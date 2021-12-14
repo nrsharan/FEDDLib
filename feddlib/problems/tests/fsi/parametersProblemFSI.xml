@@ -25,7 +25,7 @@
         <Parameter name="Criterion" type="string" value="Residual"/><!-- Criterion for nonlinear solve, Residual or Update: Residual is the norm of the nonlinear residual; Update is the norm of the update -->
     </ParameterList>
     <ParameterList name="Parameter Solid">        
-        <Parameter name="Material model" type="string" value="linear"/><!--Saint Venant-Kirchhoff,Neo-Hooke, Mooney-Rivlin -->
+        <Parameter name="Material model" type="string" value="Saint Venant-Kirchhoff"/><!--Saint Venant-Kirchhoff,Neo-Hooke, Mooney-Rivlin -->
         <Parameter name="Density" type="double"   value="1000."/>
         <!-- Parameters for linear elasticity and Saint Venant-Kirchhoff-->
         <Parameter name="Poisson Ratio" type="double" value="0.4"/>

@@ -33,7 +33,9 @@ public:
 
     ~LinearProblem();
 
-    virtual void assemble() = 0;
+    virtual void info() = 0;
+
+    virtual void assemble(std::string type = "") const = 0 ; 
 
     virtual void getValuesOfInterest( vec_dbl_Type& values ) = 0;
     

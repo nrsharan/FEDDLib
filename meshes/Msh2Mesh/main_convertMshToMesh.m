@@ -25,7 +25,7 @@ fprintf('>>>> Start of script.\n')
 
 %% User defined settings
 % Filename of the Gmsh-MSH-file without the extension.
-filename = 'turek_fluid_benchmark';
+filename = 'Rohr5';
 
 %% read meshfile
 [x,~,cElements] = MSH_Gmsh__readFile([filename '.msh']);
@@ -45,6 +45,10 @@ filename = 'turek_fluid_benchmark';
 % tetrahedron =  4
 elTypes = [4,2,1,15];
 x_flags = 100*ones(size(x,1),1);  % initialize flags
+
+
+%cElements{2} = [];
+cElements{4}.physicalIDs = 10*ones(size(cElements{4}.physicalIDs)) ;
 
 for k = 1:length(elTypes)
     elID = elTypes(k);
@@ -89,7 +93,7 @@ if not(isempty(cElements{2}))
 else
     tri = [];
 end
-%cElements{2} = [];
+
 if not(isempty(cElements{4}))
     tetr = [cElements{4}.elements,cElements{4}.physicalIDs];
 else 

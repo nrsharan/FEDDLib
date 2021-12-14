@@ -70,6 +70,12 @@ void FE<SC,LO,GO,NO>::addFE(DomainConstPtr_Type domain){
     domainVec_.push_back(domain);
 
 }
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::setFE(DomainConstPtr_Type domain, int index){
+
+    domainVec_[index]=domain;
+
+}
 
 template <class SC, class LO, class GO, class NO>
 void FE<SC,LO,GO,NO>::doSetZeros(double eps){
@@ -89,6 +95,22 @@ void FE<SC,LO,GO,NO>::applyBTinv( vec3D_dbl_ptr_Type& dPhiIn,
             for (UN d1=0; d1<dim; d1++) {
                 for (UN d2=0; d2<dim; d2++) {
                     dPhiOut[w][i][d1] += dPhiIn->at(w).at(i).at(d2) * Binv[d2][d1];
+                }
+            }
+        }
+    }
+}
+
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::applyDiff( vec3D_dbl_Type& dPhiIn,
+                                    vec3D_dbl_Type& dPhiOut,
+                                    SmallMatrix<SC>& diffT){
+    UN dim = diffT.size();
+    for (UN w=0; w<dPhiIn.size(); w++){
+        for (UN i=0; i < dPhiIn[w].size(); i++) {
+            for (UN d1=0; d1<dim; d1++) {
+                for (UN d2=0; d2<dim; d2++) {
+                    dPhiOut[w][i][d1] += dPhiIn[w][i][d2]* diffT[d2][d1];
                 }
             }
         }
@@ -665,6 +687,102 @@ void FE<SC,LO,GO,NO>::assemblyLaplace(int dim,
         A->fillComplete();
 
 }
+
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::assemblyLaplaceDiffusion(int dim,
+                                        std::string FEType,
+                                        int degree,
+                                        MatrixPtr_Type &A,
+										vec2D_dbl_Type diffusionTensor,
+                                        bool callFillComplete,
+                                        int FELocExternal){
+    TEUCHOS_TEST_FOR_EXCEPTION(FEType == "P0",std::logic_error, "Not implemented for P0");
+    UN FEloc;
+    if (FELocExternal<0)
+        FEloc = checkFE(dim,FEType);
+    else
+        FEloc = FELocExternal;
+    
+    ElementsPtr_Type elements = domainVec_.at(FEloc)->getElementsC();
+
+    vec2D_dbl_ptr_Type pointsRep = domainVec_.at(FEloc)->getPointsRepeated();
+
+    MapConstPtr_Type map = domainVec_.at(FEloc)->getMapRepeated();
+
+    vec3D_dbl_ptr_Type 	dPhi;
+    vec_dbl_ptr_Type weights = Teuchos::rcp(new vec_dbl_Type(0));
+    
+    UN deg = determineDegree(dim,FEType,FEType,Grad,Grad);
+    getDPhi(dPhi, weights, dim, FEType, deg);
+    
+    SC detB;
+    SC absDetB;
+    SmallMatrix<SC> B(dim);
+    SmallMatrix<SC> Binv(dim);
+    GO glob_i, glob_j;
+    vec_dbl_Type v_i(dim);
+    vec_dbl_Type v_j(dim);
+
+
+ 	SmallMatrix<SC> diffusionT(dim);
+	// Linear Diffusion Tensor
+	if(diffusionTensor.size()==0 || diffusionTensor.size() < dim ){
+		vec2D_dbl_Type diffusionTensor(3,vec_dbl_Type(3,0));
+		for(int i=0; i< dim; i++){
+			diffusionT[i][i]=1.;
+		}
+		//diffusionTensor =  Teuchos::rcp( new MultiVector_Type(domainVec_.at(FEloc)->getElementMap(), 1 ) );
+		//diffusionTensor->putScalar(1.);
+	}
+
+	cout << " DiffusionTensor " << endl;
+	for(int i=0; i< dim; i++){
+		for(int j=0; j<dim; j++){
+			cout << " [" << i << "]" << "[" << j << "] = " << diffusionTensor[i][j] ;
+			diffusionT[i][j]=diffusionTensor[i][j];
+
+		}
+		cout << endl;
+	}
+	//Teuchos::ArrayRCP< SC >  linearDiff = diffusionTensor->getDataNonConst( 0 );
+	cout << "Assembly Info " << "num Elements " <<  elements->numberElements() << " num Nodes " << pointsRep->size()  << endl;
+    for (UN T=0; T<elements->numberElements(); T++) {
+
+        buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
+        detB = B.computeInverse(Binv);
+        absDetB = std::fabs(detB);
+
+        vec3D_dbl_Type dPhiTrans( dPhi->size(), vec2D_dbl_Type( dPhi->at(0).size(), vec_dbl_Type(dim,0.) ) );
+        applyBTinv( dPhi, dPhiTrans, Binv );
+
+        vec3D_dbl_Type dPhiTransDiff( dPhi->size(), vec2D_dbl_Type( dPhi->at(0).size(), vec_dbl_Type(dim,0.) ) );
+        applyDiff( dPhiTrans, dPhiTransDiff, diffusionT );
+
+        for (UN i=0; i < dPhiTrans[0].size(); i++) {
+            Teuchos::Array<SC> value( dPhiTrans[0].size(), 0. );
+            Teuchos::Array<GO> indices( dPhiTrans[0].size(), 0 );
+
+            for (UN j=0; j < value.size(); j++) {
+                for (UN w=0; w<dPhiTrans.size(); w++) {
+                    for (UN d=0; d<dim; d++){
+                        value[j] += weights->at(w) * dPhiTrans[w][i][d] * dPhiTransDiff[w][j][d];
+                    }
+                }
+                value[j] *= absDetB;
+                indices[j] = map->getGlobalElement( elements->getElement(T).getNode(j) );
+            }
+            GO row = map->getGlobalElement( elements->getElement(T).getNode(i) );
+
+            A->insertGlobalValues( row, indices(), value() );
+        }
+
+
+    }
+    if (callFillComplete)
+        A->fillComplete();
+
+}
+
 
 template <class SC, class LO, class GO, class NO>
 void FE<SC,LO,GO,NO>::assemblyLaplaceVecField(int dim,
@@ -1678,6 +1796,108 @@ void FE<SC,LO,GO,NO>::assemblyElasticityStressesAceFEM(int dim,
         delete [] Amat;
 
     }
+}
+
+// Assembling the nonlinear reaction part of Reaction-Diffusion equation
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::assemblyReactionTerm(int dim,
+                                           std::string FEType,
+                                           MatrixPtr_Type &A,
+                                           MultiVectorPtr_Type u,
+                                           bool callFillComplete,
+                     					   std::vector<SC>& funcParameter,
+										   RhsFunc_Type reactionFunc){
+
+    //TEUCHOS_TEST_FOR_EXCEPTION( u->getNumVectors()>1, std::logic_error, "Implement for numberMV > 1 ." );
+    TEUCHOS_TEST_FOR_EXCEPTION(FEType == "P0",std::logic_error, "Not implemented for P0");
+    
+    UN FEloc = checkFE(dim,FEType);
+    
+	ElementsPtr_Type elements = domainVec_.at(FEloc)->getElementsC();
+
+	vec2D_dbl_ptr_Type pointsRep = domainVec_.at(FEloc)->getPointsRepeated();
+
+	MapConstPtr_Type map = domainVec_.at(FEloc)->getMapRepeated();
+
+	vec3D_dbl_ptr_Type     dPhi;
+	vec2D_dbl_ptr_Type     phi;
+	vec_dbl_ptr_Type    weights = Teuchos::rcp(new vec_dbl_Type(0));
+
+	UN extraDeg = determineDegree( dim, FEType, Std); //Elementwise assembly of grad u
+
+	UN deg = determineDegree( dim, FEType, FEType, Grad, Std, extraDeg);
+
+	getDPhi(dPhi, weights, dim, FEType, deg);
+	getPhi(phi, weights, dim, FEType, deg);
+	SC detB;
+	SC absDetB;
+	SmallMatrix<SC> B(dim);
+	SmallMatrix<SC> Binv(dim);
+	GO glob_i, glob_j;
+	vec_dbl_Type v_i(dim);
+	vec_dbl_Type v_j(dim);
+
+	// We have a scalar value of concentration in each point
+	vec2D_dbl_Type uLoc( 1, vec_dbl_Type( weights->size() , -1. ) );
+	Teuchos::ArrayRCP< const SC > uArray = u->getData(0);
+
+    std::vector<double> valueFunc(1);
+
+    SC* paras = &(funcParameter[0]);
+
+	for (UN T=0; T<elements->numberElements(); T++) {
+
+
+		buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
+		detB = B.computeInverse(Binv);
+		absDetB = std::fabs(detB);
+
+		vec3D_dbl_Type dPhiTrans( dPhi->size(), vec2D_dbl_Type( dPhi->at(0).size(), vec_dbl_Type(dim,0.) ) );
+		applyBTinv( dPhi, dPhiTrans, Binv );
+
+		// Calculating uLoc = u phi 
+		/*for (int w=0; w<phi->size(); w++){ //quads points
+		    // for (int d=0; d<dim; d++) {
+	        uLoc[0][w] = 0.;
+	        for (int i=0; i < phi->at(0).size(); i++) {
+	            LO index = 1*elements->getElement(T).getNode(i) + 0;
+	            uLoc[0][w] += uArray[index] * phi->at(w).at(i);
+	        }
+	    	// }
+			reactionFunc(&uLoc[0][w], &valueFunc[0] ,paras);
+			uLoc[0][w] = valueFunc[0];
+
+		}*/
+
+		for (UN i=0; i < phi->at(0).size(); i++) {
+		    Teuchos::Array<SC> value( dPhiTrans[0].size(), 0. );
+		    Teuchos::Array<GO> indices( dPhiTrans[0].size(), 0 );
+		    for (UN j=0; j < value.size(); j++) {
+		        for (UN w=0; w<dPhiTrans.size(); w++) {
+		            for (UN d=0; d<1; d++)
+		                value[j] += weights->at(w) *(*phi)[w][i]*(*phi)[w][i] ;//uLoc[d][w] * (*phi)[w][i];
+		        }
+				reactionFunc(&value[j], &valueFunc[0] ,paras);
+		        value[j] = valueFunc[0]*absDetB;
+		        if (setZeros_ && std::fabs(value[j]) < myeps_) {
+		            value[j] = 0.;
+		        }
+
+		        GO row = GO ( 1 * map->getGlobalElement( elements->getElement(T).getNode(i) )  );
+		        GO glob_j = GO ( 1 * map->getGlobalElement( elements->getElement(T).getNode(j) )  );
+		    }
+		    for (UN d=0; d<1; d++) {
+		        for (UN j=0; j < indices.size(); j++)
+		            indices[j] = GO ( 1 * map->getGlobalElement( elements->getElement(T).getNode(j) ) + 0 );
+
+		        GO row = GO ( 1 * map->getGlobalElement( elements->getElement(T).getNode(i) ) + 0 );
+		        A->insertGlobalValues( row, indices(), value() );
+		    }
+		}
+    }
+    
+    if (callFillComplete)
+        A->fillComplete();
 }
 
 
@@ -4963,6 +5183,8 @@ void FE<SC,LO,GO,NO>::epsilonTensor(vec_dbl_Type &basisValues, SmallMatrix<SC> &
     }
 }
 
+// in eigene Klasse !!!
+
 template <class SC, class LO, class GO, class NO>
 void FE<SC,LO,GO,NO>::phi(int dim,
                           int intFE,
@@ -6971,7 +7193,15 @@ int FE<SC,LO,GO,NO>::checkFE(int dim,
 
     return FEloc;
 }
-
+// ####################################################################################################################################################################################
+// ####################################################################################################################################################################################
+// ####################################################################################################################################################################################
+// ####################################################################################################################################################################################
+// ####################################################################################################################################################################################
+// ####################################################################################################################################################################################
+// ####################################################################################################################################################################################
+// ####################################################################################################################################################################################
+// ####################################################################################################################################################################################
 
 /*************************************************************
  * AceGen    6.921 MacOSX (29 Jan 19)                         *

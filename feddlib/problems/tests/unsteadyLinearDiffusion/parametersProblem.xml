@@ -2,7 +2,7 @@
     <ParameterList name="Parameter">
         <Parameter name="Dimension" type="int" value="2"/>
         <Parameter name="Discretization" type="string" value="P1"/><!--P1, P2; velocity, pressure always P1 -->
-        <Parameter name="Mesh Type" type="string" value="structured"/> <!--structured, unstructured, structured_bfs -->
+        <Parameter name="Mesh Type" type="string" value="unstructured"/> <!--structured, unstructured, structured_bfs -->
         <Parameter name="Mesh Delimiter" type="string" value=" "/>
         <Parameter name="H/h" type="int" value="10"/>        
     </ParameterList>
@@ -28,10 +28,10 @@
         <Parameter name="Set Zeros"		                        type="bool"     value="true"/>
     </ParameterList>
     <ParameterList name="Timestepping Parameter">
-        <Parameter name="Class"                                 type="string"		value="BDF"/> <!-- Newmark -->
-        <Parameter name="BDF"		                    		type="int"		   	value="1"/>
+        <Parameter name="Class"                                 type="string"		value="Singlestep"/> <!-- Newmark -->
+        <Parameter name="BDF"		                    		type="int"		   	value="2"/>
         <Parameter name="Timestepping type"                    	type="string"   	value="non-adaptive"/><!--non-adaptive,adaptive-->
-        <Parameter name="Final time"	                    	type="double"   	value=".05"/>
+        <Parameter name="Final time"	                    	type="double"   	value="1.5"/>
         <Parameter name="dt"			                    	type="double"   	value="0.025"/>
         <Parameter name="beta"			                    	type="double"   	value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma"			                    	type="double"   	value="0.5"/> <!-- newmark method parameter-->

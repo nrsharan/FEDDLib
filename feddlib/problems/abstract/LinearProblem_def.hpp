@@ -26,5 +26,6 @@ template<class SC,class LO,class GO,class NO>
 LinearProblem<SC,LO,GO,NO>::~LinearProblem(){
 
 }
+
 }
 #endif

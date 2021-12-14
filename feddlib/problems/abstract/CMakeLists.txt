@@ -8,6 +8,9 @@ SET(problems_abstract_HEADERS
 	abstract/NonLinearProblem_decl.hpp
 	abstract/NonLinearProblem_def.hpp
 	abstract/NonLinearProblem.hpp
+	#abstract/LinearProblem_decl.hpp
+	#abstract/LinearProblem_def.hpp
+	#abstract/LinearProblem.hpp
 	abstract/Problem_decl.hpp
 	abstract/Problem_def.hpp
 	abstract/Problem.hpp
@@ -20,6 +23,7 @@ SET(problems_abstract_SOURCES
     #abstract/CoupledProblem.cpp
 	abstract/MinPrecProblem.cpp
 	abstract/NonLinearProblem.cpp
+	#abstract/LinearProblem.cpp
 	abstract/Problem.cpp
     abstract/TimeProblem.cpp
 CACHE INTERNAL "")

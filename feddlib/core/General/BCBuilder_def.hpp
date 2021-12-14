@@ -707,6 +707,17 @@ void BCBuilder<SC,LO,GO,NO>::setLocalRowZero(const MatrixPtr_Type &matrix, LO lo
     }
 }
 
+template<class SC,class LO,class GO,class NO>
+void BCBuilder<SC,LO,GO,NO>::updateDomains(const DomainPtr_Type &domainNew, string FEType){
+
+	for(int i=0; i <  vecDomain_.size(); i++){
+		if(vecDomain_[i]->getFEType() == FEType){
+
+			vecDomain_[i] = domainNew;
+		}
+	}
+   
+}
 
 
 template<class SC,class LO,class GO,class NO>

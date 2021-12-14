@@ -5,7 +5,7 @@
 #include "feddlib/core/Mesh/MeshPartitioner.hpp"
 #include "feddlib/core/General/ExporterParaView.hpp"
 #include "feddlib/core/LinearAlgebra/MultiVector.hpp"
-#include "feddlib/problems/specific/Laplace.hpp"
+#include "feddlib/problems/specific/Diffusion.hpp"
 #include <Teuchos_GlobalMPISession.hpp>
 #include <Xpetra_DefaultPlatform.hpp>
 #include "feddlib/problems/Solver/DAESolverInTime.hpp"
@@ -29,8 +29,14 @@ void oneBC(double* x, double* res, double t, const double* parameters){
 void twoBC(double* x, double* res, double t, const double* parameters){
     res[0] = 2.;
 }
-void threeBC(double* x, double* res, double t, const double* parameters){
+/*void threeBC(double* x, double* res, double t, const double* parameters){
     res[0] = 3.;
+}*/
+void threeBC(double* x, double* res, double t, const double* parameters){
+    if(t<=5.)
+   	 res[0] = 3.;
+    else
+	 res[0] = 0.;
 }
 void zeroBC2D(double* x, double* res, double t, const double* parameters){
     res[0] = 0.;
@@ -56,6 +62,8 @@ using namespace FEDD;
 
 int main(int argc, char *argv[]) {
     typedef MeshPartitioner<SC,LO,GO,NO> MeshPartitioner_Type;
+	typedef MultiVector<SC,LO,GO,NO> MultiVector_Type;
+	typedef Teuchos::RCP<MultiVector_Type> MultiVectorPtr_Type;
 
     Teuchos::oblackholestream blackhole;
     Teuchos::GlobalMPISession mpiSession(&argc,&argv,&blackhole);
@@ -160,19 +168,32 @@ int main(int argc, char *argv[]) {
         }
         else{
             bcFactory->addBC(zeroBC, 1, 0, domain, "Dirichlet", 1);
-            bcFactory->addBC(zeroBC, 2, 0, domain, "Dirichlet", 1);
+            bcFactory->addBC(threeBC, 2, 0, domain, "Dirichlet", 1);
             bcFactory->addBC(zeroBC, 3, 0, domain, "Dirichlet", 1);
+            bcFactory->addBC(zeroBC, 4, 0, domain, "Dirichlet", 1);
         }
 
-        Laplace<SC,LO,GO,NO> laplace(domain,FEType,parameterListAll,vL);
+		
+		vec2D_dbl_Type diffusionTensor(dim,vec_dbl_Type(3));
+		for(int i=0; i<dim; i++){
+			diffusionTensor[0][0] =1;
+		    diffusionTensor[1][1] =6;
+			if(i>0){
+				diffusionTensor[i][i-1] = -1./2;
+				diffusionTensor[i-1][i] = -1./2;
+			}
+			else
+				diffusionTensor[i][i+1] = -1./2;				
+		}
+        Diffusion<SC,LO,GO,NO> diffusion(domain,FEType,parameterListAll, diffusionTensor,vL);
         {
         
-            laplace.addRhsFunction(oneFunc);
-			laplace.addBoundaries(bcFactory); // Dem Problem RW hinzufuegen
+            //laplace.addRhsFunction(oneFunc);
+			diffusion.addBoundaries(bcFactory); // Dem Problem RW hinzufuegen
                 
-            laplace.initializeProblem();
+            diffusion.initializeProblem();
             // Matrizen assemblieren
-            laplace.assemble();
+            diffusion.assemble();
 
             // Wahrscheinlich nicht noetig
             // LinElas.SetBoundariesRHS();
@@ -204,7 +225,7 @@ int main(int argc, char *argv[]) {
             daeTimeSolver.defineTimeStepping(defTS);
 
             // Uebergebe das (nicht) lineare Problem
-            daeTimeSolver.setProblem(laplace);
+            daeTimeSolver.setProblem(diffusion);
 
             // Setup fuer die Zeitintegration, wie z.B. Aufstellen der Massematrizen auf den Zeilen, welche in
             // defTS definiert worden sind.
@@ -218,22 +239,7 @@ int main(int argc, char *argv[]) {
 
         }
 
-        bool boolExportSolution = true;
-        if (boolExportSolution) {
-            Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
-
-            Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolution = laplace.getSolution()->getBlock(0);
-
-            exPara->setup("solutionLaplace", domain->getMesh(), FEType);
-            
-            if (vL)
-                exPara->addVariable(exportSolution, "u", "Vector", dim, domain->getMapUnique(), domain->getMapUniqueP2());
-            else
-                exPara->addVariable(exportSolution, "u", "Scalar", 1, domain->getMapUnique(), domain->getMapUniqueP2());
-
-            exPara->save(0.0);
-
-        }
+       
     }
     return(EXIT_SUCCESS);
 }

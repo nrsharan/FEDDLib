@@ -356,6 +356,20 @@ void TimeProblem<SC,LO,GO,NO>::reAssembleAndFill( BlockMatrixPtr_Type bMat, std:
 }
 
 template<class SC,class LO,class GO,class NO>
+void TimeProblem<SC,LO,GO,NO>::reAssembleLin( ){
+
+    ProblemPtr_Type prob = Teuchos::rcp_dynamic_cast<Problem_Type>(problem_,true);
+    prob->assemble(" ");
+}
+template<class SC,class LO,class GO,class NO>
+void TimeProblem<SC,LO,GO,NO>::reAssembleNonLin( ){
+
+    ProblemPtr_Type nonLinProb = Teuchos::rcp_dynamic_cast<Problem_Type>(problem_,true);
+    nonLinProb->assemble("");
+}
+
+
+template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::combineSystems() const{
 
     BlockMatrixPtr_Type tmpSystem = problem_->getSystem();
@@ -382,6 +396,7 @@ void TimeProblem<SC,LO,GO,NO>::combineSystems() const{
 
     SmallMatrix<SC> ones( size , Teuchos::ScalarTraits<SC>::one());
     SmallMatrix<SC> zeros( size , Teuchos::ScalarTraits<SC>::zero());
+
     systemMass_->addMatrix( massParameters_, systemCombined_, zeros );
     tmpSystem->addMatrix( timeParameters_, systemCombined_, ones );
     
@@ -528,6 +543,12 @@ template<class SC,class LO,class GO,class NO>
 typename TimeProblem<SC,LO,GO,NO>::BlockMultiVectorPtr_Type TimeProblem<SC,LO,GO,NO>::getSolution(){
 
     return problem_->getSolution();
+}
+
+template<class SC,class LO,class GO,class NO>
+void TimeProblem<SC,LO,GO,NO>::setSolution(BlockMultiVectorPtr_Type solution){
+
+    problem_->setSolution(solution);
 }
     
 template<class SC,class LO,class GO,class NO>
@@ -749,6 +770,12 @@ void TimeProblem<SC,LO,GO,NO>::setBoundaries(double time){
 }
 
 template<class SC,class LO,class GO,class NO>
+void TimeProblem<SC,LO,GO,NO>::updateBCFactory(DomainPtr_Type domainNew, string FEType) {
+
+    bcFactory_->updateDomains(domainNew, FEType );
+}
+
+template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::setBoundariesRHS(double time){
 
     BlockMultiVectorPtr_Type tmpRhs = problem_->getRhs();
@@ -796,8 +823,6 @@ int TimeProblem<SC,LO,GO,NO>::solveAndUpdate( const std::string& criterion, doub
     }
     else
         nonLinProb->getSolution()->update( 1., *nonLinProb->previousSolution_, 1. );
-
-    //nonLinProb->getSolution()->print();
     
     return its;
 }
@@ -822,8 +847,10 @@ int TimeProblem<SC,LO,GO,NO>::solve( BlockMultiVectorPtr_Type rhs ){
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::updateSolutionPreviousStep(){
 
+
     if (solutionPreviousTimesteps_.size()==0)
         solutionPreviousTimesteps_.resize(1);
+	
 
     solutionPreviousTimesteps_[0] = Teuchos::rcp( new BlockMultiVector_Type( problem_->getSolution() ) );
     
@@ -1012,6 +1039,12 @@ typename TimeProblem<SC,LO,GO,NO>::BlockMultiVectorPtr_Type TimeProblem<SC,LO,GO
 }
 
 template<class SC,class LO,class GO,class NO>
+void TimeProblem<SC,LO,GO,NO>::setRhs(BlockMultiVectorPtr_Type rhs){
+
+    problem_->setRhs(rhs);
+}
+
+template<class SC,class LO,class GO,class NO>
 typename TimeProblem<SC,LO,GO,NO>::DomainConstPtr_Type TimeProblem<SC,LO,GO,NO>::getDomain(int i) const {
     
     return problem_->getDomain(i);
@@ -1105,6 +1138,12 @@ void TimeProblem<SC,LO,GO,NO>::computeValuesOfInterestAndExport( ){
     problem_->computeValuesOfInterestAndExport( );
 }
     
+template<class SC,class LO,class GO,class NO>
+void TimeProblem<SC,LO,GO,NO>::reInitializeProblemNonLinear(int nmbVectors){
+    
+	NonLinProbPtr_Type nonLinProb = Teuchos::rcp_dynamic_cast<NonLinProb_Type>(problem_);
+    nonLinProb->reInitializeProblem(nmbVectors);
+}
     
 template<class SC, class LO, class GO, class NO>
 Thyra::ModelEvaluatorBase::InArgs<SC> TimeProblem<SC,LO,GO,NO>::getNominalValues() const

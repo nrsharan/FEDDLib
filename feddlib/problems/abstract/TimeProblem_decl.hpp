@@ -6,7 +6,7 @@
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 #include "feddlib/problems/Solver/Preconditioner.hpp"
 #include "NonLinearProblem.hpp"
-//#include "LinearProblem.hpp"
+#include "LinearProblem.hpp"
 #include "Thyra_StateFuncModelEvaluatorBase.hpp"
 /*!
  Declaration of TimeProblem
@@ -61,14 +61,18 @@ public:
 
     typedef typename Problem_Type::DomainConstPtr_Type DomainConstPtr_Type;
 
+    typedef typename Problem_Type::DomainPtr_Type DomainPtr_Type;
+
     typedef typename Problem_Type::FEFac_Type FEFac_Type;
     typedef Teuchos::RCP<FEFac_Type> FEFacPtr_Type;
     typedef Teuchos::RCP<const FEFac_Type> FEFacConstPtr_Type;
     typedef typename Problem_Type::BCConstPtr_Type BCConstPtr_Type;
-
+    typedef typename Problem_Type::BCPtr_Type BCPtr_Type;
     typedef NonLinearProblem<SC,LO,GO,NO> NonLinProb_Type;
     typedef Teuchos::RCP<NonLinProb_Type> NonLinProbPtr_Type;
-//    typedef LinearProblem<SC,LO,GO,NO> LinearProblem_Type;
+
+    //typedef LinearProblem<SC,LO,GO,NO> LinProb_Type;
+    //typedef Teuchos::RCP<LinProb_Type> LinProbPtr_Type;
 
     typedef typename Problem_Type::Preconditioner_Type Preconditioner_Type;
     typedef typename Problem_Type::PreconditionerPtr_Type PreconditionerPtr_Type;
@@ -92,6 +96,10 @@ public:
     
     virtual void reAssembleAndFill( BlockMatrixPtr_Type bMat, std::string type="FixedPoint" );
 
+    void reAssembleLin( );
+
+	void reAssembleNonLin( );
+
     void updateRhs();
 
     void updateMultistepRhs(vec_dbl_Type& coeff, int nmbToUse);
@@ -108,6 +116,8 @@ public:
     void combineSystems() const;
 
     void initializeCombinedSystems() const;
+
+    void reInitializeProblemNonLinear(int nmbVectors=1);
 
     void assembleMassSystem( ) const;
 
@@ -127,7 +137,9 @@ public:
 
     bool getVerbose();
 
-    void addBoundaries(BCConstPtr_Type bcFactory);
+    void addBoundaries(BCPtr_Type bcFactory);
+
+	void updateBCFactory(DomainPtr_Type domainNew, string FEType);
 
     void setBoundaries(double time=.0);
 
@@ -140,8 +152,12 @@ public:
     BlockMultiVectorPtr_Type getRhs();
 
     BlockMultiVectorPtr_Type getRhs() const;
+
+    void setRhs(BlockMultiVectorPtr_Type rhs);
     
     BlockMultiVectorPtr_Type getSolution();
+
+    void setSolution(BlockMultiVectorPtr_Type solution);
 
     BlockMultiVectorConstPtr_Type getSolutionConst() const;
     
@@ -219,7 +235,7 @@ public:
     int                     dimension_;
     bool                    verbose_;
     ParameterListPtr_Type	parameterList_;
-    mutable BCConstPtr_Type bcFactory_;
+    mutable BCPtr_Type bcFactory_;
     bool                    massBCSet_;
     BlockMultiVectorPtrArray_Type solutionPreviousTimesteps_;
 //    std::vector<MultiVector_ptr_Type>    solutionPreviousTimesteps_;

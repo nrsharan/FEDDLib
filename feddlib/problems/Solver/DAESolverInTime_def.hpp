@@ -196,9 +196,18 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeLinear(){
     bool fullImplicitPressure = false;
     int size = timeStepDef_.size();
     double dt = 0.0;
+
+	// #######################################################
+	string refinementMode = parameterList_->sublist("Mesh Refinement").get("Refinement Mode", "none");
+	AdaptiveMeshRefinement<SC,LO,GO,NO> meshRefiner("Laplace",parameterList_); // exactSolLShape  
+	Teuchos::RCP<Domain<SC,LO,GO,NO> > domainRefined;
+
+	// -------------------------------------------------------
+
     while (timeSteppingTool_->continueTimeStepping()) {
         problemTime_->updateTime ( timeSteppingTool_->currentTime() );
         dt = timeSteppingTool_->get_dt();
+
         problemTime_->updateSolutionPreviousStep();
         
         Teuchos::Array<BlockMatrixPtr_Type> bMatNonLin_vec_allstages;
@@ -283,8 +292,10 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeLinear(){
                 problemTime_->setTimeParameters(massCoeff, problemCoeff);
                 problemTime_->combineSystems();
                 problemTime_->setBoundaries(time);
+				//problemTime_->getRhs()->print();
+				//problemTime_->getUnderlyingProblem()->getRhs()->print();
                 
-                problemTime_->solve();
+                problemTime_->solve(problemTime_->getRhs());
 
             }
             
@@ -300,8 +311,49 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeLinear(){
                 if ( problemTime_->hasSourceTerm() )
                     sourceTermRK_stages.push_back( problemTime_->getSourceTerm() );
             }
+		
         }
-        
+		// Insert mesh refinement
+		if(refinementMode != "none") {
+			// Veloctiy is first, then pressure
+			//ProblemPtr_Type problem = Teuchos::rcp_dynamic_cast<Problem_Type>( problemTime_ , true);
+			DomainConstPtr_Type domainP1 = problemTime_->getDomain(0);
+			//DomainConstPtr_Type domainP2 = problemTime_->getDomain(0);
+		
+			DomainPtr_Type domainPressure = Teuchos::rcp(new Domain<SC,LO,GO,NO>( problemTime_->getComm(), domainP1->getDimension()));
+			//DomainPtr_Type domainVelocity = Teuchos::rcp(new Domain<SC,LO,GO,NO>(  problemTime_->getComm(), domainP2->getDimension()));
+
+			domainPressure->initWithDomain(domainP1);
+			//domainVelocity->initWithDomain(domainP2);
+
+			int index = solutionRK_stages.size()-1;
+
+			domainRefined = meshRefiner.globalAlgorithm( domainPressure,  domainPressure, problemTime_->getSolution(), problemTime_->getUnderlyingProblem(), problemTime_->getUnderlyingProblem()->getRhsFunction(0) );
+
+			//problemTime_->setDomain(1,domainRefined);
+
+			problemTime_->setDomain(0,domainRefined);
+			BlockMultiVectorPtr_Type tmpSol = meshRefiner.initerpolateSolution( domainPressure, domainRefined, problemTime_->getSolution(), "taggedEdges");
+
+			solutionRK_stages[index] = tmpSol;
+
+// UPDATE BOUNDARY BLA
+			problemTime_->updateBCFactory(domainRefined,"P1");
+			problemTime_->getUnderlyingProblem()->initializeProblem();
+			problemTime_->reAssembleLin();
+			this->problemTime_->systemMass_.reset(new BlockMatrix_Type(this->problemTime_->getSystem()->size()));
+        	this->problemTime_->systemCombined_.reset( new BlockMatrix_Type( this->problemTime_->getSystem()->size() ));
+    		problemTime_->setSolution(tmpSol);
+		
+		    // -> das linearProblem (bzw. nonlinearProblem) von oben mit der Massematrix verbinden
+		    problemTime_->assemble( "MassSystem" );
+			
+			//this->problemTime_->systemMass_->print();
+
+
+		} 
+
+
         timeSteppingTool_->advanceTime(true/*output info*/);
         
         if (print)
@@ -396,9 +448,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinear(){
     }
 
 	// #######################################################
-	//string refinementMode = parameterList_->sublist("Mesh Refinement").get("Refinement Mode", "none");
-	//AdaptiveMeshRefinement<SC,LO,GO,NO> meshRefiner("NavierStokes",parameterList_); // exactSolLShape  
-	//Teuchos::RCP<Domain<SC,LO,GO,NO> > domainRefined;
+	string refinementMode = parameterList_->sublist("Mesh Refinement").get("Refinement Mode", "none");
+	AdaptiveMeshRefinement<SC,LO,GO,NO> meshRefiner("NavierStokes",parameterList_); // exactSolLShape  
+	Teuchos::RCP<Domain<SC,LO,GO,NO> > domainRefined;
 	// -------------------------------------------------------
 
     // Navier-Stokes treatment of pressure
@@ -410,6 +462,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinear(){
     SmallMatrix<double> problemCoeff(size);
     double dt = 0.0;
     int timeit = 0;
+
+	int refinementCounter=0;
+
     while (timeSteppingTool_->continueTimeStepping()) {
         
         dt = timeSteppingTool_->get_dt();
@@ -435,8 +490,11 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinear(){
         BlockMultiVectorPtrArray_Type       solutionPrevStages;
         
         BlockMatrixPtr_Type blockMatrix = Teuchos::rcp( new BlockMatrix_Type( problemTime_->getSystem()->size() ) );
+
+		// REASSEMBLE which means adding the nonlinear parts to the constant parts
         problemTime_->reAssembleAndFill( blockMatrix );
         
+		// Block matrix represents the system Matrix
         matrixPrevStages.push_back( blockMatrix );
         
         BlockMultiVectorPtr_Type sol =
@@ -501,32 +559,62 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinear(){
 //                    sourceTermRK_stages.push_back(*problemTime_->GetSourceTerm());
             }
         }
-        timeSteppingTool_->advanceTime(true/*output info*/);
 
+        timeSteppingTool_->advanceTime(true/*output info*/);
 		// Insert mesh refinement
-		/*if(refinementMode != "none") {
+		refinementCounter++;
+		if(refinementMode != "none" && (refinementCounter % 2 == 0)) {
+
 			// Veloctiy is first, then pressure
 			//ProblemPtr_Type problem = Teuchos::rcp_dynamic_cast<Problem_Type>( problemTime_ , true);
-			DomainConstPtr_Type domainP1 = problemTime_->getDomain(1);
-			DomainConstPtr_Type domainP2 = problemTime_->getDomain(0);
+			DomainConstPtr_Type domainP1 = problemTime_->getDomain(0);
+			DomainConstPtr_Type domainP2 = problemTime_->getDomain(1);
 		
- 			DomainPtr_Type domainPressure = Teuchos::rcp(new Domain<SC,LO,GO,NO>( problemTime_->getComm(), domainP1->getDimension()));
-        	DomainPtr_Type domainVelocity = Teuchos::rcp(new Domain<SC,LO,GO,NO>(  problemTime_->getComm(), domainP2->getDimension()));
+			DomainPtr_Type domainPressure = Teuchos::rcp(new Domain<SC,LO,GO,NO>( problemTime_->getComm(), domainP1->getDimension()));
+			DomainPtr_Type domainVelocity = Teuchos::rcp(new Domain<SC,LO,GO,NO>(  problemTime_->getComm(), domainP2->getDimension()));
 
 			domainPressure->initWithDomain(domainP1);
 			domainVelocity->initWithDomain(domainP2);
-  	
-			problemTime_->getSolution()->print();
-			domainRefined = meshRefiner.globalAlgorithm( domainPressure,  domainVelocity, problemTime_->getSolution(), problemTime_->getUnderlyingProblem(), problemTime_->getUnderlyingProblem()->getRhsFunction(1) );
+
+			int index = solutionPrevStages.size()-1;
+
+			domainRefined = meshRefiner.globalAlgorithm( domainPressure,  domainVelocity, problemTime_->getSolution(), problemTime_->getUnderlyingProblem(), problemTime_->getUnderlyingProblem()->getRhsFunction(0) );
 
 			problemTime_->setDomain(1,domainRefined);
 			problemTime_->setDomain(0,domainRefined);
-			BlockMultiVectorPtr_Type tmpSol = meshRefiner.initerpolateSolution( domainPressure, domainRefined, problemTime_->getSolution(), "taggedEdges");
-			solutionPrevStages[timeit] = tmpSol;
-		}*/
+
+			BlockMultiVectorPtr_Type tmpSol = meshRefiner.initerpolateSolution(  domainPressure,domainRefined, problemTime_->getSolution(), "taggedEdges");
+
+			BlockMultiVectorPtr_Type tmpRhs = meshRefiner.initerpolateSolution(  domainPressure,domainRefined, problemTime_->getRhs(), "taggedEdges");
+
+			//solutionPrevStages[index] = tmpSol;
+
+			problemTime_->updateBCFactory(domainRefined,"P1");
+			problemTime_->updateBCFactory(domainRefined,"P2");
+
+			problemTime_->reInitializeProblemNonLinear(); // <- hier ist das problem. am besten nur residual vektor zurücksetzen!
+
+			//solutionPrevStages[index]->print();
+			
+		    problemTime_->reAssembleNonLin( );
+		    
+
+			this->problemTime_->systemMass_.reset(new BlockMatrix_Type(this->problemTime_->getSystem()->size()));
+        	this->problemTime_->systemCombined_.reset( new BlockMatrix_Type( this->problemTime_->getSystem()->size() ));
+    		problemTime_->setSolution(tmpSol);
+    		problemTime_->setRhs(tmpRhs);
+			//problemTime_->getRhs()->print();
+		
+		    // -> das linearProblem (bzw. nonlinearProblem) von oben mit der Massematrix verbinden
+		    problemTime_->assemble( "MassSystem" );
+			
+			//this->problemTime_->systemMass_->print();
+
+
+		} 
  
         timeit++;
-        if (print) {
+       if (print) {
             exportTimestep();
         }
         if (parameterList_->sublist("NSParameter").get("Calculate Coefficients",false)) {

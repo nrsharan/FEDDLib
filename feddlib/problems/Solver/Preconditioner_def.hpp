@@ -285,6 +285,8 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
         nodeListVec = Teuchos::null;
 
     //Set Precondtioner lists
+    //cout << " Preconditioner is build " << precondtionerIsBuilt_ << endl;
+    //precondtionerIsBuilt_ = false;
     if (!precondtionerIsBuilt_) {
         if ( !precType.compare("FROSch") ){
             Teuchos::ArrayRCP<FROSch::DofOrdering> dofOrderings(numberOfBlocks);
@@ -303,7 +305,6 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
                             Teuchos::RCP<const Xpetra::Map<LO,GO,NO> > mapConstTmp;
 
                             mapConstTmp = problem_->getDomain(i)->getMapVecFieldRepeated()->getXpetraMap();
-
                             Teuchos::RCP<Xpetra::Map<LO,GO,NO> > mapTmp = Teuchos::rcp_const_cast<Xpetra::Map<LO,GO,NO> > (mapConstTmp);
                             repeatedMaps[i] = mapTmp;
 
@@ -438,13 +439,14 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
 
             // We save the pointer to the coarse matrix in this parameter list inside FROSch
             pListPhiExport_ = pListThyraSolver;
-            
+
             solverBuilder->setParameterList(pListThyraSolver);
             precFactory_ = solverBuilder->createPreconditioningStrategy("");
 
-            if ( thyraPrec_.is_null() )
+           // if ( thyraPrec_.is_null() ){
+		cout << " Thyra Pre reseeeet --------- " << endl;
                 thyraPrec_ = precFactory_->createPrec();
-
+	    //}
 
             Thyra::initializePrec<SC>(*precFactory_, thyraMatrix, thyraPrec_.ptr());
             precondtionerIsBuilt_ = true;
@@ -455,6 +457,7 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
     }
     else {
         TEUCHOS_TEST_FOR_EXCEPTION( precFactory_.is_null(), std::runtime_error, "precFactory_ is null.");
+	
         Thyra::initializePrec<SC>(*precFactory_, thyraMatrix, thyraPrec_.ptr());
     }
 

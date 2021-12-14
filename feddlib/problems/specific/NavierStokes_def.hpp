@@ -138,7 +138,6 @@ void NavierStokes<SC,LO,GO,NO>::assembleConstantMatrices() const{
     int* dummy;
     
     A_.reset(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
-    
     if ( this->parameterList_->sublist("Parameter").get("Symmetric gradient",false) )
         this->feFactory_->assemblyStress(this->dim_, this->domain_FEType_vec_.at(0), A_, OneFunction, dummy, true);
     else
@@ -292,6 +291,7 @@ void NavierStokes<SC,LO,GO,NO>::reAssemble(std::string type) const {
     if (type=="FixedPoint") {
         
         MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
+
         u_rep_->importFromVector(u, true);
 
         MatrixPtr_Type N = Teuchos::rcp(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
@@ -301,8 +301,10 @@ void NavierStokes<SC,LO,GO,NO>::reAssemble(std::string type) const {
         N->scale(density);
         N->fillComplete( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getMapVecFieldUnique());
 
+		// ANW = A;
         A_->addMatrix(1.,ANW,0.);
-        N->addMatrix(1.,ANW,1.);
+		// ANW = ANW + N
+        N->addMatrix(1.,ANW,1.); // ANW thus is sum of A_ and N, so laplacian vec field and advection field
     }
     else if(type=="Newton"){ // We assume that reAssmble("FixedPoint") was already called for the current iterate
         MatrixPtr_Type W = Teuchos::rcp(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
@@ -315,6 +317,7 @@ void NavierStokes<SC,LO,GO,NO>::reAssemble(std::string type) const {
     }
     ANW->fillComplete( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getMapVecFieldUnique() );
     
+	// replacing entry (0,0) with ANW which is the combination of A_ and N
     this->system_->addBlock( ANW, 0, 0 );
     
     if (this->verbose_)
@@ -727,6 +730,9 @@ void NavierStokes<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, dou
 
     // We need to account for different parameters of time discretizations here
     // This is ok for bdf with 1.0 scaling of the system. Would be wrong for Crank-Nicolson - might be ok now for CN
+    //this->residualVec_->print();
+    //this->solution_->print();
+
     if (this->coeff_.size() == 0)
         this->system_->apply( *this->solution_, *this->residualVec_ );
     else

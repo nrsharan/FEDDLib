@@ -8,6 +8,12 @@ SET(problems_specific_HEADERS
     specific/Laplace_decl.hpp
  	specific/Laplace_def.hpp
  	specific/Laplace.hpp
+    specific/Diffusion_decl.hpp
+ 	specific/Diffusion_def.hpp
+ 	specific/Diffusion.hpp
+    specific/DiffusionReaction_decl.hpp
+ 	specific/DiffusionReaction_def.hpp
+ 	specific/DiffusionReaction.hpp
     specific/LaplaceBlocks_decl.hpp
  	specific/LaplaceBlocks_def.hpp
  	specific/LaplaceBlocks.hpp
@@ -44,6 +50,8 @@ SET(problems_specific_SOURCES
 	#specific/Elasticity.cpp
     specific/Geometry.cpp
 	specific/Laplace.cpp
+	specific/Diffusion.cpp
+	specific/DiffusionReaction.cpp
 	specific/LaplaceBlocks.cpp
     #specific/LaplacePseudoCoupled.cpp
     specific/LinElas.cpp

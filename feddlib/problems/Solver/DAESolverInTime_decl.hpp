@@ -92,7 +92,7 @@ public:
     // Newmark-Verfahren (fuer lineare Probleme)
     void advanceInTimeLinearNewmark();
 
-    // Newmkar-Verfahren (fuer nichtlineare Probleme)
+    // Newmark-Verfahren (fuer nichtlineare Probleme)
     void advanceInTimeNonLinearNewmark();
 
     // Wendet die Zeitdiskretisierung separat auf Fluid und Struktur an und

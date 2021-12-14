@@ -53,6 +53,42 @@ void NonLinearProblem<SC,LO,GO,NO>::initializeProblem(int nmbVectors){
 }
 
 template<class SC,class LO,class GO,class NO>
+void NonLinearProblem<SC,LO,GO,NO>::reInitializeProblem(int nmbVectors){
+    this->system_.reset(new BlockMatrix_Type(1));
+    
+    this->initializeVectors2( nmbVectors );
+    
+   // this->initializeVectorsNonLinear( nmbVectors );
+
+    UN size = this->domainPtr_vec_.size();
+    this->previousSolution_.reset(new BlockMultiVector_Type(size));
+    this->residualVec_.reset(new BlockMultiVector_Type(size));
+
+    for (UN i=0; i<size; i++) {
+        if ( this->dofsPerNode_vec_[i] > 1 ){
+            MapConstPtr_Type map = this->domainPtr_vec_[i]->getMapVecFieldUnique();
+            MultiVectorPtr_Type prevSolutionPart = Teuchos::rcp( new MultiVector_Type( map ) );
+            this->previousSolution_->addBlock(prevSolutionPart,i);
+            MultiVectorPtr_Type residualPart = Teuchos::rcp( new MultiVector_Type( map ) );
+            this->residualVec_->addBlock(residualPart,i);
+        }
+        else{
+            MapConstPtr_Type map = this->domainPtr_vec_[i]->getMapUnique();
+            MultiVectorPtr_Type prevSolutionPart = Teuchos::rcp( new MultiVector_Type( map ) );
+            this->previousSolution_->addBlock(prevSolutionPart,i);
+            MultiVectorPtr_Type residualPart = Teuchos::rcp( new MultiVector_Type( map ) );
+            this->residualVec_->addBlock(residualPart,i);
+        }
+    }
+    
+    this->residualVec_->putScalar(0.);
+    
+    // Init ThyraVectorSpcaes for NOX.
+    this->initVectorSpaces();
+            
+}
+
+template<class SC,class LO,class GO,class NO>
 void NonLinearProblem<SC,LO,GO,NO>::initializeVectorsNonLinear(int nmbVectors){
 
     UN size = this->domainPtr_vec_.size();

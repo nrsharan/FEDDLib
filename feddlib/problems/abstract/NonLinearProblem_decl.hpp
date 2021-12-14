@@ -64,6 +64,8 @@ public:
 
     void initializeProblem(int nmbVectors=1);
     
+	void reInitializeProblem(int nmbVectors=1);
+
     virtual void assemble( std::string type = "" ) const = 0;
 
     virtual void getValuesOfInterest( vec_dbl_Type& values ) = 0;

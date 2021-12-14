@@ -102,6 +102,7 @@ void ExporterParaViewAMR<SC,LO,GO,NO>::updateVariables(MultiVectorConstPtr_Type 
 			EpetraMapPtr_Type mapToStore = Teuchos::rcp(new Epetra_Map( (int) this->mapUniqueVariables_->getGlobalNumElements(), indices.size(), intGlobIDs,0, *this->commEpetra_ ) );
 
 			this->uniqueMaps_[i] =mapToStore;
+
 			delete [] intGlobIDs;
 		}
 	}

@@ -292,7 +292,7 @@ void Problem<SC,LO,GO,NO>::initializePreconditioner(std::string type) const {
 
 
 template<class SC,class LO,class GO,class NO>
-void Problem<SC,LO,GO,NO>::addBoundaries(const BCConstPtr_Type &bcFactory){
+void Problem<SC,LO,GO,NO>::addBoundaries(BCPtr_Type &bcFactory){
 
     bcFactory_ = bcFactory;
 
@@ -364,6 +364,37 @@ void Problem<SC,LO,GO,NO>::initializeVectors(int nmbVectors){
 }
 
 template<class SC,class LO,class GO,class NO>
+void Problem<SC,LO,GO,NO>::initializeVectors2(int nmbVectors){
+
+    UN size = domainPtr_vec_.size();
+    //solution_.reset(new BlockMultiVector_Type(size));
+    rhs_.reset(new BlockMultiVector_Type(size));
+    sourceTerm_.reset(new BlockMultiVector_Type(size));
+    rhsFuncVec_.resize(size);
+
+    for (UN i=0; i<size; i++) {
+        if ( dofsPerNode_vec_[i] > 1 ){
+            MapConstPtr_Type map = domainPtr_vec_[i]->getMapVecFieldUnique();
+            MultiVectorPtr_Type solutionPart = Teuchos::rcp( new MultiVector_Type( map ) );
+           // solution_->addBlock( solutionPart, i );
+            MultiVectorPtr_Type rhsPart = Teuchos::rcp( new MultiVector_Type( map ) );
+            rhs_->addBlock(rhsPart,i);
+            MultiVectorPtr_Type sourceTermPart = Teuchos::rcp( new MultiVector_Type( map ) );
+            sourceTerm_->addBlock(sourceTermPart,i);
+        }
+        else{
+            MapConstPtr_Type map = domainPtr_vec_[i]->getMapUnique();
+            MultiVectorPtr_Type solutionPart = Teuchos::rcp( new MultiVector_Type( map ) );
+            //solution_->addBlock( solutionPart, i );
+            MultiVectorPtr_Type rhsPart = Teuchos::rcp( new MultiVector_Type( map ) );
+            rhs_->addBlock(rhsPart,i);
+            MultiVectorPtr_Type sourceTermPart = Teuchos::rcp( new MultiVector_Type( map ) );
+            sourceTerm_->addBlock(sourceTermPart,i);
+        }
+    }
+}
+
+template<class SC,class LO,class GO,class NO>
 typename Problem<SC,LO,GO,NO>::BlockMultiVectorPtr_Type Problem<SC,LO,GO,NO>::getRhs(){
 
     return rhs_;
@@ -379,6 +410,20 @@ template<class SC,class LO,class GO,class NO>
 typename Problem<SC,LO,GO,NO>::BlockMultiVectorPtr_Type Problem<SC,LO,GO,NO>::getSolution(){
 
     return solution_;
+}
+
+template<class SC,class LO,class GO,class NO>
+void Problem<SC,LO,GO,NO>::setSolution(BlockMultiVectorPtr_Type solution){
+
+  solution_ = solution;
+
+}
+
+
+template<class SC,class LO,class GO,class NO>
+void Problem<SC,LO,GO,NO>::setRhs(BlockMultiVectorPtr_Type rhs){
+
+  rhs_ = rhs;
 }
 
 template<class SC,class LO,class GO,class NO>
@@ -415,7 +460,7 @@ typename Problem<SC,LO,GO,NO>::FEFacConstPtr_Type Problem<SC,LO,GO,NO>::getFEFac
 }
 
 template<class SC,class LO,class GO,class NO>
-typename Problem<SC,LO,GO,NO>::BCConstPtr_Type Problem<SC,LO,GO,NO>::getBCFactory(){
+typename Problem<SC,LO,GO,NO>::BCPtr_Type Problem<SC,LO,GO,NO>::getBCFactory(){
 
     return bcFactory_;
 }
@@ -430,6 +475,9 @@ template<class SC,class LO,class GO,class NO>
 void Problem<SC,LO,GO,NO>::setDomain(int i, DomainConstPtr_Type domain) const{
 
     domainPtr_vec_.at(i) = domain;
+    feFactory_->setFE(domain,i);
+	
+
 }
 
 template<class SC,class LO,class GO,class NO>

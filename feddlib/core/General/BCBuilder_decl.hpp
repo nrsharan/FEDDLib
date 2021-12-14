@@ -99,6 +99,8 @@ public:
     bool findFlag(LO flag, int block, int &loc) const;
     
     int dofsPerNodeAtBlock(int block);
+
+	void updateDomains(const DomainPtr_Type &domainNew, string FEType);
         
 //    DomainPtr_Type domainOfBlock(int block) const;
     

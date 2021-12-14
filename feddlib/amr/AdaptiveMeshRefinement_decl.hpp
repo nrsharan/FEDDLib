@@ -18,6 +18,7 @@
 #include "feddlib/core/LinearAlgebra/BlockMatrix.hpp"
 #include  <boost/function.hpp>
 #include "feddlib/problems/abstract/Problem.hpp"
+#include "feddlib/problems/abstract/NonLinearProblem.hpp"
 #include "feddlib/amr/ExporterParaViewAMR.hpp"
 #include "feddlib/amr/ErrorEstimation.hpp"
 #include "feddlib/amr/RefinementFactory.hpp"
@@ -74,6 +75,9 @@ public:
 
 	typedef Problem<SC,LO,GO,NO> Problem_Type;
     typedef Teuchos::RCP<Problem_Type> ProblemPtr_Type;
+
+    typedef NonLinearProblem<SC,LO,GO,NO> NonLinProb_Type;
+    typedef Teuchos::RCP<NonLinProb_Type> NonLinProbPtr_Type;
 
 	typedef Domain<SC,LO,GO,NO> Domain_Type;
     typedef Teuchos::RCP<Domain_Type> DomainPtr_Type;
@@ -162,6 +166,7 @@ private:
 	DomainPtr_Type domainP12_;
 
 	ProblemPtr_Type problem_;
+	NonLinProbPtr_Type nonLinProblem_;
 	
 	string refinementRestriction_ = "keepRegularity";
 	string markingStrategy_ = "Maximum";

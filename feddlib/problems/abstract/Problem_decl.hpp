@@ -41,6 +41,7 @@ public:
 
     typedef Domain<SC,LO,GO,NO> Domain_Type;
     typedef Teuchos::RCP<const Domain_Type> DomainConstPtr_Type;
+    typedef Teuchos::RCP<Domain_Type> DomainPtr_Type;
     typedef std::vector<DomainConstPtr_Type> DomainConstPtr_vec_Type;
 
     typedef Matrix<SC,LO,GO,NO> Matrix_Type;
@@ -127,7 +128,7 @@ public:
 
     void initializePreconditioner( std::string type="Monolithic" ) const;
 
-    void addBoundaries(const BCConstPtr_Type &bcFactory);
+    void addBoundaries(BCPtr_Type &bcFactory);
 
     void setBoundaries(double time=.0) const;
 
@@ -141,9 +142,15 @@ public:
     
     void initializeVectors(int nmbVectors=1);
 
+    void initializeVectors2(int nmbVectors=1);
+
     BlockMultiVectorPtr_Type getRhs();
 
     BlockMultiVectorPtr_Type getRhs() const;
+
+    void setRhs( BlockMultiVectorPtr_Type rhs);
+
+    void setSolution( BlockMultiVectorPtr_Type solution);
 
     BlockMultiVectorPtr_Type getSolution();
 
@@ -161,7 +168,7 @@ public:
 
     FEFacConstPtr_Type getFEFactory();
 
-    BCConstPtr_Type getBCFactory();
+    BCPtr_Type getBCFactory();
 
     DomainConstPtr_Type getDomain(int i) const;
 
@@ -217,7 +224,7 @@ protected:
     mutable DomainConstPtr_vec_Type domainPtr_vec_;
     string_vec_Type                 domain_FEType_vec_;
     string_vec_Type                 variableName_vec_;
-    mutable BCConstPtr_Type         bcFactory_;
+    mutable BCPtr_Type         bcFactory_;
 
     FEFacPtr_Type feFactory_;
     std::vector<int> dofsPerNode_vec_;

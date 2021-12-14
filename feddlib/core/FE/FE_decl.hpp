@@ -72,7 +72,9 @@ class FE {
     typedef Teuchos::RCP<vec3D_GO_Type> vec3D_GO_ptr_Type;
 
     typedef boost::function<void(double* x, double* res, double t, const double* parameters)> BC_func_Type;
-    
+
+    typedef boost::function<void(double* x,double* res, const double* parameters)> Reac_func_Type;
+
     DomainConstPtr_vec_Type	domainVec_;
     Teuchos::RCP<ElementSpec> es_;
 
@@ -115,6 +117,8 @@ class FE {
     
     void addFE(DomainConstPtr_Type domain);
 
+    void setFE(DomainConstPtr_Type domain, int index);
+
     void doSetZeros(double eps = 10*Teuchos::ScalarTraits<SC>::eps());
 
     void assemblyEmptyMatrix(MatrixPtr_Type &A);
@@ -126,11 +130,23 @@ class FE {
     void applyBTinv(vec3D_dbl_ptr_Type& dPhiIn,
                     vec3D_dbl_Type& dPhiOut,
                     const SmallMatrix<SC>& Binv);
+
+	void applyDiff(vec3D_dbl_Type& dPhiIn,
+                   vec3D_dbl_Type& dPhiOut,
+                   SmallMatrix<SC>& diffT);
     
     void assemblyLaplace(int Dimension,
                         std::string FEType,
                         int degree,
                         MatrixPtr_Type &A,
+                        bool callFillComplete = true,
+                         int FELocExternal = -1);
+
+    void assemblyLaplaceDiffusion(int Dimension,
+                        std::string FEType,
+                        int degree,
+                        MatrixPtr_Type &A,
+			vec2D_dbl_Type diffusionTensor,
                         bool callFillComplete = true,
                          int FELocExternal = -1);
 
@@ -190,6 +206,15 @@ class FE {
                                          double nu,
                                          double C,
                                          bool callFillComplete=true);
+
+	// Assembling the reaction term of the reaction diffusion equation. Maybe add default function.
+	void assemblyReactionTerm(int dim,
+    							std::string FEType,
+                                MatrixPtr_Type &A,
+                                MultiVectorPtr_Type u,
+                                bool callFillComplete,
+                     			std::vector<SC>& funcParameter,
+								RhsFunc_Type reactionFunc);	
 
     void assemblyAdvectionVecField(int dim,
                                    std::string FEType,

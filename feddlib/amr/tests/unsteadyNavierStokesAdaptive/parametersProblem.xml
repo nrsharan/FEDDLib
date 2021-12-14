@@ -1,7 +1,7 @@
 <ParameterList name="unsteady Navier-Stokes">
     <ParameterList name="Parameter">
         <Parameter name="Dimension" type="int" value="2"/>
-        <Parameter name="Discretization Velocity" type="string" value="P1"/><!--P1, P2; velocity -->
+        <Parameter name="Discretization Velocity" type="string" value="P2"/><!--P1, P2; velocity -->
         <Parameter name="Discretization Pressure" type="string" value="P1"/>
         <Parameter name="Mesh Type" type="string" value="unstructured"/> <!--structured, unstructured -->
         <Parameter name="BC Type" type="string"   value="partialCFD"/><!-- parabolic, parabolic_benchmark, partialCFD, parabolic_benchmark_sin-->
@@ -35,7 +35,7 @@
         <Parameter name="RefinementType" type="string" value="Maximum"/>
        	<Parameter name="Write Refinement Time" type="bool" value="true"/>
         <Parameter name="Write Mesh Quality" type="bool" value="true"/>
-        <Parameter name="Modell Problem" type="string" value="Turek"/>
+        <Parameter name="Modell Problem" type="string" value="BFS"/>
 		<Parameter name="Coarsening Cycle" type="int" value="0"/>
 		<Parameter name="Coarsening m" type="int" value="2"/>
 		<Parameter name="Coarsening n" type="int" value="3"/>
@@ -45,7 +45,7 @@
     <ParameterList name="Mesh Partitioner">
         
         <Parameter name="Contiguous" type="bool" value="true"/>        
-        <Parameter name="Mesh 1 Name" type="string" value="turek_fluid_benchmark_376.mesh"/>
+        <Parameter name="Mesh 1 Name" type="string" value="bfs.mesh"/>
         <Parameter name="Write new mesh" type="bool" value="true"/>
     </ParameterList>
     <ParameterList name="General">
@@ -55,7 +55,7 @@
         <Parameter name="ParaViewCoarse" type="bool" value="false"/>
         <Parameter name="ParaViewCoarseSum" type="bool" value="false"/>
         <Parameter name="ParaView export subdomain" type="bool" value="false"/>
-        <Parameter name="Preconditioner Method" type="string" value="Teko"/><!-- Monolithic, Teko-->
+        <Parameter name="Preconditioner Method" type="string" value="Monolithic"/><!-- Monolithic, Teko-->
     </ParameterList>
     <ParameterList name="Timestepping Parameter">
         <Parameter name="Class"                                 type="string"		value="Singlestep"/> <!--Multistep, Singlestep-->

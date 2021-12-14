@@ -149,6 +149,7 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
     ParameterListPtr_Type pListThyraSolver = sublist( problem->getParameterList(), "ThyraSolver" );
 
     Teuchos::RCP<Thyra::MultiVectorBase<SC> >thyraX = problem->getSolution()->getThyraMultiVector();
+
     Teuchos::RCP<const Thyra::MultiVectorBase<SC> > thyraB;
 
     if (rhs.is_null())
@@ -159,8 +160,10 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
     pListThyraSolver->setParameters( problem->getParameterList()->sublist("ThyraPreconditioner") );
 
     problem->getLinearSolverBuilder()->setParameterList(pListThyraSolver);
+
     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problem->getLinearSolverBuilder()->createLinearSolveStrategy("");
 
+	cout << " AUUUSGABE " << endl;
     problem->setupPreconditioner( "Monolithic" );
 
     if (!pListThyraSolver->sublist("Preconditioner Types").sublist("FROSch").get("Level Combination","Additive").compare("Multiplicative")) {
@@ -171,6 +174,7 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
         pListThyraSolver->sublist("Preconditioner Types").sublist("FROSch").set("Only apply coarse",false);
     }
 
+
     Teuchos::RCP<Teuchos::FancyOStream> out = Teuchos::VerboseObjectBase::getDefaultOStream();
 
     lowsFactory->setOStream(out);
@@ -178,6 +182,8 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
 
     Teuchos::RCP<Thyra::LinearOpWithSolveBase<SC> > solver = lowsFactory->createOp();
     //    solver = linearOpWithSolve(*lowsFactory, problem->getSystem()->getThyraLinOp());
+
+
 
     ThyraLinOpConstPtr_Type thyraMatrix = timeProblem->getSystemCombined()->getThyraLinOp();
     if ( !pListThyraSolver->get("Linear Solver Type","Belos").compare("Belos") ) {
