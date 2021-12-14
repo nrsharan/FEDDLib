@@ -178,15 +178,16 @@ int main(int argc, char *argv[]) {
             bcFactory->addBC(zeroBC, 4, 0, domain, "Dirichlet", 1);
         }
 
-		MultiVectorPtr_Type diffusionTensor = Teuchos::RCP<MultiVector_Type>(new MultiVector_Type ( domain->getElementMap(),1));
-		diffusionTensor->putScalar(1.);
-		Teuchos::ArrayRCP< SC >  linearDiff = diffusionTensor->getDataNonConst( 0 );
-		for(int j=0; j<domain->getElementsC()->numberElements(); j++){
-			for(int k = 0; k< 3 ; k++){
-				int i = domain->getElementsC()->getElement(j).getNode(k);
-				if(domain->getPointsRepeated()->at(i).at(0) == 0.5 &&  domain->getPointsRepeated()->at(i).at(1)>0 && domain->getPointsRepeated()->at(i).at(1) <1)
-					linearDiff[j] = 100000.;
+	vec2D_dbl_Type diffusionTensor(dim,vec_dbl_Type(3));
+		for(int i=0; i<dim; i++){
+			diffusionTensor[0][0] =1;
+		    diffusionTensor[1][1] =6;
+			if(i>0){
+				diffusionTensor[i][i-1] = -1./2;
+				diffusionTensor[i-1][i] = -1./2;
 			}
+			else
+				diffusionTensor[i][i+1] = -1./2;				
 		}
         DiffusionReaction<SC,LO,GO,NO> diffusionReaction(domain,FEType,parameterListAll, diffusionTensor,reactionFunc);
         {
