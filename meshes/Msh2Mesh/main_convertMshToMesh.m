@@ -25,7 +25,7 @@ fprintf('>>>> Start of script.\n')
 
 %% User defined settings
 % Filename of the Gmsh-MSH-file without the extension.
-filename = 'Rohr5';
+filename = 'Rohr2_8';
 
 %% read meshfile
 [x,~,cElements] = MSH_Gmsh__readFile([filename '.msh']);

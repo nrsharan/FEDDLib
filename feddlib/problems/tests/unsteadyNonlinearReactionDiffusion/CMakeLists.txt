@@ -22,7 +22,7 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(mesh_unsteadyNonlinearReactionDiffusion
 	SOURCE_DIR ${CMAKE_SOURCE_DIR}/meshes
 	SOURCE_FILES channel3.mesh
 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	DEST_FILES square.mesh
+	DEST_FILES channel3.mesh
 	EXEDEPS unsteadyNonlinearReactionDiffusion
 )
 

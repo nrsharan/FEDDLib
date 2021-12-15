@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
         }
         else{
             bcFactory->addBC(zeroBC, 1, 0, domain, "Dirichlet", 1);
-            bcFactory->addBC(threeBC, 2, 0, domain, "Dirichlet", 1);
+            bcFactory->addBC(threeBC, 4, 0, domain, "Dirichlet", 1);
             //bcFactory->addBC(zeroBC, 3, 0, domain, "Dirichlet", 1);
             //bcFactory->addBC(zeroBC, 4, 0, domain, "Dirichlet", 1);
         }
