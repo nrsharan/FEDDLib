@@ -49,8 +49,8 @@ void rhsImp(double* x, double* res, double* parameters){
 	double r = sqrt(pow(x[0],2)+pow(x[1],2));
 
 	if(parameters[0] <= 2.0){
-   		 res[0] = (x[0]/r)*parameters[1]*sin(M_PI *1./2*(parameters[0]));
-  	 	 res[1] = (x[1]/r)*parameters[1]*sin(M_PI *1./2*(parameters[0]));
+   		 res[0] = (x[0]/r)*parameters[1]*sin(M_PI *1./4*(parameters[0]));
+  	 	 res[1] = (x[1]/r)*parameters[1]*sin(M_PI *1./4*(parameters[0]));
 	}
 	else{ 
 	  	res[0] = (x[0]/r)*parameters[1];
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
                 bcFactory->addBC(zeroDirichlet3D, 2, 0, domain, "Dirichlet", dim);
                 bcFactory->addBC(zeroDirichlet3D, 3, 0, domain, "Dirichlet", dim);
                 bcFactory->addBC(zeroDirichlet3D, 1, 0, domain, "Neumann", dim);
-                bcFactory->addBC(zeroDirichlet3D, 5, 0, domain, "Neumann", dim);
+                //bcFactory->addBC(zeroDirichlet3D, 5, 0, domain, "Neumann", dim);
             }
 
             LinElas<SC,LO,GO,NO> LinElas(domain,discType,parameterListAll);
