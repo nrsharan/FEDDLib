@@ -43,12 +43,13 @@ void rhs(double* x, double* res, double* parameters){
     res[2] = 0.;
     return;
 }
+// parameter[0] should indicate time
 void rhsImp(double* x, double* res, double* parameters){
     
 	double r = sqrt(pow(x[0],2)+pow(x[1],2));
 
-    res[0] = (x[0]/r)*5.0;
-    res[1] = (x[1]/r)*5.0;
+    res[0] = (x[0]/r)*parameters[1];
+    res[1] = (x[1]/r)*parameters[1];
     //if (parameters[0]<=0.2)
     //res[1] = parameters[1];
     res[2] = 0.;

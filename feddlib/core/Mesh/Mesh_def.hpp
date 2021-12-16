@@ -298,7 +298,7 @@ void Mesh<SC,LO,GO,NO>::moveMesh( MultiVectorPtr_Type displacementUnique, MultiV
 {
     // Bemerkung: Repeated und Unique sind unterschiedlich lang!!! => zwei Schleifen
     TEUCHOS_TEST_FOR_EXCEPTION (displacementRepeated.is_null(), std::runtime_error," displacementRepeated in moveMesh is null.")
-    TEUCHOS_TEST_FOR_EXCEPTION (displacementUnique.is_null(), std::runtime_error," displacementRepeated in moveMesh is null.")
+    TEUCHOS_TEST_FOR_EXCEPTION (displacementUnique.is_null(), std::runtime_error," displacementUnique in moveMesh is null.")
     // Repeated
     Teuchos::ArrayRCP<const SC> values = displacementRepeated->getData(0); //only 1 MV
     for(int i = 0; i < pointsRepRef_->size(); i++)

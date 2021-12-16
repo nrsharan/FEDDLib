@@ -711,6 +711,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeLinearNewmark()
 
         timeSteppingTool_->advanceTime(true/*output info*/);
 
+	problemTime_->assemble("MoveMesh");
         if (print) {
             exportTimestep();
         }

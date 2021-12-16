@@ -17,10 +17,12 @@ public:
     
     typedef typename Problem_Type::MultiVector_Type MultiVector_Type;
     typedef typename Problem_Type::MultiVectorPtr_Type MultiVectorPtr_Type;
+    typedef typename Problem_Type::MultiVectorConstPtr_Type MultiVectorConstPtr_Type;
 
     typedef typename Problem_Type::BlockMultiVector_Type BlockMultiVector_Type;
     typedef typename Problem_Type::BlockMultiVectorPtr_Type BlockMultiVectorPtr_Type;
     
+    typedef typename Problem_Type::Domain_Type Domain_Type;
     typedef typename Problem_Type::DomainConstPtr_Type DomainConstPtr_Type;
     typedef typename Problem_Type::CommConstPtr_Type CommConstPtr_Type;
 
@@ -43,6 +45,7 @@ public:
     // TODO: Baue in Problem_def.hpp sowas wie boolHasTimeDependentSourceTerm ein, mit default auf false.
 //    void assembleSourceTerm(double time);
 
+	void moveMesh() const;
     virtual void getValuesOfInterest( vec_dbl_Type& values ){};
     
     virtual void computeValuesOfInterestAndExport() {};
