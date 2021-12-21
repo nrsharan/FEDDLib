@@ -443,10 +443,10 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
             solverBuilder->setParameterList(pListThyraSolver);
             precFactory_ = solverBuilder->createPreconditioningStrategy("");
 
-           // if ( thyraPrec_.is_null() ){
-		cout << " Thyra Pre reseeeet --------- " << endl;
+            if ( thyraPrec_.is_null() ){
+		//cout << " Thyra Pre reseeeet --------- " << endl;
                 thyraPrec_ = precFactory_->createPrec();
-	    //}
+	   }
 
             Thyra::initializePrec<SC>(*precFactory_, thyraMatrix, thyraPrec_.ptr());
             precondtionerIsBuilt_ = true;

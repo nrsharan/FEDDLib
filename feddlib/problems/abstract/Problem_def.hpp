@@ -177,7 +177,7 @@ void Problem<SC,LO,GO,NO>::assembleSourceTerm(double time) const{
     
     this->sourceTerm_->putScalar(0.);
     std::string sourceType = parameterList_->sublist("Parameter").get("Source Type","volume");
-    cout << "Source Type " << sourceType << endl;
+//    cout << "Source Type " << sourceType << endl;
     if ( sourceType == "volume")
         assembleVolumeTerm(time);
     else if( sourceType == "surface")

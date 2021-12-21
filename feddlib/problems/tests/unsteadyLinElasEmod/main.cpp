@@ -61,6 +61,34 @@ void rhsImp(double* x, double* res, double* parameters){
     return;
 }
 
+// parameter[0] should indicate time
+void rhsImpTime(double* x, double* res, double* parameters){
+    
+	double r = sqrt(pow(x[0],2)+pow(x[1],2));
+
+	// Angenommen 20 Sekunden
+	// Z=2;
+	double T_Ramp = 2.;
+	if((x[2] < 0.5 + parameters[0]/2.) && (x[2] > 0.0+parameters[0]/2.)){
+
+		if(parameters[0] <= T_Ramp){
+			res[0] = cos(M_PI*(x[2]))*(x[0]/r)*parameters[1]*sin(M_PI *1./(2*T_Ramp)*(parameters[0]));
+			res[1] = cos(M_PI*(x[2]))*(x[1]/r)*parameters[1]*sin(M_PI *1./(2*T_Ramp)*(parameters[0]));
+			}
+		else{
+			res[0] = cos(M_PI*(x[2]-(parameters[0]-T_Ramp)/2.))*(x[0]/r)*parameters[1];
+			res[1] = cos(M_PI*(x[2]-(parameters[0]-T_Ramp)/2.))*(x[1]/r)*parameters[1];
+			}
+
+	}
+	else{
+		res[0] = 0.0;
+		res[1] = 0.0;
+	}
+	res[2] = 0.0;
+    return;
+}
+
 void zeroDirichlet(double* x, double* res, double t, const double* parameters)
 {
     res[0] = 0.;
@@ -245,11 +273,80 @@ int main(int argc, char *argv[])
             }
             else if(dim == 3)
             {
+                bcFactory->addBC(zeroDirichlet3D, 1, 0, domain, "Dirichlet", dim);
                 bcFactory->addBC(zeroDirichlet3D, 2, 0, domain, "Dirichlet", dim);
-                bcFactory->addBC(zeroDirichlet3D, 3, 0, domain, "Dirichlet", dim);
-                bcFactory->addBC(zeroDirichlet3D, 1, 0, domain, "Neumann", dim);
+                bcFactory->addBC(zeroDirichlet3D, 3, 0, domain, "Neumann", dim);
                 //bcFactory->addBC(zeroDirichlet3D, 5, 0, domain, "Neumann", dim);
             }
+
+			// Checking BCs
+			Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+
+
+			Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(domain->getMapVecFieldUnique()));
+			exportSolution->putScalar(0.0);
+			
+		    Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst = exportSolution;
+			exPara->setup("Flags", domain->getMesh(), discType);
+		    
+		    exPara->addVariable(exportSolutionConst, "BC Cond", "Vector", dim, domain->getMapUnique());
+
+			vec_int_ptr_Type flags = domain->getBCFlagUnique();
+			vec2D_dbl_ptr_Type nodes = domain->getPointsUnique();
+
+			Teuchos::ArrayRCP< SC > entries  = exportSolution->getDataNonConst(0);
+
+			double T_Ramp = 2.;
+            double dt = parameterListAll->sublist("Timestepping Parameter").get("dt",1.0);
+		    double tMax = parameterListAll->sublist("Timestepping Parameter").get("Final time",1.0);
+        	double forceS = parameterListProblem->sublist("Parameter").get("Volume force",10.);
+			double r=0.;
+			vec_dbl_Type res(3);
+			for(double t=0.; t < tMax ; t= t+dt){
+
+				for(int i=0; i< nodes->size(); i++){
+	
+					if(flags->at(i) == 4){
+						vec_dbl_Type x = nodes->at(i);
+						r = sqrt(pow(x[0],2)+pow(x[1],2));
+
+						if(t<=T_Ramp){
+							if((x[2] < 0.5 ) && (x[2] > 0.0 )){
+								res[0] = sin(2*M_PI*(x[2]))*(x[0]/r)*forceS*sin(M_PI *1./(2*T_Ramp)*(t));
+								res[1] = sin(2*M_PI*(x[2]))*(x[1]/r)*forceS*sin(M_PI *1./(2*T_Ramp)*(t));
+							}
+							else{
+								res[0] = 0.0;
+								res[1] = 0.0;
+							}
+						}
+						else{
+
+							if((x[2] < 0.5 + (t-T_Ramp)/2.) && (x[2] > 0.0+(t-T_Ramp)/2.)){
+								res[0] = sin(2*M_PI*(x[2]-(t-T_Ramp)/2.))*(x[0]/r)*forceS;
+								res[1] = sin(2*M_PI*(x[2]-(t-T_Ramp)/2.))*(x[1]/r)*forceS;
+							}	
+							else{
+								res[0] = 0.0;
+								res[1] = 0.0;
+								
+							}
+							
+						}
+						res[2] = 0.0;
+
+					
+						for(int d=0; d<dim ; d++)
+							entries[i*dim+d] = res[d];
+					}
+				}
+		    	exPara->save(t);
+
+			}
+		    
+
+
+
 
             LinElas<SC,LO,GO,NO> LinElas(domain,discType,parameterListAll);
 
@@ -259,7 +356,7 @@ int main(int argc, char *argv[])
                 if (dim == 2)
                     LinElas.addRhsFunction( rhs2D );
                 else if (dim==3)
-                    LinElas.addRhsFunction( rhsImp );
+                    LinElas.addRhsFunction( rhsImpTime );
             }
             else
                 TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "Unknown boundary function.");

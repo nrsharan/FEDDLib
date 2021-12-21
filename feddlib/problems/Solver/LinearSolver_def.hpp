@@ -163,7 +163,6 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
 
     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problem->getLinearSolverBuilder()->createLinearSolveStrategy("");
 
-	cout << " AUUUSGABE " << endl;
     problem->setupPreconditioner( "Monolithic" );
 
     if (!pListThyraSolver->sublist("Preconditioner Types").sublist("FROSch").get("Level Combination","Additive").compare("Multiplicative")) {
