@@ -34,6 +34,18 @@ void rhsFunc3D(double* x, double* result, double* parameters)
     return;
 }
 
+// Funktion fuer die rechte Seite der DGL in 3D
+void EModFunc(double* x, double* result, double* parameters)
+{
+    // Wir setzen die rechte Seite g_vec als g_vec = (0, g, 0), mit g = -2.
+	double mu = parameters[2];
+	double poissonRatio = parameters[3];
+	if( fabs(x[2]) >= 1.0)
+		result[0] = 1/10.*mu*2.*(1 + poissonRatio);
+	else
+		result[0] = mu*2.*(1 + poissonRatio);
+    return;
+}
 
 template<class SC,class LO,class GO,class NO>
 LinElas<SC,LO,GO,NO>::LinElas(const DomainConstPtr_Type &domain, std::string FEType, ParameterListPtr_Type parameterList):
@@ -61,48 +73,132 @@ void LinElas<SC,LO,GO,NO>::info(){
 }
 
 template<class SC,class LO,class GO,class NO>
-void LinElas<SC,LO,GO,NO>::assemble( std::string type ) const
+void LinElas<SC,LO,GO,NO>::assemble( std::string type) const
 {
 
 	if(type == "MoveMesh")
 		this->moveMesh();
+	if(this->verbose_)
+	    std::cout << "-- Assembly linear elasticity ... " << std::flush;
+
+	// Hole die Dichte \rho (density) und die Paramter \nu (Poisson-ratio) und \mu (zweite Lamé-Konstante)
+	double density = this->parameterList_->sublist("Parameter").get("Density",1000.);
+	
+	double poissonRatio = this->parameterList_->sublist("Parameter").get("Poisson Ratio",0.4);
+	double mu = this->parameterList_->sublist("Parameter").get("Mu",2.0e+6);
+
+	// Berechne daraus nun E (Youngsches Modul) und die erste Lamé-Konstanten \lambda
+	double youngModulus = mu*2.*(1 + poissonRatio);
+	cout << " YoungModulus " << youngModulus << endl;
+	double lambda = (poissonRatio*youngModulus)/((1 + poissonRatio)*(1 - 2*poissonRatio));
+
+	// Initialisiere die Steifigkeitsmatrix. Das letzte Argument gibt die (ungefaehre) Anzahl an Eintraege pro Zeile an
+	MatrixPtr_Type K = Teuchos::rcp(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
+	// MatrixPtr_Type K = Teuchos::rcp(new Matrix_Type( this->domainPtr_vec_.at(0)->getMapVecFieldUnique(), 10 ) );
+
+	if(eModBool){
+		 vec_dbl_Type funcParameter(4,0.);
+			
+		funcParameter[0] = 0.; // degree of function
+		funcParameter[1] = 0.;
+		funcParameter[2] = mu;
+		funcParameter[3] = poissonRatio;
+		// Assembliere die Steifigkeitsmatrix. Die 2 gibt degree an, d.h. die Ordnung der Quadraturformel, die benutzt werden soll.
+		this->feFactory_->assemblyLinElasXDimEMod( this->dim_, this->getDomain(0)->getFEType(), K, poissonRatio, mu, EModFunc, funcParameter );
+
+	}
 	else{
-		if(this->verbose_)
-		    std::cout << "-- Assembly linear elasticity ... " << std::flush;
-
-		// Hole die Dichte \rho (density) und die Paramter \nu (Poisson-ratio) und \mu (zweite Lamé-Konstante)
-		double density = this->parameterList_->sublist("Parameter").get("Density",1000.);
-		
-		double poissonRatio = this->parameterList_->sublist("Parameter").get("Poisson Ratio",0.4);
-		double mu = this->parameterList_->sublist("Parameter").get("Mu",2.0e+6);
-
-		// Berechne daraus nun E (Youngsches Modul) und die erste Lamé-Konstanten \lambda
-		double youngModulus = mu*2.*(1 + poissonRatio);
-		double lambda = (poissonRatio*youngModulus)/((1 + poissonRatio)*(1 - 2*poissonRatio));
-
-		// Initialisiere die Steifigkeitsmatrix. Das letzte Argument gibt die (ungefaehre) Anzahl an Eintraege pro Zeile an
-		MatrixPtr_Type K = Teuchos::rcp(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
-		// MatrixPtr_Type K = Teuchos::rcp(new Matrix_Type( this->domainPtr_vec_.at(0)->getMapVecFieldUnique(), 10 ) );
-
 		// Assembliere die Steifigkeitsmatrix. Die 2 gibt degree an, d.h. die Ordnung der Quadraturformel, die benutzt werden soll.
 		this->feFactory_->assemblyLinElasXDim( this->dim_, this->getDomain(0)->getFEType(), K, lambda, mu );
+	}	
+	// Setup fuer die linke Seite des zu loesdenen GLS. Beachte, dass system_ via system_() im Standardkonstruktor (von der Klasse Problem)
+	// initialisiert worden ist, hier wird dieser also erst richtig initialisiert.
+	// Ein Objekt der Klasse Bmat ist eine Blockmatrix; also ist system_ eine Blockmatrix (Objekt von BMat)
+	
+	// Fuege die Steifikeitsmatrix als Blockeintrag an der Stelle (1,1) (in C dann (0,0)) in die Blockmatrix hinein.
+	this->system_->addBlock( K, 0, 0 );
+	
+	this->assembleSourceTerm( 0. );
+	this->sourceTerm_->scale(density);
+	this->addToRhs( this->sourceTerm_ );
 
-		// Setup fuer die linke Seite des zu loesdenen GLS. Beachte, dass system_ via system_() im Standardkonstruktor (von der Klasse Problem)
-		// initialisiert worden ist, hier wird dieser also erst richtig initialisiert.
-		// Ein Objekt der Klasse Bmat ist eine Blockmatrix; also ist system_ eine Blockmatrix (Objekt von BMat)
-		
-		// Fuege die Steifikeitsmatrix als Blockeintrag an der Stelle (1,1) (in C dann (0,0)) in die Blockmatrix hinein.
-		this->system_->addBlock( K, 0, 0 );
-		
-		this->assembleSourceTerm( 0. );
-		this->sourceTerm_->scale(density);
-		this->addToRhs( this->sourceTerm_ );
-		
-		if (this->verbose_)
-		    std::cout << "done -- " << std::endl;	
-	}
+	// Setup fuer die linke Seite des zu loesdenen GLS. Beachte, dass system_ via system_() im Standardkonstruktor (von der Klasse Problem)
+	// initialisiert worden ist, hier wird dieser also erst richtig initialisiert.
+	// Ein Objekt der Klasse Bmat ist eine Blockmatrix; also ist system_ eine Blockmatrix (Objekt von BMat)
+	
+	// Fuege die Steifikeitsmatrix als Blockeintrag an der Stelle (1,1) (in C dann (0,0)) in die Blockmatrix hinein.
+	this->system_->addBlock( K, 0, 0 );
+	
+	this->assembleSourceTerm( 0. );
+	this->sourceTerm_->scale(density);
+	this->addToRhs( this->sourceTerm_ );
+	
+	if (this->verbose_)
+	    std::cout << "done -- " << std::endl;
 }
 
+template<class SC,class LO,class GO,class NO>
+void LinElas<SC,LO,GO,NO>::reAssemble( double time ) const
+{
+
+	if(this->verbose_)
+	    std::cout << "-- ReAssembly linear elasticity ... " << std::flush;
+
+	// Hole die Dichte \rho (density) und die Paramter \nu (Poisson-ratio) und \mu (zweite Lamé-Konstante)
+	double density = this->parameterList_->sublist("Parameter").get("Density",1000.);
+	
+	double poissonRatio = this->parameterList_->sublist("Parameter").get("Poisson Ratio",0.4);
+	double mu = this->parameterList_->sublist("Parameter").get("Mu",2.0e+6);
+
+	// Berechne daraus nun E (Youngsches Modul) und die erste Lamé-Konstanten \lambda
+	double youngModulus = mu*2.*(1 + poissonRatio);
+	double lambda = (poissonRatio*youngModulus)/((1 + poissonRatio)*(1 - 2*poissonRatio));
+
+	// Initialisiere die Steifigkeitsmatrix. Das letzte Argument gibt die (ungefaehre) Anzahl an Eintraege pro Zeile an
+	MatrixPtr_Type K = Teuchos::rcp(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
+	// MatrixPtr_Type K = Teuchos::rcp(new Matrix_Type( this->domainPtr_vec_.at(0)->getMapVecFieldUnique(), 10 ) );
+
+	if(eModBool){
+		 vec_dbl_Type funcParameter(4,0.);
+			
+		funcParameter[0] = 0.; // degree of function
+		funcParameter[1] = time;
+		funcParameter[2] = mu;
+		funcParameter[3] = poissonRatio;
+		// Assembliere die Steifigkeitsmatrix. Die 2 gibt degree an, d.h. die Ordnung der Quadraturformel, die benutzt werden soll.
+		this->feFactory_->assemblyLinElasXDimEMod( this->dim_, this->getDomain(0)->getFEType(), K, poissonRatio, mu, EModFunc, funcParameter );
+
+	}
+	else{
+		// Assembliere die Steifigkeitsmatrix. Die 2 gibt degree an, d.h. die Ordnung der Quadraturformel, die benutzt werden soll.
+		this->feFactory_->assemblyLinElasXDim( this->dim_, this->getDomain(0)->getFEType(), K, lambda, mu );
+	}	
+	// Setup fuer die linke Seite des zu loesdenen GLS. Beachte, dass system_ via system_() im Standardkonstruktor (von der Klasse Problem)
+	// initialisiert worden ist, hier wird dieser also erst richtig initialisiert.
+	// Ein Objekt der Klasse Bmat ist eine Blockmatrix; also ist system_ eine Blockmatrix (Objekt von BMat)
+	
+	// Fuege die Steifikeitsmatrix als Blockeintrag an der Stelle (1,1) (in C dann (0,0)) in die Blockmatrix hinein.
+	this->system_->addBlock( K, 0, 0 );
+	
+	this->assembleSourceTerm( 0. );
+	this->sourceTerm_->scale(density);
+	this->addToRhs( this->sourceTerm_ );
+
+	// Setup fuer die linke Seite des zu loesdenen GLS. Beachte, dass system_ via system_() im Standardkonstruktor (von der Klasse Problem)
+	// initialisiert worden ist, hier wird dieser also erst richtig initialisiert.
+	// Ein Objekt der Klasse Bmat ist eine Blockmatrix; also ist system_ eine Blockmatrix (Objekt von BMat)
+	
+	// Fuege die Steifikeitsmatrix als Blockeintrag an der Stelle (1,1) (in C dann (0,0)) in die Blockmatrix hinein.
+	this->system_->addBlock( K, 0, 0 );
+	
+	this->assembleSourceTerm( 0. );
+	this->sourceTerm_->scale(density);
+	this->addToRhs( this->sourceTerm_ );
+	
+	if (this->verbose_)
+	    std::cout << "done -- " << std::endl;	
+
+}
 template<class SC,class LO,class GO,class NO>
 void LinElas<SC,LO,GO,NO>::moveMesh() const
 {

@@ -356,10 +356,13 @@ void TimeProblem<SC,LO,GO,NO>::reAssembleAndFill( BlockMatrixPtr_Type bMat, std:
 }
 
 template<class SC,class LO,class GO,class NO>
-void TimeProblem<SC,LO,GO,NO>::reAssembleLin( ){
+void TimeProblem<SC,LO,GO,NO>::reAssembleLin( double time){
 
     ProblemPtr_Type prob = Teuchos::rcp_dynamic_cast<Problem_Type>(problem_,true);
-    prob->assemble(" ");
+	if(time = 0.)
+   		 prob->assemble(" ");
+	else
+   		 prob->reAssemble(time);
 }
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::reAssembleNonLin( ){

@@ -96,7 +96,7 @@ public:
     
     virtual void reAssembleAndFill( BlockMatrixPtr_Type bMat, std::string type="FixedPoint" );
 
-    void reAssembleLin( );
+    void reAssembleLin(double time = 0. );
 
 	void reAssembleNonLin( );
 

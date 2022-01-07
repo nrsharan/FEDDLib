@@ -112,7 +112,7 @@ public:
     
 //    virtual void assembleExternal( std::string type ) = 0;
 
-    //void reAssemble();
+    void reAssemble( double time = 0.);
     
     void assembleSourceTerm( double time = 0. ) const;
     

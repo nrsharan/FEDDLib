@@ -337,7 +337,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeLinear(){
 
 			solutionRK_stages[index] = tmpSol;
 
-// UPDATE BOUNDARY BLA
+			// UPDATE BOUNDARY BLA
 			problemTime_->updateBCFactory(domainRefined,"P1");
 			problemTime_->getUnderlyingProblem()->initializeProblem();
 			problemTime_->reAssembleLin();
@@ -704,6 +704,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeLinearNewmark()
             // Die Skalierung mit der Dichte erfolgt schon in der Assemblierungsfunktion!
             addSourceTermToRHS(coeffSourceTerm);
         }
+        //if ( problemTime_->hasEModFunc() ){
+
+		//}
 
         // Uebergabeparameter fuer BC noch hinzu nehmen!
         problemTime_->setBoundaries(time);
@@ -711,7 +714,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeLinearNewmark()
 
         timeSteppingTool_->advanceTime(true/*output info*/);
 
-	problemTime_->assemble("MoveMesh");
+	//problemTime_->assemble("MoveMesh");
         if (print) {
             exportTimestep();
         }

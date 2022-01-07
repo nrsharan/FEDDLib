@@ -163,12 +163,15 @@ void Problem<SC,LO,GO,NO>::addVariable(const DomainConstPtr_Type &domain, std::s
 
 }
 
-//template<class SC,class LO,class GO,class NO>
-//void Problem<SC,LO,GO,NO>::reAssemble(){
-//    if (verbose_) {
-//        cout << "Nothing to reassemble for linear problem." << endl;
-//    }
-//}
+template<class SC,class LO,class GO,class NO>
+void Problem<SC,LO,GO,NO>::reAssemble(double time){
+    if (verbose_ && time == 0.) {
+        cout << "Nothing to reassemble for linear problem." << endl;
+    }
+	else{
+		this->reAssemble(time);
+	}
+}
 
 template<class SC,class LO,class GO,class NO>
 void Problem<SC,LO,GO,NO>::assembleSourceTerm(double time) const{

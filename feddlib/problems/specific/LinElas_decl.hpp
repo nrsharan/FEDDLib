@@ -38,6 +38,7 @@ public:
     // Assemblierung der Matrix, hier: \sigma = 2\mu \epsilon + \lambda \div(u) I, mit \epsilon = 0.5 ( \grad u + (\grad u)^T )
     virtual void assemble( std::string type = "" ) const;
 
+	virtual void reAssemble( double time ) const;
     // Assemblierung der rechten Seite der DGL (RHS), welche in AdvanceinTime() genutzt wird;
     // also fuer zeitabhaengige Probleme ist
     // Beachte: In AdvanceTime() wird in jedem Zeitschritt der SourceTerm neu berechnet, auch
@@ -54,8 +55,10 @@ public:
     // Falls es doch irgendwann benutzt wird, denke daran den Konstruktor zu aendern (vgl. Stokes.hpp)
     // Teuchos::RCP<Matrix_Type> 	K_;
 //    virtual void assembleExternal( std::string type ){};
-private:
 
+	//virtual bool hasEModFunc(){return eModBool;};
+private:
+	bool eModBool = true;
 };
 }
 

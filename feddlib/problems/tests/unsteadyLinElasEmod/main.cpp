@@ -65,27 +65,33 @@ void rhsImp(double* x, double* res, double* parameters){
 void rhsImpTime(double* x, double* res, double* parameters){
     
 	double r = sqrt(pow(x[0],2)+pow(x[1],2));
-
-	// Angenommen 20 Sekunden
-	// Z=2;
 	double T_Ramp = 2.;
-	if((x[2] < 0.5 + parameters[0]/2.) && (x[2] > 0.0+parameters[0]/2.)){
-
-		if(parameters[0] <= T_Ramp){
-			res[0] = cos(M_PI*(x[2]))*(x[0]/r)*parameters[1]*sin(M_PI *1./(2*T_Ramp)*(parameters[0]));
-			res[1] = cos(M_PI*(x[2]))*(x[1]/r)*parameters[1]*sin(M_PI *1./(2*T_Ramp)*(parameters[0]));
-			}
+	double a =4.;
+	if(parameters[0]<=T_Ramp){
+		if((x[2] < 0.5 ) && (x[2] > 0.0 )){
+			res[0] = sin(2*M_PI*(x[2]))*(x[0]/r)*parameters[1]*sin(M_PI *1./(2*T_Ramp)*(parameters[0]));
+			res[1] = sin(2*M_PI*(x[2]))*(x[1]/r)*parameters[1]*sin(M_PI *1./(2*T_Ramp)*(parameters[0]));
+		}
 		else{
-			res[0] = cos(M_PI*(x[2]-(parameters[0]-T_Ramp)/2.))*(x[0]/r)*parameters[1];
-			res[1] = cos(M_PI*(x[2]-(parameters[0]-T_Ramp)/2.))*(x[1]/r)*parameters[1];
-			}
-
+			res[0] = 0.0;
+			res[1] = 0.0;
+		}
 	}
 	else{
-		res[0] = 0.0;
-		res[1] = 0.0;
+
+		if((x[2] < 0.5 + a*(parameters[0]-T_Ramp)/2.) && (x[2] > 0.0+a*(parameters[0]-T_Ramp)/2.)){
+			res[0] = sin(a*M_PI*(x[2]-2*(parameters[0]-T_Ramp)/2.))*(x[0]/r)*parameters[1];
+			res[1] = sin(a*M_PI*(x[2]-2*(parameters[0]-T_Ramp)/2.))*(x[1]/r)*parameters[1];
+		}	
+		else{
+			res[0] = 0.0;
+			res[1] = 0.0;
+			
+		}
+		
 	}
 	res[2] = 0.0;
+
     return;
 }
 
@@ -302,6 +308,7 @@ int main(int argc, char *argv[])
         	double forceS = parameterListProblem->sublist("Parameter").get("Volume force",10.);
 			double r=0.;
 			vec_dbl_Type res(3);
+			double a = 2.;
 			for(double t=0.; t < tMax ; t= t+dt){
 
 				for(int i=0; i< nodes->size(); i++){
@@ -322,9 +329,9 @@ int main(int argc, char *argv[])
 						}
 						else{
 
-							if((x[2] < 0.5 + (t-T_Ramp)/2.) && (x[2] > 0.0+(t-T_Ramp)/2.)){
-								res[0] = sin(2*M_PI*(x[2]-(t-T_Ramp)/2.))*(x[0]/r)*forceS;
-								res[1] = sin(2*M_PI*(x[2]-(t-T_Ramp)/2.))*(x[1]/r)*forceS;
+							if((x[2] < 0.5 + a*(t-T_Ramp)/2.) && (x[2] > 0.0+a*(t-T_Ramp)/2.)){
+								res[0] = sin(2*M_PI*(x[2]-a*(t-T_Ramp)/2.))*(x[0]/r)*forceS;
+								res[1] = sin(2*M_PI*(x[2]-a*(t-T_Ramp)/2.))*(x[1]/r)*forceS;
 							}	
 							else{
 								res[0] = 0.0;

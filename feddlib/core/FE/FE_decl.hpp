@@ -281,6 +281,17 @@ class FE {
                             double mu,
                             bool callFillComplete = true);
 
+ /*! 2*\mu*(\eps(u):\eps(v)) + \lambda*tr(\eps(u))*tr(\eps(v)), wobei
+     tr(\eps(u)) = div(u) */
+    void assemblyLinElasXDimEMod(int dim,
+                            std::string FEType,
+                            MatrixPtr_Type &A,
+                            double poissonRatio,
+                            double mu,
+							RhsFunc_Type EFunc,
+							std::vector<SC>& funcParameter,
+                            bool callFillComplete = true);
+
     /*! Dieser Term entsteht durch schwache Formulierung der ALE-Zeitableitung
      und bleibt in nicht-conservativer Form vorhanden.
      In conservativer Form "verschwindet" der Term in die conservative Form der Konvektion.

@@ -3011,15 +3011,11 @@ void FE<SC,LO,GO,NO>::assemblyLinElasXDim(int dim,
 
         for (int T = 0; T < elements->numberElements(); T++)
         {
-            // Hole die Eckknoten des Dreiecks
-            p1 = pointsRep->at(elements->getElement(T).getNode(0));
-            p2 = pointsRep->at(elements->getElement(T).getNode(1));
-            p3 = pointsRep->at(elements->getElement(T).getNode(2));
-
             // Berechne die Transormationsmatrix B fuer das jeweilige Element (2D)
             buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B);
             detB = B.computeInverse(Binv);
             absDetB = std::fabs(detB);
+
 
             // dPhiTrans sind die transformierten Basifunktionen, also B^(-T) * \grad_phi bzw. \grad_phi^T * B^(-1).
             // Also \hat{grad_phi}.
@@ -3258,6 +3254,331 @@ void FE<SC,LO,GO,NO>::assemblyLinElasXDim(int dim,
         }
     }
 }
+
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::assemblyLinElasXDimEMod(int dim,
+                            std::string FEType,
+                            MatrixPtr_Type &A,
+                            double poissonRatio,
+                            double mu,
+							RhsFunc_Type EFunc,
+							std::vector<SC>& funcParameter,
+                            bool callFillComplete)
+
+{
+    TEUCHOS_TEST_FOR_EXCEPTION(FEType == "P0",std::logic_error, "Not implemented for P0");
+    int FEloc = this->checkFE(dim,FEType);
+
+    // Hole Elemente und Knotenliste
+    ElementsPtr_Type elements = domainVec_.at(FEloc)->getElementsC();
+    vec2D_dbl_ptr_Type pointsRep = domainVec_.at(FEloc)->getPointsRepeated();
+    MapConstPtr_Type map = domainVec_.at(FEloc)->getMapRepeated();
+
+    vec3D_dbl_ptr_Type 			dPhi;
+    vec_dbl_ptr_Type			weightsDPhi = Teuchos::rcp(new vec_dbl_Type(0));
+    vec2D_dbl_ptr_Type			quadPts;
+
+    UN deg = determineDegree( dim, FEType, FEType, Grad, Grad);
+
+    // Hole die grad_phi, hier DPhi
+    this->getDPhi(dPhi, weightsDPhi, dim, FEType, deg);
+    getQuadratureValues(dim, deg, quadPts, weightsDPhi,FEType);
+
+    // Definiere die Basisfunktion \phi_i bzw. \phi_j
+    // vec_dbl_Type basisValues_i(dim,0.), basisValues_j(dim,0.);
+
+    // SC = double, GO = long, UN = int
+    SC detB;
+    SC absDetB;
+    SmallMatrix<SC> B(dim);
+    SmallMatrix<SC> Binv(dim);
+    GO glob_i, glob_j;
+
+    // Fuer Zwischenergebniss
+    SC res;
+
+    // Fuer die Berechnung der Spur
+    double res_trace_i, res_trace_j;    
+    
+
+    double lambda;// We calculate lambda here, as EModulus is x dependend now
+
+    std::vector<double> youngModulus(1); // 	double youngModulus = mu*2.*(1 + poissonRatio);
+
+    SC* paras = &(funcParameter[0]);
+    
+    if (dim == 2)
+    {
+
+        double v11, v12, v21, v22;
+
+        // Matrizen der Groesse (2x2) in denen die einzelnen Epsilon-Tensoren berechnet werden.
+        // Siehe unten fuer mehr.
+        SmallMatrix<double> epsilonValuesMat1_i(dim), epsilonValuesMat2_i(dim),
+        epsilonValuesMat1_j(dim), epsilonValuesMat2_j(dim);
+
+        for (int T = 0; T < elements->numberElements(); T++)
+        {
+            // Berechne die Transormationsmatrix B fuer das jeweilige Element (2D)
+            buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B);
+            detB = B.computeInverse(Binv);
+            absDetB = std::fabs(detB);
+
+			// Transform Quadpoints to Element T
+			vec2D_dbl_Type quadPointsTrans(weightsDPhi->size(),vec_dbl_Type(dim));
+			for(int i=0; i< weightsDPhi->size(); i++){
+				 for(int j=0; j< dim ; j++){
+					for(int k=0; k< dim; k++){
+			 			quadPointsTrans[i][j] += B[j][k]* quadPts->at(i).at(k) ; 
+					}
+					quadPointsTrans[i][j] += pointsRep->at(elements->getElement(T).getNode(0)).at(j); 
+				 }
+			}
+
+            // dPhiTrans sind die transformierten Basifunktionen, also B^(-T) * \grad_phi bzw. \grad_phi^T * B^(-1).
+            // Also \hat{grad_phi}.
+            vec3D_dbl_Type dPhiTrans( dPhi->size(), vec2D_dbl_Type( dPhi->at(0).size(), vec_dbl_Type(dim,0.) ) );
+            applyBTinv( dPhi, dPhiTrans, Binv ); //dPhiTrans berechnen
+
+            for (int i = 0; i < dPhi->at(0).size(); i++)
+            {
+                Teuchos::Array<SC> value11( 1, 0. );
+                Teuchos::Array<SC> value12( 1, 0. );
+                Teuchos::Array<SC> value21( 1, 0. );
+                Teuchos::Array<SC> value22( 1, 0. );
+                Teuchos::Array<GO> indices( 1, 0 );
+
+                for (int j = 0; j < dPhi->at(0).size(); j++)
+                {
+                    v11 = 0.0; v12 = 0.0; v21 = 0.0; v22 = 0.0;
+                    for (int k = 0; k < dPhi->size(); k++)
+                    {
+
+						// Determine EModule for lambda
+						EFunc(&quadPointsTrans[k][0], &youngModulus[0] ,paras);
+						lambda = (poissonRatio*youngModulus[0])/((1 + poissonRatio)*(1 - 2*poissonRatio)); 
+
+                        // In epsilonValuesMat1_i (2x2 Matrix) steht fuer die Ansatzfunktion i bzw. \phi_i
+                        // der epsilonTensor fuer eine skalare Ansatzfunktion fuer die Richtung 1 (vgl. Mat1).
+                        // Also in Mat1_i wird dann also phi_i = (phi_scalar_i, 0) gesetzt und davon \eps berechnet.
+
+                        // Stelle \hat{grad_phi_i} = basisValues_i auf, also B^(-T)*grad_phi_i
+                        // GradPhiOnRef( dPhi->at(k).at(i), b_T_inv, basisValues_i );
+
+                        // \eps(v) = \eps(phi_i)
+                        epsilonTensor( dPhiTrans.at(k).at(i), epsilonValuesMat1_i, 0); // x-Richtung
+                        epsilonTensor( dPhiTrans.at(k).at(i), epsilonValuesMat2_i, 1); // y-Richtung
+
+                        // Siehe oben, nur fuer j
+                        // GradPhiOnRef( DPhi->at(k).at(j), b_T_inv, basisValues_j );
+
+                        // \eps(u) = \eps(phi_j)
+                        epsilonTensor( dPhiTrans.at(k).at(j), epsilonValuesMat1_j, 0); // x-Richtung
+                        epsilonTensor( dPhiTrans.at(k).at(j), epsilonValuesMat2_j, 1); // y-Richtung
+
+                        // Nun berechnen wir \eps(u):\eps(v) = \eps(phi_j):\eps(phi_i).
+                        // Das Ergebniss steht in res.
+                        // Berechne zudem noch die Spur der Epsilon-Tensoren tr(\eps(u)) (j) und tr(\eps(v)) (i)
+                        epsilonValuesMat1_i.innerProduct(epsilonValuesMat1_j, res); // x-x
+                        epsilonValuesMat1_i.trace(res_trace_i);
+                        epsilonValuesMat1_j.trace(res_trace_j);
+                        v11 = v11 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                        epsilonValuesMat1_i.innerProduct(epsilonValuesMat2_j, res); // x-y
+                        epsilonValuesMat1_i.trace(res_trace_i);
+                        epsilonValuesMat2_j.trace(res_trace_j);
+                        v12 = v12 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                        epsilonValuesMat2_i.innerProduct(epsilonValuesMat1_j, res); // y-x
+                        epsilonValuesMat2_i.trace(res_trace_i);
+                        epsilonValuesMat1_j.trace(res_trace_j);
+                        v21 = v21 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                        epsilonValuesMat2_i.innerProduct(epsilonValuesMat2_j, res); // y-y
+                        epsilonValuesMat2_i.trace(res_trace_i);
+                        epsilonValuesMat2_j.trace(res_trace_j);
+                        v22 = v22 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+
+                    }
+                    // Noch mit der abs(det(B)) skalieren
+                    v11 = absDetB * v11;
+                    v12 = absDetB * v12;
+                    v21 = absDetB * v21;
+                    v22 = absDetB * v22;
+
+                    value11[0] = v11;
+                    value12[0] = v12;
+                    value21[0] = v21;
+                    value22[0] = v22;
+
+                    // Hole die globale Zeile und Spalte in der die Eintraege hingeschrieben werden sollen
+                    glob_j = dim * map->getGlobalElement(elements->getElement(T).getNode(j));
+                    glob_i = dim * map->getGlobalElement(elements->getElement(T).getNode(i));
+                    indices[0] = glob_j;
+                    A->insertGlobalValues(glob_i, indices(), value11()); // x-x
+                    A->insertGlobalValues(glob_i+1, indices(), value21()); // y-x
+                    glob_j++;
+                    indices[0] = glob_j;
+                    A->insertGlobalValues(glob_i, indices(), value12()); // x-y
+                    A->insertGlobalValues(glob_i+1, indices(), value22()); // y-y
+                }
+            }
+        }
+        if (callFillComplete)
+        {
+            A->fillComplete();
+        }
+    }
+    else if(dim == 3)
+    {
+
+        double v11, v12, v13, v21, v22, v23, v31, v32, v33;
+
+        vec_dbl_Type p1(3,0.0), p2(3,0.0), p3(3,0.0), p4(3,0.0);
+        SmallMatrix<double> epsilonValuesMat1_i(dim), epsilonValuesMat2_i(dim), epsilonValuesMat3_i(dim),
+        epsilonValuesMat1_j(dim), epsilonValuesMat2_j(dim), epsilonValuesMat3_j(dim);
+
+        for (int T = 0; T < elements->numberElements(); T++)
+        {
+            p1 = pointsRep->at(elements->getElement(T).getNode(0));
+            p2 = pointsRep->at(elements->getElement(T).getNode(1));
+            p3 = pointsRep->at(elements->getElement(T).getNode(2));
+            p4 = pointsRep->at(elements->getElement(T).getNode(3));
+
+            buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B);
+            detB = B.computeInverse(Binv);
+            absDetB = std::fabs(detB);
+
+            // dPhiTrans sind die transformierten Basifunktionen, also \grad_phi * B^(-T)
+            vec3D_dbl_Type dPhiTrans( dPhi->size(), vec2D_dbl_Type( dPhi->at(0).size(), vec_dbl_Type(dim,0.) ) );
+            applyBTinv( dPhi, dPhiTrans, Binv ); //dPhiTrans berechnen
+
+            for (int i = 0; i < dPhi->at(0).size(); i++)
+            {
+                Teuchos::Array<SC> value11( 1, 0. );
+                Teuchos::Array<SC> value12( 1, 0. );
+                Teuchos::Array<SC> value13( 1, 0. );
+                Teuchos::Array<SC> value21( 1, 0. );
+                Teuchos::Array<SC> value22( 1, 0. );
+                Teuchos::Array<SC> value23( 1, 0. );
+                Teuchos::Array<SC> value31( 1, 0. );
+                Teuchos::Array<SC> value32( 1, 0. );
+                Teuchos::Array<SC> value33( 1, 0. );
+                Teuchos::Array<GO> indices( 1, 0 );
+
+                for (int j = 0; j < dPhi->at(0).size(); j++)
+                {
+                    v11 = 0.0; v12 = 0.0; v13 = 0.0; v21 = 0.0; v22 = 0.0; v23 = 0.0; v31 = 0.0; v32 = 0.0; v33 = 0.0;
+                    for (int k = 0; k < dPhi->size(); k++)
+                    {
+
+                        // GradPhiOnRef( DPhi->at(k).at(i), b_T_inv, basisValues_i );
+
+                        epsilonTensor( dPhiTrans.at(k).at(i), epsilonValuesMat1_i, 0); // x-Richtung
+                        epsilonTensor( dPhiTrans.at(k).at(i), epsilonValuesMat2_i, 1); // y-Richtung
+                        epsilonTensor( dPhiTrans.at(k).at(i), epsilonValuesMat3_i, 2); // z-Richtung
+
+
+                        // GradPhiOnRef( DPhi->at(k).at(j), b_T_inv, basisValues_j );
+
+                        epsilonTensor( dPhiTrans.at(k).at(j), epsilonValuesMat1_j, 0); // x-Richtung
+                        epsilonTensor( dPhiTrans.at(k).at(j), epsilonValuesMat2_j, 1); // y-Richtung
+                        epsilonTensor( dPhiTrans.at(k).at(j), epsilonValuesMat3_j, 2); // z-Richtung
+
+                        epsilonValuesMat1_i.innerProduct(epsilonValuesMat1_j, res); // x-x
+                        epsilonValuesMat1_i.trace(res_trace_i);
+                        epsilonValuesMat1_j.trace(res_trace_j);
+                        v11 = v11 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                        epsilonValuesMat1_i.innerProduct(epsilonValuesMat2_j, res); // x-y
+                        epsilonValuesMat1_i.trace(res_trace_i);
+                        epsilonValuesMat2_j.trace(res_trace_j);
+                        v12 = v12 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                        epsilonValuesMat1_i.innerProduct(epsilonValuesMat3_j, res); // x-z
+                        epsilonValuesMat1_i.trace(res_trace_i);
+                        epsilonValuesMat3_j.trace(res_trace_j);
+                        v13 = v13 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                        epsilonValuesMat2_i.innerProduct(epsilonValuesMat1_j, res); // y-x
+                        epsilonValuesMat2_i.trace(res_trace_i);
+                        epsilonValuesMat1_j.trace(res_trace_j);
+                        v21 = v21 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                        epsilonValuesMat2_i.innerProduct(epsilonValuesMat2_j, res); // y-y
+                        epsilonValuesMat2_i.trace(res_trace_i);
+                        epsilonValuesMat2_j.trace(res_trace_j);
+                        v22 = v22 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                        epsilonValuesMat2_i.innerProduct(epsilonValuesMat3_j, res); // y-z
+                        epsilonValuesMat2_i.trace(res_trace_i);
+                        epsilonValuesMat3_j.trace(res_trace_j);
+                        v23 = v23 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                        epsilonValuesMat3_i.innerProduct(epsilonValuesMat1_j, res); // z-x
+                        epsilonValuesMat3_i.trace(res_trace_i);
+                        epsilonValuesMat1_j.trace(res_trace_j);
+                        v31 = v31 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                        epsilonValuesMat3_i.innerProduct(epsilonValuesMat2_j, res); // z-y
+                        epsilonValuesMat3_i.trace(res_trace_i);
+                        epsilonValuesMat2_j.trace(res_trace_j);
+                        v32 = v32 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                        epsilonValuesMat3_i.innerProduct(epsilonValuesMat3_j, res); // z-z
+                        epsilonValuesMat3_i.trace(res_trace_i);
+                        epsilonValuesMat3_j.trace(res_trace_j);
+                        v33 = v33 + weightsDPhi->at(k)*(2*mu*res + lambda*res_trace_j*res_trace_i);
+
+                    }
+                    v11 = absDetB * v11;
+                    v12 = absDetB * v12;
+                    v13 = absDetB * v13;
+                    v21 = absDetB * v21;
+                    v22 = absDetB * v22;
+                    v23 = absDetB * v23;
+                    v31 = absDetB * v31;
+                    v32 = absDetB * v32;
+                    v33 = absDetB * v33;
+
+                    value11[0] = v11;
+                    value12[0] = v12;
+                    value13[0] = v13;
+                    value21[0] = v21;
+                    value22[0] = v22;
+                    value23[0] = v23;
+                    value31[0] = v31;
+                    value32[0] = v32;
+                    value33[0] = v33;
+
+                    glob_j = dim * map->getGlobalElement(elements->getElement(T).getNode(j));
+                    glob_i = dim * map->getGlobalElement(elements->getElement(T).getNode(i));
+                    indices[0] = glob_j;
+                    A->insertGlobalValues(glob_i, indices(), value11()); // x-x
+                    A->insertGlobalValues(glob_i+1, indices(), value21()); // y-x
+                    A->insertGlobalValues(glob_i+2, indices(), value31()); // z-x
+                    glob_j++;
+                    indices[0] = glob_j;
+                    A->insertGlobalValues(glob_i, indices(), value12()); // x-y
+                    A->insertGlobalValues(glob_i+1, indices(), value22()); // y-y
+                    A->insertGlobalValues(glob_i+2, indices(), value32()); // z-y
+                    glob_j++;
+                    indices[0] = glob_j;
+                    A->insertGlobalValues(glob_i, indices(), value13()); // x-z
+                    A->insertGlobalValues(glob_i+1, indices(), value23()); // y-z
+                    A->insertGlobalValues(glob_i+2, indices(), value33()); // z-z
+                }
+            }
+        }
+        if (callFillComplete)
+        {
+            A->fillComplete();
+        }
+    }
+}
+
+
 
 
 template <class SC, class LO, class GO, class NO>
@@ -4736,6 +5057,8 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegral(int dim,
                                               std::vector<SC>& funcParameter) {
     
     // degree of function funcParameter[0]
+
+	cout << " ASSEMBLY SURFACE INTEGRAL " << endl;
     TEUCHOS_TEST_FOR_EXCEPTION( funcParameter[funcParameter.size()-1] > 0., std::logic_error, "We only support constant functions for now.");
     
     UN FEloc = checkFE(dim,FEType);
@@ -4765,7 +5088,7 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegral(int dim,
     int parameters;
     
     std::vector<double> valueFunc(dim);
-    // The second last entry is a placeholder for the surface element flag. It will be set below
+    // The second to last entry is a placeholder for the surface element flag. It will be set below
     SC* params = &(funcParameter[0]);
     for (UN T=0; T<elements->numberElements(); T++) {
         FiniteElement fe = elements->getElement( T );

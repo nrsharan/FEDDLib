@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
                         domainPressure.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., 1., comm));
                         domainVelocity.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., 1., comm));
                     }
-                    TEUCHOS_TEST_FOR_EXCEPTION( true , std::logic_error, "Flags and surface elements must be adjusted for tpm.");
+                    //TEUCHOS_TEST_FOR_EXCEPTION( true , std::logic_error, "Flags and surface elements must be adjusted for tpm.");
 
                     domainPressure->buildMesh( 1, "Square", dim, discPressure, n, m, numProcsCoarseSolve);
                     domainVelocity->buildMesh( 1, "Square", dim, discVelocity, n, m, numProcsCoarseSolve);
