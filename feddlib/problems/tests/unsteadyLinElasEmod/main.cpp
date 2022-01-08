@@ -66,7 +66,7 @@ void rhsImpTime(double* x, double* res, double* parameters){
     
 	double r = sqrt(pow(x[0],2)+pow(x[1],2));
 	double T_Ramp = 2.;
-	double a =4.;
+	double a =2.;
 	if(parameters[0]<=T_Ramp){
 		if((x[2] < 0.5 ) && (x[2] > 0.0 )){
 			res[0] = sin(2*M_PI*(x[2]))*(x[0]/r)*parameters[1]*sin(M_PI *1./(2*T_Ramp)*(parameters[0]));
@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
         	double forceS = parameterListProblem->sublist("Parameter").get("Volume force",10.);
 			double r=0.;
 			vec_dbl_Type res(3);
-			double a = 2.;
+			double a = 4.;
 			for(double t=0.; t < tMax ; t= t+dt){
 
 				for(int i=0; i< nodes->size(); i++){

@@ -3450,6 +3450,17 @@ void FE<SC,LO,GO,NO>::assemblyLinElasXDimEMod(int dim,
             detB = B.computeInverse(Binv);
             absDetB = std::fabs(detB);
 
+			// Transform Quadpoints to Element T
+			vec2D_dbl_Type quadPointsTrans(weightsDPhi->size(),vec_dbl_Type(dim));
+			for(int i=0; i< weightsDPhi->size(); i++){
+				 for(int j=0; j< dim ; j++){
+					for(int k=0; k< dim; k++){
+			 			quadPointsTrans[i][j] += B[j][k]* quadPts->at(i).at(k) ; 
+					}
+					quadPointsTrans[i][j] += pointsRep->at(elements->getElement(T).getNode(0)).at(j); 
+				 }
+			}
+
             // dPhiTrans sind die transformierten Basifunktionen, also \grad_phi * B^(-T)
             vec3D_dbl_Type dPhiTrans( dPhi->size(), vec2D_dbl_Type( dPhi->at(0).size(), vec_dbl_Type(dim,0.) ) );
             applyBTinv( dPhi, dPhiTrans, Binv ); //dPhiTrans berechnen
@@ -3472,6 +3483,10 @@ void FE<SC,LO,GO,NO>::assemblyLinElasXDimEMod(int dim,
                     v11 = 0.0; v12 = 0.0; v13 = 0.0; v21 = 0.0; v22 = 0.0; v23 = 0.0; v31 = 0.0; v32 = 0.0; v33 = 0.0;
                     for (int k = 0; k < dPhi->size(); k++)
                     {
+
+						// Determine EModule for lambda
+						EFunc(&quadPointsTrans[k][0], &youngModulus[0] ,paras);
+						lambda = (poissonRatio*youngModulus[0])/((1 + poissonRatio)*(1 - 2*poissonRatio)); 
 
                         // GradPhiOnRef( DPhi->at(k).at(i), b_T_inv, basisValues_i );
 
