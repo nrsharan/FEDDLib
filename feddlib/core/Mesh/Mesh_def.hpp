@@ -257,6 +257,7 @@ int Mesh<SC,LO,GO,NO>::getOrderElement(){
     return -1;
 }
 
+// -----------------
 template <class SC, class LO, class GO, class NO>
 void Mesh<SC,LO,GO,NO>::setReferenceConfiguration()
 {

@@ -2,8 +2,8 @@
 #define RefinementFactory_decl_hpp
 
 #include "feddlib/core/Utils/FEDDUtils.hpp"
-#include "feddlib/core/Mesh/Mesh.hpp"
 #include "feddlib/core/Mesh/MeshUnstructured.hpp"
+#include "feddlib/core/Mesh/MeshFactory.hpp"
 #include "feddlib/core/Mesh/MeshInterface.hpp"
 #include "feddlib/core/Mesh/MeshFileReader.hpp"
 #include "feddlib/core/FE/EdgeElements.hpp"
@@ -23,7 +23,7 @@
  @brief  RefinementFactory
  @author Lea Saßmannshausen
  @version 1.0
- @copyright CH
+ @copyright LS
  */
 
 namespace FEDD {
@@ -32,9 +32,8 @@ template <class SC = default_sc, class LO = default_lo, class GO = default_go, c
 class RefinementFactory : public MeshUnstructured<SC,LO,GO,NO> {
     
 public:
-   typedef Mesh<SC,LO,GO,NO> Mesh_Type;
    typedef MeshUnstructured<SC,LO,GO,NO> MeshUnstr_Type;
-    typedef Teuchos::RCP<MeshUnstructured<SC,LO,GO,NO> > MeshUnstrPtr_Type;
+    typedef Teuchos::RCP<MeshUnstr_Type > MeshUnstrPtr_Type;
 
     typedef std::vector<MeshUnstrPtr_Type> MeshUnstrPtrArray_Type;
 
@@ -42,10 +41,9 @@ public:
     typedef Teuchos::RCP<MeshUnstrRef_Type> MeshUnstrRefPtr_Type;
     typedef std::vector<MeshUnstrRefPtr_Type> MeshUnstrRefPtrArray_Type; // Array of meshUnstr for meshRefinement*/
 
-	typedef typename Mesh_Type::CommPtr_Type CommPtr_Type;
-    typedef typename Mesh_Type::CommConstPtr_Type CommConstPtr_Type;
-
-    
+	typedef typename MeshUnstr_Type::CommPtr_Type CommPtr_Type;
+    typedef typename MeshUnstr_Type::CommConstPtr_Type CommConstPtr_Type;
+ 
     typedef Elements Elements_Type;
     typedef Teuchos::RCP<Elements_Type>  ElementsPtr_Type;
     typedef SurfaceElements SurfaceElements_Type;
@@ -79,11 +77,12 @@ public:
     RefinementFactory( CommConstPtr_Type comm, int volumeID,  ParameterListPtr_Type parameterListAll);
     
     ~RefinementFactory();
-    
+
+    virtual void dummy() {};    
 
     void refineMesh( MeshUnstrPtr_Type meshP1, int iteration, MeshUnstrPtr_Type outputMesh, string refinementMode); // MeshRefinement
 
-	void assignEdgeFlags( MeshUnstrPtr_Type meshP1, EdgeElementsPtr_Type edgeElements);
+	//void assignEdgeFlags( MeshUnstrPtr_Type meshP1, EdgeElementsPtr_Type edgeElements);
     	
 	void refineRegular(EdgeElementsPtr_Type edgeElements, ElementsPtr_Type elements,  int i, SurfaceElementsPtr_Type surfaceTriangleElements); // aka red refinement
 	
@@ -103,11 +102,10 @@ public:
 
 	int determineLongestEdge( EdgeElementsPtr_Type edgeElements, vec_int_Type edgeVec, vec2D_dbl_ptr_Type points); // Determines longest edge in triangle
 
-	void buildEdgeMap(MapConstPtr_Type mapGlobalProc,MapConstPtr_Type mapProc);
+	//void buildEdgeMap(MapConstPtr_Type mapGlobalProc,MapConstPtr_Type mapProc);
 	void buildNodeMap(EdgeElementsPtr_Type edgeElements, MapConstPtr_Type mapGlobalProc, MapConstPtr_Type mapProc, int newPoints, int newPointsRepeated);
-
 	
-	void updateElementsOfEdgesLocalAndGlobal(int maxRank, MapConstPtr_Type edgeMap);
+	//void updateElementsOfEdgesLocalAndGlobal(int maxRank, MapConstPtr_Type edgeMap);
 
 	void updateElementsOfSurfaceLocalAndGlobal(EdgeElementsPtr_Type edgeElements);
 

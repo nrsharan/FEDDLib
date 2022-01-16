@@ -2,7 +2,6 @@
 #define AdaptiveMeshRefinement_decl_hpp
 
 #include "feddlib/core/Utils/FEDDUtils.hpp"
-#include "feddlib/core/Mesh/Mesh.hpp"
 #include "feddlib/core/Mesh/MeshUnstructured.hpp"
 #include "feddlib/core/Mesh/MeshInterface.hpp"
 #include "feddlib/core/Mesh/MeshFileReader.hpp"
@@ -36,7 +35,7 @@ template <class SC = default_sc, class LO = default_lo, class GO = default_go, c
 class AdaptiveMeshRefinement {
     
 public:
-    typedef Mesh<SC,LO,GO,NO> Mesh_Type;
+    typedef MeshUnstructured<SC,LO,GO,NO> Mesh_Type;
     typedef MeshUnstructured<SC,LO,GO,NO>  MeshUnstr_Type;
     typedef Teuchos::RCP<MeshUnstructured<SC,LO,GO,NO> > MeshUnstrPtr_Type;
 

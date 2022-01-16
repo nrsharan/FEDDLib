@@ -1,7 +1,7 @@
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 
-#include "feddlib/core/Mesh/MeshStructured.hpp"
+#include "feddlib/core/Mesh/MeshFactory.hpp"
 #include "feddlib/core/General/ExporterParaView.hpp"
 #include "feddlib/core/LinearAlgebra/MultiVector.hpp"
 #include <Teuchos_GlobalMPISession.hpp>
@@ -78,12 +78,12 @@ int main(int argc, char *argv[]) {
     int size = comm->getSize();
     bool boolExportMesh = true;
     bool boolExportMeshSubdomains = true;
-    RCP<MeshStructured<SC,LO,GO,NO> > meshStr;
+    RCP<MeshFactory<SC,LO,GO,NO> > meshStr;
     if (dim == 2) {
         n = (int) (std::pow(size/minNumberSubdomains,1/2.) + 100.*ScalarTraits< SC >::eps()); // 1/H
         std::vector<double> x(2);
         x[0]=0.0;    x[1]=0.0;
-        meshStr = rcp(new MeshStructured<SC,LO,GO,NO>(comm));
+        meshStr = rcp(new MeshFactory<SC,LO,GO,NO>(comm));
         meshStr->setGeometry2DRectangle(x, 1., 1.);
         meshStr->buildMesh2D( FEType,n,m,numProcsCoarseSolve);
     }
@@ -92,14 +92,14 @@ int main(int argc, char *argv[]) {
         std::vector<double> x(3);
         if (meshGeometry=="cube") {
             x[0]=0.0;    x[1]=0.0;	x[2]=0.0;
-            meshStr = rcp(new MeshStructured<SC,LO,GO,NO>(comm));
+            meshStr = rcp(new MeshFactory<SC,LO,GO,NO>(comm));
             meshStr->setGeometry3DBox(x, 1., 1., 1.);
             meshStr->buildMesh3D( FEType,n,m,numProcsCoarseSolve);
         }
         else if(meshGeometry=="bfs") {
             n = (int) (std::pow(size,1/3.) + 100.*ScalarTraits< SC >::eps()); // 1/H
             x[0]=-1.0;    x[1]=0.0;    x[2]=-1.0;
-            meshStr = rcp(new MeshStructured<SC,LO,GO,NO>(comm));
+            meshStr = rcp(new MeshFactory<SC,LO,GO,NO>(comm));
             meshStr->setGeometry3DBox(x, length+1., 1., 2.);
             meshStr->buildMesh3DBFS( FEType,n,m,numProcsCoarseSolve);
         }
@@ -107,6 +107,24 @@ int main(int argc, char *argv[]) {
     }
     meshStr->buildElementMap();
     
+	Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+
+	Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(meshStr->getMapUnique()));
+	vec_int_ptr_Type BCFlags = meshStr->getBCFlagUnique();
+
+	Teuchos::ArrayRCP< SC > entries  = exportSolution->getDataNonConst(0);
+	for(int i=0; i< entries.size(); i++){
+		entries[i] = BCFlags->at(i);
+	}
+
+	Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst = exportSolution;
+
+	exPara->setup("Flags", meshStr, FEType);
+
+	exPara->addVariable(exportSolutionConst, "Flags", "Scalar", 1, meshStr->getMapUnique(), meshStr->getMapUniqueP2());
+
+	exPara->save(0.0);
+
     if (boolExportMesh) {
         RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
         

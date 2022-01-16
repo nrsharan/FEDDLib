@@ -1,7 +1,7 @@
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 
-#include "feddlib/core/Mesh/MeshStructured.hpp"
+#include "feddlib/core/Mesh/MeshFactory.hpp"
 #include "feddlib/core/General/ExporterParaView.hpp"
 #include "feddlib/core/LinearAlgebra/MultiVector.hpp"
 #include <Teuchos_GlobalMPISession.hpp>
@@ -55,12 +55,12 @@ int main(int argc, char *argv[]) {
     int n;
     int size = comm->getSize();
     bool boolExportMesh = false;
-    RCP<MeshStructured<SC,LO,GO,NO> > meshStr;
+    RCP<MeshFactory<SC,LO,GO,NO> > meshStr;
     if (dim == 3) {
         n = (int) (std::pow(size,1/3.) + 100.*ScalarTraits< SC >::eps()); // 1/H
         std::vector<double> x(3);
         x[0]=0.0; x[1]=0.0; x[2]=0.0;
-        meshStr = rcp(new MeshStructured<SC,LO,GO,NO>(comm));
+        meshStr = rcp(new MeshFactory<SC,LO,GO,NO>(comm));
         meshStr->setGeometry3DBox(x, 1., 1., 1.);
         meshStr->buildMesh3D( FEType,n,M,numProcsCoarseSolve);
     }

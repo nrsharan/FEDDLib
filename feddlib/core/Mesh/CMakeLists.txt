@@ -1,8 +1,11 @@
 SET(Mesh_HEADERS
     Mesh/gmsh_io.hpp
-	Mesh/Mesh.hpp
-    Mesh/Mesh_decl.hpp
-	Mesh/Mesh_def.hpp
+	Mesh/MeshUnstructured.hpp
+	Mesh/MeshUnstructured_decl.hpp
+	Mesh/MeshUnstructured_def.hpp
+	Mesh/MeshFactory.hpp
+    Mesh/MeshFactory_decl.hpp
+	Mesh/MeshFactory_def.hpp
 	Mesh/MeshFileReader.hpp
 	Mesh/MeshInterface.hpp
     Mesh/MeshInterface_decl.hpp
@@ -10,12 +13,6 @@ SET(Mesh_HEADERS
     Mesh/MeshPartitioner.hpp
     Mesh/MeshPartitioner_decl.hpp
     Mesh/MeshPartitioner_def.hpp
-    Mesh/MeshStructured.hpp
-    Mesh/MeshStructured_decl.hpp
-    Mesh/MeshStructured_def.hpp
-	Mesh/MeshUnstructured.hpp
-	Mesh/MeshUnstructured_decl.hpp
-	Mesh/MeshUnstructured_def.hpp
     Mesh/AABBTree.hpp
     Mesh/AABBTree_decl.hpp
     Mesh/AABBTree_def.hpp
@@ -23,12 +20,11 @@ CACHE INTERNAL "")
 
 SET(Mesh_SOURCES
     Mesh/gmsh_io.cpp
-    Mesh/Mesh.cpp
+    Mesh/MeshUnstructured.cpp
+    Mesh/MeshFactory.cpp
     Mesh/MeshPartitioner.cpp
     Mesh/MeshFileReader.cpp
     Mesh/MeshInterface.cpp
-    Mesh/MeshStructured.cpp
-    Mesh/MeshUnstructured.cpp
     Mesh/AABBTree.cpp
 CACHE INTERNAL "")
 

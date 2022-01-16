@@ -48,9 +48,11 @@ class FE {
     typedef Teuchos::RCP<const Domain_Type> DomainConstPtr_Type;
     typedef std::vector<DomainConstPtr_Type> DomainConstPtr_vec_Type;
 
-    typedef Teuchos::RCP<Mesh<SC,LO,GO,NO> > MeshPtr_Type;
-    typedef MeshUnstructured<SC,LO,GO,NO> MeshUnstr_Type;
-    typedef Teuchos::RCP<MeshUnstr_Type> MeshUnstrPtr_Type;
+    typedef MeshUnstructured<SC,LO,GO,NO>  Mesh_Type;
+    typedef Teuchos::RCP<MeshUnstructured<SC,LO,GO,NO> > MeshPtr_Type;
+
+    //typedef MeshUnstructured<SC,LO,GO,NO> MeshUnstr_Type;
+    //typedef Teuchos::RCP<MeshUnstr_Type> MeshUnstrPtr_Type;
     
     typedef Elements Elements_Type;
     typedef Teuchos::RCP<Elements_Type> ElementsPtr_Type;

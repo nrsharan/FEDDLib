@@ -21,7 +21,7 @@
 #include <Xpetra_DefaultPlatform.hpp>
 #include "feddlib/core/LinearAlgebra/BlockMatrix.hpp"
 #include "feddlib/core/LinearAlgebra/BlockMultiVector.hpp"
-#include "feddlib/core/Mesh/Mesh.hpp"
+//#include "feddlib/core/Mesh/Mesh.hpp"
 #include "feddlib/core/Mesh/MeshInterface.hpp"
 #include "feddlib/core/Mesh/MeshFileReader.hpp"
 #include "feddlib/amr/AdaptiveMeshRefinement.hpp"
@@ -220,12 +220,8 @@ int main(int argc, char *argv[]) {
 	typedef Teuchos::RCP<BlockMatrix_Type> BlockMatrixPtr_Type;
 	typedef EdgeElements EdgeElements_Type;
 	typedef Teuchos::RCP<EdgeElements_Type> EdgeElementsPtr_Type;
-	typedef Mesh<SC,LO,GO,NO> MAIN_Type;
-	typedef Teuchos::RCP<MAIN_Type > MeshPtr_Type;
 	typedef MeshUnstructured<SC,LO,GO,NO> MeshUnstr_Type;
 	typedef Teuchos::RCP<MeshUnstr_Type> MeshUnstrPtr_Type;
-	typedef typename MAIN_Type::Elements_Type Elements_Type;
-	typedef typename MAIN_Type::ElementsPtr_Type ElementsPtr_Type;
     typedef Map<LO,GO,NO> Map_Type;
     typedef typename Map_Type::MapPtr_Type MapPtr_Type;
 	typedef Problem<SC,LO,GO,NO> Problem_Type;

@@ -209,7 +209,7 @@ void Domain<SC,LO,GO,NO>::buildMesh(int flagsOption , std::string meshType, int 
     MYASSERT(geoNumber!=-1, "Geometry not known for this Dimension.")
 #endif
 
-    MeshStrPtr_Type meshStructured = Teuchos::rcp(new MeshStr_Type(comm_));
+    MeshFactoryPtr_Type meshFactory = Teuchos::rcp(new MeshFactory_Type(comm_));
     n_ = N;
     m_ = M;
     dim_ = dim;
@@ -222,20 +222,20 @@ void Domain<SC,LO,GO,NO>::buildMesh(int flagsOption , std::string meshType, int 
         case 2:
             switch (geoNumber) {
                 case 0:
-                    meshStructured->setGeometry2DRectangle(coorRec, length, height);
-                    meshStructured->buildMesh2D(FEType, n_, m_, numProcsCoarseSolve);
+                    meshFactory->setGeometry2DRectangle(coorRec, length, height);
+                    meshFactory->buildMesh2D(FEType, n_, m_, numProcsCoarseSolve);
                     break;
                 case 1:
-                    meshStructured->setGeometry2DRectangle(coorRec, length, height);
-                    meshStructured->buildMesh2DBFS(FEType, n_, m_, numProcsCoarseSolve);
+                    meshFactory->setGeometry2DRectangle(coorRec, length, height);
+                    meshFactory->buildMesh2DBFS(FEType, n_, m_, numProcsCoarseSolve);
                     break;
                 case 2:
-                    meshStructured->setGeometry2DRectangle(coorRec, length, height);
-                    meshStructured->buildMesh2DTPM(FEType, n_, m_, numProcsCoarseSolve);
+                    meshFactory->setGeometry2DRectangle(coorRec, length, height);
+                    meshFactory->buildMesh2DTPM(FEType, n_, m_, numProcsCoarseSolve);
                     break;
                 case 3:
-                    meshStructured->setGeometry2DRectangle(coorRec, length, height);
-                    meshStructured->buildMesh2DMiniTPM(FEType, n_, m_, numProcsCoarseSolve);
+                    meshFactory->setGeometry2DRectangle(coorRec, length, height);
+                    meshFactory->buildMesh2DMiniTPM(FEType, n_, m_, numProcsCoarseSolve);
                     break;
                 default:
                     TEUCHOS_TEST_FOR_EXCEPTION(true,std::logic_error,"Select valid mesh. Structured types are 'structured' and 'structured_bfs' in 2D. TPM test meshes also available.");
@@ -246,12 +246,12 @@ void Domain<SC,LO,GO,NO>::buildMesh(int flagsOption , std::string meshType, int 
         case 3:
             switch (geoNumber) {
                 case 0:
-                    meshStructured->setGeometry3DBox(coorRec, length, width, height);
-                    meshStructured->buildMesh3D( FEType, n_, m_, numProcsCoarseSolve);
+                    meshFactory->setGeometry3DBox(coorRec, length, width, height);
+                    meshFactory->buildMesh3D( FEType, n_, m_, numProcsCoarseSolve);
                     break;
                 case 1:
-                    meshStructured->setGeometry3DBox(coorRec, length, width, height);
-                    meshStructured->buildMesh3DBFS(	FEType, n_, m_, numProcsCoarseSolve);
+                    meshFactory->setGeometry3DBox(coorRec, length, width, height);
+                    meshFactory->buildMesh3DBFS(	FEType, n_, m_, numProcsCoarseSolve);
                     break;
                 default:
                     TEUCHOS_TEST_FOR_EXCEPTION(true,std::runtime_error,"Select valid mesh. Structured types are 'structured' and 'structured_bfs' in 3D." );
@@ -262,16 +262,17 @@ void Domain<SC,LO,GO,NO>::buildMesh(int flagsOption , std::string meshType, int 
             TEUCHOS_TEST_FOR_EXCEPTION(true,std::logic_error,"Select valid mesh dimension. 2 or 3 dimensional meshes can be constructed.");
             break;
     }
-    meshStructured->buildElementMap();
-    meshStructured->setStructuredMeshFlags(flagsOption,FEType);
-    mesh_ = meshStructured;
+    meshFactory->buildElementMap();
+    meshFactory->setStructuredMeshFlags(flagsOption,FEType);
+    //meshFactory->infoMesh();
+    mesh_ =  meshFactory;
 }
 
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::initializeUnstructuredMesh(int dimension, string feType, int volumeID){
     
-    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp(new MeshUnstr_Type(comm_, volumeID));
-    mesh_ = meshUnstructured;
+    MeshFactoryPtr_Type meshFactory = Teuchos::rcp(new MeshFactory_Type(comm_, volumeID));
+    mesh_ = meshFactory;
     mesh_->dim_ = dimension;
     FEType_ = feType;
     meshType_ = "unstructured";
@@ -284,18 +285,19 @@ void Domain<SC,LO,GO,NO>::initializeUnstructuredMesh(int dimension, string feTyp
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::readMeshSize(string filename, string delimiter){
     
-    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( mesh_ );
-    TEUCHOS_TEST_FOR_EXCEPTION( meshUnstructured.is_null(), std::runtime_error, "Unstructured Mesh is null." );
-    
-    meshUnstructured->setMeshFileName( filename, delimiter );
-    meshUnstructured->readMeshSize( );
+    MeshFactoryPtr_Type meshFactory = Teuchos::rcp_dynamic_cast<MeshFactory_Type>( mesh_ );
+
+    TEUCHOS_TEST_FOR_EXCEPTION( meshFactory.is_null(), std::runtime_error, "Unstructured Mesh is null." );
+
+    meshFactory->setMeshFileName( filename, delimiter );
+    meshFactory->readMeshSize( );
     
 }
 
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::partitionMesh( bool partitionDistance ){
 
-    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( mesh_ );
+    MeshPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<Mesh_Type>( mesh_ );
     
     if (partitionDistance)
         partitionDistanceToInterface();
@@ -320,7 +322,7 @@ void Domain<SC,LO,GO,NO>::partitionDistanceToInterface( ){
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::readAndPartitionMesh( std::string filename, std::string delimiter, int dim, std::string FEType, int volumeID ){
 
-    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp(new MeshUnstr_Type(comm_, volumeID));
+    MeshFactoryPtr_Type meshUnstructured = Teuchos::rcp(new MeshFactory_Type(comm_, volumeID));
 
     dim_ = dim;
     FEType_ = FEType;
@@ -337,21 +339,22 @@ void Domain<SC,LO,GO,NO>::readAndPartitionMesh( std::string filename, std::strin
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::buildP2ofP1Domain( DomainPtr_Type domainP1 ){ //P1 mesh must be parallel
 
-    MeshUnstrPtr_Type meshUnstructuredP1 = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( domainP1->mesh_ );
-    
-    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp( new MeshUnstr_Type( comm_, meshUnstructuredP1->volumeID_) );
+    MeshPtr_Type meshUnstructuredP1 = domainP1->mesh_;
+        
+    MeshFactoryPtr_Type meshFactory = Teuchos::rcp(new MeshFactory<SC,LO,GO,NO> ( comm_ ))  ;
 
     n_ = domainP1->n_;
     m_ = domainP1->m_;
     dim_ = domainP1->dim_;
     FEType_ = "P2";
     numProcsCoarseSolve_ = 0;
-    flagsOption_ = -1;
     meshType_ = "unstructured";
 
-    meshUnstructured->buildP2ofP1MeshEdge( meshUnstructuredP1 );
-    mesh_ = meshUnstructured;
+    meshFactory->buildP2ofP1MeshEdge( meshUnstructuredP1 );
+
+    mesh_ = meshFactory;
 }
+
 
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::initWithDomain(DomainPtr_Type domainP1){ 
@@ -371,7 +374,7 @@ void Domain<SC,LO,GO,NO>::initWithDomain(DomainPtr_Type domainP1){
 
 
 template <class SC, class LO, class GO, class NO>
-void Domain<SC,LO,GO,NO>::setMesh(MeshUnstrPtr_Type meshUnstr){ 
+void Domain<SC,LO,GO,NO>::setMesh(MeshPtr_Type meshUnstr){ 
 
     mesh_ = meshUnstr;
 }
@@ -533,8 +536,8 @@ int Domain<SC,LO,GO,NO>::checkGeomentry(std::string meshType, int dim) const{
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::identifyInterfaceParallelAndDistance( DomainPtr_Type domainOther, vec_int_Type interfaceID_vec ){
     
-    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( mesh_ );
-    MeshUnstrPtr_Type meshUnstructuredOther = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( domainOther->mesh_ );
+    MeshFactoryPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<MeshFactory_Type>( mesh_ );
+    MeshFactoryPtr_Type meshUnstructuredOther = Teuchos::rcp_dynamic_cast<MeshFactory_Type>( domainOther->mesh_ );
     meshUnstructured->buildMeshInterfaceParallelAndDistance( meshUnstructuredOther, interfaceID_vec, distancesToInterface_ );
     
 }
@@ -545,7 +548,7 @@ void Domain<SC,LO,GO,NO>::calculateDistancesToInterface()
 {
     // IdentifyInterface() ist nur fuer unstrukturierte Gitter programmiert
     // Mesh_->MeshInterface_ gibt es somit nicht.
-    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( mesh_ );
+    MeshPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<Mesh_Type>( mesh_ );
 
     // Fuer jede Interface-Flag gibt es "aussen" einen Eintrag im Vektor.
     // Wenn das Interface also fuer 2 Flags bestimmt wird, dann ist IndicesGlobalMatched_.size() = 2.
@@ -648,7 +651,8 @@ typename Domain<SC,LO,GO,NO>::MeshConstPtr_Type Domain<SC,LO,GO,NO>::getMesh() c
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::moveMesh(MultiVectorPtr_Type displacementUnique, MultiVectorPtr_Type displacementRepeated)
 {
-    mesh_->moveMesh(displacementUnique, displacementRepeated);
+    MeshFactoryPtr_Type meshFactory = Teuchos::rcp_dynamic_cast<MeshFactory_Type>( mesh_, true );
+    meshFactory->moveMesh(displacementUnique, displacementRepeated);
 }
 
 //only need in geometry problem.
@@ -658,7 +662,7 @@ void Domain<SC,LO,GO,NO>::buildUniqueInterfaceMaps()
     // Mesh_ umcasten  in unstructured und dann meshUnstructured nutzen,
     // da nur unstructured Attribut MeshInterface_ besitzt.
     // Jeder Prozessor kennt also das komplette matched Interface
-    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( this->getMesh() );
+    MeshPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<Mesh_Type>( this->getMesh() );
 
     vec3D_GO_ptr_Type indicesGlobalMatchedOrigin = meshUnstructured->getMeshInterface()->getIndicesGlobalMatchedOrigin();
 
@@ -741,7 +745,7 @@ typename Domain<SC,LO,GO,NO>::MapConstPtr_Type Domain<SC,LO,GO,NO>::getOtherGlob
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::setPartialCoupling(int flag, std::string type){
 
-    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( this->getMesh() );
+    MeshPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<Mesh_Type>( this->getMesh() );
     meshUnstructured->getMeshInterface()->setPartialCoupling(flag, type);
     
 }
@@ -749,7 +753,7 @@ void Domain<SC,LO,GO,NO>::setPartialCoupling(int flag, std::string type){
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::buildInterfaceMaps()
 {
-    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( this->getMesh() );
+    MeshPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<Mesh_Type>( this->getMesh() );
     MeshInterfacePtr_Type interface = meshUnstructured->getMeshInterface();
     vec3D_GO_ptr_Type indicesMatchedUni = interface->getIndicesGlobalMatchedUnique();
     
@@ -873,8 +877,8 @@ vec_long_Type Domain<SC,LO,GO,NO>::getLocalInterfaceIDInGlobal() const
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::setDummyInterfaceDomain(DomainPtr_Type domain)
 {
-    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp(new MeshUnstr_Type(comm_, 10/*default volume flag*/));
-    mesh_ = meshUnstructured;
+    //MeshPtr_Type meshUnstructured = Teuchos::rcp(new MeshFactory_Type(comm_, 10/*default volume flag*/));
+    mesh_.reset(new Mesh_Type(comm_)); //= meshUnstructured;
     
     this->dim_ = domain->getDimension();
     this->mesh_->mapUnique_ = Teuchos::rcp_const_cast<Map_Type>( domain->getInterfaceMapUnique() );

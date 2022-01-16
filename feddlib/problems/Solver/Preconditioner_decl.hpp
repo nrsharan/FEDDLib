@@ -60,7 +60,7 @@ public:
     typedef Teuchos::RCP<const Thyra::LinearOpBase<SC> > ThyraLinOpConstPtr_Type;
     typedef Teuchos::RCP<Stratimikos::DefaultLinearSolverBuilder >  LinSolverBuilderPtr_Type;
 
-    typedef Mesh<SC,LO,GO,NO> Mesh_Type;
+    typedef MeshUnstructured<SC,LO,GO,NO> Mesh_Type;
     typedef Teuchos::RCP<Mesh_Type> MeshPtr_Type;
     typedef Teuchos::RCP<const Mesh_Type> MeshConstPtr_Type;
 

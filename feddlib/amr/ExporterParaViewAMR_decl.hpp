@@ -5,7 +5,7 @@
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 #include "feddlib/core/LinearAlgebra/MultiVector.hpp"
-#include "feddlib/core/Mesh/Mesh.hpp"
+#include "feddlib/core/Mesh/MeshUnstructured.hpp"
 #include "feddlib/core/General/ExporterParaView.hpp"
 #include "feddlib/amr/ExporterParaViewAMR.hpp"
 // Trilinos
@@ -75,7 +75,7 @@ public:
     typedef Teuchos::RCP<const MultiVector_Type> MultiVectorConstPtr_Type;
     typedef const MultiVectorConstPtr_Type MultiVectorConstPtrConst_Type;
     
-    typedef Mesh<SC,LO,GO,NO> Mesh_Type;
+    typedef MeshUnstructured<SC,LO,GO,NO> Mesh_Type;
     typedef Teuchos::RCP<Mesh_Type> MeshPtr_Type;
     
     typedef typename Mesh_Type::ElementsPtr_Type ElementsPtr_Type;

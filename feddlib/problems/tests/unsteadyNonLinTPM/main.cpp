@@ -6,7 +6,7 @@
 #include "feddlib/core/LinearAlgebra/MultiVector.hpp"
 #include "feddlib/problems/Solver/DAESolverInTime.hpp"
 #include "feddlib/problems/specific/NonLinTPM.hpp"
-
+// --------------- Nonlinear funktioniert hier nicht nur linear ----------------------
 #include <Teuchos_TestForException.hpp>
 #include <Teuchos_GlobalMPISession.hpp>
 #include <Xpetra_DefaultPlatform.hpp>
@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
                         domainPressure.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., 1., comm));
                         domainVelocity.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., 1., comm));
                     }
-                    TEUCHOS_TEST_FOR_EXCEPTION( true , std::logic_error, "Flags and surface elements must be adjusted for tpm.");
+                    //TEUCHOS_TEST_FOR_EXCEPTION( true , std::logic_error, "Flags and surface elements must be adjusted for tpm.");
 
                     domainPressure->buildMesh( 1, "Square", dim, discPressure, n, m, numProcsCoarseSolve);
                     domainVelocity->buildMesh( 1, "Square", dim, discVelocity, n, m, numProcsCoarseSolve);
@@ -250,7 +250,24 @@ int main(int argc, char *argv[]) {
 
                 }
             }
-            
+                
+			Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+
+			Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(domainVelocity->getMapUnique()));
+			vec_int_ptr_Type BCFlags = domainVelocity->getBCFlagUnique();
+
+			Teuchos::ArrayRCP< SC > entries  = exportSolution->getDataNonConst(0);
+			for(int i=0; i< entries.size(); i++){
+				entries[i] = BCFlags->at(i);
+			}
+
+		    Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst = exportSolution;
+
+		    exPara->setup("Flags", domainVelocity->getMesh(), discVelocity);
+		    
+		    exPara->addVariable(exportSolutionConst, "Flags", "Scalar", 1, domainVelocity->getMapUnique(), domainVelocity->getMapUniqueP2());
+
+		    exPara->save(0.0);
             
             {
 //                ///////////////////////////

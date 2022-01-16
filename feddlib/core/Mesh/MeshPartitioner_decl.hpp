@@ -33,8 +33,10 @@ public:
     typedef typename Domain_Type::DomainPtr_Type DomainPtr_Type;
     typedef typename Domain_Type::CommConstPtr_Type CommConstPtr_Type;
     typedef std::vector<DomainPtr_Type> DomainPtrArray_Type;
-    typedef typename Domain_Type::MeshUnstr_Type MeshUnstr_Type;
-    typedef typename Domain_Type::MeshUnstrPtr_Type MeshUnstrPtr_Type;
+    typedef typename Domain_Type::Mesh_Type Mesh_Type;
+    typedef typename Domain_Type::MeshPtr_Type MeshPtr_Type;
+    typedef typename Domain_Type::MeshFactory_Type MeshFactory_Type;
+    typedef typename Domain_Type::MeshFactoryPtr_Type MeshFactoryPtr_Type;
     typedef typename Domain_Type::MapConstPtr_Type MapConstPtr_Type;
     typedef Elements Elements_Type;
     typedef Teuchos::RCP<Elements_Type> ElementsPtr_Type;    
@@ -56,11 +58,11 @@ public:
     
     void setSurfacesToElements(int meshNumber);
     
-    void partitionMesh( MeshUnstrPtr_Type& mesh, int meshNumber );
+    void partitionMesh( MeshPtr_Type& mesh, int meshNumber );
 
-    void buildEdgeListParallel( MeshUnstrPtr_Type mesh, ElementsPtr_Type elementsGlobal );
+    void buildEdgeListParallel( MeshPtr_Type mesh, ElementsPtr_Type elementsGlobal );
     
-    void buildEdgeList( MeshUnstrPtr_Type mesh, ElementsPtr_Type& elementsGlobal );
+    void buildEdgeList( MeshPtr_Type mesh, ElementsPtr_Type& elementsGlobal );
 
     void setLocalEdgeIndices(vec2D_int_Type &localEdgeIndices );
 

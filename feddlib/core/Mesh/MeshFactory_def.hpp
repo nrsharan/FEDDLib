@@ -1,44 +1,912 @@
-#ifndef MeshStructured_def_hpp
-#define MeshStructured_def_hpp
-#include "MeshStructured_decl.hpp"
+#ifndef MESHFACTORY_def_hpp
+#define MESHFACTORY_def_hpp
+
+#include "MeshFactory_decl.hpp"
+#include "feddlib/core/LinearAlgebra/MultiVector_def.hpp"
 
 /*!
- Definition of MeshStructured
- 
- @brief  MeshStructured
- @author Christian Hochmuth
- @version 1.0
- @copyright CH
- */
+Definition of MeshFactory
+
+@brief  Mesh
+@author Christian Hochmuth, Lea Sassmannshausen
+@version 1.0
+@copyright CH
+*/
 
 using namespace std;
-//using namespace Teuchos;
 namespace FEDD {
-template <class SC, class LO, class GO, class NO>
-MeshStructured<SC,LO,GO,NO>::MeshStructured():
+
+template <class SC, class LO, class GO, class NO> MeshFactory<SC,LO,GO,NO>::MeshFactory():
 MeshUnstructured<SC,LO,GO,NO>(),
 coorRec(0),
 length(0),
 height(0),
 width(0)
-{ }
+{
 
-template <class SC, class LO, class GO, class NO>
-MeshStructured<SC,LO,GO,NO>::MeshStructured(CommConstPtrConst_Type& comm):
-MeshUnstructured<SC,LO,GO,NO>(comm),
+    
+}
+
+template <class SC, class LO, class GO, class NO> MeshFactory<SC,LO,GO,NO>::MeshFactory( CommConstPtr_Type comm,int volumeID ):
+MeshUnstructured<SC,LO,GO,NO>(comm,volumeID),
 coorRec(0),
 length(0),
 height(0),
 width(0)
-{ }
+{
 
-template <class SC, class LO, class GO, class NO>
-MeshStructured<SC,LO,GO,NO>::~MeshStructured(){
 
 }
 
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::setGeometry2DRectangle(std::vector<double> coordinates, double l, double h){
+MeshFactory<SC,LO,GO,NO>::~MeshFactory(){
+
+}
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::buildP2ofP1MeshEdge( MeshPtr_Type meshP1 ){
+    
+    // If flags of line segments should be used over surface flags, this functions must be checked
+     int rank = this->comm_->getRank();
+    this->rankRange_ = meshP1->rankRange_;
+    bool verbose( this->comm_->getRank() == 0 );
+    this->elementMap_ = meshP1->elementMap_;
+	this->edgeMap_ = meshP1->edgeMap_;
+    this->dim_ = meshP1->getDimension();
+    this->FEType_ = "P2";
+    this->numElementsGlob_ = meshP1->numElementsGlob_;
+	this->surfaceTriangleElements_ = meshP1->surfaceTriangleElements_;
+    
+	meshP1->assignEdgeFlags();
+    GO P1Offset = meshP1->mapUnique_->getMaxAllGlobalIndex()+1;
+    EdgeElementsPtr_Type edgeElements = meshP1->getEdgeElements();
+    ElementsPtr_Type elements = meshP1->getElementsC();
+    
+    if (verbose)
+        cout << "-- --  Start building P2 mesh -- -- " << endl;
+    
+    if (verbose)
+        cout << "-- Building edge mid points with edges and setting P2 elements ... " << flush;
+
+    vec2D_dbl_Type newPoints( edgeElements->numberElements(), vec_dbl_Type( this->dim_ ) );
+    vec_int_Type newFlags( edgeElements->numberElements(), -1 );
+    int newNodesPerElement = -1;
+    if (this->dim_==2)
+        newNodesPerElement = 3;
+    else if (this->dim_==3)
+        newNodesPerElement = 6;
+    
+    vec2D_LO_Type newElementNodes( elements->numberElements(), vec_LO_Type( newNodesPerElement, -1 ) );
+
+    vec2D_dbl_ptr_Type pointsP1 = meshP1->getPointsRepeated();
+    MapConstPtr_Type mapRepeatedP1 = meshP1->getMapRepeated();
+    vec2D_LO_Type markedPoints(0);
+    // loop over all previously created edges
+	vec_int_Type markedTrue(edgeElements->numberElements());
+
+    for (int i=0; i<edgeElements->numberElements(); i++) {
+        
+        LO p1ID = edgeElements->getElement(i).getNode( 0 );
+        LO p2ID = edgeElements->getElement(i).getNode( 1 );
+
+        GO id1 = mapRepeatedP1->getGlobalElement( p1ID );
+        GO id2 = mapRepeatedP1->getGlobalElement( p2ID );
+        
+        for (int d=0; d<this->dim_; d++)
+            newPoints[i][d] = ( (*pointsP1)[p1ID][d] + (*pointsP1)[p2ID][d] ) / 2.;
+        
+
+       	newFlags[i] = edgeElements->getElement(i).getFlag(); //this->determineFlagP2( p1ID, p2ID, i, markedPoints );
+		                
+        const vec_LO_Type elementsOfEdge = edgeElements->getElementsOfEdge( i );
+        const vec_GO_Type elementsGlobalOfEdge = edgeElements->getElementsOfEdgeGlobal( i );
+
+		/*if(newFlags[i] != -1){ // questionable point that were given a flag, but that is not certain yet
+       		for (int j=0; j<elementsOfEdge.size(); j++) {
+           		if ( elementsOfEdge[j] == -1 ) 
+					markedTrue[i] =1;
+			}
+		}*/	
+
+                
+        vec_GO_Type relevantElementsOfEdge(0);
+        for (int j=0; j<elementsOfEdge.size(); j++) {
+            if ( elementsOfEdge[j] != OTLO::invalid() )
+                relevantElementsOfEdge.push_back( elementsOfEdge[j] );
+        }
+
+        // We need to determine the correct location in the P2 element
+        vec_int_Type positions( relevantElementsOfEdge.size() );
+        if ( relevantElementsOfEdge.size() > 0 )
+            determinePositionInElementP2( positions, relevantElementsOfEdge, p1ID, p2ID, meshP1 );
+    
+        int factor = 0;
+        if (this->dim_==2)
+            factor=3;
+        else if(this->dim_==3)
+            factor = 4;
+        for (int j=0; j<relevantElementsOfEdge.size(); j++)
+            newElementNodes[ relevantElementsOfEdge[j] ][ positions[j]-factor ] =  i ;
+        
+    }
+
+    // ##########################################################
+    // Set P2 Elements
+    this->elementsC_.reset(new Elements());
+    
+    LO numberLocalP1Nodes = meshP1->getPointsRepeated()->size();
+    
+    for (int i=0; i<elements->numberElements(); i++) {
+        vec_int_Type feNodeList = elements->getElement( i ).getVectorNodeListNonConst(); // get a copy
+        for (int j=0; j<newElementNodes[i].size(); j++)
+            feNodeList.push_back( newElementNodes[i][j] + numberLocalP1Nodes );
+        FiniteElement feP2( feNodeList );
+        this->elementsC_->addElement(feP2);
+    }
+    
+    if (verbose)
+        cout << "done --" << endl;
+    
+    if (verbose)
+        cout << "-- Setting global point IDs and building repeated P2 map and repeated points ... " << flush;
+    
+    this->pointsRep_.reset(new std::vector<std::vector<double> >(meshP1->pointsRep_->size(),vector<double>(this->dim_,-1.)));
+    *this->pointsRep_ = *meshP1->pointsRep_;
+    this->bcFlagRep_.reset(new vector<int>(meshP1->bcFlagRep_->size()));
+    *this->bcFlagRep_ = *meshP1->bcFlagRep_;
+
+    this->pointsRep_->insert( this->pointsRep_->end(), newPoints.begin(), newPoints.end() );
+    this->bcFlagRep_->insert( this->bcFlagRep_->end(), newFlags.begin(), newFlags.end());
+    
+    Teuchos::ArrayView<const GO> nodeList = meshP1->getMapRepeated()->getNodeElementList();
+    std::vector<GO> vecGlobalIDs = Teuchos::createVector( nodeList );
+    
+    for (int i=0; i<edgeElements->numberElements(); i++){
+        vecGlobalIDs.push_back( edgeElements->getGlobalID( (LO) i ) + P1Offset );
+    }
+    Teuchos::RCP<std::vector<GO> > pointsRepGlobMapping = Teuchos::rcp( new vector<GO>( vecGlobalIDs ) );
+    Teuchos::ArrayView<GO> pointsRepGlobMappingArray = Teuchos::arrayViewFromVector( *pointsRepGlobMapping );
+    
+    this->mapRepeated_.reset(new Map<LO,GO,NO>( meshP1->getMapRepeated()->getUnderlyingLib(), Teuchos::OrdinalTraits<GO>::invalid(), pointsRepGlobMappingArray, 0, this->comm_) );
+    
+    if (verbose)
+        cout << "done --" << endl;
+    
+    if (verbose)
+        cout << "-- Building unique P2 map, setting unique points and setting P2 elements ... " << flush;
+
+    this->mapUnique_ = this->mapRepeated_->buildUniqueMap( this->rankRange_ );
+    
+    this->pointsUni_.reset(new std::vector<std::vector<double> >( this->mapUnique_->getNodeNumElements(), vector<double>(this->dim_,-1. ) ) );
+    this->bcFlagUni_.reset( new std::vector<int> ( this->mapUnique_->getNodeNumElements(), 0 ) );
+    for (int i=0; i<this->mapUnique_->getNodeNumElements(); i++) {
+        GO gid = this->mapUnique_->getGlobalElement( i );
+
+        LO id = this->mapRepeated_->getLocalElement( this->mapUnique_->getGlobalElement( i ) );
+        this->pointsUni_->at(i) = this->pointsRep_->at(id);
+        this->bcFlagUni_->at(i) = this->bcFlagRep_->at(id);
+
+    }
+	this->edgeElements_ = edgeElements;
+
+    
+    if (verbose)
+        cout << "done --" << endl;
+    
+    if (verbose)
+        cout << "-- Building P2 surface elements ... " << flush;
+    
+    setP2SurfaceElements( meshP1 );
+    
+    if (verbose)
+        cout << "done --" << endl;
+    
+}
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::setP2SurfaceElements( MeshPtr_Type meshP1 ){
+    // loop over all elements. Inside we loop over all P1 surface elements and set the P2 surface elements accordingly
+    ElementsPtr_Type elementsP1 = meshP1->getElementsC();
+    ElementsPtr_Type elementsP2 = this->getElementsC();
+    vec2D_int_Type localSurfaceIndices;
+    int surfaceElementOrder = 2;
+    if (this->dim_==3)
+        surfaceElementOrder = 3;
+
+    
+    vec2D_int_Type surfacePermutation;
+    getLocalSurfaceIndices( surfacePermutation, surfaceElementOrder );
+    
+    vec2D_int_Type surfacePermutation2D; // only used if in 3D, since we need to additionally set edges
+    if (this->dim_==3)
+        getLocalSurfaceIndices( surfacePermutation2D, 2 );
+    
+    for (int i=0; i<elementsP1->numberElements(); i++) {
+        
+        FiniteElement fe = elementsP1->getElement( i );
+        FiniteElement feP2 = elementsP2->getElement( i );
+        
+        ElementsPtr_Type subEl = fe.getSubElements(); //might be null
+        for (int j=0; j<fe.numSubElements(); j++) {
+            FiniteElement feSurf = subEl->getElement(j);
+            this->setSurfaceP2(feP2, feSurf, surfacePermutation, this->dim_);
+            
+            // set edges for 3D case and if there are any edges, for 2D the edges are handled above
+            ElementsPtr_Type subElSurf = feSurf.getSubElements(); //might be null
+            if (!subElSurf.is_null()) {
+                ElementsPtr_Type subElP2 = feP2.getSubElements();
+                FiniteElement feSubP2 = subElP2->getElement(j);
+                for (int e=0; e<feSurf.numSubElements(); e++) {
+                    FiniteElement feEdge = subElSurf->getElement(e);
+                    this->setSurfaceP2( feSubP2, feEdge, surfacePermutation2D, this->dim_-1 );
+                    subElP2->switchElement( j, feSubP2 );
+                }
+            }
+            elementsP2->switchElement( i, feP2 );
+        }
+        
+    }
+}
+
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::setSurfaceP2( FiniteElement &feP2, const FiniteElement &surfFeP1, const vec2D_int_Type &surfacePermutation, int dim ){
+    
+    if (dim == 2) {
+        for (int j=0; j<surfacePermutation.size(); j++) {
+            vec_int_Type tmpSurface(2);
+            tmpSurface[0] = feP2.getNode( surfacePermutation.at(j).at(0) );
+            tmpSurface[1] = feP2.getNode( surfacePermutation.at(j).at(1) );
+            
+            sort( tmpSurface.begin(), tmpSurface.end() );
+            
+            vec_int_Type surfaceNodeP2(0);
+            const vec_int_Type surfaceNodeP1 = surfFeP1.getVectorNodeList();
+            if ( tmpSurface[0] == surfaceNodeP1[0]  && tmpSurface[1] == surfaceNodeP1[1] ) {
+                                
+                surfaceNodeP2.push_back( surfaceNodeP1[0] );
+                surfaceNodeP2.push_back( surfaceNodeP1[1] );
+                if (j == 0)
+                    surfaceNodeP2.push_back( feP2.getNode( 3 ) );
+                else if( j == 1 )
+                    surfaceNodeP2.push_back( feP2.getNode( 5 ) );
+                else if( j == 2 )
+                    surfaceNodeP2.push_back( feP2.getNode( 4 ) );
+                
+                int flag = surfFeP1.getFlag();
+                FiniteElement feP2Surf( surfaceNodeP2, flag );
+                
+                if ( !feP2.subElementsInitialized() )
+                    feP2.initializeSubElements("P2",dim-1);
+                feP2.addSubElement(feP2Surf);
+            }
+            
+        }
+    }
+    else if (dim == 3){
+        for (int j=0; j<surfacePermutation.size(); j++) {
+            vec_int_Type tmpSurface(3);
+            tmpSurface[0] = feP2.getNode( surfacePermutation.at(j).at(0) );
+            tmpSurface[1] = feP2.getNode( surfacePermutation.at(j).at(1) );
+            tmpSurface[2] = feP2.getNode( surfacePermutation.at(j).at(2) );
+                        
+            //sort( tmpSurface.begin(), tmpSurface.end() );
+            vec_int_Type index(3, 0);
+            for (int i = 0 ; i != index.size() ; i++)
+                index[i] = i;
+            
+            sort(index.begin(), index.end(),
+                 [&](const int& a, const int& b) {
+                     return  tmpSurface[a] < tmpSurface[b];
+                    }
+                 );
+            
+            tmpSurface = sort_from_ref(tmpSurface, index);
+            
+            vec_int_Type surfaceNodeP2(0);
+            const vec_int_Type surfaceNodeP1 = surfFeP1.getVectorNodeList();
+            
+            if ( tmpSurface[0] == surfaceNodeP1[0]  &&
+                    tmpSurface[1] == surfaceNodeP1[1] &&
+                    tmpSurface[2] == surfaceNodeP1[2]) {
+                surfaceNodeP2.push_back( surfaceNodeP1[0] );
+                surfaceNodeP2.push_back( surfaceNodeP1[1] );
+                surfaceNodeP2.push_back( surfaceNodeP1[2] );
+                vec_int_Type additionalP2IDs(3);
+                if (j == 0){
+                    additionalP2IDs[0] = feP2.getNode( 4 );
+                    additionalP2IDs[1] = feP2.getNode( 5 );
+                    additionalP2IDs[2] = feP2.getNode( 6 );
+                }
+                else if( j == 1 ){
+                    additionalP2IDs[0] = feP2.getNode( 4 );
+                    additionalP2IDs[1] = feP2.getNode( 7 );
+                    additionalP2IDs[2] = feP2.getNode( 8 );
+                }
+                else if( j == 2 ){
+                    additionalP2IDs[0] = feP2.getNode( 5 );
+                    additionalP2IDs[1] = feP2.getNode( 8 );
+                    additionalP2IDs[2] = feP2.getNode( 9 );
+                }
+                else if( j == 3 ){
+                    additionalP2IDs[0] = feP2.getNode( 6 );
+                    additionalP2IDs[1] = feP2.getNode( 7 );
+                    additionalP2IDs[2] = feP2.getNode( 9 );
+                }
+                
+                additionalP2IDs = this->reorderP2SurfaceIndices(additionalP2IDs, index);
+                surfaceNodeP2.push_back( additionalP2IDs[0] );
+                surfaceNodeP2.push_back( additionalP2IDs[1] );
+                surfaceNodeP2.push_back( additionalP2IDs[2] );
+                
+                int flag = surfFeP1.getFlag();
+                FiniteElement feP2Surf( surfaceNodeP2, flag );
+                if ( !feP2.subElementsInitialized() )
+                    feP2.initializeSubElements("P2",dim-1);
+                feP2.addSubElement(feP2Surf);
+            }
+            
+        }
+    }
+    
+}
+
+
+template <class SC, class LO, class GO, class NO>
+vec_int_Type MeshFactory<SC,LO,GO,NO>::reorderP2SurfaceIndices( vec_int_Type& additionalP2IDs, vec_int_Type& index , bool track){
+    vec_int_Type reorderedIDs(3);
+    // depending on the sorting of P1 surface nodes we have to adjust the new ordering of P2 edge midpoints for surfaces in 3D
+    if (index[0] == 0){
+        if(index[1] == 1){
+            reorderedIDs[0] = 0; reorderedIDs[1] = 1; reorderedIDs[2] = 2;
+        }
+        else if(index[1] == 2){
+            reorderedIDs[0] = 2; reorderedIDs[1] = 1; reorderedIDs[2] = 0;
+        }
+    }
+    else if (index[0] == 1){
+        if(index[1] == 0){
+            reorderedIDs[0] = 0; reorderedIDs[1] = 2; reorderedIDs[2] = 1;
+        }
+        else if(index[1] == 2){
+            reorderedIDs[0] = 1; reorderedIDs[1] = 2; reorderedIDs[2] = 0;
+        }
+    }
+    else if (index[0] == 2){
+        if(index[1] == 0){
+            reorderedIDs[0] = 2; reorderedIDs[1] = 0; reorderedIDs[2] = 1;
+        }
+        else if(index[1] == 1){
+            reorderedIDs[0] = 1; reorderedIDs[1] = 0; reorderedIDs[2] = 2;
+        }
+    }
+    
+    return sort_from_ref(additionalP2IDs, reorderedIDs);
+}
+
+//template <class SC, class LO, class GO, class NO>
+//void MeshUnstructured<SC,LO,GO,NO>::setSurfaceP2( const FiniteElement &elementP2 , const vec_int_Type& surfaceNode, vec_int_Type& surfaceNodeP2, const vec2D_int_Type &surfacePermutation ){
+//    
+//    int loc, id1, id2, id3;
+//    if (this->dim_ == 2) {
+//        for (int j=0; j<surfacePermutation.size(); j++) {
+//            id1 = elementP2.getNode( surfacePermutation.at(j).at(0) );
+//            id2 = elementP2.getNode( surfacePermutation.at(j).at(1) );
+//            
+//            vec_int_Type tmpSurface(2);
+//            if (id1 > id2){
+//                tmpSurface[0] = id2;
+//                tmpSurface[1] = id1;
+//            }
+//            else{
+//                tmpSurface[0] = id1;
+//                tmpSurface[1] = id2;
+//            }
+//            
+//            if ( tmpSurface[0] == surfaceNode[0]  && tmpSurface[1] == surfaceNode[1] ) {
+//                surfaceNodeP2.push_back( surfaceNode[0] );
+//                surfaceNodeP2.push_back( surfaceNode[1] );
+//                if (j == 0)
+//                    surfaceNodeP2.push_back( elementP2.getNode( 3 ) );
+//                else if( j == 1 )
+//                    surfaceNodeP2.push_back( elementP2.getNode( 5 ) );
+//                else if( j == 2 )
+//                    surfaceNodeP2.push_back( elementP2.getNode( 4 ) );
+//            }
+//        }
+//    }
+//    else if (this->dim_ == 3){
+//        for (int j=0; j<surfacePermutation.size(); j++) {
+//            id1 = elementP2.getNode( surfacePermutation.at(j).at(0) );
+//            id2 = elementP2.getNode( surfacePermutation.at(j).at(1) );
+//            id3 = elementP2.getNode( surfacePermutation.at(j).at(2) );
+//            
+//            vec_int_Type tmpSurface = {id1 , id2 , id3};
+//            sort( tmpSurface.begin(), tmpSurface.end() );
+//            
+//            if ( tmpSurface[0] == surfaceNode[0]  &&
+//                    tmpSurface[1] == surfaceNode[1] &&
+//                    tmpSurface[2] == surfaceNode[2]) {
+//                surfaceNodeP2.push_back( surfaceNode[0] );
+//                surfaceNodeP2.push_back( surfaceNode[1] );
+//                surfaceNodeP2.push_back( surfaceNode[2] );
+//                if (j == 0){
+//                    surfaceNodeP2.push_back( elementP2.getNode( 4 ) );
+//                    surfaceNodeP2.push_back( elementP2.getNode( 5 ) );
+//                    surfaceNodeP2.push_back( elementP2.getNode( 6 ) );
+//                }
+//                else if( j == 1 ){
+//                    surfaceNodeP2.push_back( elementP2.getNode( 4 ) );
+//                    surfaceNodeP2.push_back( elementP2.getNode( 7 ) );
+//                    surfaceNodeP2.push_back( elementP2.getNode( 8 ) );
+//                }
+//                else if( j == 2 ){
+//                    surfaceNodeP2.push_back( elementP2.getNode( 5 ) );
+//                    surfaceNodeP2.push_back( elementP2.getNode( 8 ) );
+//                    surfaceNodeP2.push_back( elementP2.getNode( 9 ) );
+//                }
+//                else if( j == 3 ){
+//                    surfaceNodeP2.push_back( elementP2.getNode( 6 ) );
+//                    surfaceNodeP2.push_back( elementP2.getNode( 7 ) );
+//                    surfaceNodeP2.push_back( elementP2.getNode( 9 ) );
+//                }
+//            }
+//        }
+//    }
+//    
+//}
+//    
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::getLocalSurfaceIndices(vec2D_int_Type &localSurfaceIndices , int surfaceElementOrder ){
+    
+    if ( this->dim_ == 2 ) {
+        
+        if (surfaceElementOrder == 2) { //P1
+            localSurfaceIndices.resize(3,vec_int_Type(3,-1));
+            localSurfaceIndices.at(0).at(0) = 0;
+            localSurfaceIndices.at(0).at(1) = 1;
+            localSurfaceIndices.at(1).at(0) = 0;
+            localSurfaceIndices.at(1).at(1) = 2;
+            localSurfaceIndices.at(2).at(0) = 1;
+            localSurfaceIndices.at(2).at(1) = 2;
+        }
+        else{
+#ifdef ASSERTS_WARNINGS
+            MYASSERT(false,"no permutation for this surface yet.");
+#endif
+        }
+    }
+    else if ( this->dim_ == 3 ){
+        if (surfaceElementOrder == 3) {
+            localSurfaceIndices.resize(4,vec_int_Type(3,-1));
+            localSurfaceIndices.at(0).at(0) = 0;
+            localSurfaceIndices.at(0).at(1) = 1;
+            localSurfaceIndices.at(0).at(2) = 2;
+            localSurfaceIndices.at(1).at(0) = 0;
+            localSurfaceIndices.at(1).at(1) = 1;
+            localSurfaceIndices.at(1).at(2) = 3;
+            localSurfaceIndices.at(2).at(0) = 1;
+            localSurfaceIndices.at(2).at(1) = 2;
+            localSurfaceIndices.at(2).at(2) = 3;
+            localSurfaceIndices.at(3).at(0) = 0;
+            localSurfaceIndices.at(3).at(1) = 2;
+            localSurfaceIndices.at(3).at(2) = 3;
+        }
+        else{
+#ifdef ASSERTS_WARNINGS
+            MYASSERT(false,"no permutation for this surface yet.");
+#endif
+        }
+    }
+}
+    
+    
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::getEdgeCombinations( vec2D_int_Type& edgeCombinations ){
+
+    if (this->dim_ == 2) {
+        edgeCombinations[0][0] = 0; edgeCombinations[0][1] = 1;
+        edgeCombinations[1][0] = 0; edgeCombinations[1][1] = 2;
+        edgeCombinations[2][0] = 1; edgeCombinations[2][1] = 2;
+    }
+    else if (this->dim_ == 3) {
+        edgeCombinations[0][0] = 0; edgeCombinations[0][1] = 1;
+        edgeCombinations[1][0] = 0; edgeCombinations[1][1] = 2;
+        edgeCombinations[2][0] = 0; edgeCombinations[2][1] = 3;
+        edgeCombinations[3][0] = 1; edgeCombinations[3][1] = 2;
+        edgeCombinations[4][0] = 1; edgeCombinations[4][1] = 3;
+        edgeCombinations[5][0] = 2; edgeCombinations[5][1] = 3;
+    }
+    
+}
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::determinePositionInElementP2( vec_int_Type& positions, vec_GO_Type& elementsOfEdge, LO p1ID, LO p2ID, MeshPtr_Type meshP1 ){
+    ElementsPtr_Type elements = meshP1->getElementsC();
+    for (int i=0; i<elementsOfEdge.size(); i++) {
+
+        const vec_int_Type nodeList = elements->getElement( elementsOfEdge[i] ).getVectorNodeList();
+
+        auto it1 = find( nodeList.begin(), nodeList.end() , p1ID );
+        int localElNum1 = distance( nodeList.begin() , it1 );
+        auto it2 = find( nodeList.begin(), nodeList.end() , p2ID );
+        int localElNum2 = distance( nodeList.begin() , it2 );
+        if (localElNum1 > localElNum2) {
+            int tmp = localElNum1;
+            localElNum1 = localElNum2;
+            localElNum2 = tmp;
+        }
+        if (this->dim_ == 2) {
+            if (localElNum1==0) {
+                if (localElNum2==1)
+                    positions[i] = 3;
+                else if(localElNum2==2)
+                    positions[i] = 5;
+            }
+            else
+                positions[i] = 4;
+        }
+        else if (this->dim_ == 3) {
+            if (localElNum1==0) {
+                if (localElNum2==1)
+                    positions[i] = 4;
+                else if(localElNum2==2)
+                    positions[i] = 6;
+                else if(localElNum2==3)
+                    positions[i] = 7;
+                
+            }
+            else if(localElNum1==1){
+                if (localElNum2==2)
+                    positions[i] = 5;
+                else if(localElNum2==3)
+                    positions[i] = 8;
+            }
+            else
+                positions[i] = 9;
+        }
+    }
+}
+
+// Reading external mesh files
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::readMeshSize(){
+
+    int numElement;
+    int orderElement;
+    int dim;
+    int numNode;
+    int numSurface = -1;
+    int orderSurface = -1;
+    int numEdges = 0;
+    int orderEdges = 0;
+    bool verbose ( this->comm_->getRank() == 0 );
+
+    if (verbose) {
+        cout << "\n";
+        cout << "  Read data of mesh " << this->meshFileName_<< ":\n";
+    }
+
+    meshReadSize ( this->meshFileName_, numNode, dim, numElement, orderElement, numSurface, orderSurface, numEdges, orderEdges );
+    
+    if (verbose) {
+        cout << "\n";
+        cout << "\n";
+        cout << "  Number of nodes = " << numNode << "\n";
+        cout << "  Spatial dimension = " << dim << "\n";
+        cout << "  Number of elements = " << numElement << "\n";
+        cout << "  Element order = " << orderElement << "\n";
+        cout << "  Number of surface elements = " << numSurface << "\n";
+        cout << "  Surface element order = " << orderSurface << "\n";
+        cout << "  Number of edge elements (for 3D) = " << numEdges << "\n";
+        cout << "  Edges element order (for 3D) = " << orderEdges << "\n";
+        
+        cout << "\n";
+        cout << "\n";
+        cout << " Starting to read the data. \n";
+    }
+
+    
+    this->elementOrder_ = orderElement;
+    this->surfaceElementOrder_ = orderSurface;
+    this->edgesElementOrder_ = orderEdges;
+    this->numElements_ = numElement;
+    this->numSurfaces_ = numSurface;
+    this->numEdges_ = numEdges;
+    this->numNodes_ = numNode;
+    
+    this->numElementsGlob_ = numElement;    
+}
+
+
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::readMeshEntity(string entityType){
+    
+    if (entityType == "element")
+        this->readElements( );
+    else if (entityType == "surface")
+        this->readSurfaces( );
+    else if (entityType == "line")
+        this->readLines( );
+    else if (entityType == "node")
+        this->readNodes( );
+    else
+        TEUCHOS_TEST_FOR_EXCEPTION( true, std::runtime_error, "Unknown entity type.");
+}
+
+//template <class SC, class LO, class GO, class NO>
+//void MeshUnstructured<SC,LO,GO,NO>::readSurfaces(){
+//    bool verbose ( this->comm_->getRank() == 0 );
+//    if (verbose)
+//        cout << "### Starting to read surface data ... " << flush;
+//
+//    vec_int_Type    surfaceFlags( numSurfaces_, 0 );
+//    vec_int_Type    surfacesCont( numSurfaces_* surfaceElementOrder_, 0 );
+//
+//    // We need the edges of surface elements to use special surface flags, which are only set on 1D line segments. We need to save these edges to determine the correct flag of P2 elements which might be build later
+//    meshReadData ( meshFileName_, "surface", delimiter_, this->getDimension(), numSurfaces_, surfaceElementOrder_, surfacesCont, surfaceFlags );
+//
+//    if (verbose){
+//        cout << "done." << endl;
+//        cout << "### Setting surface data ... " << flush;
+//    }
+//    ElementsPtr_Type surfaceElementsMesh = this->getSurfaceElements();
+//
+//    for (int i=0; i<numSurfaces_; i++) {
+//        vec_int_Type tmp(surfaceElementOrder_);
+//        for (int j=0; j<surfaceElementOrder_; j++)
+//            tmp.at(j) = surfacesCont.at( i * surfaceElementOrder_ + j ) - 1;// -1 to have start index 0
+//
+//        sort( tmp.begin(), tmp.end() ); // we sort here in order to identify the corresponding element faster!
+//        FiniteElement feSurface( tmp , surfaceFlags[i] );
+//        surfaceElementsMesh->addElement( feSurface );
+//    }
+//
+//
+//    if (verbose)
+//        cout << "done." << endl;
+//}
+
+//template <class SC, class LO, class GO, class NO>
+//void MeshUnstructured<SC,LO,GO,NO>::readLines(){
+//    bool verbose ( this->comm_->getRank() == 0 );
+//    if (verbose)
+//        cout << "### Starting to read line data ... " << flush;
+//
+//    vec_int_Type    edgeFlags( numEdges_, 0 );
+//    vec_int_Type    edgesCont( numEdges_* edgesElementOrder_, 0 );
+//
+//    // We need the edges of surface elements to use special surface flags, which are only set on 1D line segments. We need to save these edges to determine the correct flag of P2 elements which might be build later
+//    meshReadData ( meshFileName_, "line", delimiter_, this->getDimension(), numEdges_, edgesElementOrder_, edgesCont, edgeFlags );
+//
+//
+//    if (verbose){
+//        cout << "done." << endl;
+//        cout << "### Setting line data ... " << flush;
+//    }
+//
+//    ElementsPtr_Type edgeElementsMesh = this->getSurfaceEdgeElements();
+//
+//    //Continous edge surface elements to FiniteElement object (only relevant in 3D)
+//    for (int i=0; i<numEdges_; i++) {
+//        vec_int_Type tmp(edgesElementOrder_);
+//        for (int j=0; j<edgesElementOrder_; j++)
+//            tmp.at(j) = edgesCont.at( i * edgesElementOrder_ + j ) - 1;// -1 to have start index 0
+//
+//        sort( tmp.begin(), tmp.end() ); // we sort here in order to identify the corresponding element faster!
+//        FiniteElement feEdge( tmp , edgeFlags[i] );
+//        edgeElementsMesh->addElement( feEdge );
+//    }
+//
+//    if (verbose)
+//        cout << "done." << endl;
+//}
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::readNodes(){
+    bool verbose ( this->comm_->getRank() == 0 );
+    if (verbose)
+        cout << "### Starting to read node data ... " << flush;
+
+    vec_dbl_Type nodes(this->numNodes_ * this->getDimension(), 0.);
+    vec_int_Type nodeFlags(this->numNodes_,0);
+    meshReadData ( this->meshFileName_, "node", this->delimiter_, this->getDimension(), this->numNodes_, 3/*order of nodes is always 3*/, nodes, nodeFlags );
+    
+    if (verbose){
+        cout << "done." << endl;
+        cout << "### Setting node data ... " << flush;
+    }
+    //Here, all points are saved on every proc
+    this->pointsRep_.reset(new std::vector<std::vector<double> >(this->numNodes_,std::vector<double>(this->getDimension(),-1.)));
+    this->bcFlagRep_.reset(new std::vector<int> (this->numNodes_,0));
+
+    FEDD_TIMER_START(pointsTimer," : MeshReader : Set Points not partitioned");
+
+    for (int i=0; i<this->numNodes_ ; i++) {
+        for (int j=0; j<this->getDimension(); j++)
+            this->pointsRep_->at(i).at(j) = nodes[this->getDimension()*i+j];
+        
+        this->bcFlagRep_->at(i) = nodeFlags[i];
+    }
+
+    if (verbose)
+        cout << "done." << endl;
+}
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::readElements(){
+    bool verbose ( this->comm_->getRank() == 0 );
+    if (verbose)
+        cout << "### Starting to read element data ... " << flush;
+
+    vec_int_Type    elementFlags( this->numElements_, 0 );
+    vec_int_Type    elementsCont( this->numElements_* this->elementOrder_, 0 );
+        
+    // We need the edges of surface elements to use special surface flags, which are only set on 1D line segments. We need to save these edges to determine the correct flag of P2 elements which might be build later
+    meshReadData ( this->meshFileName_, "element", this->delimiter_, this->getDimension(), this->numElements_, this->elementOrder_, elementsCont, elementFlags );
+
+    if (verbose){
+        cout << "done." << endl;
+        cout << "### Setting element data ... " << flush;
+    }
+    ElementsPtr_Type elementsMesh = this->getElementsC();
+    elementsMesh->setFiniteElementType("P1");
+    elementsMesh->setDimension(this->getDimension());
+    
+	
+    int id;
+    for (int i=0; i<this->numElements_; i++) {
+        vec_int_Type tmp(this->elementOrder_);
+        for (int j=0; j<this->elementOrder_; j++){
+            id = elementsCont.at(i*this->elementOrder_ + j) - 1;
+            tmp.at(j) = id;
+        }
+        FiniteElement fe( tmp , elementFlags[i] );
+        elementsMesh->addElement( fe );
+    }
+    
+    if (verbose)
+        cout << "done." << endl;
+}
+
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::readSurfaces(){
+    bool verbose ( this->comm_->getRank() == 0 );
+    if (verbose)
+        cout << "### Starting to read surface data ... " << flush;
+    
+    vec_int_Type    surfaceFlags( this->numSurfaces_, 0 );
+    vec_int_Type    surfacesCont( this->numSurfaces_* this->surfaceElementOrder_, 0 );
+        
+    // We need the edges of surface elements to use special surface flags, which are only set on 1D line segments. We need to save these edges to determine the correct flag of P2 elements which might be build later
+    meshReadData ( this->meshFileName_, "surface", this->delimiter_, this->getDimension(), this->numSurfaces_, this->surfaceElementOrder_, surfacesCont, surfaceFlags );
+        
+    if (verbose){
+        cout << "done." << endl;
+        cout << "### Setting surface data ... " << flush;
+    }
+    ElementsPtr_Type surfaceElementsMesh = this->getSurfaceElements();
+    
+    for (int i=0; i<this->numSurfaces_; i++) {
+        vec_int_Type tmp(this->surfaceElementOrder_);
+        for (int j=0; j<this->surfaceElementOrder_; j++)
+            tmp.at(j) = surfacesCont.at( i * this->surfaceElementOrder_ + j ) - 1;// -1 to have start index 0
+        
+        sort( tmp.begin(), tmp.end() ); // we sort here in order to identify the corresponding element faster!
+        FiniteElement feSurface( tmp , surfaceFlags[i] );
+        surfaceElementsMesh->addElement( feSurface );
+    }
+    
+    
+    if (verbose)
+        cout << "done." << endl;
+}
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::readLines(){
+    bool verbose ( this->comm_->getRank() == 0 );
+
+    if (verbose)
+        cout << "### Starting to read line data ... " << flush;
+
+    vec_int_Type    edgeFlags( this->numEdges_, 0 );
+    vec_int_Type    edgesCont( this->numEdges_* this->edgesElementOrder_, 0 );
+        
+    // We need the edges of surface elements to use special surface flags, which are only set on 1D line segments. We need to save these edges to determine the correct flag of P2 elements which might be build later
+    meshReadData ( this->meshFileName_, "line", this->delimiter_, this->getDimension(), this->numEdges_, this->edgesElementOrder_, edgesCont, edgeFlags );
+
+    
+    if (verbose){
+        cout << "done." << endl;
+        cout << "### Setting line data ... " << flush;
+    }
+    
+    ElementsPtr_Type edgeElementsMesh = this->getSurfaceEdgeElements();
+    
+    //Continous edge surface elements to FiniteElement object (only relevant in 3D)
+    for (int i=0; i<this->numEdges_; i++) {
+        vec_int_Type tmp(this->edgesElementOrder_);
+        for (int j=0; j<this->edgesElementOrder_; j++)
+            tmp.at(j) = edgesCont.at( i * this->edgesElementOrder_ + j ) - 1;// -1 to have start index 0
+        
+        sort( tmp.begin(), tmp.end() ); // we sort here in order to identify the corresponding element faster!
+        FiniteElement feEdge( tmp , edgeFlags[i] );
+        edgeElementsMesh->addElement( feEdge );
+    }
+    
+    if (verbose)
+        cout << "done." << endl;
+}
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::buildMeshInterfaceParallelAndDistance( MeshPtr_Type mesh, vec_int_Type flag_vec, vec_dbl_ptr_Type &distancesToInterface ){
+    this->meshInterface_.reset( new MeshInterface<SC,LO,GO,NO> ( this->getComm() ) );
+
+    //    BuildMeshInterface for different flags
+    this->meshInterface_->determineInterfaceParallelAndDistance( this->pointsUni_,  mesh->pointsUni_, this->bcFlagUni_, mesh->bcFlagUni_, flag_vec, this->getMapUnique(), mesh->getMapUnique(), distancesToInterface, this->pointsRep_, this->getDimension() );
+    
+    mesh->meshInterface_.reset( new MeshInterface_Type ( mesh->getComm() ) );
+    mesh->meshInterface_->buildFromOtherInterface( this->meshInterface_ );
+    
+    //because we had to communicated all interface information in determineInterfaceParallel(), we can now partition the information again.
+    this->partitionInterface();
+
+    MeshFactoryPtr_Type meshFactory = Teuchos::rcp_dynamic_cast<MeshFactory_Type>( mesh );
+    meshFactory->partitionInterface();
+}
+    
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::partitionInterface(){
+    FEDD_TIMER_START(interfacePartitionTimer," : Mesh : Partition Interface");
+    if (!this->meshInterface_.is_null())
+        this->meshInterface_->partitionMeshInterface( this->mapRepeated_, this->mapUnique_);
+
+}
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::moveMesh( MultiVectorPtr_Type displacementUnique, MultiVectorPtr_Type displacementRepeated )
+{
+    // Bemerkung: Repeated und Unique sind unterschiedlich lang!!! => zwei Schleifen
+    TEUCHOS_TEST_FOR_EXCEPTION (displacementRepeated.is_null(), std::runtime_error," displacementRepeated in moveMesh is null.")
+    TEUCHOS_TEST_FOR_EXCEPTION (displacementUnique.is_null(), std::runtime_error," displacementRepeated in moveMesh is null.")
+    // Repeated
+    Teuchos::ArrayRCP<const SC> values = displacementRepeated->getData(0); //only 1 MV
+    for(int i = 0; i < this->pointsRepRef_->size(); i++)
+    {
+        for(int j = 0; j < this->pointsRepRef_->at(0).size(); j++)
+        {
+            // Sortierung von DisplacementRepeated ist x-y-x-y-x-y-x-y bzw. x-y-z-x-y-z-x-y-z
+            // Achtung: DisplacementRepeated ist ein Pointer der mit (*) dereferenziert werden muss.
+            // Operator[] kann nicht auf einen Pointer angewendet werden!!!
+            // Es sei denn es ist ein Array.
+            this->pointsRep_->at(i).at(j) = this->pointsRepRef_->at(i).at(j) + values[this->dim_*i+j];
+        }
+    }
+
+    // Unique
+    values = displacementUnique->getData(0); //only 1 MV
+    for(int i = 0; i < this->pointsUniRef_->size(); i++)
+    {
+        for(int j = 0; j < this->pointsUniRef_->at(0).size(); j++)
+        {
+            // Sortierung von DisplacementRepeated ist x-y-x-y-x-y-x-y bzw. x-y-z-x-y-z-x-y-z
+            // Erklaerung: DisplacementUnique ist ein Vector-Pointer, wo in jedem Eintrag ein MultiVector-Pointer drin steht (std::vector<MultiVector_ptr_Type>)
+            // Greife mit ->at auf den Eintrag des Vektors zu (hier nur ein Eintrag vorhanden), dereferenziere den damit erhaltenen MultiVector-Pointer (als Referenz) um einen
+            // MultiVector zu erhalten.
+            // Greife dann mit [] auf das entsprechende Array (double *&) im MultiVector zu (hier gibt es nur einen)
+            // und anschliessend mit [] auf den Wert des Arrays.
+            // Beachte falls x ein Array ist (also z.B. double *), dann ist x[i] := *(x+i)!!!
+            // Liefert also direkt den Wert und keinen Pointer auf einen double.
+            // Achtung: MultiVector[] liefert double* wohingegen MultiVector() Epetra_Vector* zurueck liefert
+            this->pointsUni_->at(i).at(j) = this->pointsUniRef_->at(i).at(j) + values[this->dim_*i+j];
+        }
+    }
+}
+
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::setGeometry2DRectangle(std::vector<double> coordinates, double l, double h){
     
 	coorRec	= coordinates;
 	length 	= l;
@@ -48,7 +916,7 @@ void MeshStructured<SC,LO,GO,NO>::setGeometry2DRectangle(std::vector<double> coo
 }
 
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::setGeometry3DBox(std::vector<double> coordinates, double l, double w, double h){
+void MeshFactory<SC,LO,GO,NO>::setGeometry3DBox(std::vector<double> coordinates, double l, double w, double h){
     
     coorRec	= coordinates;
     length 	= l;
@@ -59,13 +927,13 @@ void MeshStructured<SC,LO,GO,NO>::setGeometry3DBox(std::vector<double> coordinat
 }
     
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::setRankRange(int numProcsCoarseSolve){
+void MeshFactory<SC,LO,GO,NO>::setRankRange(int numProcsCoarseSolve){
     get<0>(this->rankRange_) = 0;
     get<1>(this->rankRange_) = this->comm_->getSize() - 1 - numProcsCoarseSolve;
 }
 
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildMesh2DTPM(std::string FEType,
+void MeshFactory<SC,LO,GO,NO>::buildMesh2DTPM(std::string FEType,
                                               int N,
                                               int M,
                                               int numProcsCoarseSolve,
@@ -84,7 +952,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh2DTPM(std::string FEType,
 }
     
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildMesh2DMiniTPM(std::string FEType,
+void MeshFactory<SC,LO,GO,NO>::buildMesh2DMiniTPM(std::string FEType,
                                                      int N,
                                                      int M,
                                                      int numProcsCoarseSolve,
@@ -210,7 +1078,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh2DMiniTPM(std::string FEType,
 
 
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildElementsClass( vec2D_int_ptr_Type elements, vec_int_ptr_Type elementFlag ){
+void MeshFactory<SC,LO,GO,NO>::buildElementsClass( vec2D_int_ptr_Type elements, vec_int_ptr_Type elementFlag ){
 
     this->elementsC_.reset(new Elements ( this->FEType_, this->dim_ ) );
     bool setFlags = !elementFlag.is_null();
@@ -231,7 +1099,7 @@ void MeshStructured<SC,LO,GO,NO>::buildElementsClass( vec2D_int_ptr_Type element
 }
     
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildSurfaceLinesSquare(){
+void MeshFactory<SC,LO,GO,NO>::buildSurfaceLinesSquare(){
 
 //    for (int i=0; i<this->elementsC_->numberElements(); i++) {
 //
@@ -240,7 +1108,7 @@ void MeshStructured<SC,LO,GO,NO>::buildSurfaceLinesSquare(){
 }
 
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildSurfaceLinesSquareMiniTPM(string feType){
+void MeshFactory<SC,LO,GO,NO>::buildSurfaceLinesSquareMiniTPM(string feType){
     ElementsPtr_Type elementsMesh = this->getElementsC();
     TEUCHOS_TEST_FOR_EXCEPTION( true, std::runtime_error, "Must be implemented for new elements!");
     if (feType=="P2") {
@@ -283,8 +1151,9 @@ void MeshStructured<SC,LO,GO,NO>::buildSurfaceLinesSquareMiniTPM(string feType){
     
 }
 
+// Simple 2D Mesh, that includes flags, we can add edges an their flags here.
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildMesh2D(std::string FEType,
+void MeshFactory<SC,LO,GO,NO>::buildMesh2D(std::string FEType,
                                                  int N,
                                                  int M,
                                                  int numProcsCoarseSolve,
@@ -626,7 +1495,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh2D(std::string FEType,
 }
     
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
+void MeshFactory<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
                                                  int N,
                                                  int M,
                                                  int numProcsCoarseSolve,
@@ -747,7 +1616,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
                         (*this->pointsRep_)[counter][1] > (coorRec[1]+width-eps) 	|| (*this->pointsRep_)[counter][1] < (coorRec[1]+eps) ||
                         (*this->pointsRep_)[counter][2] > (coorRec[2]+height-eps) 	|| (*this->pointsRep_)[counter][2] < (coorRec[2]+eps) ) {
                         
-                        (*this->bcFlagRep_)[counter] = 1;
+                        (*this->bcFlagRep_)[counter] = 1; 
                     }
                     
                     counter++;
@@ -1016,7 +1885,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
 };
     
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildP1_Disc_Q2_3DCube(int N,
+void MeshFactory<SC,LO,GO,NO>::buildP1_Disc_Q2_3DCube(int N,
                                                         int M,
                                                         int numProcsCoarseSolve,
                                                         std::string underlyingLib){
@@ -1197,7 +2066,7 @@ void MeshStructured<SC,LO,GO,NO>::buildP1_Disc_Q2_3DCube(int N,
 }
     
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::build3DQ1Cube(int N,
+void MeshFactory<SC,LO,GO,NO>::build3DQ1Cube(int N,
                                                 int M,
                                                 int numProcsCoarseSolve,
                                                 std::string underlyingLib)
@@ -1321,7 +2190,7 @@ void MeshStructured<SC,LO,GO,NO>::build3DQ1Cube(int N,
 
     
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::build3DQ2Cube(int N,
+void MeshFactory<SC,LO,GO,NO>::build3DQ2Cube(int N,
                                                 int M,
                                                 int numProcsCoarseSolve,
                                                 std::string underlyingLib)
@@ -1491,7 +2360,7 @@ void MeshStructured<SC,LO,GO,NO>::build3DQ2Cube(int N,
 }
     
 template <class SC, class LO, class GO, class NO>
-GO MeshStructured<SC,LO,GO,NO>::globalID_Q2_20Cube(int r, int s , int t, int &rr, int off_x, int off_y, int off_z, int M, int N, GO nmbPoints_oneDirFull, GO nmbPoints_oneDirMid){
+GO MeshFactory<SC,LO,GO,NO>::globalID_Q2_20Cube(int r, int s , int t, int &rr, int off_x, int off_y, int off_z, int M, int N, GO nmbPoints_oneDirFull, GO nmbPoints_oneDirMid){
 
     GO index = -1;
     bool setPoint = false;
@@ -1532,7 +2401,7 @@ GO MeshStructured<SC,LO,GO,NO>::globalID_Q2_20Cube(int r, int s , int t, int &rr
 }
 
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::build3DQ2_20Cube(int N,
+void MeshFactory<SC,LO,GO,NO>::build3DQ2_20Cube(int N,
                                                    int M,
                                                    int numProcsCoarseSolve,
                                                    std::string underlyingLib)
@@ -1682,7 +2551,7 @@ void MeshStructured<SC,LO,GO,NO>::build3DQ2_20Cube(int N,
 }
     
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::build3DQ2BFS(int N,
+void MeshFactory<SC,LO,GO,NO>::build3DQ2BFS(int N,
                                                 int M,
                                                 int numProcsCoarseSolve,
                                                 std::string underlyingLib){
@@ -1878,7 +2747,7 @@ void MeshStructured<SC,LO,GO,NO>::build3DQ2BFS(int N,
 }
 
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildMesh2DBFS(std::string FEType,
+void MeshFactory<SC,LO,GO,NO>::buildMesh2DBFS(std::string FEType,
                                                     int N,
                                                     int M,
                                                     int numProcsCoarseSolve,
@@ -2336,7 +3205,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh2DBFS(std::string FEType,
 }
 
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildMesh3DBFS(std::string FEType,
+void MeshFactory<SC,LO,GO,NO>::buildMesh3DBFS(std::string FEType,
                                                     int N,
                                                     int M,
                                                     int numProcsCoarseSolve,
@@ -2795,7 +3664,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3DBFS(std::string FEType,
 };
     
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildP1_Disc_Q2_3DBFS(int N,
+void MeshFactory<SC,LO,GO,NO>::buildP1_Disc_Q2_3DBFS(int N,
                                                      int M,
                                                      int numProcsCoarseSolve,
                                                      std::string underlyingLib){
@@ -2978,7 +3847,7 @@ void MeshStructured<SC,LO,GO,NO>::buildP1_Disc_Q2_3DBFS(int N,
     
 }
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::setStructuredMeshFlags(int flagsOption,string FEType){
+void MeshFactory<SC,LO,GO,NO>::setStructuredMeshFlags(int flagsOption,string FEType){
     
     double tol=1.e-12;
     
@@ -3265,7 +4134,7 @@ void MeshStructured<SC,LO,GO,NO>::setStructuredMeshFlags(int flagsOption,string 
 }
     
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildElementMap(){
+void MeshFactory<SC,LO,GO,NO>::buildElementMap(){
     
     Teuchos::Array<GO> elementsGlobalMapping( this->elementsC_->numberElements() );
     LO offset = this->comm_->getRank() * elementsGlobalMapping.size();
@@ -3280,148 +4149,67 @@ void MeshStructured<SC,LO,GO,NO>::buildElementMap(){
 // We assemble the surface elements to the corresponding mesh
 // In 2D we build edgeElements and in 3D the triangle Elements
 
-/* template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::assembleSurfaceElements(){
 
+// Edge Elements for triangular, tetrahedral elements
+template <class SC, class LO, class GO, class NO>
+void MeshFactory<SC,LO,GO,NO>::buildEdgeElements(){
+	this->edgeElements_.reset(new EdgeElements(  ) );
 
+	ElementsPtr_Type elements = this->elementsC_;
+	// we will now assume, that if both nodes of an edge have one flag, it will be flagged that way. This case precludes the fact that edge can connect to surfaces via the inside of the Domain.
+	vec2D_int_Type edgeTmp((this->dim_-1)*3,vec_int_Type(2));
+	vec2D_int_Type edgeFlag((this->dim_-1)*3,vec_int_Type(2));
+	for(int i=0; i< elements->numberElements(); i++){
+		FiniteElement fe = elements->getElement(i);
+		if(this->dim_ = 2){
+			edgeTmp[0] = {fe.getNode(0) , fe.getNode(1)};
+			edgeFlag[0] = {this->bcFlagRep_->at(fe.getNode(0)),this->bcFlagRep_->at(fe.getNode(1))};
+			edgeTmp[1] = {fe.getNode(0) , fe.getNode(2)};
+			edgeFlag[1] = {this->bcFlagRep_->at(fe.getNode(0)),this->bcFlagRep_->at(fe.getNode(2))};
+			edgeTmp[2] = {fe.getNode(1) , fe.getNode(1)};
+			edgeFlag[2] = {this->bcFlagRep_->at(fe.getNode(1)),this->bcFlagRep_->at(fe.getNode(2))};
 
+		}
+		else if(this->dim_ = 3){
+			edgeTmp[0] = {fe.getNode(0) , fe.getNode(1)};
+			edgeFlag[0] = {this->bcFlagRep_->at(fe.getNode(0)),this->bcFlagRep_->at(fe.getNode(1))};
+			edgeTmp[0] = {fe.getNode(0) , fe.getNode(2)};
+			edgeFlag[0] = {this->bcFlagRep_->at(fe.getNode(0)),this->bcFlagRep_->at(fe.getNode(2))};
+			edgeTmp[0] = {fe.getNode(0) , fe.getNode(3)};
+			edgeFlag[0] = {this->bcFlagRep_->at(fe.getNode(0)),this->bcFlagRep_->at(fe.getNode(3))};
+			edgeTmp[0] = {fe.getNode(1) , fe.getNode(2)};
+			edgeFlag[0] = {this->bcFlagRep_->at(fe.getNode(1)),this->bcFlagRep_->at(fe.getNode(2))};
+			edgeTmp[0] = {fe.getNode(1) , fe.getNode(3)};
+			edgeFlag[0] = {this->bcFlagRep_->at(fe.getNode(1)),this->bcFlagRep_->at(fe.getNode(3))};
+			edgeTmp[0] = {fe.getNode(2) , fe.getNode(3)};
+			edgeFlag[0] = {this->bcFlagRep_->at(fe.getNode(2)),this->bcFlagRep_->at(fe.getNode(3))};
+		}
+//std::min_element(vec.begin(), vec.end())
+		for(int j=0; j< edgeTmp.size() ; j++){
+			sort( edgeTmp[j].begin(), edgeTmp[j].end() );
+			sort( edgeFlag[j].begin(), edgeFlag[j].end() );
+			if(edgeFlag[j][0] == this->volumeID_ || edgeFlag[j][1] == this->volumeID_){
+				FiniteElement feNew(edgeTmp[j],this->volumeID_);			
+				this->edgeElements_->addEdge( feNew, i  );	
+			}
+			else{
+				FiniteElement feNew(edgeTmp[j],edgeFlag[j][0]);	 // always using smaller Flag		
+				this->edgeElements_->addEdge( feNew, i  );	
+			}
+
+		}
+	}
+	vec2D_GO_Type combinedEdgeElements;
+	this->edgeElements_->sortUniqueAndSetGlobalIDsParallel(this->elementMap_,combinedEdgeElements);
+	this->edgeElements_->setElementsEdges( combinedEdgeElements );
+	this->buildEdgeMap();
+	this->edgeElements_->setUpElementsOfEdge( this->elementMap_, this->edgeMap_);
+	this->updateElementsOfEdgesLocalAndGlobal();
 
 }
 
-template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::assignEdgeFlags(){
 
-	vec2D_LO_Type markedPoints(0);
-	elements = this->elements_;
-	edgeElements = this->edgeElements_;
-	MapConstPtr_Type mapRepeatedP1 = this->getMapRepeated();
-	vec_int_Type newFlags(edgeElements->numberElements());
-
-	MapConstPtr_Type edgeMap = this->getEdgeMap();
-
-	vec_int_Type markedTrue(edgeElements->numberElements());
-	for(int i=0; i< edgeElements->numberElements() ; i++){
-		LO p1ID =edgeElements->getElement(i).getNode(0);
-		LO p2ID =edgeElements->getElement(i).getNode(1);
-		newFlags[i]=meshP1->determineFlagP2( meshP1, p1ID, p2ID, i , markedPoints );
-		if(newFlags[i] != -1){ // questionable point that were given a flag, but that is not certain yet
-			vec_LO_Type elementsOfEdge = edgeElements->getElementsOfEdge( (int) i );		
-       		for (int j=0; j<elementsOfEdge.size(); j++) {
-           		if ( elementsOfEdge[j] == -1 ) 
-					markedTrue[i] =1;
-			}
-		}	
-	}
-	// It is possible that a Edge is conencted to two surfaces with different Flags, that are also on different Processors
-	// This Leads to two different Flags for the same Edge
-	// In order to counter that effect we check the interface edges of which we determined the flag via surfaces and check if they have the same flag and if not choose the lower one
-	int maxRank = std::get<1>(this->rankRange_);
-	if(maxRank >0 ){
-		vec_GO_Type edgeSwitch(0);
-		vec_LO_Type flags(0);
-		for(int i=0; i<edgeElements->numberElements(); i++){
-			if(markedTrue[i]==1){
-				edgeSwitch.push_back(edgeMap->getGlobalElement(i));
-				flags.push_back(newFlags[i]);
-			}
-		}
-
-		// communticating elements across interface
-		Teuchos::ArrayView<GO> edgeSwitchArray = Teuchos::arrayViewFromVector( edgeSwitch);
-
-		MapPtr_Type mapGlobalInterface =
-			Teuchos::rcp( new Map_Type( edgeMap->getUnderlyingLib(), Teuchos::OrdinalTraits<GO>::invalid(), edgeSwitchArray, 0, this->comm_) );
-
-		// Global IDs of Procs
-		// Setting newPoints as to be communicated Values
-		MultiVectorLOPtr_Type edgeFlags = Teuchos::rcp( new MultiVectorLO_Type( mapGlobalInterface, 1 ) );
-		Teuchos::ArrayRCP< LO > edgeFlagsEntries  = edgeFlags->getDataNonConst(0);
-
-		for(int i=0; i< edgeFlagsEntries.size() ; i++){
-			edgeFlagsEntries[i] = flags[i] ;
-		}
-
-		MapConstPtr_Type mapGlobalInterfaceUnique = mapGlobalInterface;
-		if(mapGlobalInterface->getGlobalNumElements()>0){
-			mapGlobalInterfaceUnique = mapGlobalInterface->buildUniqueMap( meshP1->rankRange_ );
-		}
-
-
-		MultiVectorLOPtr_Type isInterfaceElement_imp = Teuchos::rcp( new MultiVectorLO_Type( mapGlobalInterfaceUnique, 1 ) );
-		isInterfaceElement_imp->putScalar( (LO) 0 ); 
-		isInterfaceElement_imp->importFromVector( edgeFlags, false, "Insert");
-
-		MultiVectorLOPtr_Type isInterfaceElement_exp = Teuchos::rcp( new MultiVectorLO_Type( mapGlobalInterfaceUnique, 1 ) );
-		isInterfaceElement_exp->putScalar( (LO) 0 ); 
-		isInterfaceElement_exp->exportFromVector( edgeFlags, false, "Insert");
-
-		MultiVectorLOPtr_Type isInterfaceElement2_imp = Teuchos::rcp( new MultiVectorLO_Type( mapGlobalInterface, 1 ) );
-		isInterfaceElement2_imp->putScalar( (LO) 0 ); 
-		isInterfaceElement2_imp->importFromVector(isInterfaceElement_imp, false, "Insert");
-
-		isInterfaceElement2_imp->exportFromVector(isInterfaceElement_exp, false, "Insert");
-
-		edgeFlagsEntries  = isInterfaceElement2_imp->getDataNonConst(0);
-
-		for(int i=0; i<edgeFlagsEntries.size(); i++){
-			LO entry = edgeMap->getLocalElement(edgeSwitch[i]);
-			if(newFlags[entry] > edgeFlagsEntries[i]){
-				newFlags[entry] = edgeFlagsEntries[i];
-
-			}
-		}
-	}
-	// In the next Step we need to determine the missing Flags of the 'MarkedMissing' Edges
-	// We create a Map of the entries we have and one of the ones we need
-	vec_GO_Type edgesNeeded(0); // For the Flag entries we need
-	vec_GO_Type edgesActive(0);
-	vec_int_Type flagsTmp(0);
-	for(int i=0; i<edgeElements->numberElements(); i++){
-		if(newFlags[i]==-1){
-			edgesNeeded.push_back(edgeMap->getGlobalElement(i));
-		}
-		else{
-			edgesActive.push_back(edgeMap->getGlobalElement(i));
-			flagsTmp.push_back(newFlags[i]);
-			
-		}
-	}
-
-	// communticating elements across interface
-	Teuchos::ArrayView<GO> edgesNeededArray = Teuchos::arrayViewFromVector( edgesNeeded);
-	Teuchos::ArrayView<GO> edgesActiveArray = Teuchos::arrayViewFromVector( edgesActive);
-	
-	MapPtr_Type mapEdgesNeeded =
-		Teuchos::rcp( new Map_Type( edgeMap->getUnderlyingLib(), Teuchos::OrdinalTraits<GO>::invalid(), edgesNeededArray, 0, this->comm_) );
-
-	MapPtr_Type mapEdgesActive =
-		Teuchos::rcp( new Map_Type( edgeMap->getUnderlyingLib(), Teuchos::OrdinalTraits<GO>::invalid(), edgesActiveArray, 0, this->comm_) );
-
-	MultiVectorLOPtr_Type flagsImport = Teuchos::rcp( new MultiVectorLO_Type( mapEdgesNeeded, 1 ) );
-	flagsImport->putScalar(10);
-
-	MultiVectorLOPtr_Type flagsExport = Teuchos::rcp( new MultiVectorLO_Type( mapEdgesActive, 1 ) );
-	Teuchos::ArrayRCP< LO > flagExportEntries  = flagsExport->getDataNonConst(0);
-	for(int i=0; i< flagExportEntries.size(); i++){
-		flagExportEntries[i] = flagsTmp[i];
-	}
-	
-	flagsImport->importFromVector(flagsExport, false, "Insert");
-
-    Teuchos::ArrayRCP< LO > flagImportEntries  = flagsImport->getDataNonConst(0);
-	for(int i=0; i<flagImportEntries.size(); i++){
-		LO entry = edgeMap->getLocalElement(edgesNeeded[i]);
-		if(newFlags[entry] ==-1){
-			newFlags[entry] = flagImportEntries[i];
-		}
-	}
-
-	for(int i=0; i< edgeElements->numberElements() ; i++){
-		edgeElements->getElement(i).setFlag(newFlags[i]);
-	}
-}
-
-template <class SC, class LO, class GO, class NO>
+/*template <class SC, class LO, class GO, class NO>
 void MeshStructured<SC,LO,GO,NO>::buildSurfaceTriangleElements(ElementsPtr_Type elements, EdgeElementsPtr_Type edgeElements, SurfaceElementsPtr_Type surfaceTriangleElements, MapConstPtr_Type edgeMap, MapConstPtr_Type elementMap ){
     TEUCHOS_TEST_FOR_EXCEPTION( elements.is_null(), std::runtime_error, "Elements not initialized!");
     TEUCHOS_TEST_FOR_EXCEPTION( surfaceTriangleElements.is_null(), std::runtime_error, "Surface Triangle Elements not initialized!");
@@ -3537,7 +4325,7 @@ void MeshStructured<SC,LO,GO,NO>::buildSurfaceTriangleElements(ElementsPtr_Type 
 	surfaceTriangleElements->setElementsSurface( combinedSurfaceElements );
 
 	surfaceTriangleElements->setUpElementsOfSurface(elementMap,edgeMap, edgeElements);	
-}
-  */  
+}*/
+  
 }
 #endif

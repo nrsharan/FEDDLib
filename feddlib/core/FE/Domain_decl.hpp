@@ -5,6 +5,7 @@
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 #include "feddlib/core/Mesh/MeshStructured.hpp"
 #include "feddlib/core/Mesh/MeshUnstructured.hpp"
+#include "feddlib/core/Mesh/MeshFactory.hpp"
 
 /*!
  Declaration of Domain
@@ -23,18 +24,18 @@ public:
     typedef Teuchos::RCP<Domain<SC,LO,GO,NO> > DomainPtr_Type;
     typedef std::vector<DomainPtr_Type> DomainPtrArray_Type; // Array of domains for meshrefinement
     typedef Teuchos::RCP< const Domain<SC,LO,GO,NO> > DomainConstPtr_Type;
-    typedef Mesh<SC,LO,GO,NO> Mesh_Type;
-    typedef Teuchos::RCP<Mesh_Type > MeshPtr_Type;
 
+    typedef MeshUnstructured<SC,LO,GO,NO> Mesh_Type;
+    typedef Teuchos::RCP<Mesh_Type > MeshPtr_Type;
     typedef Teuchos::RCP<const Mesh_Type > MeshConstPtr_Type;
+
+    typedef MeshFactory<SC,LO,GO,NO> MeshFactory_Type;
+    typedef Teuchos::RCP<MeshFactory_Type > MeshFactoryPtr_Type;
+
     typedef MeshStructured<SC,LO,GO,NO> MeshStr_Type;
     typedef Teuchos::RCP<MeshStr_Type> MeshStrPtr_Type;
 
-    typedef MeshUnstructured<SC,LO,GO,NO> MeshUnstr_Type;
-    typedef Teuchos::RCP<MeshUnstr_Type> MeshUnstrPtr_Type;
-    typedef std::vector<MeshUnstrPtr_Type> MeshUnstrPtrArray_Type; // Array of meshUnstr for meshRefinement
-    
-    typedef typename MeshUnstr_Type::MeshInterfacePtr_Type MeshInterfacePtr_Type;
+    typedef typename Mesh_Type::MeshInterfacePtr_Type MeshInterfacePtr_Type;
     
     typedef typename Mesh_Type::Elements_Type Elements_Type;
     typedef typename Mesh_Type::ElementsPtr_Type ElementsPtr_Type;
@@ -126,7 +127,7 @@ public:
 
     void initWithDomain(DomainPtr_Type domainsP1); // Mesh Refinement
 
-    void setMesh(MeshUnstrPtr_Type meshUnstr); 
+    void setMesh(MeshPtr_Type meshUnstr); 
     
     // Baue unique node- und dof-InterfaceMap in der Interface-Nummerierung
     void buildUniqueInterfaceMaps();

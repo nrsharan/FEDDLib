@@ -2,7 +2,6 @@
 #define ErrorEstimation_decl_hpp
 
 #include "feddlib/core/Utils/FEDDUtils.hpp"
-#include "feddlib/core/Mesh/Mesh.hpp"
 #include "feddlib/core/Mesh/MeshUnstructured.hpp"
 #include "feddlib/core/Mesh/MeshInterface.hpp"
 #include "feddlib/core/Mesh/MeshFileReader.hpp"

@@ -229,17 +229,17 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
     string underlyingLib = "Tpetra";
 #endif
     
-    MeshUnstrPtr_Type meshUnstr = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( domains_[meshNumber]->getMesh() );
+    MeshFactoryPtr_Type meshFactory = Teuchos::rcp_dynamic_cast<MeshFactory_Type>( domains_[meshNumber]->getMesh() );
     
-    meshUnstr->readMeshEntity("node");
+   	meshFactory->readMeshEntity("node");
     // We delete the point at this point. We only need the flags to determine surface elements. We will load them again later.
-    meshUnstr->pointsRep_.reset();
+    meshFactory->pointsRep_.reset();
     
-    meshUnstr->readMeshEntity("element");
+    meshFactory->readMeshEntity("element");
     
-    meshUnstr->readMeshEntity("surface");
+    meshFactory->readMeshEntity("surface");
     
-    meshUnstr->readMeshEntity("line");
+    meshFactory->readMeshEntity("line");
 
 
     
@@ -250,9 +250,9 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
     if (buildSurfaces)
         this->setSurfacesToElements( meshNumber );
     else
-        meshUnstr->deleteSurfaceElements();
+        meshFactory->deleteSurfaceElements();
 
-    ElementsPtr_Type elementsMesh = meshUnstr->getElementsC();
+    ElementsPtr_Type elementsMesh = meshFactory->getElementsC();
     
     // Setup Metis
     idx_t options[METIS_NOPTIONS];
@@ -265,16 +265,16 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
     //    options[METIS_OPTION_RTYPE] = METIS_RTYPE_GREEDY;
     options[METIS_OPTION_NITER] = 50; // default is 10
     options[METIS_OPTION_CCORDER] = 1;
-    idx_t ne = meshUnstr->getNumElementsGlobal();
-    idx_t nn = meshUnstr->getNumGlobalNodes();
+    idx_t ne = meshFactory->getNumElementsGlobal();
+    idx_t nn = meshFactory->getNumGlobalNodes();
 
     // ----------------------------------------------------------------
     // Neu: Indexmenge Edges
     // ----------------------------------------------------------------
-    idx_t ned = meshUnstr->getEdgeElements()->numberElements();
+    idx_t ned = meshFactory->getEdgeElements()->numberElements();
     // ----------------------------------------------------------------
         
-    int dim = meshUnstr->getDimension();
+    int dim = meshFactory->getDimension();
     std::string FEType = domains_[meshNumber]->getFEType();
 
     vec_idx_Type eptr_vec(0);
@@ -344,8 +344,6 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
     // Global Edge IDs
     vec_GO_Type locedpart(0);
 
-
-
     for (int i=0; i<ne; i++) {
         if (epart[i] == comm_->getRank() - std::get<0>( rankRanges_[meshNumber] ) ){
             locepart.push_back(i);
@@ -401,16 +399,16 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
     
     Teuchos::ArrayView<GO> pointsRepGlobMapping =  Teuchos::arrayViewFromVector( pointsRepIndices );
     
-    meshUnstr->mapRepeated_.reset( new Map<LO,GO,NO>( underlyingLib, OTGO::invalid(), pointsRepGlobMapping, 0, this->comm_) );
-    MapConstPtr_Type mapRepeated = meshUnstr->mapRepeated_;
+    meshFactory->mapRepeated_.reset( new Map<LO,GO,NO>( underlyingLib, OTGO::invalid(), pointsRepGlobMapping, 0, this->comm_) );
+    MapConstPtr_Type mapRepeated = meshFactory->mapRepeated_;
     // We keep the global elements if we want to build edges later. Otherwise they will be deleted
     ElementsPtr_Type elementsGlobal = Teuchos::rcp( new Elements_Type( *elementsMesh ) );
-    meshUnstr->elementsC_.reset(new Elements ( FEType, dim ) );
+    meshFactory->elementsC_.reset(new Elements ( FEType, dim ) );
     {
         Teuchos::ArrayView<GO> elementsGlobalMapping =  Teuchos::arrayViewFromVector( locepart );
             // elementsGlobalMapping -> elements per Processor
 
-        meshUnstr->elementMap_.reset(new Map<LO,GO,NO>( underlyingLib, (GO) -1, elementsGlobalMapping, 0, this->comm_) );
+        meshFactory->elementMap_.reset(new Map<LO,GO,NO>( underlyingLib, (GO) -1, elementsGlobalMapping, 0, this->comm_) );
         
         {
             int localSurfaceCounter = 0;
@@ -421,7 +419,7 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
                     int index = mapRepeated->getLocalElement( (long long) eind[j] );
                     tmpElement.push_back(index);
                 }
-		std::sort(tmpElement.begin(), tmpElement.end());
+				std::sort(tmpElement.begin(), tmpElement.end());
                 FiniteElement fe( tmpElement, elementsGlobal->getElement( locepart.at(i) ).getFlag()  );
                 // convert global IDs of (old) globally owned subelements to local IDs
                 if (buildSurfaces) {
@@ -432,7 +430,7 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
                         fe.setSubElements( subEl );
                     }
                 }
-                meshUnstr->elementsC_->addElement( fe );
+                meshFactory->elementsC_->addElement( fe );
             }
         }
     }
@@ -449,73 +447,73 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
     if (buildSurfaces){
         this->setEdgesToSurfaces( meshNumber );}
     else
-        meshUnstr->deleteSurfaceElements();
+        meshFactory->deleteSurfaceElements();
         
     if (buildEdges) {
         if (verbose)
             cout << "-- Build edge element list ... \n" << flush;
         
         
-        buildEdgeListParallel( meshUnstr, elementsGlobal );
+        buildEdgeListParallel( meshFactory, elementsGlobal );
         
         if (verbose)
             cout << "\n done!"<< endl;
         
-        MapConstPtr_Type elementMap =  meshUnstr->getElementMap();
+        MapConstPtr_Type elementMap = meshFactory->getElementMap();
 
         FEDD_TIMER_START(partitionEdgesTimer," : MeshPartitioner : Partition Edges");
-        meshUnstr->getEdgeElements()->partitionEdges( elementMap, mapRepeated );
+        meshFactory->getEdgeElements()->partitionEdges( elementMap, mapRepeated );
         FEDD_TIMER_STOP(partitionEdgesTimer);
 
         // edge global indices on different processors
-        for( int i=0; i<meshUnstr->getEdgeElements()->numberElements() ; i++){
-            locedpart.push_back(meshUnstr->getEdgeElements()->getGlobalID((LO) i));
+        for( int i=0; i<meshFactory->getEdgeElements()->numberElements() ; i++){
+            locedpart.push_back(meshFactory->getEdgeElements()->getGlobalID((LO) i));
         }
 
         // Setup EdgeMap
         Teuchos::ArrayView<GO> edgesGlobalMapping =  Teuchos::arrayViewFromVector( locedpart );
-        meshUnstr->edgeMap_.reset(new Map<LO,GO,NO>( underlyingLib, (GO) -1, edgesGlobalMapping, 0, this->comm_) );
+        meshFactory->edgeMap_.reset(new Map<LO,GO,NO>( underlyingLib, (GO) -1, edgesGlobalMapping, 0, this->comm_) );
 
 
     }
         
-    meshUnstr->readMeshEntity("node");
+    meshFactory->readMeshEntity("node");
     
     if (verbose)
         cout << "-- Build Repeated Points Volume ... " << flush;
             
     // adjust for coarse procs
-    meshUnstr->mapUnique_ = meshUnstr->mapRepeated_->buildUniqueMap( rankRanges_[meshNumber] );
+    meshFactory->mapUnique_ = meshFactory->mapRepeated_->buildUniqueMap( rankRanges_[meshNumber] );
 
     //    free(epart);
     if (verbose)
         cout << "-- Building unique & repeated points ... " << flush;
     {
-        vec2D_dbl_Type points = *meshUnstr->getPointsRepeated();
-        vec_int_Type flags = *meshUnstr->getBCFlagRepeated();
-        meshUnstr->pointsRep_.reset( new std::vector<std::vector<double> >( meshUnstr->mapRepeated_->getNodeNumElements(), std::vector<double>(dim,-1.) ) );
-        meshUnstr->bcFlagRep_.reset( new std::vector<int> ( meshUnstr->mapRepeated_->getNodeNumElements(), 0 ) );
+        vec2D_dbl_Type points = *meshFactory->getPointsRepeated();
+        vec_int_Type flags = *meshFactory->getBCFlagRepeated();
+        meshFactory->pointsRep_.reset( new std::vector<std::vector<double> >(meshFactory->mapRepeated_->getNodeNumElements(), std::vector<double>(dim,-1.) ) );
+        meshFactory->bcFlagRep_.reset( new std::vector<int> ( meshFactory->mapRepeated_->getNodeNumElements(), 0 ) );
         
         int pointIDcont;
         for (int i=0; i<pointsRepIndices.size() ; i++) {
             pointIDcont = pointsRepIndices.at(i);
             for (int j=0; j<dim; j++)
-                meshUnstr->pointsRep_->at(i).at(j) = points[pointIDcont][j];
-            meshUnstr->bcFlagRep_->at(i) =  flags[pointIDcont];
+                meshFactory->pointsRep_->at(i).at(j) = points[pointIDcont][j];
+            meshFactory->bcFlagRep_->at(i) =  flags[pointIDcont];
         }
     }
 
-    meshUnstr->pointsUni_.reset(new std::vector<std::vector<double> >( meshUnstr->mapUnique_->getNodeNumElements(), std::vector<double>(dim,-1.) ) );
-    meshUnstr->bcFlagUni_.reset(new std::vector<int> ( meshUnstr->mapUnique_->getNodeNumElements(), 0) );
+    meshFactory->pointsUni_.reset(new std::vector<std::vector<double> >( meshFactory->mapUnique_->getNodeNumElements(), std::vector<double>(dim,-1.) ) );
+    meshFactory->bcFlagUni_.reset(new std::vector<int> ( meshFactory->mapUnique_->getNodeNumElements(), 0) );
     GO indexGlobal;
-    MapConstPtr_Type map = meshUnstr->getMapRepeated();
-    vec2D_dbl_ptr_Type pointsRep = meshUnstr->pointsRep_;
-    for (int i=0; i<meshUnstr->mapUnique_->getNodeNumElements() ; i++) {
-        indexGlobal = meshUnstr->mapUnique_->getGlobalElement(i);
+    MapConstPtr_Type map = meshFactory->getMapRepeated();
+    vec2D_dbl_ptr_Type pointsRep = meshFactory->pointsRep_;
+    for (int i=0; i<meshFactory->mapUnique_->getNodeNumElements() ; i++) {
+        indexGlobal = meshFactory->mapUnique_->getGlobalElement(i);
         for (int j=0; j<dim; j++) {
-            meshUnstr->pointsUni_->at(i).at(j) = pointsRep->at( map->getLocalElement( indexGlobal) ).at(j);
+            meshFactory->pointsUni_->at(i).at(j) = pointsRep->at( map->getLocalElement( indexGlobal) ).at(j);
         }
-        meshUnstr->bcFlagUni_->at(i) = meshUnstr->bcFlagRep_->at( map->getLocalElement( indexGlobal) );
+        meshFactory->bcFlagUni_->at(i) = meshFactory->bcFlagRep_->at( map->getLocalElement( indexGlobal) );
     }
     
     if (verbose)
@@ -523,7 +521,7 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
     
     if (verbose)
         cout << "-- Partition interface ... " << flush;
-    meshUnstr->partitionInterface();
+   meshFactory->partitionInterface();
     
     if (verbose)
         cout << "done!" << endl;
@@ -535,7 +533,7 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
 template <class SC, class LO, class GO, class NO>
 void MeshPartitioner<SC,LO,GO,NO>::setEdgesToSurfaces(int meshNumber){
     bool verbose ( comm_->getRank() == 0 );
-    MeshUnstrPtr_Type meshUnstr = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( domains_[meshNumber]->getMesh() );
+    MeshPtr_Type meshUnstr = Teuchos::rcp_dynamic_cast<Mesh_Type>( domains_[meshNumber]->getMesh() );
     ElementsPtr_Type elementsMesh = meshUnstr->getElementsC();
     MapConstPtr_Type mapRepeated = meshUnstr->mapRepeated_;
     if (verbose)
@@ -583,7 +581,7 @@ template <class SC, class LO, class GO, class NO>
 void MeshPartitioner<SC,LO,GO,NO>::setSurfacesToElements(int meshNumber){
     
     bool verbose ( comm_->getRank() == 0 );
-    MeshUnstrPtr_Type meshUnstr = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( domains_[meshNumber]->getMesh() );
+    MeshPtr_Type meshUnstr = Teuchos::rcp_dynamic_cast<Mesh_Type>( domains_[meshNumber]->getMesh() );
     ElementsPtr_Type elementsMesh = meshUnstr->getElementsC();
 
     if (verbose)
@@ -658,7 +656,7 @@ void MeshPartitioner<SC,LO,GO,NO>::setSurfacesToElements(int meshNumber){
 }
 
 template <class SC, class LO, class GO, class NO>
-void MeshPartitioner<SC,LO,GO,NO>::buildEdgeListParallel( MeshUnstrPtr_Type mesh, ElementsPtr_Type elementsGlobal ){
+void MeshPartitioner<SC,LO,GO,NO>::buildEdgeListParallel( MeshPtr_Type mesh, ElementsPtr_Type elementsGlobal ){
     FEDD_TIMER_START(edgeListTimer," : MeshReader : Build Edge List");
     ElementsPtr_Type elements = mesh->getElementsC();
     
