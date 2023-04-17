@@ -349,8 +349,9 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             this->problemStructureNonLin_->updateEMod(eModVecConst);                
             this->system_->addBlock( this->problemStructureNonLin_->getSystem()->getBlock(0,0), 0, 0 );                                
         }
-      
-        exporterEMod_->save( timeSteppingTool_->t_);
+
+        if ( this->parameterList_->sublist("Exporter").get("Export EMod", true))      
+            exporterEMod_->save( timeSteppingTool_->t_);
 
 
         return;

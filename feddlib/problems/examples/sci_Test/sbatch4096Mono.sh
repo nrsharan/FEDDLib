@@ -10,6 +10,7 @@
 
 unset SLURM_EXPORT_ENV
 
-srun ./problems_sci_Test.exe --precfile=SIMPLE/parametersPrec_GDSW.xml
-srun ./problems_sci_Test.exe --precfile=SIMPLE/parametersPrec_RGDSW.xml
+srun ./problems_sci_Test.exe --precfile=parametersPrec_GDSW.xml	--problemfile=parametersProblemSCI_GDSW.xml
+srun ./problems_sci_Test.exe --precfile=parametersPrec_RGDSW.xml --problemfile=parametersProblemSCI_RGDSW.xml
+
 
