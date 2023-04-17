@@ -446,7 +446,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
 
         MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
         d_rep_->importFromVector(d, true); 
-        d_rep_->writeMM("Solution_d_rep");
+        //d_rep_->writeMM("Solution_d_rep");
        
         this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Rhs", true/*call fillComplete*/);
 
@@ -484,7 +484,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
            
         }
 
-         this->residualVec_->getBlockNonConst(0)->writeMM("residualVec");
+        // this->residualVec_->getBlockNonConst(0)->writeMM("residualVec");
 
 
         /*this->problemChem_->assemble();
@@ -510,7 +510,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
         this->bcFactory_->setVectorMinusBC( this->residualVec_, this->solution_, time );
     }
     
-    this->residualVec_->getBlockNonConst(0)->writeMM("residualVec_BC");
+    //this->residualVec_->getBlockNonConst(0)->writeMM("residualVec_BC");
 
 
 }
@@ -883,7 +883,7 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
 
 
             this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
-            this->sourceTerm_->getBlockNonConst(0)->writeMM("RHS_ext");
+            //this->sourceTerm_->getBlockNonConst(0)->writeMM("RHS_ext");
         }
         else
             this->problemTimeStructure_->assembleSourceTerm( timeSteppingTool_->t_ );

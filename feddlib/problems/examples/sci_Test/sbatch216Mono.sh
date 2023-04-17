@@ -1,6 +1,6 @@
 #! /bin/bash -l
 
-#SBATCH -N 4
+#SBATCH -N 3
 #SBATCH --ntasks=216
 #SBATCH -t 00:20:00
 #SBATCH --output=216_Mono.out

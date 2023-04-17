@@ -535,9 +535,9 @@ int main(int argc, char *argv[])
         domainChem->setReferenceConfiguration();
         domainStructure->setReferenceConfiguration();
 
-        MultiVectorPtr_Type nodes(domainStructure->getNodeListMV());
+        //MultiVectorPtr_Type nodes(domainStructure->getNodeListMV());
 
-        nodes->writeMM("nodes.mm");
+        //nodes->writeMM("nodes.mm");
 
         vec2D_dbl_Type diffusionTensor(dim,vec_dbl_Type(3));
         double D0 = parameterListAll->sublist("Parameter Diffusion").get("D0",1.);
