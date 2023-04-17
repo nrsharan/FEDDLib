@@ -3438,7 +3438,7 @@ void MeshStructured<SC,LO,GO,NO>::buildSurfaces(int flagsOption, string FEType){
                 case 3:
                     for( int T =0; T< this->elementsC_->numberElements(); T++){
 
-                        vec_int_Type nodeList = elementsC_->getElement(T).getVectorNodeList();
+                        vec_int_Type nodeList = this->elementsC_->getElement(T).getVectorNodeList();
 
                         //cout << "NodeList Element for Element " << T << " "  << nodeList[0] << " " << nodeList[1] << " " << nodeList[2] << " " << nodeList[3] << " " << nodeList[4] << " " << nodeList[5] <<" " << nodeList[6] << " " << nodeList[7] << " " << nodeList[8] << " " << nodeList[9] << endl;
 
@@ -3532,10 +3532,10 @@ void MeshStructured<SC,LO,GO,NO>::buildSurfaces(int flagsOption, string FEType){
 
                             if(flag != 10){
                                 FiniteElement feSurface( surfaceElements_vec[i], flag);
-                                if ( !elementsC_->getElement(T).subElementsInitialized() )
-                                    elementsC_->getElement(T).initializeSubElements( "P2", 2 ); // only P1 for now
+                                if ( !this->elementsC_->getElement(T).subElementsInitialized() )
+                                    this->elementsC_->getElement(T).initializeSubElements( "P2", 2 ); // only P1 for now
                                 
-                                elementsC_->getElement(T).addSubElement( feSurface );
+                                this->elementsC_->getElement(T).addSubElement( feSurface );
                             }
                         }
                     }
