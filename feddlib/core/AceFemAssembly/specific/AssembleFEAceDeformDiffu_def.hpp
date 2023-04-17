@@ -80,6 +80,8 @@ namespace FEDD
 
 		this->rhsVec_.reset(new vec_dbl_Type(dofsElement_, 0.));
 
+#ifdef FEDD_HAVE_ACEGENINTERFACE
+
 		std::vector<double> positions(30);
 		int count = 0;
 		for (int i = 0; i < 10; i++)
@@ -128,7 +130,7 @@ namespace FEDD
 			(*this->rhsVec_)[i] = residuum[i];
 
 		free(stiffnessMatrix);
-		
+
 		// std::vector<double> v(2238);
 		// std::vector<double> d(6);
 		// std::vector<double> ul(60);
@@ -228,11 +230,14 @@ namespace FEDD
 		// }
 		// else
 		// 	TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Unknown DOF ordering sequence. Known identifiers: 1 and 2. Check parameters file!");
+	#endif
 	}
 
 	template <class SC, class LO, class GO, class NO>
 	void AssembleFEAceDeformDiffu<SC, LO, GO, NO>::assembleDeformationDiffusionNeoHook(SmallMatrixPtr_Type &elementMatrix)
 	{
+	#ifdef FEDD_HAVE_ACEGENINTERFACE
+
 
 		std::vector<double> positions(30);
 		int count = 0;
@@ -452,6 +457,7 @@ namespace FEDD
 		//	TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Unknown DOF ordering sequence. Known identifiers: 1 and 2. Check parameters file!");
 
 		// Need to modify the above based on dof ordering flag selected
+	#endif
 	}
 
 } // namespace FEDD
