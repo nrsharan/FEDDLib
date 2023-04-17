@@ -67,7 +67,7 @@ void zeroDirichlet3D(double* x, double* res, double t, const double* parameters)
 
 void inflowChem(double* x, double* res, double t, const double* parameters)
 {
-    res[0] = 0.;
+    res[0] = 1.;
     
     return;
 }
@@ -111,13 +111,16 @@ void rhsYZ(double* x, double* res, double* parameters){
     else
         force = parameters[1];
 
-
-    if(parameters[2] == 4  || parameters[2] == 5){
+    if(parameters[2] == 4  ){
       	res[0] = force;
         res[1] = force;
         res[2] = force;
     }
-    
+     if(parameters[2] == 5){
+      	res[0] = force;
+        res[1] = force;
+        res[2] = force;
+    }
     return;
 }
 
@@ -333,6 +336,8 @@ int main(int argc, char *argv[])
     string xmlPrecFile = "parametersPrec.xml";
     myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
 
+    double length = 1.;
+    myCLP.setOption("length",&length,"length of domain.");
 
     myCLP.recogniseAllOptions(true);
     myCLP.throwExceptions(false);
@@ -373,21 +378,27 @@ int main(int argc, char *argv[])
         parameterListStructureAll->setParameters(*parameterListPrecStructure);
         parameterListStructureAll->setParameters(*parameterListProblem);
 
-                 
+   
+        string		meshName    	= parameterListProblem->sublist("Parameter").get("Mesh Name","cube_h_1.mesh");
+        string		meshDelimiter   = parameterListProblem->sublist("Parameter").get("Mesh Delimiter"," ");
+        int 		m				= parameterListProblem->sublist("Parameter").get("H/h",5);
+        string		linearization	= parameterListProblem->sublist("General").get("Linearization","FixedPoint");
         int 		dim				= parameterListProblem->sublist("Parameter").get("Dimension",2);
-        string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
-        
+        string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");       
         string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
         string preconditionerMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
         int         n;
        
+       
+        int minNumberSubdomains=1;
+       
+        int numProcsCoarseSolve = parameterListProblem->sublist("General").get("Mpi Ranks Coarse",0);
+        int size = comm->getSize() - numProcsCoarseSolve;
+
+
 
         TimePtr_Type totalTime(TimeMonitor_Type::getNewCounter("FEDD - main - Total Time"));
         TimePtr_Type buildMesh(TimeMonitor_Type::getNewCounter("FEDD - main - Build Mesh"));
-
-        int numProcsCoarseSolve = parameterListProblem->sublist("General").get("Mpi Ranks Coarse",0);
-
-        int size = comm->getSize() - numProcsCoarseSolve;
 
         // #####################
         // Mesh bauen und wahlen
@@ -412,45 +423,71 @@ int main(int argc, char *argv[])
         std::string bcType = parameterListAll->sublist("Parameter").get("BC Type","Cube");
         
         std::string rhsType = parameterListAll->sublist("Parameter").get("RHS Type","Constant");
-    
-        domainP1chem.reset( new Domain_Type( comm, dim ) );
-        domainP1struct.reset( new Domain_Type( comm, dim ) );
-        domainP2chem.reset( new Domain_Type( comm, dim ) );
-        domainP2struct.reset( new Domain_Type( comm, dim ) );
-                                
-        MeshPartitioner_Type::DomainPtrArray_Type domainP1Array(1);
-        domainP1Array[0] = domainP1struct;
-       // domainP1Array[1] = domainP1struct;
-    
-        ParameterListPtr_Type pListPartitioner = sublist( parameterListAll, "Mesh Partitioner" );                    
+                                   
 
-        pListPartitioner->set("Build Edge List",true);
-        pListPartitioner->set("Build Surface List",true);
-                        
-        MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
-        
-        int volumeID=10;
-        if(bcType=="Artery")
-        	volumeID = 15;
-        partitionerP1.readAndPartition(volumeID);
-                    
-        if (!discType.compare("P2")){
-			domainP2chem->buildP2ofP1Domain( domainP1struct );
-			domainP2struct->buildP2ofP1Domain( domainP1struct );
-
-			domainChem = domainP2chem;
-			domainStructure = domainP2struct;   
-		}        
-		else{
-			domainStructure = domainP1struct;
-			domainChem = domainP1struct;
+		if (!meshType.compare("structured")) {
+		    TEUCHOS_TEST_FOR_EXCEPTION( size%minNumberSubdomains != 0 , std::logic_error, "Wrong number of processors for structured mesh.");
+		    /*if (dim == 2) {
+		        n = (int) (std::pow( size/minNumberSubdomains ,1/2.) + 100*Teuchos::ScalarTraits<double>::eps()); // 1/H
+		        std::vector<double> x(2);
+		        x[0]=0.0;    x[1]=0.0;
+		        domainStructure.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., comm ) );
+		        domainChem.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., comm ) );
+		    }
+		    else if (dim == 3){*/
+		        n = (int)(std::pow( size/minNumberSubdomains, 1/3.) + 100*Teuchos::ScalarTraits<double>::eps()); // 1/H
+		        std::vector<double> x(3);
+		        x[0]=0.0;    x[1]=0.0;	x[2]=0.0;
+		        domainStructure.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., 1., comm));
+		        domainChem.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., 1., comm));
+		    //}
+		    domainStructure->buildMesh( 3,"Square", dim, discType, n, m, numProcsCoarseSolve);
+		    domainChem->buildMesh( 3,"Square", dim, discType, n, m, numProcsCoarseSolve);
 		}
+        else if (!meshType.compare("unstructured")) {
+        
+            domainP1chem.reset( new Domain_Type( comm, dim ) );
+		    domainP1struct.reset( new Domain_Type( comm, dim ) );
+		    domainP2chem.reset( new Domain_Type( comm, dim ) );
+		    domainP2struct.reset( new Domain_Type( comm, dim ) );
+            
+            MeshPartitioner_Type::DomainPtrArray_Type domainP1Array(1);
+            domainP1Array[0] = domainP1struct;
+            
+            ParameterListPtr_Type pListPartitioner = sublist( parameterListAll, "Mesh Partitioner" );                    
+            
+            pListPartitioner->set("Build Edge List",true);
+		    pListPartitioner->set("Build Surface List",true);
+		                    
+		    MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
+		    
+		    int volumeID=10;
+		    if(bcType=="Artery")
+		    	volumeID = 15;
+		    	
+		    partitionerP1.readAndPartition(volumeID);
 
+            if (!discType.compare("P2")){
+				domainP2chem->buildP2ofP1Domain( domainP1struct );
+				domainP2struct->buildP2ofP1Domain( domainP1struct );
+
+				domainChem = domainP2chem;
+				domainStructure = domainP2struct;   
+			}        
+			else{
+				domainStructure = domainP1struct;
+				domainChem = domainP1struct;
+			}
+        }
+
+                    
+        
        // ########################
         // Flags check
         // ########################
 
-		Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaF(new ExporterParaView<SC,LO,GO,NO>());
+
+		/*Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaF(new ExporterParaView<SC,LO,GO,NO>());
 
 		Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(domainStructure->getMapUnique()));
 		vec_int_ptr_Type BCFlags = domainStructure->getBCFlagUnique();
@@ -466,92 +503,32 @@ int main(int argc, char *argv[])
 
 		exParaF->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainStructure->getMapUnique(), domainStructure->getMapUniqueP2());
 
-		exParaF->save(0.0);
+		exParaF->save(0.0);*/
 		
-		/*double a0    = 11.693284502463376;
-		double a [20] = {1.420706949636449,-0.937457438404759,0.281479818173732,-0.224724363786734,0.080426469802665,0.032077024077824,0.039516941555861, 
-		  0.032666881040235,-0.019948718147876,0.006998975442773,-0.033021060067630,-0.015708267688123,-0.029038419813160,-0.003001255512608,-0.009549531539299, 
-		  0.007112349455861,0.001970095816773,0.015306208420903,0.006772571935245,0.009480436178357};
-		double b [20] = {-1.325494054863285,0.192277311734674,0.115316087615845,-0.067714675760648,0.207297536049255,-0.044080204999886,0.050362628821152,-0.063456242820606,
-		  -0.002046987314705,-0.042350454615554,-0.013150127522194,-0.010408847105535,0.011590255438424,0.013281630639807,0.014991955865968,0.016514327477078, 
-		  0.013717154383988,0.012016806933609,-0.003415634499995,0.003188511626163};
-		
-		Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaHeartBeat(new ExporterParaView<SC,LO,GO,NO>());
-
-		
-		Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolutionBeat(new MultiVector<SC,LO,GO,NO>(domainStructure->getMapUnique()));
-
-		Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConstBeat = exportSolutionBeat;
-
-		exParaHeartBeat->setup("HeartBeat", domainStructure->getMesh(), discType);
-
-		exParaHeartBeat->addVariable(exportSolutionConstBeat, "Beat", "Scalar", 1,domainStructure->getMapUnique(), domainStructure->getMapUniqueP2());
-		
-
-	
-		Teuchos::ArrayRCP< SC > entriesPulse  = exportSolutionBeat->getDataNonConst(0);
-		double dt = 0.01;
-		double lambda =0.;
-		for(int i= 1; i<2500; i++){	         
-			double Q = 0.5*a0;
-		
-
-			double t_min = dt * i - fmod(dt*i,1.0); //FlowConditions::t_start_unsteady;
-			double t_max = t_min + 1.0; // One heartbeat lasts 1.5 second    
-			double y = M_PI * ( 2.0*( dt * i-t_min ) / ( t_max - t_min ) -1.0  );
-		
-		
-		
-			for(int j=0; j< 20; j++)
-				Q += (a[j]*std::cos((j+1.)*y) + b[j]*std::sin((j+1.)*y) ) ;
-			
-			
-			// Remove initial offset due to FFT
-			Q -= 0.026039341343493;
-			//Q = (Q - 4.3637)/3.5427;
-			entriesPulse[0] = Q ;
-			
-			if(dt*i < 20.)
-				lambda = 0.875;
-			else if( dt*i <= 20.5 )
-				lambda = 0.8125+0.0625*cos(2*M_PI*dt*i);
-			else if ( dt*i >= 20.5 && (dt*i - std::floor(dt*i))<= 0.5)
-				lambda= 0.75;
-			else
-				lambda = 0.875 - 0.125 * cos(4*M_PI*(dt*i+0.01));
-
-			entriesPulse[0] = 0.02133*lambda;
-			
-			
-			exParaHeartBeat->save(double (dt*i));
-		}*/
-
-
-
         if (parameterListAll->sublist("General").get("ParaView export subdomains",false) ){
-            
-            if (verbose)
-                std::cout << "\t### Exporting subdomains ###\n";
+        
+		    if (verbose)
+		        std::cout << "\t### Exporting subdomains ###\n";
 
-            typedef MultiVector<SC,LO,GO,NO> MultiVector_Type;
-            typedef RCP<MultiVector_Type> MultiVectorPtr_Type;
-            typedef RCP<const MultiVector_Type> MultiVectorConstPtr_Type;
-            typedef BlockMultiVector<SC,LO,GO,NO> BlockMultiVector_Type;
-            typedef RCP<BlockMultiVector_Type> BlockMultiVectorPtr_Type;
-            // Same subdomain for solid and chemistry, as they have same domain
-            {
-                MultiVectorPtr_Type vecDecomposition = rcp(new MultiVector_Type( domainStructure->getElementMap() ) );
-                MultiVectorConstPtr_Type vecDecompositionConst = vecDecomposition;
-                vecDecomposition->putScalar(comm->getRank()+1.);
-                
-                Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
-                
-                exPara->setup( "subdomains_solid", domainStructure->getMesh(), "P0" );
-                
-                exPara->addVariable( vecDecompositionConst, "subdomains", "Scalar", 1, domainStructure->getElementMap());
-                exPara->save(0.0);
-                exPara->closeExporter();
-            }
+		    typedef MultiVector<SC,LO,GO,NO> MultiVector_Type;
+		    typedef RCP<MultiVector_Type> MultiVectorPtr_Type;
+		    typedef RCP<const MultiVector_Type> MultiVectorConstPtr_Type;
+		    typedef BlockMultiVector<SC,LO,GO,NO> BlockMultiVector_Type;
+		    typedef RCP<BlockMultiVector_Type> BlockMultiVectorPtr_Type;
+		    // Same subdomain for solid and chemistry, as they have same domain
+		    {
+		        MultiVectorPtr_Type vecDecomposition = rcp(new MultiVector_Type( domainStructure->getElementMap() ) );
+		        MultiVectorConstPtr_Type vecDecompositionConst = vecDecomposition;
+		        vecDecomposition->putScalar(comm->getRank()+1.);
+		        
+		        Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+		        
+		        exPara->setup( "subdomains_solid", domainStructure->getMesh(), "P0" );
+
+		        exPara->addVariable( vecDecompositionConst, "subdomains", "Scalar", 1, domainStructure->getElementMap());
+		        exPara->save(0.0);
+		        exPara->closeExporter();
+		        }
 
         }
     

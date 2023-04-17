@@ -467,7 +467,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
             //this->rhs_->getBlockNonConst(0)->scale(-1.0);
             if(this->verbose_)
                 cout << " Residual Type : " << type  << endl;
-            this->residualVec_->getBlockNonConst(0)->update(-1.,*this->rhs_->getBlockNonConst(0),1.);
+            this->residualVec_->getBlockNonConst(0)->update(1.,*this->rhs_->getBlockNonConst(0),1.);
             //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
             //   this->residualVec_->getBlockNonConst(0)->update(-1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);    
        
@@ -478,7 +478,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
             if(this->verbose_)
                 cout << " Residual Type : " << type  << endl;
 
-            this->residualVec_->getBlockNonConst(0)->update(1.,*this->rhs_->getBlockNonConst(0),-1.);
+            this->residualVec_->getBlockNonConst(0)->update(-1.,*this->rhs_->getBlockNonConst(0),-1.);
             //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
             //     this->residualVec_->getBlockNonConst(0)->update(1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);
            
@@ -884,9 +884,6 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
 
             this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
             this->sourceTerm_->getBlockNonConst(0)->writeMM("RHS_ext");
-
-           
-
         }
         else
             this->problemTimeStructure_->assembleSourceTerm( timeSteppingTool_->t_ );

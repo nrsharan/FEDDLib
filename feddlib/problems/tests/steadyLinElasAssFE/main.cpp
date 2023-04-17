@@ -179,6 +179,10 @@ int main(int argc, char *argv[])
         parameterListAll->setParameters(*parameterListPrec);
         parameterListAll->setParameters(*parameterListSolver);
 
+        /*else if(!meshType.compare("structured_bfs")){
+            minNumberSubdomains = (int) 2*length+1;
+        }*/
+
         int 		dim				= parameterListProblem->sublist("Parameter").get("Dimension",2);
         string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","structured");
         string		meshName    	= parameterListProblem->sublist("Parameter").get("Mesh Name","dfg_fsi_solid.mesh");
@@ -187,6 +191,11 @@ int main(int argc, char *argv[])
         int 		m				= parameterListProblem->sublist("Parameter").get("H/h",5);
         string      FEType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
 
+        int minNumberSubdomains;
+        if (!meshType.compare("structured")) {
+            minNumberSubdomains = 1;
+        }
+        
         int numProcsCoarseSolve = parameterListProblem->sublist("General").get("Mpi Ranks Coarse",0);
         int size = comm->getSize() - numProcsCoarseSolve;
 
@@ -200,22 +209,47 @@ int main(int argc, char *argv[])
         // P1 und P2 Gitter bauen
         // ########################
 
-        domain.reset( new Domain<SC,LO,GO,NO>( comm, dim ) );
-        MeshPartitioner_Type::DomainPtrArray_Type domainP1Array(1);
-        domainP1Array[0] = domain;
-        
-        ParameterListPtr_Type pListPartitioner = sublist( parameterListProblem, "Mesh Partitioner" );
-        MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
-        
-        partitionerP1.readAndPartition();
-        if (FEType=="P2") {
-            Teuchos::RCP<Domain<SC,LO,GO,NO> > domainP2;
-            domainP2.reset( new Domain_Type( comm, dim ) );
-            domainP2->buildP2ofP1Domain( domain );
-            domain = domainP2;
-        }
 
-       // ########################
+		if (!meshType.compare("structured")) {
+		    TEUCHOS_TEST_FOR_EXCEPTION( size%minNumberSubdomains != 0 , std::logic_error, "Wrong number of processors for structured mesh.");
+		    /*if (dim == 2) {
+		        n = (int) (std::pow( size/minNumberSubdomains ,1/2.) + 100*Teuchos::ScalarTraits<double>::eps()); // 1/H
+		        std::vector<double> x(2);
+		        x[0]=0.0;    x[1]=0.0;
+		        domainStructure.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., comm ) );
+		        domainChem.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., comm ) );
+		    }
+		    else if (dim == 3){*/
+		        n = (int) (std::pow( size/minNumberSubdomains, 1/3.) + 100*Teuchos::ScalarTraits<double>::eps()); // 1/H
+		        std::vector<double> x(3);
+		        x[0]=0.0;    x[1]=0.0;	x[2]=0.0;
+		        domain.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., 1., comm));
+
+		    //}
+		    domain->buildMesh( 3,"Square", dim, FEType, n, m, numProcsCoarseSolve);
+		}
+        else if (!meshType.compare("unstructured")) {
+        
+           
+            domain.reset( new Domain<SC,LO,GO,NO>( comm, dim ) );
+		    MeshPartitioner_Type::DomainPtrArray_Type domainP1Array(1);
+		    domainP1Array[0] = domain;
+		    
+		    ParameterListPtr_Type pListPartitioner = sublist( parameterListProblem, "Mesh Partitioner" );
+		    MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
+        		    	
+		    partitionerP1.readAndPartition();
+
+            if (!FEType.compare("P2")){
+			    Teuchos::RCP<Domain<SC,LO,GO,NO> > domainP2;
+		        domainP2.reset( new Domain_Type( comm, dim ) );
+		        domainP2->buildP2ofP1Domain( domain );
+		        domain = domainP2;   
+			}        
+			
+        }     
+        
+        // ########################
         // Flags setzen
         // ########################
 

@@ -878,7 +878,7 @@ void RefinementFactory<SC,LO,GO,NO>::buildSurfaceTriangleElements(ElementsPtr_Ty
 			}
 		}
 
-		// We hace 4 Triangles in our Tetraedron
+		// We have 4 Triangles in our Tetraedron
 		// If one or more of those Triangles are Part of the domains' boundaries, they are added to the element in question as subelement
 		// We extract them in follwing pattern:
 

@@ -230,10 +230,56 @@ int main(int argc, char *argv[]) {
         int numProcsCoarseSolve = parameterListProblem->sublist("General").get("Mpi Ranks Coarse",0);
         int size = comm->getSize() - numProcsCoarseSolve;
 
-        {
-            DomainPtr_Type domainPressure;
-            DomainPtr_Type domainVelocity;
-                              
+        
+        
+        DomainPtr_Type domainPressure;
+        DomainPtr_Type domainVelocity;
+                   
+
+        if (verbose) {
+            cout << "-- Building Mesh ..." << flush;
+        }
+
+        if (!meshType.compare("structured")) {
+            TEUCHOS_TEST_FOR_EXCEPTION( size%minNumberSubdomains != 0 , std::logic_error, "Wrong number of processors for structured mesh.");
+            if (dim == 2) {
+                n = (int) (std::pow( size/minNumberSubdomains ,1/2.) + 100*Teuchos::ScalarTraits<double>::eps()); // 1/H
+                std::vector<double> x(2);
+                x[0]=0.0;    x[1]=0.0;
+                domainPressure.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., comm ) );
+                domainVelocity.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., comm ) );
+            }
+            else if (dim == 3){
+                n = (int) (std::pow( size/minNumberSubdomains, 1/3.) + 100*Teuchos::ScalarTraits<double>::eps()); // 1/H
+                std::vector<double> x(3);
+                x[0]=0.0;    x[1]=0.0;	x[2]=0.0;
+                domainPressure.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., 1., comm));
+                domainVelocity.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., 1., comm));
+            }
+            domainPressure->buildMesh( 1,"Square", dim, discPressure, n, m, numProcsCoarseSolve);
+            domainVelocity->buildMesh( 1,"Square", dim, discVelocity, n, m, numProcsCoarseSolve);
+        }
+        if (!meshType.compare("structured_bfs")) {
+            TEUCHOS_TEST_FOR_EXCEPTION( size%minNumberSubdomains != 0 , std::logic_error, "Wrong number of processors for structured BFS mesh.");
+            if (dim == 2) {
+                n = (int) (std::pow( size/minNumberSubdomains ,1/2.) + 100*Teuchos::ScalarTraits<double>::eps()); // 1/H
+                std::vector<double> x(2);
+                x[0]=-1.0;    x[1]=-1.0;
+                domainPressure.reset(new Domain<SC,LO,GO,NO>( x, length+1., 2., comm ) );
+                domainVelocity.reset(new Domain<SC,LO,GO,NO>( x, length+1., 2., comm ) );
+            }
+            else if (dim == 3){
+                n = (int) (std::pow( size/minNumberSubdomains ,1/3.) + 100*Teuchos::ScalarTraits<double>::eps()); // 1/H
+                std::vector<double> x(3);
+                x[0]=-1.0;    x[1]=0.0;    x[2]=-1.0;
+                domainPressure.reset(new Domain<SC,LO,GO,NO>( x, length+1., 1., 2., comm));
+                domainVelocity.reset(new Domain<SC,LO,GO,NO>( x, length+1., 1., 2., comm));
+            }
+            domainPressure->buildMesh( 2,"BFS", dim, discPressure, n, m, numProcsCoarseSolve);
+            domainVelocity->buildMesh( 2,"BFS", dim, discVelocity, n, m, numProcsCoarseSolve);
+        }
+        else if (!meshType.compare("unstructured")) {
+        
             domainPressure.reset( new Domain<SC,LO,GO,NO>( comm, dim ) );
             domainVelocity.reset( new Domain<SC,LO,GO,NO>( comm, dim ) );
             
@@ -249,69 +295,93 @@ int main(int argc, char *argv[]) {
                 domainVelocity->buildP2ofP1Domain( domainPressure );
             else
                 domainVelocity = domainPressure;
-      
-            std::vector<double> parameter_vec(1, parameterListProblem->sublist("Parameter").get("MaxVelocity",1.));
+        }
+    
 
-            // ####################
-            Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactory( new BCBuilder<SC,LO,GO,NO>( ) );
+        std::vector<double> parameter_vec(1, parameterListProblem->sublist("Parameter").get("MaxVelocity",1.));
+
+        // ####################
+        Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactory( new BCBuilder<SC,LO,GO,NO>( ) );
+
+        if (!bcType.compare("parabolic"))
+            parameter_vec.push_back(1.);//height of inflow region
+        else if(!bcType.compare("parabolic_benchmark") || !bcType.compare("partialCFD"))
+            parameter_vec.push_back(.41);//height of inflow region
+        else if(!bcType.compare("Richter3D"))
+            parameter_vec.push_back(.4);
+        else
+            TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Select a valid boundary condition.");
 
 
-          	 parameter_vec.push_back(0.41);//height of inflow region
-
-			if (dim==2){
+        if ( !bcType.compare("parabolic") || !bcType.compare("parabolic_benchmark") ) {//flag of obstacle
+            if (dim==2){
                 bcFactory->addBC(zeroDirichlet2D, 1, 0, domainVelocity, "Dirichlet", dim);
                 bcFactory->addBC(inflowParabolic2D, 2, 0, domainVelocity, "Dirichlet", dim, parameter_vec);
-//                       bcFactory->addBC(dummyFunc, 3, 0, domainVelocity, "Neumann", dim);
+//                        bcFactory->addBC(dummyFunc, 3, 0, domainVelocity, "Neumann", dim);
 //                        bcFactory->addBC(dummyFunc, 666, 1, domainPressure, "Neumann", 1);
-                //bcFactory->addBC(zeroDirichlet2D, 3, 0, domainVelocity, "Dirichlet", dim);
                 bcFactory->addBC(zeroDirichlet2D, 4, 0, domainVelocity, "Dirichlet", dim);
-                bcFactory->addBC(zeroDirichlet2D, 5, 0, domainVelocity, "Dirichlet", dim);
             }
             else if (dim==3){
                 bcFactory->addBC(zeroDirichlet3D, 1, 0, domainVelocity, "Dirichlet", dim);
                 bcFactory->addBC(inflowParabolic3D, 2, 0, domainVelocity, "Dirichlet", dim, parameter_vec);
 //                        bcFactory->addBC(dummyFunc, 3, 0, domainVelocity, "Neumann", dim);
 //                        bcFactory->addBC(dummyFunc, 666, 1, domainPressure, "Neumann", 1);
-                bcFactory->addBC(zeroDirichlet3D, 2, 0, domainVelocity, "Dirichlet", dim);
+                bcFactory->addBC(zeroDirichlet3D, 4, 0, domainVelocity, "Dirichlet", dim);
                 
             }
-            // Flag Check
-            Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
-
-			Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(domainVelocity->getMapUnique()));
-			vec_int_ptr_Type BCFlags = domainVelocity->getBCFlagUnique();
-
-			Teuchos::ArrayRCP< SC > entries  = exportSolution->getDataNonConst(0);
-			for(int i=0; i< entries.size(); i++){
-				entries[i] = BCFlags->at(i);
-			}
-
-			Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst = exportSolution;
-
-			exPara->setup("FlagsFluid",domainVelocity->getMesh(), discVelocity);
-
-			exPara->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainVelocity->getMapUnique(), domainVelocity->getMapUniqueP2());
-
-			exPara->save(0.0);
-			// ---------------------
-			// Old Assembly Rouine
+        }
+        else if (!bcType.compare("partialCFD")) {
+            bcFactory->addBC(zeroDirichlet2D, 1, 0, domainVelocity, "Dirichlet", dim); // wall
+            bcFactory->addBC(inflowParabolic2D, 2, 0, domainVelocity, "Dirichlet", dim, parameter_vec); // inflow
+            bcFactory->addBC(zeroDirichlet2D, 4, 0, domainVelocity, "Dirichlet", dim);
+            bcFactory->addBC(zeroDirichlet2D, 5, 0, domainVelocity, "Dirichlet", dim);
+        }
         
-          	NavierStokes<SC,LO,GO,NO> navierStokes( domainVelocity, discVelocity, domainPressure, discPressure, parameterListAll );
+        else if (!bcType.compare("Richter3D")) {
+            bcFactory->addBC(zeroDirichlet3D, 1, 0, domainVelocity, "Dirichlet", dim); // wall
+            bcFactory->addBC(inflow3DRichter, 2, 0, domainVelocity, "Dirichlet", dim, parameter_vec); // inflow
+            bcFactory->addBC(zeroDirichlet3D, 3, 0, domainVelocity, "Dirichlet_Z", dim);
+            bcFactory->addBC(zeroDirichlet3D, 5, 0, domainVelocity, "Dirichlet", dim);
+        }
+         
+        
+        // Flag Check
+        Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
 
-            {
-				MAIN_TIMER_START(NavierStokes," Assemble System and solve");
-                navierStokes.addBoundaries(bcFactory);
-                navierStokes.initializeProblem();
-                navierStokes.assemble();
+		Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(domainVelocity->getMapUnique()));
+		vec_int_ptr_Type BCFlags = domainVelocity->getBCFlagUnique();
 
-                navierStokes.setBoundariesRHS();
+		Teuchos::ArrayRCP< SC > entries  = exportSolution->getDataNonConst(0);
+		for(int i=0; i< entries.size(); i++){
+			entries[i] = BCFlags->at(i);
+		}
 
-                std::string nlSolverType = parameterListProblem->sublist("General").get("Linearization","FixedPoint");
-                NonLinearSolver<SC,LO,GO,NO> nlSolver( nlSolverType );
-                nlSolver.solve( navierStokes );
-				MAIN_TIMER_STOP(NavierStokes);	
-                comm->barrier();
-            }
+		Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst = exportSolution;
+
+		exPara->setup("FlagsFluid",domainVelocity->getMesh(), discVelocity);
+
+		exPara->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainVelocity->getMapUnique(), domainVelocity->getMapUniqueP2());
+
+		exPara->save(0.0);
+		// ---------------------
+		// Old Assembly Rouine
+    
+      	NavierStokes<SC,LO,GO,NO> navierStokes( domainVelocity, discVelocity, domainPressure, discPressure, parameterListAll );
+
+        {
+			MAIN_TIMER_START(NavierStokes," Assemble System and solve");
+            navierStokes.addBoundaries(bcFactory);
+            navierStokes.initializeProblem();
+            navierStokes.assemble();
+
+            navierStokes.setBoundariesRHS();
+
+            std::string nlSolverType = parameterListProblem->sublist("General").get("Linearization","FixedPoint");
+            NonLinearSolver<SC,LO,GO,NO> nlSolver( nlSolverType );
+            nlSolver.solve( navierStokes );
+			MAIN_TIMER_STOP(NavierStokes);	
+            comm->barrier();
+        }
 
 
            	// ---------------------
@@ -324,140 +394,136 @@ int main(int argc, char *argv[]) {
         cout << "###############################################################" <<endl;
          }
 
-           NavierStokesAssFE<SC,LO,GO,NO> navierStokesAssFE( domainVelocity, discVelocity, domainPressure, discPressure, parameterListAll );
+       NavierStokesAssFE<SC,LO,GO,NO> navierStokesAssFE( domainVelocity, discVelocity, domainPressure, discPressure, parameterListAll );
 
-            {
-				MAIN_TIMER_START(NavierStokesAssFE," AssFE:   Assemble System and solve");
-                navierStokesAssFE.addBoundaries(bcFactory);
-                navierStokesAssFE.initializeProblem();
-                navierStokesAssFE.assemble();
+        {
+			MAIN_TIMER_START(NavierStokesAssFE," AssFE:   Assemble System and solve");
+            navierStokesAssFE.addBoundaries(bcFactory);
+            navierStokesAssFE.initializeProblem();
+            navierStokesAssFE.assemble();
 
-                navierStokesAssFE.setBoundariesRHS();
+            navierStokesAssFE.setBoundariesRHS();
 
 
-                std::string nlSolverType = parameterListProblem->sublist("General").get("Linearization","FixedPoint");
-                NonLinearSolver<SC,LO,GO,NO> nlSolverAssFE( nlSolverType );
-                nlSolverAssFE.solve( navierStokesAssFE );
-				MAIN_TIMER_STOP(NavierStokesAssFE);	
-                comm->barrier();
-  
-            }
- //*/
-			Teuchos::TimeMonitor::report(cout,"Main");	
-       
-			Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaVelocity(new ExporterParaView<SC,LO,GO,NO>());
-            Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaPressure(new ExporterParaView<SC,LO,GO,NO>());
+            std::string nlSolverType = parameterListProblem->sublist("General").get("Linearization","FixedPoint");
+            NonLinearSolver<SC,LO,GO,NO> nlSolverAssFE( nlSolverType );
+            nlSolverAssFE.solve( navierStokesAssFE );
+			MAIN_TIMER_STOP(NavierStokesAssFE);	
+            comm->barrier();
 
-            Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionV = navierStokes.getSolution()->getBlock(0);
-            Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionP = navierStokes.getSolution()->getBlock(1);
+        }
+//*/
+		Teuchos::TimeMonitor::report(cout,"Main");	
+   
+		Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaVelocity(new ExporterParaView<SC,LO,GO,NO>());
+        Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaPressure(new ExporterParaView<SC,LO,GO,NO>());
+
+        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionV = navierStokes.getSolution()->getBlock(0);
+        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionP = navierStokes.getSolution()->getBlock(1);
 ///*
-            Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionVAssFE = navierStokesAssFE.getSolution()->getBlock(0);
-            Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionPAssFE = navierStokesAssFE.getSolution()->getBlock(1);
+        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionVAssFE = navierStokesAssFE.getSolution()->getBlock(0);
+        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionPAssFE = navierStokesAssFE.getSolution()->getBlock(1);
 
 
 
 
-			// Calculating the error per node
-			Teuchos::RCP<MultiVector<SC,LO,GO,NO> > errorValues = Teuchos::rcp(new MultiVector<SC,LO,GO,NO>( navierStokes.getSolution()->getBlock(0)->getMap() ) ); 
-			//this = alpha*A + beta*B + gamma*this
-			errorValues->update( 1., exportSolutionV, -1. ,exportSolutionVAssFE, 0.);
+		// Calculating the error per node
+		Teuchos::RCP<MultiVector<SC,LO,GO,NO> > errorValues = Teuchos::rcp(new MultiVector<SC,LO,GO,NO>( navierStokes.getSolution()->getBlock(0)->getMap() ) ); 
+		//this = alpha*A + beta*B + gamma*this
+		errorValues->update( 1., exportSolutionV, -1. ,exportSolutionVAssFE, 0.);
 
-			// Taking abs norm
-			Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > errorValuesAbs = errorValues;
+		// Taking abs norm
+		Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > errorValuesAbs = errorValues;
 
-			errorValues->abs(errorValuesAbs);
+		errorValues->abs(errorValuesAbs);
 
- 			Teuchos::Array<SC> norm(1); 
-    		errorValues->normInf(norm);//const Teuchos::ArrayView<typename Teuchos::ScalarTraits<SC>::magnitudeType> &norms);
-			double res = norm[0];
-			if(comm->getRank() ==0)
-				cout << " Inf Norm of Error of Solutions " << res << endl;
-			double twoNormError = res;
+		Teuchos::Array<SC> norm(1); 
+		errorValues->normInf(norm);//const Teuchos::ArrayView<typename Teuchos::ScalarTraits<SC>::magnitudeType> &norms);
+		double res = norm[0];
+		if(comm->getRank() ==0)
+			cout << " Inf Norm of Error of Solutions " << res << endl;
+		double twoNormError = res;
 
-			navierStokes.getSolution()->norm2(norm);
-			res = norm[0];
-			if(comm->getRank() ==0)
-				cout << " 2 rel. Norm of solution navier stokes " << twoNormError/res << endl;
+		navierStokes.getSolution()->norm2(norm);
+		res = norm[0];
+		if(comm->getRank() ==0)
+			cout << " 2 rel. Norm of solution navier stokes " << twoNormError/res << endl;
 
-			navierStokesAssFE.getSolution()->norm2(norm);
-			res = norm[0];
-			if(comm->getRank() ==0)
-				cout << " 2 rel. Norm of solutions navier stokes assemFE " << twoNormError/res << endl;
+		navierStokesAssFE.getSolution()->norm2(norm);
+		res = norm[0];
+		if(comm->getRank() ==0)
+			cout << " 2 rel. Norm of solutions navier stokes assemFE " << twoNormError/res << endl;
 
-			MatrixPtr_Type Sum2= Teuchos::rcp(new Matrix_Type( domainVelocity->getMapVecFieldUnique(), domainVelocity->getDimension() * domainVelocity->getApproxEntriesPerRow() )  );
-			navierStokes.getSystem()->getBlock(0,0)->addMatrix(1, Sum2, 1);
-			navierStokesAssFE.getSystem()->getBlock(0,0)->addMatrix(-1, Sum2, 1);
+		MatrixPtr_Type Sum2= Teuchos::rcp(new Matrix_Type( domainVelocity->getMapVecFieldUnique(), domainVelocity->getDimension() * domainVelocity->getApproxEntriesPerRow() )  );
+		navierStokes.getSystem()->getBlock(0,0)->addMatrix(1, Sum2, 1);
+		navierStokesAssFE.getSystem()->getBlock(0,0)->addMatrix(-1, Sum2, 1);
 
-			Teuchos::ArrayView<const GO> indices;
-			Teuchos::ArrayView<const SC> values;
-			res=0.;
-			for (UN i=0; i < domainVelocity->getMapUnique()->getMaxLocalIndex()+1 ; i++) {
-				for(int d=0; d< dim ; d++){
-					GO row = dim*domainVelocity->getMapUnique()->getGlobalElement( i )+d;
-					Sum2->getGlobalRowView(row, indices,values);
-					
-					for(int j=0; j< values.size() ; j++){
-						if(fabs(values[j])>res)
-							res = fabs(values[j]);			
-					}	
-				}	
-			}
-			res = fabs(res);
-			reduceAll<int, double> (*comm, REDUCE_MAX, res, outArg (res));
-           
-			if(comm->getRank() == 0)
-				cout << " Inf Norm of Difference between Block A: " << res << endl;
-
-			MatrixPtr_Type Sum1= Teuchos::rcp(new Matrix_Type( domainPressure->getMapUnique(), domainVelocity->getDimension() * domainVelocity->getApproxEntriesPerRow() )  );
-			navierStokes.getSystem()->getBlock(1,0)->addMatrix(1, Sum1, 1);
-			navierStokesAssFE.getSystem()->getBlock(1,0)->addMatrix(-1, Sum1, 1);
-
-			res=0.;
-			for (UN i=0; i < domainPressure->getMapUnique()->getMaxLocalIndex()+1 ; i++) {
-				GO row = domainPressure->getMapUnique()->getGlobalElement( i );
-				Sum1->getGlobalRowView(row, indices,values);
+		Teuchos::ArrayView<const GO> indices;
+		Teuchos::ArrayView<const SC> values;
+		res=0.;
+		for (UN i=0; i < domainVelocity->getMapUnique()->getMaxLocalIndex()+1 ; i++) {
+			for(int d=0; d< dim ; d++){
+				GO row = dim*domainVelocity->getMapUnique()->getGlobalElement( i )+d;
+				Sum2->getGlobalRowView(row, indices,values);
 				
 				for(int j=0; j< values.size() ; j++){
-					res += fabs(values[j]);			
+					if(fabs(values[j])>res)
+						res = fabs(values[j]);			
 				}	
 			}	
+		}
+		res = fabs(res);
+		reduceAll<int, double> (*comm, REDUCE_MAX, res, outArg (res));
+       
+		if(comm->getRank() == 0)
+			cout << " Inf Norm of Difference between Block A: " << res << endl;
+
+		MatrixPtr_Type Sum1= Teuchos::rcp(new Matrix_Type( domainPressure->getMapUnique(), domainVelocity->getDimension() * domainVelocity->getApproxEntriesPerRow() )  );
+		navierStokes.getSystem()->getBlock(1,0)->addMatrix(1, Sum1, 1);
+		navierStokesAssFE.getSystem()->getBlock(1,0)->addMatrix(-1, Sum1, 1);
+
+		res=0.;
+		for (UN i=0; i < domainPressure->getMapUnique()->getMaxLocalIndex()+1 ; i++) {
+			GO row = domainPressure->getMapUnique()->getGlobalElement( i );
+			Sum1->getGlobalRowView(row, indices,values);
 			
-			res = fabs(res);
-			reduceAll<int, double> (*comm, REDUCE_SUM, res, outArg (res));
+			for(int j=0; j< values.size() ; j++){
+				res += fabs(values[j]);			
+			}	
+		}	
 		
-			if(comm->getRank() == 0)
-				cout << " Norm of Difference between Block B: " << res << endl;
+		res = fabs(res);
+		reduceAll<int, double> (*comm, REDUCE_SUM, res, outArg (res));
+	
+		if(comm->getRank() == 0)
+			cout << " Norm of Difference between Block B: " << res << endl;
 
 
-		  			
+	  			
 //*/
-            DomainPtr_Type dom = domainVelocity;
+        DomainPtr_Type dom = domainVelocity;
 
-            exParaVelocity->setup("velocity", dom->getMesh(), dom->getFEType());
-                                
-            UN dofsPerNode = dim;
-            exParaVelocity->addVariable(exportSolutionV, "u", "Vector", dofsPerNode, dom->getMapUnique());
+        exParaVelocity->setup("velocity", dom->getMesh(), dom->getFEType());
+                            
+        UN dofsPerNode = dim;
+        exParaVelocity->addVariable(exportSolutionV, "u", "Vector", dofsPerNode, dom->getMapUnique());
 ///*       
-            exParaVelocity->addVariable(exportSolutionVAssFE, "uAssFE", "Vector", dofsPerNode, dom->getMapUnique());
-            exParaVelocity->addVariable(errorValuesAbs, "u-uAssFE", "Vector", dofsPerNode, dom->getMapUnique());
+        exParaVelocity->addVariable(exportSolutionVAssFE, "uAssFE", "Vector", dofsPerNode, dom->getMapUnique());
+        exParaVelocity->addVariable(errorValuesAbs, "u-uAssFE", "Vector", dofsPerNode, dom->getMapUnique());
 //*/
-            dom = domainPressure;
-            exParaPressure->setup("pressure", dom->getMesh(), dom->getFEType());
+        dom = domainPressure;
+        exParaPressure->setup("pressure", dom->getMesh(), dom->getFEType());
 
-            exParaPressure->addVariable(exportSolutionP, "p", "Scalar", 1, dom->getMapUnique());
- //*/
-            exParaPressure->addVariable(exportSolutionPAssFE, "pAssFE", "Scalar", 1, dom->getMapUnique());
-
-
-            exParaVelocity->save(0.0);
-            exParaPressure->save(0.0); 
+        exParaPressure->addVariable(exportSolutionP, "p", "Scalar", 1, dom->getMapUnique());
+//*/
+        exParaPressure->addVariable(exportSolutionPAssFE, "pAssFE", "Scalar", 1, dom->getMapUnique());
 
 
-           //TEUCHOS_TEST_FOR_EXCEPTION( infNormError > 1e-11 , std::logic_error, "Inf Norm of Error between calculated solutions is too great. Exceeded 1e-11. ");
+        exParaVelocity->save(0.0);
+        exParaPressure->save(0.0); 
 
-			
-            
-        }
+
+       //TEUCHOS_TEST_FOR_EXCEPTION( infNormError > 1e-11 , std::logic_error, "Inf Norm of Error between calculated solutions is too great. Exceeded 1e-11.
     }
 
     return(EXIT_SUCCESS);

@@ -131,7 +131,7 @@ void FE<SC,LO,GO,NO>::assemblyLinearElasticity(int dim,
 
 	vec2D_dbl_ptr_Type pointsRep = domainVec_.at(0)->getPointsRepeated();
 
-	MapConstPtr_Type mapVel = domainVec_.at(0)->getMapRepeated();
+	MapConstPtr_Type map = domainVec_.at(0)->getMapRepeated();
 
 	vec_dbl_Type solution(0);
 	vec_dbl_Type solution_d;
@@ -175,7 +175,7 @@ void FE<SC,LO,GO,NO>::assemblyLinearElasticity(int dim,
 		assemblyFEElements_[T]->advanceNewtonStep();
 
 
-		addFeBlock(A, elementMatrix, elements->getElement(T), mapVel, 0, 0, problemDisk);
+		addFeBlock(A, elementMatrix, elements->getElement(T), map, 0, 0, problemDisk);
 			
 	}
 	if (callFillComplete)
@@ -499,7 +499,7 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
            // elementMatrix->print();
 			assemblyFEElements_[T]->advanceNewtonStep(); // n genereal non linear solver step
 			
-			addFeBlockMatrix(A, elementMatrix, elementsSolid->getElement(T),  mapSolid, mapChem, problemDisk);
+			addFeBlockMatrix(A, elementMatrix, elementsSolid->getElement(T),elementsChem->getElement(T),  mapSolid, mapChem, problemDisk);
 
           
 
@@ -545,13 +545,14 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
 
 @param[in] &A Global Block Matrix
 @param[in] elementMatrix Stiffness matrix of one element
-@param[in] element Corresponding finite element
+@param[in] elementBlock1 Corresponding finite element of first block
+@param[in] elementBlock2 Corresponding finite element of second block
 @param[in] map Map that corresponds to repeated nodes of first block
 @param[in] map Map that corresponds to repeated nodes of second block
 
 */
 template <class SC, class LO, class GO, class NO>
-void FE<SC,LO,GO,NO>::addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement element, MapConstPtr_Type mapFirstRow,MapConstPtr_Type mapSecondRow, tuple_disk_vec_ptr_Type problemDisk){
+void FE<SC,LO,GO,NO>::addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement elementBlock1, FiniteElement elementBlock2, MapConstPtr_Type mapFirstRow,MapConstPtr_Type mapSecondRow, tuple_disk_vec_ptr_Type problemDisk){
 		
 		int numDisk = problemDisk->size();
 
@@ -572,10 +573,10 @@ void FE<SC,LO,GO,NO>::addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Ty
 
 		for (UN i=0; i < numNodes1 ; i++) {
 			for(int di=0; di<dofs1; di++){
-				GO row =GO (dofs1* mapFirstRow->getGlobalElement( element.getNode(i) )+di);
+				GO row =GO (dofs1* mapFirstRow->getGlobalElement( elementBlock1.getNode(i) )+di);
 				for(int d=0; d<dofs1; d++){
 					for (UN j=0; j < columnIndices1.size(); j++){
-		                columnIndices1[j] = GO ( dofs1 * mapFirstRow->getGlobalElement( element.getNode(j) ) + d );
+		                columnIndices1[j] = GO ( dofs1 * mapFirstRow->getGlobalElement( elementBlock1.getNode(j) ) + d );
 						value1[j] = (*elementMatrix)[dofs1*i+di][dofs1*j+d];	
 					}
 			  		A->getBlock(0,0)->insertGlobalValues( row, columnIndices1(), value1() ); // Automatically adds entries if a value already exists 
@@ -588,12 +589,12 @@ void FE<SC,LO,GO,NO>::addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Ty
         Teuchos::Array<GO> columnIndex( 1, 0 );
         for (UN i=0; i < numNodes2 ; i++) {
             for(int di=0; di<dofs2; di++){
-                GO row =GO (dofs2* mapSecondRow->getGlobalElement( element.getNode(i) )+di);
+                GO row =GO (dofs2* mapSecondRow->getGlobalElement( elementBlock2.getNode(i) )+di);
                 for(int d=0; d<dofs2; d++){
                     for (UN j=0; j < columnIndices2.size(); j++){
                         double tmpValue =  (*elementMatrix)[offset+dofs2*i+di][offset+dofs2*j+d];
                         if(std::fabs(tmpValue) > 1.e-13){
-                            columnIndex[0] = GO ( dofs2 * mapSecondRow->getGlobalElement( element.getNode(j) ) + d );
+                            columnIndex[0] = GO ( dofs2 * mapSecondRow->getGlobalElement( elementBlock2.getNode(j) ) + d );
                             value[0] = tmpValue;
                             A->getBlock(1,1)->insertGlobalValues( row, columnIndex(), value() ); // Automatically adds entries if a value already exists 
 
@@ -607,11 +608,11 @@ void FE<SC,LO,GO,NO>::addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Ty
 
 		for (UN i=0; i < numNodes1; i++){
 			for(int di=0; di<dofs1; di++){				
-                GO row =GO (dofs1* mapFirstRow->getGlobalElement( element.getNode(i) )+di);
+                GO row =GO (dofs1* mapFirstRow->getGlobalElement( elementBlock1.getNode(i) )+di);
                 for(int d=0; d<dofs2; d++){				
                     for (UN j=0; j < numNodes2 ; j++) {
                         value2[j] = (*elementMatrix)[i*dofs1+di][offset+j*dofs2+d];			    				    		
-                        columnIndices2[j] =GO (dofs2* mapSecondRow->getGlobalElement( element.getNode(j) )+d);
+                        columnIndices2[j] =GO (dofs2* mapSecondRow->getGlobalElement( elementBlock2.getNode(j) )+d);
                     }
                     A->getBlock(0,1)->insertGlobalValues( row, columnIndices2(), value2() ); // Automatically adds entries if a value already exists                            
                 }
@@ -620,11 +621,11 @@ void FE<SC,LO,GO,NO>::addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Ty
 
         for (UN j=0; j < numNodes2; j++){
             for(int di=0; di<dofs2; di++){	
-                GO row = GO (dofs2* mapSecondRow->getGlobalElement( element.getNode(j) ) +di );
+                GO row = GO (dofs2* mapSecondRow->getGlobalElement( elementBlock2.getNode(j) ) +di );
                 for(int d=0; d<dofs1; d++){				
                     for (UN i=0; i < numNodes1 ; i++) {
                         value1[i] = (*elementMatrix)[offset+j*dofs2+di][dofs1*i+d];			    				    		
-                        columnIndices1[i] =GO (dofs1* mapFirstRow->getGlobalElement( element.getNode(i) )+d);
+                        columnIndices1[i] =GO (dofs1* mapFirstRow->getGlobalElement( elementBlock1.getNode(i) )+d);
                     }
                     A->getBlock(1,0)->insertGlobalValues( row, columnIndices1(), value1() ); // Automatically adds entries if a value already exists                       
                 }    
@@ -681,6 +682,7 @@ void FE<SC,LO,GO,NO>::assemblyNavierStokes(int dim,
 	MapConstPtr_Type mapVel = domainVec_.at(FElocVel)->getMapRepeated();
 
 	MapConstPtr_Type mapPres = domainVec_.at(FElocPres)->getMapRepeated();
+    mapPres->print();
 
 	vec_dbl_Type solution(0);
 	vec_dbl_Type solution_u;
@@ -747,7 +749,7 @@ void FE<SC,LO,GO,NO>::assemblyNavierStokes(int dim,
 			if(reAssemble)
 				addFeBlock(A, elementMatrix, elements->getElement(T), mapVel, 0, 0, problemDisk);
 			else
-				addFeBlockMatrix(A, elementMatrix, elements->getElement(T), mapVel, mapPres, problemDisk);
+				addFeBlockMatrix(A, elementMatrix, elements->getElement(T),elementsPres->getElement(T), mapVel, mapPres, problemDisk);
 		}
    		if(assembleMode == "FixedPoint"){
 
@@ -762,8 +764,7 @@ void FE<SC,LO,GO,NO>::assemblyNavierStokes(int dim,
 			if(reAssemble)
 				addFeBlock(A, elementMatrix, elements->getElement(T), mapVel, 0, 0, problemDisk);
 			else
-				addFeBlockMatrix(A, elementMatrix, elements->getElement(T), mapVel, mapPres, problemDisk);
-
+                addFeBlockMatrix(A, elementMatrix, elements->getElement(T),elementsPres->getElement(T), mapVel, mapPres, problemDisk);
         }
 		if(assembleMode == "Rhs"){
 			AssembleFENavierStokesPtr_Type elTmp = Teuchos::rcp_dynamic_cast<AssembleFENavierStokes_Type>(assemblyFEElements_[T] );
@@ -809,7 +810,9 @@ void FE<SC,LO,GO,NO>::assemblyNavierStokes(int dim,
 
 @param[in] res BlockMultiVector of residual vec; Repeated distribution; 2 blocks
 @param[in] rhsVec sorted the same way as residual vec
-@param[in] element of block1
+@param[in] elementBlock1 of block1
+@param[in] elementBlock2 of block2
+
 
 */
 
@@ -6188,7 +6191,7 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegralExternal(int dim,
             }
         }
     }
-    //f->scale(-1.);
+    //f->scale(-1.); // No scaling is needed, as the AceGEN pressure Load is already scaled with -1 internally
 
 }
     
@@ -6336,7 +6339,7 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
             }
         }
     }
-    //f->scale(-1.);
+    //f->scale(-1.); // No scaling is needed, as the AceGEN pressure Load is already scaled with -1 internally
     Kext->fillComplete(domainVec_.at(FEloc)->getMapVecFieldUnique(),domainVec_.at(FEloc)->getMapVecFieldUnique());
     Kext->writeMM("K_ext1");
 }
@@ -6415,6 +6418,9 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegral(int dim,
 					v_E[0] = p1[1]*p2[2] - p1[2]*p2[1];
 					v_E[1] = p1[2]*p2[0] - p1[0]*p2[2];
 					v_E[2] = p1[0]*p2[1] - p1[1]*p2[0];
+
+                    //if(feSub.getFlag() == 4 || feSub.getFlag() ==5 )
+                    //   cout << " Normal vector " << v_E[0] << " " << v_E[1] << " " << v_E[2] << endl;
 		            
 					norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2)+pow(v_E[2],2));
 				}
@@ -6439,15 +6445,13 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegral(int dim,
                             }   
                             x[k] += b[k];
                         }
-                        //cout << " Quadpoint [" << w << "] = (" << (*quadPoints)[ w ][ 0 ] << ", " << (*quadPoints)[ w ][ 1 ] << ")"  << endl; 
-                        //cout << " Transformed = (" << x[ 0 ] << ", " << x[1] << "," << x[2] <<  ")"  << endl;
-
+                       
                         func( &x[0], &valueFunc[0], params);
                         if ( fieldType == "Scalar" )
                             value[0] += weights->at(w) * valueFunc[0] * (*phi)[w][i];
                         else if ( fieldType == "Vector" ){
                             for (int j=0; j<value.size(); j++){
-                                value[j] += weights->at(w) * valueFunc[j]*v_E[j]/norm_v_E * (*phi)[w][i];
+                                value[j] += weights->at(w) * valueFunc[j]*v_E[j]/norm_v_E * (*phi)[w][i]; // Load in Normal Direction
                             }
                         }
                     }

@@ -173,6 +173,31 @@ int main(int argc, char *argv[]) {
             else
                 domain = domainP1;
         }
+        
+
+        
+	    
+	    typedef MultiVector<SC,LO,GO,NO> MultiVector_Type;
+	    typedef Teuchos::RCP<MultiVector_Type> MultiVectorPtr_Type;
+	    typedef Teuchos::RCP<const MultiVector_Type> MultiVectorConstPtr_Type;
+	    typedef BlockMultiVector<SC,LO,GO,NO> BlockMultiVector_Type;
+	    typedef Teuchos::RCP<BlockMultiVector_Type> BlockMultiVectorPtr_Type;
+	    // Same subdomain for solid and chemistry, as they have same domain
+	    {
+	        MultiVectorPtr_Type vecDecomposition = Teuchos::rcp(new MultiVector_Type( domain->getElementMap() ) );
+	        MultiVectorConstPtr_Type vecDecompositionConst = vecDecomposition;
+	        vecDecomposition->putScalar(comm->getRank()+1.);
+	        
+	        Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+	        
+	        exPara->setup( "subdomains_solid", domain->getMesh(), "P0" );
+
+	        exPara->addVariable( vecDecompositionConst, "subdomains", "Scalar", 1, domain->getElementMap());
+	        exPara->save(0.0);
+	        exPara->closeExporter();
+	    }
+
+        
 
 
 

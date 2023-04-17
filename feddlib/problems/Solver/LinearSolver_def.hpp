@@ -46,7 +46,6 @@ template<class SC,class LO,class GO,class NO>
 int LinearSolver<SC,LO,GO,NO>::solve(TimeProblem_Type* problem, BlockMultiVectorPtr_Type rhs, std::string type ){
 
     int its=0;
-
     if (!type.compare("Monolithic"))
         its = solveMonolithic( problem, rhs );
     else if (!type.compare("Teko")){
@@ -161,8 +160,6 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
     problem->getLinearSolverBuilder()->setParameterList(pListThyraSolver);
     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problem->getLinearSolverBuilder()->createLinearSolveStrategy("");
 
-
-
     problem->setupPreconditioner( "Monolithic" );
 
     if (!pListThyraSolver->sublist("Preconditioner Types").sublist("FROSch").get("Level Combination","Additive").compare("Multiplicative")) {
@@ -189,7 +186,8 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
     // Printing the stiffness matrix for the first newton iteration
     timeProblem->getSystemCombined()->writeMM("stiffnessMatrixWihtDirichlet");
     timeProblem->getSystem()->writeMM("stiffnessMatrixFull");
-    rhs->writeMM("rhs");
+    if (!rhs.is_null())
+        rhs->writeMM("rhs");
 
     if ( !pListThyraSolver->get("Linear Solver Type","Belos").compare("Belos") ) {
         ThyraPrecPtr_Type thyraPrec = problem->getPreconditioner()->getThyraPrec();
