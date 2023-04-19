@@ -924,6 +924,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
 
         if (verbose) {
             cout << "-- ElementsList ... " << endl;
+            cout << "-- P2M =" << P2M << endl;
         }
         counter = 0;
         for (int t=0; t < M; t++) {

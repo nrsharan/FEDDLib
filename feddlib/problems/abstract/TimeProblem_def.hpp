@@ -110,14 +110,14 @@ void TimeProblem<SC,LO,GO,NO>::combineSystems() const{
         for (int j=0; j<size; j++) {
             if ( tmpSystem->blockExists(i,j) ) {
                 LO maxNumEntriesPerRow = tmpSystem->getBlock(i,j)->getGlobalMaxNumRowEntries();
-                MatrixPtr_Type matrix = Teuchos::rcp( new Matrix_Type( tmpSystem->getBlock(i,j)->getMap(), maxNumEntriesPerRow ) );
+                MatrixPtr_Type matrix = Teuchos::rcp( new Matrix_Type( tmpSystem->getBlock(i,j)->getMap(), 2*maxNumEntriesPerRow ) );
                 
                 systemCombined_->addBlock( matrix, i, j );
 
             }
             else if (systemMass_->blockExists(i,j)) {
                 LO maxNumEntriesPerRow = systemMass_->getBlock(i,j)->getGlobalMaxNumRowEntries();
-                MatrixPtr_Type matrix = Teuchos::rcp( new Matrix_Type( systemMass_->getBlock(i,j)->getMap(), maxNumEntriesPerRow) );
+                MatrixPtr_Type matrix = Teuchos::rcp( new Matrix_Type( systemMass_->getBlock(i,j)->getMap(), 2*maxNumEntriesPerRow) );
                 systemCombined_->addBlock( matrix, i, j );
             }
         }
@@ -940,7 +940,7 @@ Teuchos::RCP<Thyra::PreconditionerBase<SC> > TimeProblem<SC,LO,GO,NO>::create_W_
             precInitOnly_ = false;
         }
         else{
-            nonLinProb->initializePreconditioner( type );
+            nonLinProb->setupPreconditioner( type );//nonLinProb->initializePreconditioner( type );
         }
     }
     

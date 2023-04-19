@@ -1052,9 +1052,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     {
         if(structureModel=="SCI_sophisticated"  ){
             if(timeSteppingTool_->currentTime() < 1.)
-                dt = 0.05;
+                dt = 0.1;
             if(timeSteppingTool_->currentTime() >= 1. )
-                dt = 1.0;
+                dt = 0.1;
             if(timeSteppingTool_->currentTime()>= 1001.)
                 dt= 1.0;
             if(timeSteppingTool_->currentTime() >= 2001.)
@@ -1070,13 +1070,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
         if( structureModel=="SCI_simple" ){
             if(timeSteppingTool_->currentTime() < 1.)
-                dt = 0.05;
+                dt = 0.1;
             if(timeSteppingTool_->currentTime() >= 1. )
                 dt = 0.1;
             if(timeSteppingTool_->currentTime() >= 5.-1e-10 )
-                dt = 0.01;
+                dt = 0.1;
             if(timeSteppingTool_->currentTime()>= 1000.)
-                dt= 0.01;
+                dt= 0.1;
                 
             timeSteppingTool_->dt_prev_= dt;        
             timeSteppingTool_->dt_= dt;
@@ -1191,6 +1191,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
         //massCoeffSCI.print();
         //problemCoeffSCI.print();
+
         if("linear" != parameterList_->sublist("Parameter Solid").get("Material model","linear"))
             nlSolver.solve(*this->problemTime_, time, its);
         else{

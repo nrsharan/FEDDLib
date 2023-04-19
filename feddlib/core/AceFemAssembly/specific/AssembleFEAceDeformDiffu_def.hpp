@@ -52,25 +52,23 @@ namespace FEDD
 	void AssembleFEAceDeformDiffu<SC, LO, GO, NO>::advanceInTime(double dt)
 	{
 
-	//cout << " advanced in time for this element " << endl;
-	if(this->timeStep_ < 1.)
-		this->timeIncrement_ = 0.05;
-	if(this->timeStep_ >= 1. )
-		this->timeIncrement_ = 0.1;
-	if(this->timeStep_ >= 5. -1e-10)
-		this->timeIncrement_ = 0.01;
-	if(this->timeStep_ >= 1000.)
-		this->timeIncrement_= 0.01;
+		//cout << " advanced in time for this element " << endl;
+		if(this->timeStep_ < 1.)
+			this->timeIncrement_ = 0.1;
+		if(this->timeStep_ >= 1. )
+			this->timeIncrement_ = 0.1;
+		if(this->timeStep_ >= 10. -1e-10)
+			this->timeIncrement_ = 0.1;
+		if(this->timeStep_ >= 1000.)
+			this->timeIncrement_= 0.01;
 
 		//	this->timeIncrement_ = dt;
 		this->timeStep_ = this->timeStep_ + this->timeIncrement_;
 
 		for (int i = 0; i < 40; i++)
 		{
-			if (i < 30)
-				solution_n_[i] = (*this->solution_)[i];
-			else
-				solution_n_[30 + 3 * (i - 30)] = (*this->solution_)[i];
+		    solution_n_[i] = (*this->solution_)[i];
+			
 		}
 	}
 
