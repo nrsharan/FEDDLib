@@ -1860,6 +1860,7 @@ void FE<SC,LO,GO,NO>::assemblyLaplace(int dim,
 
         buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
         detB = B.computeInverse(Binv);
+        cout << " Determinante ! " << detB << endl;
         absDetB = std::fabs(detB);
 
         vec3D_dbl_Type dPhiTrans( dPhi->size(), vec2D_dbl_Type( dPhi->at(0).size(), vec_dbl_Type(dim,0.) ) );
