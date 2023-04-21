@@ -487,7 +487,7 @@ int main(int argc, char *argv[])
         // ########################
 
 
-		Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaF(new ExporterParaView<SC,LO,GO,NO>());
+		/*Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaF(new ExporterParaView<SC,LO,GO,NO>());
 
 		Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(domainStructure->getMapUnique()));
 		vec_int_ptr_Type BCFlags = domainStructure->getBCFlagUnique();
@@ -503,7 +503,7 @@ int main(int argc, char *argv[])
 
 		exParaF->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainStructure->getMapUnique(), domainStructure->getMapUniqueP2());
 
-		exParaF->save(0.0);
+		exParaF->save(0.0);*/
 		
         if (parameterListAll->sublist("General").get("ParaView export subdomains",false) ){
         

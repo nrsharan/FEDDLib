@@ -485,7 +485,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
            
         }
 
-        // this->residualVec_->getBlockNonConst(0)->writeMM("residualVec");
+        //this->residualVec_->getBlockNonConst(0)->writeMM("residualVec");
 
 
         /*this->problemChem_->assemble();
@@ -873,7 +873,7 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
                     
                 A->addMatrix(1.,AKext,0.);
                 // AKext = -1. * Kext + 1. *AKext;
-                Kext->addMatrix(-1.,AKext,1.);
+                Kext->addMatrix(1.,AKext,-1.);
 
                 AKext->fillComplete(this->getDomain(0)->getMapVecFieldUnique(),this->getDomain(0)->getMapVecFieldUnique());
                 this->system_->addBlock(AKext,0,0);
