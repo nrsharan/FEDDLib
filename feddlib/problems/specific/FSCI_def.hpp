@@ -60,10 +60,10 @@ FSI<SC,LO,GO,NO>(parameterListFSCI,parameterListStructure, domainVelocity,defTS)
 problemSCI_()
 {
     this->nonLinearTolerance_ = this->parameterList_->sublist("Parameter").get("relNonLinTol",1.0e-6);
-    geometryExplicit_ = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
+    this->geometryExplicit_ = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
 
     this->initNOXParameters();
-    counterP = 0;
+    this->counterP = 0;
     
     std::string linearization = parameterListFSCI->sublist("General").get("Linearization","FixedPoint");
     
@@ -78,8 +78,8 @@ problemSCI_()
 
     this->dim_ = this->getDomain(0)->getDimension();
     
-    problemFluid_ = Teuchos::rcp( new FluidProblem_Type( domainVelocity, FETypeVelocity, domainPressure, FETypePressure, parameterListFluid ) );
-    problemFluid_->initializeProblem();
+    this->problemFluid_ = Teuchos::rcp( new FluidProblem_Type( domainVelocity, FETypeVelocity, domainPressure, FETypePressure, parameterListFluid ) );
+    this->problemFluid_->initializeProblem();
     
     Teuchos::RCP<SmallMatrix<int>> defTSSCI; // Seperate Timestepping Matrix for SCI
     defTSSCI.reset( new SmallMatrix<int> (2) );
@@ -89,15 +89,15 @@ problemSCI_()
     this->problemSCI_->initializeProblem();
 
     
-    problemGeometry_ = Teuchos::rcp( new GeometryProblem_Type( domainGeometry, FETypeGeometry, parameterListGeometry ) );
-    problemGeometry_->initializeProblem();
+    this->problemGeometry_ = Teuchos::rcp( new GeometryProblem_Type( domainGeometry, FETypeGeometry, parameterListGeometry ) );
+    this->problemGeometry_->initializeProblem();
     //We initialize the subproblems. In the main routine, we need to call initializeFSCI(). There, we first initialize the vectors of the FSCI problem and then we set the pointers of the subproblems to the vectors of the full monolithic FSCI system. This way all values are only saved once in the subproblems and can be used by the monolithic FSCI system.
     
-    meshDisplacementNew_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(5)->getMapVecFieldRepeated() ) );
-    meshDisplacementOld_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(5)->getMapVecFieldRepeated() ) );
-    u_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
-    w_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
-    u_minus_w_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
+    this->meshDisplacementNew_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(5)->getMapVecFieldRepeated() ) );
+    this->meshDisplacementOld_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(5)->getMapVecFieldRepeated() ) );
+    this->u_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
+    this->w_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
+    this->u_minus_w_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
     
     // Exporting benchmark values
     if ( parameterListFSCI->sublist("General").get("Export Extra Data",false) ){
@@ -107,12 +107,12 @@ problemSCI_()
             findDisplacementRichter3DBenchmark();
     }
     if ( parameterListFSCI->sublist("General").get("Export drag and lift",false) ){
-        exporterTxtDrag_ = Teuchos::rcp(new ExporterTxt () );
-        exporterTxtDrag_->setup( "drag_force", this->comm_ );
-        exporterTxtLift_ = Teuchos::rcp(new ExporterTxt () );
-        exporterTxtLift_->setup( "lift_force", this->comm_ );
+        this->exporterTxtDrag_ = Teuchos::rcp(new ExporterTxt () );
+        this->exporterTxtDrag_->setup( "drag_force", this->comm_ );
+        this->exporterTxtLift_ = Teuchos::rcp(new ExporterTxt () );
+        this->exporterTxtLift_->setup( "lift_force", this->comm_ );
     }
-    p_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(1)->getMapRepeated() ) );
+    this->p_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(1)->getMapRepeated() ) );
     
 }
 
