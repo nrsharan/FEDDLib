@@ -93,6 +93,8 @@ public:
          ParameterListPtr_Type parameterListFSI, ParameterListPtr_Type parameterListGeometry,
          Teuchos::RCP<SmallMatrix<int> > &defTS );
 
+   FSI(ParameterListPtr_Type parameterListFSI, ParameterListPtr_Type parameterListStructure, const DomainConstPtr_Type &domainVelocity, Teuchos::RCP<SmallMatrix<int> > &defTS );
+
     ~FSI();
 
     virtual void info();

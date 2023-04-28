@@ -457,11 +457,28 @@ void TimeProblem<SC,LO,GO,NO>::calculateNonLinResidualVec( std::string type, dou
                 this->systemMass_->addBlock( massmatrix, 0, 0 );
             }
         }
+         // for FSCI we need to reassemble the massmatrix system if the mesh was moved for geometry implicit computations
+        else if (this->parameterList_->sublist("Parameter").get("FSCI",false) ){
+            bool geometryExplicit = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
+            if( !geometryExplicit ) {
+                typedef FSCI<SC,LO,GO,NO> FSCI_Type;
+                typedef Teuchos::RCP<FSCI_Type> FSCIPtr_Type;
+                
+                MatrixPtr_Type massmatrix;                
+                FSCIPtr_Type fsci = Teuchos::rcp_dynamic_cast<FSCI_Type>( this->problem_ );
+                fsci->setFluidMassmatrix( massmatrix );
+                this->systemMass_->addBlock( massmatrix, 0, 0 );
+
+                MatrixPtr_Type massmatrixChem;                
+                fsci->setChemMassmatrix( massmatrixChem );
+                this->systemMass_->addBlock( massmatrixChem, 3, 3 );                 
+
+            }
+        }
         // we need to add M/dt*u_(t+1)^k (the last results of the nonlinear method) to the residualVec_
         //Copy
         BlockMultiVectorPtr_Type tmpMV = Teuchos::rcp(new BlockMultiVector_Type( nonLinProb->getSolution() ) );
         tmpMV->putScalar(0.);
-        
         systemMass_->apply( *nonLinProb->getSolution(), *tmpMV, massParameters_ );
 
         if (type=="reverse")// reverse: b-Ax

@@ -910,7 +910,6 @@ void MeshPartitioner<SC,LO,GO,NO>::findAndSetSurfaceEdges( vec2D_int_Type& edgeE
                 
                 int id1 = element.getNode( permutation.at(j).at(0) );
                 int id2 = element.getNode( permutation.at(j).at(1) );
-                
                 vec_int_Type tmpEdgeLocal(0);
                 if (id2>id1)
                     tmpEdgeLocal = { id1 , id2 };
@@ -926,10 +925,12 @@ void MeshPartitioner<SC,LO,GO,NO>::findAndSetSurfaceEdges( vec2D_int_Type& edgeE
                     element.initializeSubElements( "P1", 1 ); // only P1 for now                
                     element.addSubElement( feEdge );
                 }
+                else if(element.subElementsInitialized() && element.getSubElements()->getDimension()<2)
+                    element.addSubElement( feEdge );
                 else {
                     ElementsPtr_Type surfaces = element.getSubElements();
                     // We set the edge to the corresponding element(s)
-                    surfaces->setToCorrectElement( feEdge );
+                    surfaces->setToCorrectElement(feEdge);
                 }                                
             }
         }

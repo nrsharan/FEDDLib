@@ -63,9 +63,9 @@ materialModel_( parameterListStructure->sublist("Parameter").get("Material model
     eModVec_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getElementMap() ) );
 
     couplingType_ =    parameterListSCI->sublist("Parameter").get("Coupling Type","explicit");
-    loadStepping_ =    parameterListSCI->sublist("Parameter").get("Load Stepping",true);
-    externalForce_ =   parameterListSCI->sublist("Parameter").get("External Force",true);
-    nonlinearExternalForce_ = parameterListSCI->sublist("Parameter").get("Nonlinear External Force",true);
+    loadStepping_ =    parameterListSCI->sublist("Parameter").get("Load Stepping",false);
+    externalForce_ =   parameterListSCI->sublist("Parameter").get("External Force",false);
+    nonlinearExternalForce_ = parameterListSCI->sublist("Parameter").get("Nonlinear External Force",false);
     this->info();
 
 }
@@ -182,8 +182,8 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
             MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapUnique(), 0 ) );
             BT->fillComplete(this->getDomain(0)->getMapVecFieldUnique(),this->getDomain(1)->getMapUnique());
 
-            this->system_->addBlock( B, 0, 1 );
-            this->system_->addBlock( BT, 1, 0 );
+            //this->system_->addBlock( B, 0, 1 );
+            //this->system_->addBlock( BT, 1, 0 );
 
 
             // Fuer die Zeitprobleme
@@ -485,7 +485,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
            
         }
 
-        //this->residualVec_->getBlockNonConst(0)->writeMM("residualVec");
+        this->residualVec_->getBlockNonConst(0)->writeMM("residualVec");
 
 
         /*this->problemChem_->assemble();
@@ -873,7 +873,7 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
                     
                 A->addMatrix(1.,AKext,0.);
                 // AKext = -1. * Kext + 1. *AKext;
-                Kext->addMatrix(1.,AKext,-1.);
+                Kext->addMatrix(-1.,AKext,-1.);
 
                 AKext->fillComplete(this->getDomain(0)->getMapVecFieldUnique(),this->getDomain(0)->getMapVecFieldUnique());
                 this->system_->addBlock(AKext,0,0);

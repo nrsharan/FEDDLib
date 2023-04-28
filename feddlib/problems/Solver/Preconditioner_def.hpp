@@ -269,10 +269,27 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
     ParameterListPtr_Type plFrosch = sublist( sublist( pListThyraPrec, "Preconditioner Types" ), "FROSch");
     
     ThyraLinOpConstPtr_Type thyraMatrix;
+
+    /*if(!timeProblem_.is_null()){
+        timeProblem_->getSystemCombined()->writeMM("systemCombined");
+
+        for(int i=0 ;i< timeProblem_->getSystemCombined()->size(); i++ ){
+            for(int j=0 ;j< timeProblem_->getSystemCombined()->size(); j++ ){
+
+                cout << "#################################" << endl;
+                cout << "Map of Block (" << i <<" " << j << ")" << endl;
+                if(timeProblem_->getSystemCombined()->blockExists(i, j)){
+                    cout << "Num Entries=" << timeProblem_->getSystemCombined()->getBlock(i,j)->getMap("col")->getGlobalNumElements() << endl;
+                    cout << "Max Global Index=" << timeProblem_->getSystemCombined()->getBlock(i,j)->getMap("col")->getMaxAllGlobalIndex() << endl;
+                }
+            }
+        }
+    }*/
+
     if (!problem_.is_null())
         thyraMatrix = problem_->getSystem()->getThyraLinOp();
     else if(!timeProblem_.is_null())
-        thyraMatrix = timeProblem_->getSystemCombined()->getThyraLinOp();
+        thyraMatrix = timeProblem_->getSystemCombined()->getThyraLinOp(); // !!!!!!! HIER IST DAS PROBLEM 
 
     UN numberOfBlocks = parameterList->get("Number of blocks",1);
     Teuchos::ArrayRCP<Teuchos::RCP<Xpetra::Map<LO,GO,NO> > > repeatedMaps(numberOfBlocks);

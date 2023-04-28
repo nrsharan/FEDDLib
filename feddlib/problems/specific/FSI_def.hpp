@@ -43,6 +43,33 @@ void lift3D(double* x, double* res, double t, const double* parameters)
 
 namespace FEDD {
 // Funktionen fuer die rechte Seite der Struktur/ Fluid/ Geometrie sind im jeweiligen Problem
+template<class SC,class LO,class GO,class NO>
+FSI<SC,LO,GO,NO>::FSI(ParameterListPtr_Type parameterListFSI, ParameterListPtr_Type parameterListStructure, const DomainConstPtr_Type &domainVelocity, Teuchos::RCP<SmallMatrix<int> > &defTS ):
+NonLinearProblem<SC,LO,GO,NO>( parameterListFSI, domainVelocity->getComm() ),
+// hasSourceTerm = drittes Arguement. assembleSourceTerm() fuer NS nicht programmiert.
+// Deswegen hier erstmal false (default Parameter).
+// Fuer Struktur hingegen ist default Parameter true, da programmiert.
+P_(),
+problemFluid_(),
+problemStructure_(),
+problemStructureNonLin_(),
+problemGeometry_(),
+meshDisplacementOld_rep_(),
+meshDisplacementNew_rep_(),
+u_rep_(),
+w_rep_(),
+u_minus_w_rep_(),
+p_rep_(),
+defTS_(defTS),
+timeSteppingTool_(),
+materialModel_( parameterListStructure->sublist("Parameter").get("Material model","linear") ),
+valuesForExport_(0),
+exporterTxtDrag_(),
+exporterGeo_()
+{
+   
+  
+}
 
 template<class SC,class LO,class GO,class NO>
 FSI<SC,LO,GO,NO>::FSI(const DomainConstPtr_Type &domainVelocity, std::string FETypeVelocity,

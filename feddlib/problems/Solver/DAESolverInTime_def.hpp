@@ -1052,9 +1052,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     {
         if(structureModel=="SCI_sophisticated"  ){
             if(timeSteppingTool_->currentTime() < 1.)
-                dt = 0.1;
+                dt = 0.2;
             if(timeSteppingTool_->currentTime() >= 1. )
-                dt = 0.1;
+                dt = 0.2;
             if(timeSteppingTool_->currentTime()>= 1001.)
                 dt= 1.0;
             if(timeSteppingTool_->currentTime() >= 2001.)
@@ -1070,9 +1070,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
         if( structureModel=="SCI_simple" ){
             if(timeSteppingTool_->currentTime() < 1.)
-                dt = 0.1;
+                dt = 0.2;
             if(timeSteppingTool_->currentTime() >= 1. )
-                dt = 0.1;
+                dt = 0.2;
             if(timeSteppingTool_->currentTime() >= 5.-1e-10 )
                 dt = 0.1;
             if(timeSteppingTool_->currentTime()>= 1000.)
@@ -2557,6 +2557,7 @@ void DAESolverInTime<SC,LO,GO,NO>::setupExporter(){
             export_solution_vector_.push_back(exportVector);
         }
     }
+
     boolExporterSetup_ = true;
 
 }

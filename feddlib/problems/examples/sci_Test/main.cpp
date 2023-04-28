@@ -67,7 +67,7 @@ void zeroDirichlet3D(double* x, double* res, double t, const double* parameters)
 
 void inflowChem(double* x, double* res, double t, const double* parameters)
 {
-    res[0] = 1.;
+    res[0] = 0.;
     
     return;
 }
@@ -107,7 +107,7 @@ void rhsYZ(double* x, double* res, double* parameters){
     res[1] =0.;
     res[2] =0.;
     if(parameters[0]+1e-10 < TRamp)
-        force = (parameters[0]+0.1) * force ;
+        force = (parameters[0]+0.2) * force ;
     else
         force = parameters[1];
 
