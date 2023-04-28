@@ -102,9 +102,9 @@ problemSCI_()
     // Exporting benchmark values
     if ( parameterListFSCI->sublist("General").get("Export Extra Data",false) ){
         if (this->dim_==2)
-            findDisplacementTurek2DBenchmark();
+            this->findDisplacementTurek2DBenchmark();
         else if (this->dim_==3)
-            findDisplacementRichter3DBenchmark();
+            this->findDisplacementRichter3DBenchmark();
     }
     if ( parameterListFSCI->sublist("General").get("Export drag and lift",false) ){
         this->exporterTxtDrag_ = Teuchos::rcp(new ExporterTxt () );
