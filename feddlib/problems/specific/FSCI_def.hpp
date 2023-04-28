@@ -533,7 +533,7 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             }
             
             this->problemFluid_->reAssemble( "Newton" );
-            cout << "Assemble Newton for Fluid done" <<endl;
+            //cout << "Assemble Newton for Fluid done" <<endl;
             //if (materialModel_ != "linear")
             this->problemSCI_->reAssemble("Newton");
             

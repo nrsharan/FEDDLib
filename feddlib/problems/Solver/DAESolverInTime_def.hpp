@@ -1280,9 +1280,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     // problemCoeff vor A (= komplettes steady-System)
     // massCoeff vor M (= Massematrix)
     // coeffSourceTerm vor f (= rechte Seite der DGL)
-    cout << " ###### advanceInTimeFSCI #########" << endl;
-  
-    
+   
     FSCIProblemPtr_Type fsci = Teuchos::rcp_dynamic_cast<FSCIProblem_Type>( this->problemTime_->getUnderlyingProblem() );
     
     bool print = parameterList_->sublist("General").get("ParaViewExport",false);
@@ -1533,8 +1531,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 #endif
     while(timeSteppingTool_->continueTimeStepping())
     {
-        cout << " ###### Timeloop #########" << endl;
-
         problemTime_->updateTime ( timeSteppingTool_->currentTime() );
 
         string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
