@@ -2,9 +2,9 @@
     <ParameterList name="Parameter">
         <Parameter name="Dimension" type="int" value="2"/>
         <Parameter name="Discretization" type="string" value="P1"/><!--P1, P2; velocity, pressure always P1 -->
-       
+
         <Parameter name="Mesh Type" type="string" value="unstructured"/> <!--structured, unstructured, structured_bfs -->
-        <Parameter name="Mesh Name" type="string" value="aneurysmBenchmark.mesh"/><!--Turek3DCylinder_1400.mesh, circle2D.mesh-->
+        <Parameter name="Mesh 1 Name" type="string" value="fluid_straightTube.mesh"/>
 
         <Parameter name="Mesh Delimiter" type="string" value=" "/>
         <Parameter name="H/h" type="int" value="5"/>
@@ -13,9 +13,8 @@
     
     <ParameterList name="Mesh Partitioner">
         <Parameter name="Contiguous" type="bool" value="true"/>
-      
-        <Parameter name="Mesh 1 Name" type="string" value="aneurysmBenchmark.mesh"/>
 
+        <Parameter name="Mesh 1 Name" type="string" value="fluid_straightTube.mesh"/>
     </ParameterList>
     
     <ParameterList name="Exporter">

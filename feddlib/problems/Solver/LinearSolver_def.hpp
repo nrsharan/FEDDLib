@@ -135,6 +135,7 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(Problem_Type* problem, BlockMulti
 template<class SC,class LO,class GO,class NO>
 int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, BlockMultiVectorPtr_Type rhs){
 
+    cout << " #### Solve Monolithic ####" << endl;
 
     bool verbose(timeProblem->getVerbose());
     int its=0;

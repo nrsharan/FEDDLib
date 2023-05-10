@@ -1493,6 +1493,14 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     problemCoeffFSI[2][4] = 1.0; // C3_T
     problemCoeffFSI[4][0] = 1.0; // C1
     problemCoeffFSI[4][2] = 1.0; // C2
+    
+    std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
+    if(couplingType=="implicit")
+    {
+       problemCoeffFSI[2][3] = 1.0; //SCI Coupling Blocks
+       problemCoeffFSI[3][2] = 1.0; 
+    }
+
     if(!geometryExplicit)
     {
         problemCoeffFSI[5][2] = 1.0; // C4
@@ -1660,7 +1668,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         this->problemTime_->assemble( "ComputeChemRHSInTime" ); // hier ist massmatrix nicht relevant
         //this->problemTime_->getRhs()->addBlock( Teuchos::rcp_const_cast<MultiVector_Type>(rhs->getBlock(0)), 0 );
 
-
         // ######################
         // System loesen
         // ######################
@@ -1671,6 +1678,12 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
                 for (int j = 0; j < sizeFluid; j++){
                     if (massCoeffFSI[i][j] != 0.)
                         massCoeffFSI[i][j] = 1./dt ;
+                }
+            }
+            for (int i = 0; i < sizeChem; i++)
+            {
+                for (int j = 0; j < sizeChem; j++){
+                    massCoeffFSI[i+sizeStructure+sizeFluid][j+sizeStructure+sizeFluid] = 1./dt;
                 }
             }
             this->problemTime_->setTimeParameters(massCoeffFSI, problemCoeffFSI);
@@ -1689,6 +1702,12 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
                     massCoeffFSI[i][j] = massCoeffFluid[i][j];
                 }
             }
+            for (int i = 0; i < sizeChem; i++)
+            {
+                for (int j = 0; j < sizeChem; j++){
+                    massCoeffFSI[i+sizeStructure+sizeFluid][j+sizeStructure+sizeFluid] = massCoeffChem[i][j];
+                }
+            }
             this->problemTime_->setTimeParameters(massCoeffFSI, problemCoeffFSI);
         }
         
@@ -1696,8 +1715,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 
         timeSteppingTool_->advanceTime(true/*output info*/);
         this->problemTime_->assemble("UpdateTime"); // Zeit in FSI inkrementieren
-
-         std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
 
         // Should be some place else
         if(couplingType == "explicit")

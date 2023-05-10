@@ -921,7 +921,7 @@ void MeshPartitioner<SC,LO,GO,NO>::findAndSetSurfaceEdges( vec2D_int_Type& edgeE
                 // In some cases an edge is the only part of the surface of an Element. In that case there does not exist a triangle subelement. 
                 // We then have to initialize the edge as subelement.                       
                                        
-                if ( !element.subElementsInitialized() ){
+                if ( !elemenumInterfaceGlobalThist.subElementsInitialized() ){
                     element.initializeSubElements( "P1", 1 ); // only P1 for now                
                     element.addSubElement( feEdge );
                 }

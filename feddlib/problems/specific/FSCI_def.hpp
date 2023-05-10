@@ -736,8 +736,7 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
         Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(0) );
     MultiVectorPtr_Type residualSolidFSCI =
         Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(2) );
-    MultiVectorPtr_Type residualChemFSCI =
-        Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(3) );
+   // MultiVectorPtr_Type residualChemFSCI = Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(3) );
 
 
     MultiVectorPtr_Type residualCouplingFSCI =Teuchos::rcp( new MultiVector_Type( this->getDomain(4)->getMapVecFieldUnique() ) );
@@ -770,7 +769,6 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
         this->residualVec_->scale(-1.);
         this->bcFactory_->setVectorMinusBC( this->residualVec_, this->solution_, time );
     }
-
 
 }
 

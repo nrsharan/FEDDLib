@@ -95,7 +95,7 @@ void BCBuilder<SC,LO,GO,NO>::setRHS(const BlockMultiVectorPtr_Type &blockMV, dou
     vec_dbl_Type point;
     
     TEUCHOS_TEST_FOR_EXCEPTION( blockMV->getNumVectors()>1, std::runtime_error, "BCBuilder::setRHS() only for getNumVectors == 1.");
-    
+    cout << " -------- BC BUILDER: Set Rhs ------" << endl;
     int loc = 0;
     for (int block = 0; block < blockMV->size(); block++) { // blocks of RHS vector
         if(blockHasDirichletBC(block, loc)){

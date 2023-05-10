@@ -783,9 +783,9 @@ void FSI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     
     this->system_->getBlock(2,3)->apply( *this->solution_->getBlock(3) , *residualSolidFSI, Teuchos::NO_TRANS, -1., 1. );
     
-    this->system_->getBlock(3,0)->apply( *this->solution_->getBlock(0) , *residualCouplingFSI, Teuchos::NO_TRANS, -1., 1. );
+    this->system_->getBlock(3,0)->apply( *this->solution_->getBlock(0) , *residualCouplingFSI, Teuchos::NO_TRANS, -1., 1. ); // Restriction Velocity in interface Nodes
     
-    this->system_->getBlock(3,2)->apply( *this->solution_->getBlock(2) , *residualCouplingFSI, Teuchos::NO_TRANS, -1., 1. );
+    this->system_->getBlock(3,2)->apply( *this->solution_->getBlock(2) , *residualCouplingFSI, Teuchos::NO_TRANS, -1., 1. ); // Restriction Structure in interface Nodes
 
     if (!geometryExplicit_) {
         

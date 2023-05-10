@@ -41,20 +41,21 @@ void parabolicInflow3D(double* x, double* res, double t, const double* parameter
     // parameters[1] end of ramp
     // parameters[2] is the maxium solution value of the laplacian parabolic inflow problme
     // we use x[0] for the laplace solution in the considered point. Therefore, point coordinates are missing
+   
     if(t < parameters[1])
     {
         res[0] = 0.;
         res[1] = 0.;
-        res[2] = parameters[0] / 1. * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
+        res[2] = parameters[0] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
     }
     else
     {
         res[0] = 0.;
         res[1] = 0.;
-        res[2] = parameters[0] / 1. * x[0];
+        res[2] = parameters[0] / parameters[2] * x[0];
 
     }
-
+   
     return;
 }
 
@@ -409,41 +410,7 @@ int main(int argc, char *argv[])
             //                TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,"P1/P1 for FSI not implemented!");
         }
 
-        /*Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
-
-        Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(domainFluidVelocity->getMapUnique()));
-        vec_int_ptr_Type BCFlags = domainFluidVelocity->getBCFlagUnique();
-
-        Teuchos::ArrayRCP< SC > entries  = exportSolution->getDataNonConst(0);
-        for(int i=0; i< entries.size(); i++){
-            entries[i] = BCFlags->at(i);
-        }
-
-        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst = exportSolution;
-
-        exPara->setup("FlagsFluid",domainFluidVelocity->getMesh(), discType);
-
-        exPara->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainFluidVelocity->getMapUnique(), domainFluidVelocity->getMapUniqueP2());
-
-        exPara->save(0.0);
-
-        Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara2(new ExporterParaView<SC,LO,GO,NO>());
-
-        Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution2(new MultiVector<SC,LO,GO,NO>(domainStructure->getMapUnique()));
-        vec_int_ptr_Type BCFlags2 = domainStructure->getBCFlagUnique();
-
-        Teuchos::ArrayRCP< SC > entries2  = exportSolution2->getDataNonConst(0);
-        for(int i=0; i< entries2.size(); i++){
-            entries2[i] = BCFlags2->at(i);
-        }
-
-        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst2 = exportSolution2;
-
-        exPara2->setup("FlagsStructure", domainStructure->getMesh(), discType);
-
-        exPara2->addVariable(exportSolutionConst2, "Flags", "Scalar", 1,domainStructure->getMapUnique(), domainStructure->getMapUniqueP2());
-
-        exPara2->save(0.0);*/
+        
 
 
         if (verbose){
@@ -469,6 +436,45 @@ int main(int argc, char *argv[])
 
         
         if (parameterListAll->sublist("General").get("ParaView export subdomains",false) ){
+            
+            if (verbose)
+                std::cout << "\t### Exporting fluid and solid flags ###\n";
+
+            Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+
+		    Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(domainFluidVelocity->getMapUnique()));
+		    vec_int_ptr_Type BCFlags = domainFluidVelocity->getBCFlagUnique();
+
+		    Teuchos::ArrayRCP< SC > entries  = exportSolution->getDataNonConst(0);
+		    for(int i=0; i< entries.size(); i++){
+		        entries[i] = BCFlags->at(i);
+		    }
+
+		    Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst = exportSolution;
+
+		    exPara->setup("FlagsFluid",domainFluidVelocity->getMesh(), discType);
+
+		    exPara->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainFluidVelocity->getMapUnique(), domainFluidVelocity->getMapUniqueP2());
+
+		    exPara->save(0.0);
+
+		    Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara2(new ExporterParaView<SC,LO,GO,NO>());
+
+		    Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution2(new MultiVector<SC,LO,GO,NO>(domainStructure->getMapUnique()));
+		    vec_int_ptr_Type BCFlags2 = domainStructure->getBCFlagUnique();
+
+		    Teuchos::ArrayRCP< SC > entries2  = exportSolution2->getDataNonConst(0);
+		    for(int i=0; i< entries2.size(); i++){
+		        entries2[i] = BCFlags2->at(i);
+		    }
+
+		    Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst2 = exportSolution2;
+
+		    exPara2->setup("FlagsStructure", domainStructure->getMesh(), discType);
+
+		    exPara2->addVariable(exportSolutionConst2, "Flags", "Scalar", 1,domainStructure->getMapUnique(), domainStructure->getMapUniqueP2());
+
+		    exPara2->save(0.0);
             
             if (verbose)
                 std::cout << "\t### Exporting fluid and solid subdomains ###\n";
@@ -597,9 +603,18 @@ int main(int argc, char *argv[])
         {
             Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryLaplace(new BCBuilder<SC,LO,GO,NO>( ));
             
-            bcFactoryLaplace->addBC(zeroBC, 4, 0, domainFluidVelocity, "Dirichlet", 1); //inflow ring
-            bcFactoryLaplace->addBC(zeroBC, 4, 0, domainFluidVelocity, "Dirichlet", 1); //outflow ring
-            bcFactoryLaplace->addBC(zeroBC, 6, 0, domainFluidVelocity, "Dirichlet", 1); //surface
+            if(geometryType == "Benchmark"){
+		        bcFactoryLaplace->addBC(zeroBC, 4, 0, domainFluidVelocity, "Dirichlet", 1); //inflow ring
+		        bcFactoryLaplace->addBC(zeroBC, 4, 0, domainFluidVelocity, "Dirichlet", 1); //outflow ring
+		        bcFactoryLaplace->addBC(zeroBC, 6, 0, domainFluidVelocity, "Dirichlet", 1); //surface
+		    }
+            else if (geometryType == "Tube"){
+           		bcFactoryLaplace->addBC(zeroBC, 2, 0, domainFluidVelocity, "Dirichlet", 1); //inflow ring
+        	 	bcFactoryLaplace->addBC(zeroBC, 3, 0, domainFluidVelocity, "Dirichlet", 1); //outflow ring
+        	 	bcFactoryLaplace->addBC(zeroBC, 6, 0, domainFluidVelocity, "Dirichlet", 1); //surface
+            }
+            else
+               TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Select a valid geometry Type. Only 'Benchmark' and 'Tube' available.");
             
             ParameterListPtr_Type parameterListProblemL = Teuchos::getParametersFromXmlFile(xmlProbL);
             ParameterListPtr_Type parameterListPrecL = Teuchos::getParametersFromXmlFile(xmlPrecL);
@@ -621,8 +636,14 @@ int main(int argc, char *argv[])
             }
             
             //We need the values in the inflow area. Therefore, we use the above bcFactory and the volume flag 10 and the outlet flag 5 and set zero Dirichlet boundary values
-            bcFactoryLaplace->addBC(zeroBC, 3, 0, domainFluidVelocity, "Dirichlet", 1);
-            bcFactoryLaplace->addBC(zeroBC, 10, 0, domainFluidVelocity, "Dirichlet", 1);
+            if(geometryType == "Benchmark"){
+                bcFactoryLaplace->addBC(zeroBC, 3, 0, domainFluidVelocity, "Dirichlet", 1);
+	            bcFactoryLaplace->addBC(zeroBC, 10, 0, domainFluidVelocity, "Dirichlet", 1);
+            }
+            else if (geometryType == "Tube"){
+            	bcFactoryLaplace->addBC(zeroBC, 5, 0, domainFluidVelocity, "Dirichlet", 1);
+            	bcFactoryLaplace->addBC(zeroBC, 10, 0, domainFluidVelocity, "Dirichlet", 1);
+            }
             bcFactoryLaplace->setRHS( laplace.getSolution(), 0.);
             
             solutionLaplace = laplace.getSolution()->getBlock(0);
@@ -631,7 +652,7 @@ int main(int argc, char *argv[])
             
             parameter_vec.push_back(maxValue);
 
-            /*Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+            Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
             
             exPara->setup("parabolicInflow", domainFluidVelocity->getMesh(), discType);
             
@@ -641,7 +662,7 @@ int main(int argc, char *argv[])
             exPara->addVariable( valuesConst, "values", "Scalar", 1, domainFluidVelocity->getMapUnique() );
 
             exPara->save(0.0);
-            exPara->closeExporter();*/
+            exPara->closeExporter();
 
         }
         
@@ -654,21 +675,25 @@ int main(int argc, char *argv[])
         {
             bool zeroPressure = parameterListProblem->sublist("Parameter Fluid").get("Set Outflow Pressure to Zero",false);
             Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryFluid( new BCBuilder<SC,LO,GO,NO>( ) );
-                            
-            bcFactory->addBC(parabolicInflow3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
-            //bcFactory->addBC(parabolicInflow3D, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
-            bcFactoryFluid->addBC(parabolicInflow3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
-            //bcFactoryFluid->addBC(parabolicInflow3D, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
+                 
+            if(geometryType == "Benchmark"){               
+		        bcFactory->addBC(parabolicInflow3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
+		        bcFactoryFluid->addBC(parabolicInflow3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
+		     
+		        
+		        bcFactory->addBC(zeroDirichlet3D, 4, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring                
+		        bcFactoryFluid->addBC(zeroDirichlet3D, 4, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
 
-            //bcFactoryFluid->addBC(zeroDirichlet3D, 1, 0, domainFluidVelocity, "Dirichlet", dim); // wall
+		        bcFactory->addBC(zeroDirichlet3D, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);//, solutionLaplace); // outflow ring                
+		        bcFactoryFluid->addBC(zeroDirichlet3D, 4, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring
+            }
+            else if(geometryType == "Tube"){               
+		        bcFactory->addBC(parabolicInflow3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
+   				bcFactory->addBC(parabolicInflow3D, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
 
-            
-            bcFactory->addBC(zeroDirichlet3D, 4, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring                
-            bcFactoryFluid->addBC(zeroDirichlet3D, 4, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
-
-            bcFactory->addBC(zeroDirichlet3D, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);//, solutionLaplace); // outflow ring                
-            bcFactoryFluid->addBC(zeroDirichlet3D, 4, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring
-            
+    			bcFactoryFluid->addBC(parabolicInflow3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
+    			bcFactoryFluid->addBC(parabolicInflow3D, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
+  			}
             if (zeroPressure) {
                 //bcFactory->addBC(zeroBC, 4, 1, domainFluidPressure, "Dirichlet", 1); // outflow ring
                     bcFactory->addBC(zeroBC, 3, 1, domainFluidPressure, "Dirichlet", 1); // outflow
@@ -685,6 +710,8 @@ int main(int argc, char *argv[])
         // Struktur-RW
         {
             Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryStructure( new BCBuilder<SC,LO,GO,NO>( ) );
+             
+     	   if(geometryType == "Benchmark"){                 
                 bcFactory->addBC(zeroDirichlet3D, 0, 2, domainStructure, "Dirichlet_Y_Z", dim); // inflow/outflow strip fixed in y direction
                 bcFactory->addBC(zeroDirichlet3D, 1, 2, domainStructure, "Dirichlet_X_Y", dim); // inflow/outflow strip fixed in y direction
                 bcFactory->addBC(zeroDirichlet3D, 2, 2, domainStructure, "Dirichlet_Z", dim); // inlet fixed in Z direction
@@ -694,6 +721,22 @@ int main(int argc, char *argv[])
                 bcFactoryStructure->addBC(zeroDirichlet3D, 1, 0, domainStructure, "Dirichlet_X_Y", dim); 
                 bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);           
                 bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_X", dim); 
+            }
+            else if(geometryType == "Tube"){
+            
+				bcFactory->addBC(zeroDirichlet3D, 2, 2, domainStructure, "Dirichlet_Z", dim); // linke Seite
+				bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim); // linke Seite
+			   
+				bcFactory->addBC(zeroDirichlet3D, 4, 2, domainStructure, "Dirichlet_Z", dim); // linke Seite
+				bcFactoryStructure->addBC(zeroDirichlet3D, 4, 0, domainStructure, "Dirichlet_Z", dim); // linke Seite
+				
+				bcFactory->addBC(zeroDirichlet3D, 3, 2, domainStructure, "Dirichlet_Z", dim); // rechte Seite
+				bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dim); // rechte Seite
+			   
+				bcFactory->addBC(zeroDirichlet3D, 5, 2, domainStructure, "Dirichlet_Z", dim); // rechte Seite
+				bcFactoryStructure->addBC(zeroDirichlet3D, 5, 0, domainStructure, "Dirichlet_Z", dim); // rechte Seite
+						            
+            }
             // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
             // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()
             if (!fsci.problemSCI_->problemStructure_.is_null())
@@ -718,14 +761,22 @@ int main(int argc, char *argv[])
         if (preconditionerMethod == "FaCSI" || preconditionerMethod == "FaCSI-Teko")
             bcFactoryFluidInterface = Teuchos::rcp( new BCBuilder<SC,LO,GO,NO>( ) );
 
-        bcFactoryGeometry->addBC(zeroDirichlet3D, 0, 0, domainGeometry, "Dirichlet", dim); // inflow/outflow strip fixed in y direction
-	    bcFactoryGeometry->addBC(zeroDirichlet3D, 1, 0, domainGeometry, "Dirichlet", dim); // inflow/outflow strip fixed in y direction
-	    bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in Z direction
-	    bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in X direction
-	    bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // inlet/outlet Ring
-	    bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // ?
-        bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // Interface
-        
+		if(geometryType == "Benchmark"){
+		    bcFactoryGeometry->addBC(zeroDirichlet3D, 0, 0, domainGeometry, "Dirichlet", dim); // inflow/outflow strip fixed in y direction
+			bcFactoryGeometry->addBC(zeroDirichlet3D, 1, 0, domainGeometry, "Dirichlet", dim); // inflow/outflow strip fixed in y direction
+			bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in Z direction
+			bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in X direction
+			bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // inlet/outlet Ring
+			bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // ?
+		    bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // Interface
+        }
+        else if (geometryType == "Tube" ) {
+       		bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet 
+			bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // outlet 	
+			bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // inflow ring
+			bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // outflow ring
+		    bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // interface
+   		}
         // Die RW, welche nicht Null sind in der rechten Seite (nur Interface) setzen wir spaeter per Hand.
         // Hier erstmal Dirichlet Nullrand, wird spaeter von der Sturkturloesung vorgegeben
             bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // interface
@@ -737,22 +788,21 @@ int main(int argc, char *argv[])
             fsci.getPreconditioner()->setFaCSIBCFactory( bcFactoryFluidInterface );
 
         Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryChem( new BCBuilder<SC,LO,GO,NO>( ) ); 
-        if (dim==2)
-        {
-                TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "Only 3D Test available");                               
-                            
-        }
-        else if(dim==3)
-        {
 
+		if(geometryType == "Benchmark"){
             bcFactory->addBC(inflowChem, 6, 3, domainChem, "Dirichlet", 1); // inflow of Chem
             bcFactoryChem->addBC(inflowChem, 6, 0, domainChem, "Dirichlet", 1); // inflow of Chem
             bcFactory->addBC(inflowChem, 4, 3, domainChem, "Dirichlet", 1); // inflow of Chem
             bcFactoryChem->addBC(inflowChem, 4, 0, domainChem, "Dirichlet", 1); // inflow of Chem
-            //bcFactory->addBC(inflowChem, 4, 3, domainChem, "Dirichlet", 1); // inflow of Chem
-            //bcFactoryChem->addBC(inflowChem, 4, 0, domainChem, "Dirichlet", 1); // inflow of Chem
-            // bcFactoryChem->addBC(inflowChem, 4, 1, domainChem, "Dirichlet", 1); // inflow of Chem
-        }
+         }
+        else if(geometryType == "Tube"){
+            bcFactory->addBC(inflowChem, 6, 3, domainChem, "Dirichlet", 1); // inflow of Chem
+            bcFactoryChem->addBC(inflowChem, 6, 0, domainChem, "Dirichlet", 1); // inflow of Chem
+            bcFactory->addBC(inflowChem, 2, 3, domainChem, "Dirichlet", 1); // inflow of Chem
+            bcFactoryChem->addBC(inflowChem, 2, 0, domainChem, "Dirichlet", 1); // inflow of Chem
+            bcFactory->addBC(inflowChem, 3, 3, domainChem, "Dirichlet", 1); // inflow of Chem
+            bcFactoryChem->addBC(inflowChem, 3, 0, domainChem, "Dirichlet", 1); // inflow of Chem
+         }
 
     // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
     // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()

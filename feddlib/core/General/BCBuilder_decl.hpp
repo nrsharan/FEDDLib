@@ -120,7 +120,6 @@ private:
     TimePtr_Type FindFlagTimer_;
 #endif
 
-    
 };
 }
 
