@@ -102,6 +102,8 @@ class FE {
     DomainConstPtr_vec_Type	domainVec_;
     Teuchos::RCP<ElementSpec> es_;
 
+   typedef FiniteElement FiniteElement_Type;
+    typedef std::vector<FiniteElement_Type> FiniteElement_vec;
     /* ###################################################################### */
 
     FE(bool saveAssembly=false);
@@ -568,9 +570,30 @@ class FE {
                                     bool callFillComplete = true,
                                     int FELocExternal=-1);
 
+    void globalAssembly(string ProblemType,
+                        int dim,                    
+                        int degree,                       
+                        BlockMultiVectorPtr_Type sol_rep,
+                        BlockMatrixPtr_Type &A,
+                        BlockMultiVectorPtr_Type &resVec,
+                        ParameterListPtr_Type params,
+                        string assembleMode,
+                        bool callFillComplete=true,
+                        int FELocExternal=-1);
 
+    void postProcessing(string Type, BlockMultiVectorPtr_Type &res);
 /* ----------------------------------------------------------------------------------------*/
 private:
+
+    void addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement_vec element, tuple_disk_vec_ptr_Type problemDisk);
+
+	//void addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement element, MapConstPtr_Type mapFirstColumn,MapConstPtr_Type mapSecondColumn, tuple_disk_vec_ptr_Type problemDisk);
+
+	//void addFeBlock(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement element, MapConstPtr_Type mapFirstRow, int row, int column, tuple_disk_vec_ptr_Type problemDisk);
+
+    void addFeBlockMv(BlockMultiVectorPtr_Type &res, vec_dbl_ptr_Type rhsVec,tuple_disk_vec_ptr_Type problemDisk, FiniteElement_vec element);
+
+
 	void addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement element, MapConstPtr_Type mapFirstColumn,MapConstPtr_Type mapSecondColumn, tuple_disk_vec_ptr_Type problemDisk);
 
 	void addFeBlock(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement element, MapConstPtr_Type mapFirstRow, int row, int column, tuple_disk_vec_ptr_Type problemDisk);
@@ -712,5 +735,6 @@ private:
     std::vector<Teuchos::RCP<DataElement> > ed_;
     bool saveAssembly_;
 };
+
 }
 #endif

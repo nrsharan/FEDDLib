@@ -145,7 +145,8 @@ public:
     
     void updatePoints();
     
-    
+    void updateVariables(MultiVecConstPtr_Type &u, std::string varName);
+
     void initXmf();
     
     void initXmfTimes();

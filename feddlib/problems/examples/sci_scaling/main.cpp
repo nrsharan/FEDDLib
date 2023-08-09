@@ -607,15 +607,17 @@ int main(int argc, char *argv[])
 		    int volumeID=10;
 		    if(bcType=="Artery")
 		    	volumeID = 15;
+		    else if(bcType=="Realistic Artery")
+		    	volumeID = 21;
 		    	
 		    partitionerP1.readAndPartition(volumeID);
 		    
 		    
             if (!discType.compare("P2")){
-				domainP2chem->buildP2ofP1Domain( domainP1struct );
+				//domainP2chem->buildP2ofP1Domain( domainP1struct );
 				domainP2struct->buildP2ofP1Domain( domainP1struct );
 
-				domainChem = domainP2chem;
+				domainChem = domainP2struct;   //domainP2chem;
 				domainStructure = domainP2struct;   
 			}        
 			else{
@@ -623,6 +625,8 @@ int main(int argc, char *argv[])
 				domainChem = domainP1struct;
 			}
         }
+        domainStructure->setDofs(dim);
+        domainChem->setDofs(1);
         /*vec2D_dbl_ptr_Type pointsUni_ = domainStructure->getPointsUnique();
     
         for(int i=0; i<domainStructure->getMapUnique()->getNodeNumElements(); i++) {
@@ -807,7 +811,37 @@ int main(int argc, char *argv[])
 			bcFactoryStructure->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet_X_Z", dim);
         
         }
-        
+		else if(dim==3 && bcType=="Realistic Artery"){
+			bcFactoryStructure->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 17, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 19, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 15, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 18, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet_Z", dim);	
+			
+			bcFactoryStructure->addBC(zeroDirichlet3D, 77, 0, domainStructure, "Dirichlet_X", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 78, 0, domainStructure, "Dirichlet_Y", dim);
+			
+		
+			bcFactory->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 17, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 19, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 15, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 18, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet_Z", dim);	
+			
+			bcFactory->addBC(zeroDirichlet3D, 77, 0, domainStructure, "Dirichlet_X", dim);
+			bcFactory->addBC(zeroDirichlet3D, 78, 0, domainStructure, "Dirichlet_Y", dim);
+			
+        }
         // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
         // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()
         if (!sci.problemStructure_.is_null())
@@ -854,7 +888,7 @@ int main(int argc, char *argv[])
                 sci.problemStructure_->addParemeterRhs( heartBeatStart );
             }
             else{             
-				if(bcType=="Cube"){
+				if(bcType=="Artery" || bcType=="Realistic Artery" ){
 					if(rhsType=="Constant")
 		    		 	sci.problemStructureNonLin_->addRhsFunction( rhsYZ,0 );
 		    		if(rhsType=="Paper")
@@ -863,7 +897,7 @@ int main(int argc, char *argv[])
 		        		sci.problemStructureNonLin_->addRhsFunction( rhsHeartBeatCube,0 );
 					
 				}
-				else if(bcType=="Artery"){
+				else if(bcType=="Artery" || bcType=="Realistic Artery" ){
 					if(rhsType=="Constant")
 		    		 	sci.problemStructureNonLin_->addRhsFunction( rhsArtery,0 );
 					if(rhsType=="Paper")
@@ -931,6 +965,18 @@ int main(int argc, char *argv[])
            bcFactoryChem->addBC(inflowChem, 14, 0, domainChem, "Dirichlet", 1,parameter_vec);
            bcFactoryChem->addBC(inflowChem, 7, 0, domainChem, "Dirichlet", 1,parameter_vec);
            bcFactoryChem->addBC(inflowChem, 10, 0, domainChem, "Dirichlet", 1,parameter_vec);
+        }
+        else if(dim==3 && bcType=="Realistic Artery"){
+           std::vector<double> parameter_vec(1, parameterListAll->sublist("Parameter").get("Inflow Start Time",0.));
+           
+           bcFactory->addBC(inflowChem, 5, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+		   bcFactory->addBC(inflowChem, 15, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+		   bcFactory->addBC(inflowChem, 14, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+		   
+           bcFactoryChem->addBC(inflowChem, 5, 0, domainChem, "Dirichlet", 1,parameter_vec);
+           bcFactoryChem->addBC(inflowChem, 15, 0, domainChem, "Dirichlet", 1,parameter_vec);
+           bcFactoryChem->addBC(inflowChem, 14, 0, domainChem, "Dirichlet", 1,parameter_vec);
+           
         }
 
         // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems

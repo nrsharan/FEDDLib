@@ -59,6 +59,8 @@ class AssembleFE_SCI_SMC_Active_Growth_Reorientation : public AssembleFE<SC,LO,G
 
 		virtual void advanceInTime(double dt);
 
+        virtual void postProcessing();
+
         void getMassMatrix(SmallMatrixPtr_Type &massMatrix ){massMatrix=massMatrix_;};
 
     protected:
@@ -218,6 +220,7 @@ class AssembleFE_SCI_SMC_Active_Growth_Reorientation : public AssembleFE<SC,LO,G
 		double thetaMinus3_ ;
 		double kMin_;
 		double rho_;
+		double typeOfInterpol_;
 };
 
 }

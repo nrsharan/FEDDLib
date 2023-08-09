@@ -520,6 +520,22 @@ public:
          
     */
     MultiVectorPtr_Type getNodeListMV() const;
+
+     /// @brief Setting physic property of domain 
+     /// @param physic physics property of unterlying component of problem i.e. velocity for Navier-Stokes
+     void setPhysicProperty(string physic);
+
+     /// @brief 
+     /// @param dofs 
+     void setDofs(int dofs);
+
+     /// @brief 
+     /// @return 
+     int getDofs();
+
+     /// @brief Returning the physics property of domain
+     /// @return physics property of unterlying component of problem i.e. velocity for Navier-Stokes
+     string getPhysicProperty();
 /* ----------------------------------------------------------------------------------------*/
 
 private:
@@ -527,6 +543,8 @@ private:
     CommConstPtr_Type 		comm_;
     MeshPtr_Type 			mesh_;
     int                     dim_;
+    int                     dofs_=1; // dimension
+
     vec_dbl_Type            coorRec;
     double 					length;
     double		 			height;
@@ -534,6 +552,8 @@ private:
     int 					n_;
     int 					m_;
     std::string				FEType_;
+    std::string               physics_ = "u"; // Physics component - only useful for multiphysics problems to identify blocks
+
     mutable MapPtr_Type mapVecFieldUnique_;
     mutable  MapPtr_Type mapVecFieldRepeated_;
     

@@ -137,7 +137,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	thetaMinus3_ = this->params_->sublist("Parameter Solid").get("ThetaMinus3",0.98e0);
 	kMin_ = this->params_->sublist("Parameter Solid").get("KMin",0.15e0);
 	rho_ = this->params_->sublist("Parameter Solid").get("Rho",1.e0);
-
+	typeOfInterpol_ = 1;
 // iCode_ = this->params_->sublist("Parameter Solid").get("Intergration Code",18);
 	iCode_=18; //Only works for 18 currently!!
 
@@ -151,7 +151,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	dofsElement_ = dofsSolid_*numNodesSolid_ + dofsChem_*numNodesChem_; // "Dimension of return matrix"
 
 	// Einlesen durch Parameterdatei irgendwann cool
-	this->history_ ={1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.82758, 1.82758, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+	history_ ={1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.82758, 1.82758, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
                      1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.82758, 1.82758, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
                      1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.82758, 1.82758, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
                      1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.82758, 1.82758, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
@@ -160,21 +160,23 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
                      1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
                      1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};*/
 
-	this->historyLength_ = 0;	
+	historyLength_ = 136;	
+	
+	historyUpdated_.resize(historyLength_,0.);
 #ifdef FEDD_HAVE_ACEGENINTERFACE	   
-	AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 tempElem(iCode_);
-	this->historyLength_ = tempElem.getHistoryLength();
+	//AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 tempElem(iCode_);
+	historyLength_ = 136; //tempElem.getHistoryLength();
 	
 	TEUCHOS_TEST_FOR_EXCEPTION(this->historyLength_ != this->history_.size(), std::logic_error, "History input length does not match history size of model! \n Hisory input length: " << this->history_.size() << "\n History size of model: " << this->historyLength_ << "\n");
 #endif
-
-	this->historyUpdated_.resize(this->historyLength_,0.);
-
+	historyUpdated_.resize(historyLength_,0.);
 
 	solutionC_n_.resize(10,0.);
 	solutionC_n1_.resize(10,0.);
 
-	this->solution_.reset( new vec_dbl_Type ( dofsElement_,0.) );
+
+	postProcessingData_ = Teuchos::rcp( new SmallMatrix_Type(10,0.));
+	//this->solution_.reset( new vec_dbl_Type ( dofsElement_,0.) );
 
 	/*timeParametersVec_.resize(0, vec_dbl_Type(2));
     numSegments_ = this->params_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);
@@ -187,7 +189,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
         vec_dbl_Type segment = {startTime,dtTmp};
         timeParametersVec_.push_back(segment);
     }*/
-    massMatrix_ = Teuchos::rcp( new SmallMatrix_Type(10,0.));
+    //massMatrix_ = Teuchos::rcp( new SmallMatrix_Type(10,0.));
 }
 
 template <class SC, class LO, class GO, class NO>
@@ -470,10 +472,91 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assemble_SCI_S
 			//(*massMatrix_)[i][j] = massMatrixMc[i][j];
 		}
 	}
+
 #endif
 
 	
 }
+
+template <class SC, class LO, class GO, class NO>
+void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::postProcessing()
+{
+#ifdef FEDD_HAVE_ACEGENINTERFACE
+
+	double deltaT=this->getTimeIncrement();
+	
+	double positions[30];
+	int count = 0;
+	//cout << "Positions " << endl;
+	for(int i=0;i<10;i++){
+		for(int j=0;j<3;j++){
+			positions[count] = this->getNodesRefConfig()[i][j];
+			count++;
+	//		cout << " | " <<  positions[count-1] ;
+		}
+	//	cout << endl;
+
+	}
+	
+	double displacements[30];
+	for(int i = 0; i < 30; i++)
+	{
+		displacements[i]=(*this->solution_)[i];	
+	}
+
+
+	std::vector<double> history(this->historyLength_, 0.0);
+    for(int i = 0; i < this->historyLength_; i++){
+	    history[i] = this->history_[i];
+	}
+   
+    double concentrations[10];
+    for(int i = 0; i < 10; i++)
+	{
+		concentrations[i]= (*this->solution_)[i+30];	
+		this->solutionC_n1_[i] = (*this->solution_)[i+30];		// in each newtonstep solution for n+1 is updated.
+	}	
+	
+    double accelerations[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
+   	
+	std::vector<double> domainData = {this->fA_, this->lambdaC50_, this->gamma3_, this->lambdaBarCDotMax_, this->lambdaBarCDotMin_, this->gamma2_, this->gamma1_, this->eta_, this->ca50_, this->k2_, this->k5_,
+						   this->k3_, this->k4_, this->k7_, this->kappa_, this->beta1_, this->muA_, this->beta2_, this->alpha2_, this->alpha3_, this->alpha1_, this->alpha4_, this->alpha5_,
+						   this->gamma6_, this->lambdaP50_, this->kDotMin_, this->zeta1_, this->kDotMax_, this->gamma4_, this->lambdaBarDotPMin_, this->lambdaBarDotPMax_, this->gamma5_, this->zeta2_,
+		 				   this->DeltaLambdaBarPMin_, this->p1_, this->p3_, this->c50_, this->d0_, this->m_, this->activeStartTime_, this->kEtaPlus_, this->mEtaPlus_, this->growthStartTime_,
+						   this->reorientationStartTime_, this->growthEndTime_, this->reorientationEndTime_, this->kThetaPlus_, this->kThetaMinus_, this->mThetaPlus_, this->mThetaMinus_, this->thetaPlus1_,
+						   this->thetaPlus2_, this->thetaPlus3_, this->thetaMinus1_, this->thetaMinus2_, this->thetaMinus3_, this->kMin_, this->rho_,this->typeOfInterpol_};
+
+    double rates[10];
+
+	for(int i=0; i<10 ; i++){
+		rates[i] =(this->solutionC_n1_[i]-this->solutionC_n_[i])/deltaT;//(solutionC_n1_[i])/deltaT; //-solutionC_n_[i](solutionC_n1_[i]-solutionC_n_[i])/deltaT;//
+	}
+
+    
+    double time = this->getTimeStep()+deltaT;
+
+    double subIterationTolerance = 1.e-7;
+ 
+    // immer speicher und wenn es konvergiert, dann zur history machen
+    double historyUpdated[] = {1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                    		   1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                    		   1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+                     		   1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
+	
+	AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(positions, displacements, concentrations, accelerations, rates, &domainData[0], &history[0], subIterationTolerance, deltaT, time, this->iCode_,this->getGlobalElementID());
+	elem.compute();
+	double** stress = elem.postProcess(displacements, concentrations, elem.getHistoryUpdated());
+
+	for(int i=0; i< 10; i++){
+		for(int  j=0; j<10; j++){
+			(*this->postProcessingData_)[i][j] = stress[i][j];
+		}
+	}
+
+	//this->postProcessingData_->print();
+#endif
+}
+
 
 } // namespace FEDD
 #endif // AssembleFE_SCI_SMC_Active_Growth_Reorientation_DEF_hpp

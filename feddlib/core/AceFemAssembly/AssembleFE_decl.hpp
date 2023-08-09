@@ -168,10 +168,16 @@ namespace FEDD {
         void preProcessing();
 
         /*!
-         \brief This function is called at the end of each Newton step after updating the solution vector.
+         \brief This function is called at the end of each Newton step after updating the solution vector to calculate post processing data.
         */
-        void postProcessing();
+        virtual void postProcessing();
 		/// @todo PostProcessing: Teuchos::Array with values and one global Array with Strings and names
+        
+        /*!
+         \brief This function is called at the end of each Newton step after updating the solution vector to return postprocessing data.
+         \return postProcessingData_
+        */
+       SmallMatrixPtr_Type getPostProcessingData() {return postProcessingData_;};
 
         /*!
          \brief Get the spatial dimension. (Typically 2 or 3)
@@ -247,6 +253,7 @@ namespace FEDD {
         vec_dbl_ptr_Type solution_ ;
         double timeIncrement_;
         GO globalElementID_;
+        SmallMatrixPtr_Type postProcessingData_;
 
         friend class AssembleFEFactory<SC,LO,GO,NO>;
     };

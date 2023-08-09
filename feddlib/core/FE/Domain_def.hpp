@@ -272,6 +272,29 @@ void Domain<SC,LO,GO,NO>::buildMesh(int flagsOption , std::string meshType, int 
 }
 
 template <class SC, class LO, class GO, class NO>
+void Domain<SC,LO,GO,NO>::setPhysicProperty(string physic){
+    physics_ = physic;
+}
+
+template <class SC, class LO, class GO, class NO>
+void Domain<SC, LO, GO, NO>::setDofs(int dofs)
+{
+    dofs_ = dofs;
+}
+
+template <class SC, class LO, class GO, class NO>
+int Domain<SC, LO, GO, NO>::getDofs()
+{
+    return dofs_;
+}
+
+
+template <class SC, class LO, class GO, class NO>
+string Domain<SC,LO,GO,NO>::getPhysicProperty(){
+    return physics_;
+}
+
+template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::initializeUnstructuredMesh(int dimension, string feType, int volumeID){
     
     MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp(new MeshUnstr_Type(comm_, volumeID));

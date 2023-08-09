@@ -392,6 +392,271 @@ void FE<SC,LO,GO,NO>::addFeBlockMv(BlockMultiVectorPtr_Type &res, vec_dbl_ptr_Ty
 	}
 }
 
+/*!
+
+ \brief Assembly of Jacobian 
+@param[in] dim Dimension
+@param[in] FEType FE Discretization
+@param[in] degree Degree of basis function
+@param[in] A Resulting matrix
+@param[in] callFillComplete If Matrix A should be completely filled at end of function
+@param[in] FELocExternal 
+
+*/
+
+// Check the order of chemistry and solid in system matrix
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::globalAssembly(string ProblemType,
+                        int dim,                    
+                        int degree,                       
+                        BlockMultiVectorPtr_Type sol_rep,
+                        BlockMatrixPtr_Type &A,
+                        BlockMultiVectorPtr_Type &resVec,
+                        ParameterListPtr_Type params,
+                        string assembleMode,
+                        bool callFillComplete,
+                        int FELocExternal){
+
+    int problemSize = domainVec_.size(); // Problem size, as in number of subproblems
+
+    // Depending on problem size we extract necessary information 
+
+	/// Tupel construction follows follwing pattern:
+	/// string: Physical Entity (i.e. Velocity) , string: Discretisation (i.e. "P2"), int: Degrees of Freedom per Node, int: Number of Nodes per element)
+
+	BlockMultiVectorPtr_Type resVecRep = Teuchos::rcp( new BlockMultiVector_Type( 2) );
+
+	tuple_disk_vec_ptr_Type problemDisk = Teuchos::rcp(new tuple_disk_vec_Type(0));
+    for(int i=0; i< problemSize; i++){
+        int numNodes = domainVec_.at(i)->getElementsC()->getElement(0).getVectorNodeList().size();
+
+        tuple_ssii_Type infoTuple (domainVec_.at(i)->getPhysicProperty(),domainVec_.at(i)->getFEType(),domainVec_.at(i)->getDofs(),numNodes); //,dim);
+        problemDisk->push_back(infoTuple);
+
+        MultiVectorPtr_Type resVec;
+        if(domainVec_.at(i)->getDofs() == 1)
+            resVec = Teuchos::rcp( new MultiVector_Type( domainVec_.at(i)->getMapRepeated(), 1 ) );
+        else
+            resVec = Teuchos::rcp( new MultiVector_Type( domainVec_.at(i)->getMapVecFieldRepeated(), 1 ) );
+
+        resVecRep->addBlock(resVec,i);
+
+
+    }
+	if(assemblyFEElements_.size()== 0){
+       	initAssembleFEElements(ProblemType,problemDisk,domainVec_.at(0)->getElementsC(), params,domainVec_.at(0)->getPointsRepeated(),domainVec_.at(0)->getElementMap());
+    }
+	else if(assemblyFEElements_.size() != domainVec_.at(0)->getElementsC()->numberElements())
+	     TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "Number Elements not the same as number assembleFE elements." );
+
+    vec_dbl_Type solution_tmp;
+    for (UN T=0; T<assemblyFEElements_.size(); T++) {
+		vec_dbl_Type solution(0);
+        FiniteElement_vec elementsDisc(0);
+        for(int i=0; i< problemSize; i++){
+		    solution_tmp = getSolution(domainVec_.at(i)->getElementsC()->getElement(T).getVectorNodeList(), sol_rep->getBlock(i),domainVec_.at(i)->getDofs());      
+            solution.insert( solution.end(), solution_tmp.begin(), solution_tmp.end() );
+
+            elementsDisc.push_back(domainVec_.at(i)->getElementsC()->getElement(T));
+        }   
+        
+  		assemblyFEElements_[T]->updateSolution(solution);
+
+ 		SmallMatrixPtr_Type elementMatrix;
+	    vec_dbl_ptr_Type rhsVec;
+
+     	if(assembleMode == "Jacobian"){
+			assemblyFEElements_[T]->assembleJacobian();
+
+            elementMatrix = assemblyFEElements_[T]->getJacobian(); 
+			assemblyFEElements_[T]->advanceNewtonStep(); // n genereal non linear solver step
+			
+			addFeBlockMatrix(A, elementMatrix, elementsDisc, problemDisk);
+		}
+		if(assembleMode == "Rhs"){
+		    assemblyFEElements_[T]->assembleRHS();
+		    rhsVec = assemblyFEElements_[T]->getRHS(); 
+			addFeBlockMv(resVecRep, rhsVec, problemDisk, elementsDisc);
+		}
+      		
+	}
+	if ( assembleMode == "Jacobian"){
+        for(int probRow = 0; probRow <  problemSize; probRow++){
+            for(int probCol = 0; probCol <  problemSize; probCol++){
+                MapConstPtr_Type rowMap;
+                MapConstPtr_Type domainMap;
+
+                if(domainVec_.at(probRow)->getDofs() == 1)
+                    rowMap = domainVec_.at(probRow)->getMapUnique();
+                else
+                    rowMap = domainVec_.at(probRow)->getMapVecFieldUnique();
+
+                if(domainVec_.at(probCol)->getDofs() == 1)
+                    domainMap = domainVec_.at(probCol)->getMapUnique();
+                else
+                    domainMap = domainVec_.at(probCol)->getMapVecFieldUnique();
+
+                A->getBlock(probRow,probCol)->fillComplete(domainMap,rowMap);
+            }
+        }
+	}
+    else if(assembleMode == "Rhs"){
+
+        for(int probRow = 0; probRow <  problemSize; probRow++){
+            MapConstPtr_Type rowMap;
+             if(domainVec_.at(probRow)->getDofs() == 1)
+                rowMap = domainVec_.at(probRow)->getMapUnique();
+            else
+                rowMap = domainVec_.at(probRow)->getMapVecFieldUnique();
+
+		    MultiVectorPtr_Type resVecUnique = Teuchos::rcp( new MultiVector_Type( rowMap, 1 ) );
+
+            resVecUnique->putScalar(0.);
+
+            resVecUnique->exportFromVector( resVecRep->getBlock(probRow), true, "Add" );
+
+            resVec->addBlock(resVecUnique,probRow);
+        }
+	}
+
+}
+
+/*!
+
+ \brief Inserting element stiffness matrices into global stiffness matrix
+
+
+@param[in] &A Global Block Matrix
+@param[in] elementMatrix Stiffness matrix of one element
+@param[in] element Corresponding finite element
+@param[in] map Map that corresponds to repeated nodes of first block
+@param[in] map Map that corresponds to repeated nodes of second block
+
+*/
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement_vec element, tuple_disk_vec_ptr_Type problemDisk){
+		
+    int numDisk = problemDisk->size();
+
+    for(int probRow = 0; probRow < numDisk; probRow++){
+        for(int probCol = 0; probCol < numDisk; probCol++){
+            //cout << " ProbRow: " << probRow << " probCol: " << probCol << endl;
+            int dofs1 = std::get<2>(problemDisk->at(probRow));
+            int dofs2 = std::get<2>(problemDisk->at(probCol));
+
+            int numNodes1 = std::get<3>(problemDisk->at(probRow));
+            int numNodes2=  std::get<3>(problemDisk->at(probCol));
+
+            int offsetRow= numNodes1*dofs1*probRow;
+            int offsetCol= numNodes1*dofs1*probCol;
+
+            MapConstPtr_Type mapRow = domainVec_.at(probRow)->getMapRepeated();
+            MapConstPtr_Type mapCol = domainVec_.at(probCol)->getMapRepeated();
+
+            Teuchos::Array<SC> value2( numNodes2, 0. );
+            Teuchos::Array<GO> columnIndices2( numNodes2, 0 );
+            for (UN i=0; i < numNodes1; i++){
+                for(int di=0; di<dofs1; di++){				
+                    GO row =GO (dofs1* mapRow->getGlobalElement( element[probRow].getNode(i) )+di);
+                    for(int d=0; d<dofs2; d++){				
+                        for (UN j=0; j < numNodes2 ; j++) {
+                            value2[j] = (*elementMatrix)[offsetRow+i*dofs1+di][offsetCol+j*dofs2+d];			    				    		
+                            columnIndices2[j] =GO (dofs2* mapCol->getGlobalElement( element[probCol].getNode(j) )+d);
+                        }
+                        A->getBlock(probRow,probCol)->insertGlobalValues( row, columnIndices2(), value2() ); // Automatically adds entries if a value already exists                            
+                    }
+                }      
+            }
+
+        }
+    }
+}
+
+
+
+/*!
+
+ \brief Inserting local rhsVec into global residual Mv;
+
+
+@param[in] res BlockMultiVector of residual vec; Repeated distribution; 2 blocks
+@param[in] rhsVec sorted the same way as residual vec
+@param[in] element of block1
+
+*/
+
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::addFeBlockMv(BlockMultiVectorPtr_Type &res, vec_dbl_ptr_Type rhsVec,tuple_disk_vec_ptr_Type problemDisk, FiniteElement_vec element){
+    int numDisk = problemDisk->size();
+
+    for(int probRow = 0; probRow < numDisk; probRow++){
+        Teuchos::ArrayRCP<SC>  resArray_block = res->getBlockNonConst(probRow)->getDataNonConst(0);
+      	vec_LO_Type nodeList_block = element[probRow].getVectorNodeList();
+        int dofs = std::get<2>(problemDisk->at(probRow));
+        int numNodes = std::get<3>(problemDisk->at(probRow));
+
+        int offset = numNodes*dofs*probRow; 
+        for(int i=0; i< nodeList_block.size() ; i++){
+            for(int d=0; d<dofs; d++){
+                resArray_block[nodeList_block[i]*dofs+d] += (*rhsVec)[i*dofs+d+offset];
+            }
+        }
+    }
+}
+
+template <class SC, class LO, class GO, class NO>
+void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &res)
+{
+    MapConstPtr_Type mapRep = domainVec_[0]->getMapRepeated();
+    MapConstPtr_Type mapUni = domainVec_[0]->getMapUnique();
+
+    MultiVectorPtr_Type multiRep = Teuchos::rcp( new MultiVector_Type(mapRep, 1 ) );
+    multiRep->putScalar(0.);
+    Teuchos::ArrayRCP<SC>  arrayMultiRep = multiRep->getDataNonConst(0);
+
+    MultiVectorPtr_Type resRep = Teuchos::rcp( new MultiVector_Type(mapRep, 1 ) );
+    resRep->putScalar(0.);
+    Teuchos::ArrayRCP<SC>  arrayRep = resRep->getDataNonConst(0);
+
+   // MultiVectorPtr_Type resRep = Teuchos::rcp( new MultiVector_Type( mapRep, 1 ) );
+   // Teuchos::ArrayRCP<SC>  arrayRes = resRep->getDataNonConst(0);
+
+    //BlockMultiVectorPtr_Type resVecRep = Teuchos::rcp( new BlockMultiVector_Type( 9) );
+
+	ElementsPtr_Type elements = domainVec_[0]->getElementsC();
+
+    if(type == "Stress"){
+        for (UN T=0; T<assemblyFEElements_.size(); T++) {
+                vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
+                assemblyFEElements_[T]->postProcessing();
+                SmallMatrixPtr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
+                
+                // We only do sigma_11 now
+                for(int i=0; i< 10; i++){
+                    arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0];
+                    arrayRep[nodeList[i]] +=  (*postProcessingData)[i][1]*(*postProcessingData)[i][0];
+                    //arrayMultiRep[nodeList[i]] += 1;
+                }
+        }
+    }
+    MultiVectorPtr_Type multiUni = Teuchos::rcp( new MultiVector_Type(mapRep, 1 ) );
+    multiUni->putScalar(0.);
+    multiUni->exportFromVector(multiRep,true, "Add");
+
+    res->getBlockNonConst(0)->putScalar(0.);
+    res->getBlockNonConst(0)->exportFromVector( resRep, true, "Add" );
+
+    Teuchos::ArrayRCP<SC>  arrayMultiUni = multiUni->getDataNonConst(0);
+    Teuchos::ArrayRCP<SC>  arrayUni = res->getBlockNonConst(0)->getDataNonConst(0);
+
+    //multiUni->print();
+    //res->getBlock(0)->print();
+
+    for(int i= 0; i< arrayUni.size() ; i++)
+       arrayUni[i]  = arrayUni[i] / arrayMultiUni[i]; 
+}
+
+
 // Check the order of chemistry and solid in system matrix
 template <class SC, class LO, class GO, class NO>
 void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,

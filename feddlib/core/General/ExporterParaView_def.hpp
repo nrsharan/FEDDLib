@@ -215,6 +215,31 @@ void ExporterParaView<SC,LO,GO,NO>::setup(std::string filename,
     saveTimestep_ = 1;
 }
 
+template<class SC,class LO,class GO,class NO>
+void ExporterParaView<SC,LO,GO,NO>::updateVariables(MultiVecConstPtr_Type &u, std::string varName){
+
+    for (int i=0; i<this->variables_.size(); i++) {
+		if(this->varNames_[i] == varName){
+			this->variables_[i] = u;
+
+		    this->mapUniqueVariables_= u->getMap();
+
+			this->nmbExportValuesGlob_ = this->mapUniqueVariables_->getGlobalNumElements();
+			Teuchos::ArrayView< const GO > indices = this->mapUniqueVariables_->getNodeElementList();
+			int* intGlobIDs = new int[indices.size()];
+			for (int j=0; j<indices.size(); j++) {
+				intGlobIDs[j] = (int) indices[j];
+			}
+
+			EpetraMapPtr_Type mapToStore = Teuchos::rcp(new Epetra_Map( (int) this->mapUniqueVariables_->getGlobalNumElements(), indices.size(), intGlobIDs,0, *this->commEpetra_ ) );
+
+			this->uniqueMaps_[i] =mapToStore;
+			delete [] intGlobIDs;
+		}
+	}
+
+}
+
 //template<class <<<<SC,class LO,class GO,class NO>
 //void ExporterParaView<SC,LO,GO,NO>::setup(int dim,
 //                                          GO nmbElementsGlob,

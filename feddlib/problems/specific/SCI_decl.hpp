@@ -163,6 +163,8 @@ public:
 
     virtual void calculateNonLinResidualVec(std::string type="standard", double time=0.) const; //standard or reverse    
     
+    BlockMultiVectorPtr_Type getPostProcessingData() const;
+
     /*####################*/
 
     // Alternativ wie in reAssembleExtrapolation() in NS?
