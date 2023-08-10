@@ -843,7 +843,6 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
         if (verbose) {
             cout << "-- Building P2 Points Repeated ... " << endl;
         }
-        cout << " Offsets on Rank " << rank << " || x=" << offset_x << " y=" << offset_y << " z=" << offset_z << endl;
        this->comm_->barrier();
 
         bool p1point;

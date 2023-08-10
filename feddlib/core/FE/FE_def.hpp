@@ -6875,8 +6875,8 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegral(int dim,
 		            
 				    norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2)+pow(v_E[2],2));
                   
-                    if(feSub.getFlag() == 1)
-                    cout << " Normal: " << v_E[0] << " " << v_E[1] << " " << v_E[2] << endl;
+                    //if(feSub.getFlag() == 1)
+                    //cout << " Normal: " << v_E[0] << " " << v_E[1] << " " << v_E[2] << endl;
 
 				}
                 //if(feSub.getFlag() == 5) // || feSub.getFlag()==5)

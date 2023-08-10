@@ -117,9 +117,9 @@ void rhsYZ(double* x, double* res, double* parameters){
   	res[0] =0.;
     res[1] =0.;
     res[2] =0.;
-    
+
     if(parameters[0]+1.e-12 < TRamp)
-        force = (parameters[0]+loadStepSize) * force ;
+        force = (parameters[0]+loadStepSize) * parameters[1] ;
     else
         force = parameters[1];
 
@@ -152,7 +152,7 @@ void rhsArtery(double* x, double* res, double* parameters){
     res[2] =0.;
     
     if(parameters[0]+1.e-12 < TRamp)
-        force = (parameters[0]+loadStepSize) * force ;
+        force = (parameters[0]+loadStepSize) * parameters[1] ;
     else
         force = parameters[1];
 
@@ -869,7 +869,7 @@ int main(int argc, char *argv[])
 		        		 	sci.problemStructure_->addRhsFunction( rhsHeartBeatCube,0 );
 					
 				}
-				else if(bcType=="Artery"){
+				else if(bcType=="Artery" || bcType=="Realistic Artery" ){
 					if(rhsType=="Constant")
 		    		 	sci.problemStructure_->addRhsFunction( rhsArtery,0 );
 					if(rhsType=="Paper")
@@ -888,7 +888,7 @@ int main(int argc, char *argv[])
                 sci.problemStructure_->addParemeterRhs( heartBeatStart );
             }
             else{             
-				if(bcType=="Artery" || bcType=="Realistic Artery" ){
+                if(bcType=="Cube"){
 					if(rhsType=="Constant")
 		    		 	sci.problemStructureNonLin_->addRhsFunction( rhsYZ,0 );
 		    		if(rhsType=="Paper")
