@@ -119,7 +119,7 @@ void rhsYZ(double* x, double* res, double* parameters){
     res[2] =0.;
 
     if(parameters[0]+1.e-12 < TRamp)
-        force = (parameters[0]+loadStepSize) * parameters[1] ;
+        force = (parameters[0]+loadStepSize) * parameters[1] / TRamp ;
     else
         force = parameters[1];
 
@@ -152,7 +152,7 @@ void rhsArtery(double* x, double* res, double* parameters){
     res[2] =0.;
     
     if(parameters[0]+1.e-12 < TRamp)
-        force = (parameters[0]+loadStepSize) * parameters[1] ;
+        force = (parameters[0]+loadStepSize) * parameters[1] / TRamp ;
     else
         force = parameters[1];
 
@@ -209,7 +209,7 @@ void rhsHeartBeatCube(double* x, double* res, double* parameters){
     
     bool Qtrue=false;
     if(parameters[0]+1e-12 < TRamp)
-        lambda = 0.875*(parameters[0]+loadStepSize);
+        lambda = 0.875*(parameters[0]+loadStepSize)/ TRamp;
     else if(parameters[0] <= TRamp+1.e-12)
     	lambda = 0.875;
     else if (parameters[0] < heartBeatStart)
@@ -292,7 +292,7 @@ void rhsHeartBeatArtery(double* x, double* res, double* parameters){
     
     bool Qtrue=false;
     if(parameters[0]+1e-12 < TRamp)
-        lambda = 0.875*(parameters[0]+loadStepSize);
+        lambda = 0.875*(parameters[0]+loadStepSize)/ TRamp;
     else if(parameters[0] <= TRamp+1.e-12)
     	lambda = 0.875;
     else if (parameters[0] < heartBeatStart)
@@ -353,7 +353,7 @@ void rhsArteryPaper(double* x, double* res, double* parameters){
     double heartBeatStart = parameters[4];
     
     if(parameters[0]+1e-12 < TRamp)
-        lambda = 0.875*(parameters[0]+loadStepSize);
+        lambda = 0.875*(parameters[0]+loadStepSize)/ TRamp;
     else if(parameters[0] <= TRamp+1.e-12)
     	lambda = 0.875;
     else if (parameters[0] < heartBeatStart)
@@ -387,7 +387,7 @@ void rhsCubePaper(double* x, double* res, double* parameters){
     double heartBeatStart = parameters[4];
     
     if(parameters[0]+1e-12 < TRamp)
-        lambda = 0.875*(parameters[0]+loadStepSize);
+        lambda = 0.875*(parameters[0]+loadStepSize)/ TRamp;
     else if(parameters[0] <= TRamp+1.e-12)
     	lambda = 0.875;
     else if (parameters[0] < heartBeatStart)
