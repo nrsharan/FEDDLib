@@ -548,12 +548,29 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::postProcess
 	double** stress = elem.postProcess(displacements, concentrations, elem.getHistoryUpdated());
 
 	for(int i=0; i< 10; i++){
-		for(int  j=0; j<10; j++){
-			(*this->postProcessingData_)[i][j] = stress[i][j];
+		//for(int  j=0; j<10; j++){
+			(*this->postProcessingData_)[i][0] = fabs(stress[i][0]);
+		//}
+	}
+	// For each node:
+	vec2D_dbl_Type sigma(3,vec_dbl_Type(3));
+	vec2D_dbl_Type s(3,vec_dbl_Type(3));
+
+	for(int i=0; i< 10; i++){
+		for(int j=0; j<3; j++){
+			sigma[0][j] = stress[i][1+j];
+			sigma[1][j] = stress[i][4+j];
+			sigma[2][j] = stress[i][7+j];
 		}
+		s=sigma;
+		for(int j=0; j<3; j++){
+			s[j][j] = sigma[j][j] - sigma[j][j] / 3.;
+		}
+		(*this->postProcessingData_)[i][1] = sqrt(3/2. * (pow(s[0][0],2)+ pow(s[0][1],2)+pow(s[0][2],2)+pow(s[1][0],2)+pow(s[1][1],2)+pow(s[1][2],2)+pow(s[2][0],2)+pow(s[2][1],2)+pow(s[2][2],2)));
 	}
 
-	//this->postProcessingData_->print();
+
+	this->postProcessingData_->print();
 #endif
 }
 

@@ -634,12 +634,12 @@ void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &r
                 // We only do sigma_11 now
                 for(int i=0; i< 10; i++){
                     arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0];
-                    arrayRep[nodeList[i]] +=  (*postProcessingData)[i][1]*(*postProcessingData)[i][0];
+                    arrayRep[nodeList[i]] +=  (*postProcessingData)[i][1];///*(*postProcessingData)[i][0];
                     //arrayMultiRep[nodeList[i]] += 1;
                 }
         }
     }
-    MultiVectorPtr_Type multiUni = Teuchos::rcp( new MultiVector_Type(mapRep, 1 ) );
+    MultiVectorPtr_Type multiUni = Teuchos::rcp( new MultiVector_Type(mapUni, 1 ) );
     multiUni->putScalar(0.);
     multiUni->exportFromVector(multiRep,true, "Add");
 
@@ -653,7 +653,7 @@ void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &r
     //res->getBlock(0)->print();
 
     for(int i= 0; i< arrayUni.size() ; i++)
-       arrayUni[i]  = arrayUni[i] / arrayMultiUni[i]; 
+       arrayUni[i]  = arrayUni[i]/ arrayMultiUni[i]; 
 }
 
 

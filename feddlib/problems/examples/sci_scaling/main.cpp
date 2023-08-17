@@ -812,7 +812,7 @@ int main(int argc, char *argv[])
         
         }
 		else if(dim==3 && bcType=="Realistic Artery"){
-			bcFactoryStructure->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dim);
+			/*bcFactoryStructure->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 17, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 19, 0, domainStructure, "Dirichlet_Z", dim);
@@ -821,13 +821,34 @@ int main(int argc, char *argv[])
 			bcFactoryStructure->addBC(zeroDirichlet3D, 18, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet_Z", dim);	
+			bcFactoryStructure->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet_Z", dim);	*/
+
+            bcFactoryStructure->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 17, 0, domainStructure, "Dirichlet", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 19, 0, domainStructure, "Dirichlet", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 15, 0, domainStructure, "Dirichlet", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 18, 0, domainStructure, "Dirichlet", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet", dim);	
 			
-			bcFactoryStructure->addBC(zeroDirichlet3D, 77, 0, domainStructure, "Dirichlet_X", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 78, 0, domainStructure, "Dirichlet_Y", dim);
+			//bcFactoryStructure->addBC(zeroDirichlet3D, 77, 0, domainStructure, "Dirichlet_X", dim);
+			//bcFactoryStructure->addBC(zeroDirichlet3D, 78, 0, domainStructure, "Dirichlet_Y", dim);
 			
-		
-			bcFactory->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dim);
+		    bcFactory->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet", dim);
+			bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet", dim);
+			bcFactory->addBC(zeroDirichlet3D, 17, 0, domainStructure, "Dirichlet", dim);
+			bcFactory->addBC(zeroDirichlet3D, 19, 0, domainStructure, "Dirichlet", dim);
+			bcFactory->addBC(zeroDirichlet3D, 15, 0, domainStructure, "Dirichlet", dim);
+			bcFactory->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet", dim);
+			bcFactory->addBC(zeroDirichlet3D, 18, 0, domainStructure, "Dirichlet", dim);
+			bcFactory->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet", dim);
+			bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet", dim);
+			bcFactory->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet", dim);	
+
+			/*bcFactory->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactory->addBC(zeroDirichlet3D, 17, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactory->addBC(zeroDirichlet3D, 19, 0, domainStructure, "Dirichlet_Z", dim);
@@ -836,10 +857,10 @@ int main(int argc, char *argv[])
 			bcFactory->addBC(zeroDirichlet3D, 18, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactory->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactory->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet_Z", dim);	
+			bcFactory->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet_Z", dim);	*/
 			
-			bcFactory->addBC(zeroDirichlet3D, 77, 0, domainStructure, "Dirichlet_X", dim);
-			bcFactory->addBC(zeroDirichlet3D, 78, 0, domainStructure, "Dirichlet_Y", dim);
+			//bcFactory->addBC(zeroDirichlet3D, 77, 0, domainStructure, "Dirichlet_X", dim);
+			//bcFactory->addBC(zeroDirichlet3D, 78, 0, domainStructure, "Dirichlet_Y", dim);
 			
         }
         // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
