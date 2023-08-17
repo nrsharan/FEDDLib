@@ -921,7 +921,7 @@ int main(int argc, char *argv[])
 		        		 	sci.problemStructure_->addRhsFunction( rhsHeartBeatCube,0 );
 					
 				}
-				else if(bcType=="Artery" || bcType=="Realistic Artery" ){
+				else if(bcType=="Artery" || bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2" ){
 					if(rhsType=="Constant")
 		    		 	sci.problemStructure_->addRhsFunction( rhsArtery,0 );
 					if(rhsType=="Paper")
@@ -949,7 +949,7 @@ int main(int argc, char *argv[])
 		        		sci.problemStructureNonLin_->addRhsFunction( rhsHeartBeatCube,0 );
 					
 				}
-				else if(bcType=="Artery" || bcType=="Realistic Artery" ){
+				else if(bcType=="Artery" || bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2" ){
 					if(rhsType=="Constant")
 		    		 	sci.problemStructureNonLin_->addRhsFunction( rhsArtery,0 );
 					if(rhsType=="Paper")
