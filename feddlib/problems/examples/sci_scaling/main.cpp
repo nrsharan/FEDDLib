@@ -607,7 +607,7 @@ int main(int argc, char *argv[])
 		    int volumeID=10;
 		    if(bcType=="Artery")
 		    	volumeID = 15;
-		    else if(bcType=="Realistic Artery")
+		    else if(bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2")
 		    	volumeID = 21;
 		    	
 		    partitionerP1.readAndPartition(volumeID);
