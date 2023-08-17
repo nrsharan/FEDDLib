@@ -847,6 +847,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     SCIProblemPtr_Type sci = Teuchos::rcp_dynamic_cast<SCIProblem_Type>( this->problemTime_->getUnderlyingProblem() );
     
     bool print = parameterList_->sublist("General").get("ParaViewExport",false);
+    bool printStress = parameterList_->sublist("General").get("StressExport",false);
     bool printData = parameterList_->sublist("General").get("Export Data",true);
     bool printExtraData = parameterList_->sublist("General").get("Export Extra Data",false);
 
@@ -1289,9 +1290,12 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         {
             exportTimestep();
 
+        }
+        if (printStress){
             BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
             stressVec = stressVecTmp;
-            exportStress(stressVec,problemTime_->getDomain(0));
+            exportStress(stressVec,problemTime_->getDomain(0));                 
+
         }
 
     }
