@@ -816,29 +816,22 @@ int main(int argc, char *argv[])
 			bcFactory->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactory->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dim);
 			
-			bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X", dim);
-			bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y", dim);
+			bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim);
 
 			
 
 			bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dim);
 			
-			bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet_X", dim);
+
+			bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim);
 
         }
 		else if(dim==3 && bcType=="Realistic Artery 1"){
-			/*bcFactoryStructure->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 17, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 19, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 15, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 18, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactoryStructure->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet_Z", dim);	*/
+		
 
             bcFactoryStructure->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet", dim);
@@ -851,8 +844,6 @@ int main(int argc, char *argv[])
 			bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet", dim);	
 			
-			//bcFactoryStructure->addBC(zeroDirichlet3D, 77, 0, domainStructure, "Dirichlet_X", dim);
-			//bcFactoryStructure->addBC(zeroDirichlet3D, 78, 0, domainStructure, "Dirichlet_Y", dim);
 			
 		    bcFactory->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet", dim);
 			bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet", dim);
@@ -865,19 +856,6 @@ int main(int argc, char *argv[])
 			bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet", dim);
 			bcFactory->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet", dim);	
 
-			/*bcFactory->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactory->addBC(zeroDirichlet3D, 17, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactory->addBC(zeroDirichlet3D, 19, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactory->addBC(zeroDirichlet3D, 15, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactory->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactory->addBC(zeroDirichlet3D, 18, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactory->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Z", dim);
-			bcFactory->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet_Z", dim);	*/
-			
-			//bcFactory->addBC(zeroDirichlet3D, 77, 0, domainStructure, "Dirichlet_X", dim);
-			//bcFactory->addBC(zeroDirichlet3D, 78, 0, domainStructure, "Dirichlet_Y", dim);
 			
         }
         else if(dim==3 && bcType=="Realistic Artery 2"){
@@ -948,6 +926,8 @@ int main(int argc, char *argv[])
 				}
                      
                 double force = parameterListAll->sublist("Parameter").get("Volume force",1.);
+                if(bcType == "Artery Short") // The surface normals are opposite to usual
+                    force = force * -1.;
                 sci.problemStructure_->addParemeterRhs( force );
                 double loadStep = parameterListAll->sublist("Parameter").get("Load Step Size",1.);
                 double loadRampEnd= parameterListAll->sublist("Parameter").get("Load Ramp End",1.);
@@ -975,6 +955,8 @@ int main(int argc, char *argv[])
             		 	sci.problemStructureNonLin_->addRhsFunction( rhsHeartBeatArtery,0 );
 				}
                 double force = parameterListAll->sublist("Parameter").get("Volume force",1.);
+                if(bcType == "Artery Short")
+                    force = force * -1.;
                 sci.problemStructureNonLin_->addParemeterRhs( force );
                 double loadStep = parameterListAll->sublist("Parameter").get("Load Step Size",1.);
                 double loadRampEnd= parameterListAll->sublist("Parameter").get("Load Ramp End",1.);

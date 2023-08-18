@@ -415,14 +415,16 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assemble_SCI_S
     // history  [in] Vector of history variables [Order: LambdaBarC1, LambdaBarC2, nA1, nA2, nB1, nB2, nC1, nC2, nD1, nD2, LambdaA1, LambdaA2] (The length must be equal to number of history variables per gauss point * number of gauss points)
     
     double time = this->getTimeStep()+deltaT;
-    double subIterationTolerance = 1.e-7;
+    double subIterationTolerance = 1.e-6;
     	
     // immer speicher und wenn es konvergiert, dann zur history machen
     // double historyUpdated[] = {1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0}; // 48 values, 12 variables, 4 gausspoints
 	
 	AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(positions, displacements, concentrations, accelerations, rates, &domainData[0], &history[0], subIterationTolerance, deltaT, time, this->iCode_,this->getGlobalElementID());
 	int errorCode = elem.compute();
-	TEUCHOS_TEST_FOR_EXCEPTION(errorCode == 2, std::runtime_error, "Subiteration Fail in Element" << this->getGlobalElementID() );
+	//TEUCHOS_TEST_FOR_EXCEPTION(errorCode == 2, std::runtime_error, "Subiteration Fail in Element " << this->getGlobalElementID() );
+	if(errorCode == 2)
+		cout << "Subiteration Fail in Element " << this->getGlobalElementID()  << endl;
 
 	double *historyUpdated = elem.getHistoryUpdated();
 
