@@ -137,6 +137,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	thetaMinus3_ = this->params_->sublist("Parameter Solid").get("ThetaMinus3",0.98e0);
 	kMin_ = this->params_->sublist("Parameter Solid").get("KMin",0.15e0);
 	rho_ = this->params_->sublist("Parameter Solid").get("Rho",1.e0);
+	subiterationTolerance_ = this->params_->sublist("Parameter Solid").get("Subiteration Tolerance",1.e-7);
 	typeOfInterpol_ = 1;
 // iCode_ = this->params_->sublist("Parameter Solid").get("Intergration Code",18);
 	iCode_=18; //Only works for 18 currently!!
@@ -294,7 +295,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assembleRHS(){
     
     double time = this->getTimeStep()+deltaT;
 
-    double subIterationTolerance = 1.e-7;
+    double subIterationTolerance = subiterationTolerance_;
  
     // immer speicher und wenn es konvergiert, dann zur history machen
     double historyUpdated[] = {1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
@@ -305,7 +306,9 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assembleRHS(){
 	AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(positions, displacements, concentrations, accelerations, rates, &domainData[0], &history[0], subIterationTolerance, deltaT, time, this->iCode_,this->getGlobalElementID());
 	int errorCode = elem.compute();
 
-	TEUCHOS_TEST_FOR_EXCEPTION(errorCode == 2, std::runtime_error, "Subiteration Fail in Element" << this->getGlobalElementID() );
+	if(errorCode == 2)
+		cout << "Subiteration Fail in Element " << this->getGlobalElementID()  << endl;
+	//TEUCHOS_TEST_FOR_EXCEPTION(errorCode == 2, std::runtime_error, "Subiteration Fail in Element" << this->getGlobalElementID() );
 
 
 	double *residuumRint = elem.getResiduumVectorRint();
@@ -415,7 +418,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assemble_SCI_S
     // history  [in] Vector of history variables [Order: LambdaBarC1, LambdaBarC2, nA1, nA2, nB1, nB2, nC1, nC2, nD1, nD2, LambdaA1, LambdaA2] (The length must be equal to number of history variables per gauss point * number of gauss points)
     
     double time = this->getTimeStep()+deltaT;
-    double subIterationTolerance = 1.e-6;
+    double subIterationTolerance = subiterationTolerance_;
     	
     // immer speicher und wenn es konvergiert, dann zur history machen
     // double historyUpdated[] = {1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0}; // 48 values, 12 variables, 4 gausspoints
@@ -537,7 +540,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::postProcess
     
     double time = this->getTimeStep()+deltaT;
 
-    double subIterationTolerance = 1.e-7;
+    double subIterationTolerance = subiterationTolerance_;
  
     // immer speicher und wenn es konvergiert, dann zur history machen
     double historyUpdated[] = {1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,

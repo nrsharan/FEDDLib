@@ -221,6 +221,7 @@ class AssembleFE_SCI_SMC_Active_Growth_Reorientation : public AssembleFE<SC,LO,G
 		double kMin_;
 		double rho_;
 		double typeOfInterpol_;
+		double subiterationTolerance_;
 };
 
 }
