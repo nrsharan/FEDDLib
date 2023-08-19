@@ -229,10 +229,11 @@ void rhsHeartBeatCube(double* x, double* res, double* parameters){
     else
     	Q = 0.;
        
+    double forceDirection = force/fabs(force);
     if(parameters[5]==5 || parameters[5] == 4){
-        res[0] =lambda*force+Q;
-        res[1] =lambda*force+Q;
-        res[2] =lambda*force+Q;        
+        res[0] =lambda*force+forceDirection*Q;
+        res[1] =lambda*force+forceDirection*Q;
+        res[2] =lambda*force+forceDirection*Q;        
     } 
     
    /* if(parameters[0]< heartBeatStart){
@@ -312,10 +313,11 @@ void rhsHeartBeatArtery(double* x, double* res, double* parameters){
     else
     	Q = 0.;
        
+    double forceDirection = force/fabs(force);
     if(parameters[5]==5){
-        res[0] =lambda*force+Q;
-        res[1] =lambda*force+Q;
-        res[2] =lambda*force+Q;        
+        res[0] =lambda*force+forceDirection*Q;
+        res[1] =lambda*force+forceDirection*Q;
+        res[2] =lambda*force+forceDirection*Q;        
     } 
     
    /* if(parameters[0]< heartBeatStart){
