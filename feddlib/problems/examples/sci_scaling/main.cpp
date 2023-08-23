@@ -259,7 +259,7 @@ void rhsHeartBeatCube(double* x, double* res, double* parameters){
 // 4 : Flag 
 void rhsHeartBeatArtery(double* x, double* res, double* parameters){
 
- res[0] =0.;
+    res[0] =0.;
     res[1] =0.;
     res[2] = 0.;
     double lambda=0.;
@@ -336,6 +336,89 @@ void rhsHeartBeatArtery(double* x, double* res, double* parameters){
       
 }
 
+void rhsHeartBeatArteryPulse(double* x, double* res, double* parameters){
+
+    res[0] =0.;
+    res[1] =0.;
+    res[2] = 0.;
+    double lambda=0.;
+    double force = parameters[1];
+    double loadStepSize = parameters[2];
+    double TRamp = parameters[3];
+    double heartBeatStart = parameters[4];
+    
+	double a0    = 11.693284502463376;
+	double a [20] = {1.420706949636449,-0.937457438404759,0.281479818173732,-0.224724363786734,0.080426469802665,0.032077024077824,0.039516941555861, 
+		  0.032666881040235,-0.019948718147876,0.006998975442773,-0.033021060067630,-0.015708267688123,-0.029038419813160,-0.003001255512608,-0.009549531539299, 
+		  0.007112349455861,0.001970095816773,0.015306208420903,0.006772571935245,0.009480436178357};
+	double b [20] = {-1.325494054863285,0.192277311734674,0.115316087615845,-0.067714675760648,0.207297536049255,-0.044080204999886,0.050362628821152,-0.063456242820606,
+		  -0.002046987314705,-0.042350454615554,-0.013150127522194,-0.010408847105535,0.011590255438424,0.013281630639807,0.014991955865968,0.016514327477078, 
+		  0.013717154383988,0.012016806933609,-0.003415634499995,0.003188511626163};
+		         
+    double Q = 0.5*a0;
+    
+
+    double t_min = parameters[0] - fmod(parameters[0],1.0); //FlowConditions::t_start_unsteady;
+    double t_max = t_min + 0.52; // One heartbeat lasts 1.0 second    
+    double y = M_PI * ( 2.0*( parameters[0]-t_min ) / ( t_max - t_min ) -0.87  );
+    
+    for(int i=0; i< 20; i++)
+        Q += (a[i]*std::cos((i+1.)*y) + b[i]*std::sin((i+1.)*y) ) ;
+    
+    
+    // Remove initial offset due to FFT
+    Q -= 0.026039341343493;
+    Q = (Q - 2.85489)/(7.96908-2.85489);
+    
+    bool Qtrue=false;
+    if(parameters[0]+1e-12 < TRamp)
+        lambda = 0.875*(parameters[0]+loadStepSize)/ TRamp;
+    else if(parameters[0] <= TRamp+1.e-12)
+    	lambda = 0.875;
+    else if (parameters[0] < heartBeatStart)
+    	lambda = 0.875;
+    else if( parameters[0]+1.0e-10 < heartBeatStart + 0.5)
+		lambda = 0.8125+0.0625*cos(2*M_PI*parameters[0]);
+    else if( parameters[0] >= heartBeatStart + 0.5 && (parameters[0] - std::floor(parameters[0]))+1.e-10< 0.5)
+    	lambda= 0.75;
+    else{
+        lambda = 0.75; // 0.775+0.125 * cos(4*M_PI*(parameters[0]));
+        Qtrue = true; 
+    } 
+    
+    if(Qtrue){
+        double t = parameters[0] - fmod(parameters[0],1.0);
+        if(t>0.)
+    	    Q = Q*0.005329*cos(1/8.*M_PI*x[2]-M_PI/t);
+        else
+            Q = Q*0.005329*cos(1/8.*M_PI*x[2]);
+
+    }  
+    else
+    	Q = 0.;
+       
+    double forceDirection = force/fabs(force);
+    if(parameters[5]==5){
+        res[0] =lambda*force+forceDirection*Q;
+        res[1] =lambda*force+forceDirection*Q;
+        res[2] =lambda*force+forceDirection*Q;        
+    } 
+    
+   /* if(parameters[0]< heartBeatStart){
+    	Q = 0.;
+    }
+    
+    if(parameters[0]+1e-12 < TRamp)
+        force = force * (parameters[0]+loadStepSize);
+    
+    if(parameters[5] == 5 || parameters[5] == 4){
+     	res[0] = force+Q*0.005329;
+        res[1] = force+Q*0.005329;
+       	res[2] = force+Q*0.005329;
+       	      	
+    }*/
+      
+}
 
 // Parameter Structure
 // 0 : time
@@ -607,7 +690,7 @@ int main(int argc, char *argv[])
 		    MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
 		    
 		    int volumeID=10;
-		    if(bcType=="Artery" || bcType == "Artery Short")
+		    if(bcType=="Artery" || bcType == "Artery Full")
 		    	volumeID = 15;
 		    else if(bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2")
 		    	volumeID = 21;
@@ -813,10 +896,12 @@ int main(int argc, char *argv[])
 			bcFactoryStructure->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet_X_Z", dim);
         
         }
-        else if(dim==3 && bcType=="Artery Short"){
+        else if(dim==3 && bcType=="Artery Full"){
         
 			bcFactory->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactory->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dim);
+            bcFactory->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim);
 			
 			bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim);
 			bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim);
@@ -826,7 +911,9 @@ int main(int argc, char *argv[])
 			bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dim);
 			
-			bcFactoryStructure->addBC(zeroDirichlet3D, 12, 0, domainStructure, "Dirichlet_X", dim);
+            bcFactoryStructure->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim);
+
 
 			bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim);
@@ -918,17 +1005,19 @@ int main(int argc, char *argv[])
 		        		 	sci.problemStructure_->addRhsFunction( rhsHeartBeatCube,0 );
 					
 				}
-				else if(bcType=="Artery" || bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2" || bcType == "Artery Short" ){
+				else if(bcType=="Artery" || bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2" || bcType == "Artery Full" ){
 					if(rhsType=="Constant")
 		    		 	sci.problemStructure_->addRhsFunction( rhsArtery,0 );
 					if(rhsType=="Paper")
             		 	sci.problemStructure_->addRhsFunction( rhsArteryPaper,0 );
             		if(rhsType=="Heart Beat")
             		 	sci.problemStructure_->addRhsFunction( rhsHeartBeatArtery,0 );
+                    if(rhsType=="Heart Beat Pulse")
+            		 	sci.problemStructure_->addRhsFunction( rhsHeartBeatArteryPulse,0 );
 				}
                      
                 double force = parameterListAll->sublist("Parameter").get("Volume force",1.);
-                if(bcType == "Artery Short") // The surface normals are opposite to usual
+                if(bcType == "Artery Full") // The surface normals are opposite to usual
                     force = force * -1.;
                 sci.problemStructure_->addParemeterRhs( force );
                 double loadStep = parameterListAll->sublist("Parameter").get("Load Step Size",1.);
@@ -948,16 +1037,18 @@ int main(int argc, char *argv[])
 		        		sci.problemStructureNonLin_->addRhsFunction( rhsHeartBeatCube,0 );
 					
 				}
-				else if(bcType=="Artery" || bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2" || bcType == "Artery Short" ){
+				else if(bcType=="Artery" || bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2" || bcType == "Artery Full" ){
 					if(rhsType=="Constant")
 		    		 	sci.problemStructureNonLin_->addRhsFunction( rhsArtery,0 );
 					if(rhsType=="Paper")
             		 	sci.problemStructureNonLin_->addRhsFunction( rhsArteryPaper,0 );
             		if(rhsType=="Heart Beat")
             		 	sci.problemStructureNonLin_->addRhsFunction( rhsHeartBeatArtery,0 );
+                    if(rhsType=="Heart Beat Pulse")
+            		 	sci.problemStructureNonLin_->addRhsFunction( rhsHeartBeatArteryPulse,0 );
 				}
                 double force = parameterListAll->sublist("Parameter").get("Volume force",1.);
-                if(bcType == "Artery Short")
+                if(bcType == "Artery Full")
                     force = force * -1.;
                 sci.problemStructureNonLin_->addParemeterRhs( force );
                 double loadStep = parameterListAll->sublist("Parameter").get("Load Step Size",1.);
@@ -1031,14 +1122,17 @@ int main(int argc, char *argv[])
            bcFactoryChem->addBC(inflowChem, 14, 0, domainChem, "Dirichlet", 1,parameter_vec);
            
         }
-        else if(dim==3 && bcType=="Artery Short"){
+        else if(dim==3 && bcType=="Artery Full"){
            std::vector<double> parameter_vec(1, parameterListAll->sublist("Parameter").get("Inflow Start Time",0.));
            
-           bcFactory->addBC(inflowChem, 5, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
-		  
+            bcFactory->addBC(inflowChem, 5, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactory->addBC(inflowChem, 8, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactory->addBC(inflowChem, 9, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+
 		   
            bcFactoryChem->addBC(inflowChem, 5, 0, domainChem, "Dirichlet", 1,parameter_vec);
-       
+           bcFactoryChem->addBC(inflowChem, 8, 0, domainChem, "Dirichlet", 1,parameter_vec);
+           bcFactoryChem->addBC(inflowChem, 9, 0, domainChem, "Dirichlet", 1,parameter_vec);
          
         }
 
