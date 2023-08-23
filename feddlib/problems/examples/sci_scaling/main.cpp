@@ -385,7 +385,7 @@ void rhsHeartBeatArteryPulse(double* x, double* res, double* parameters){
         lambda = 0.75; // 0.775+0.125 * cos(4*M_PI*(parameters[0]));
         Qtrue = true; 
     } 
-    
+
     if(Qtrue){
         double t = parameters[0] - fmod(parameters[0],1.0);
         if(t>0.)

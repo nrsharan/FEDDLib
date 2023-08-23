@@ -6614,7 +6614,18 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegralExternal(int dim,
                 //for (int j=0; j<value.size(); j++)
                 //    value[j] *= elScaling;
                 paramsFunc[ funcParameter.size() - 1 ] = feSub.getFlag();
-                vec_dbl_Type p1 = {0.,0.,0.}; // Dummy vector
+                 // middlepoint of surface
+                double x0 = pointsRep->at(nodeList.at(0)).at(0);
+                double y0 = pointsRep->at(nodeList.at(0)).at(1);
+                double z0 = pointsRep->at(nodeList.at(0)).at(2);
+                double x1 = pointsRep->at(nodeList.at(1)).at(0);
+                double y1 = pointsRep->at(nodeList.at(1)).at(1);
+                double z1 = pointsRep->at(nodeList.at(1)).at(2);
+                double x2 = pointsRep->at(nodeList.at(2)).at(0);
+                double y2 = pointsRep->at(nodeList.at(2)).at(1);
+                double z2 = pointsRep->at(nodeList.at(2)).at(2);
+
+                vec_dbl_Type p1 = {(x0+x1+x2)/3.,(y0+y1+y2)/3.,(z0+z1+z2)/3.}; // Dummy vector
                 func( &p1[0], &valueFunc[0], paramsFunc);
   
                 if(valueFunc[0] != 0.){
@@ -6701,8 +6712,18 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
 
                     }
                 }
+                // middlepoint of surface
+                double x0 = pointsRep->at(nodeList.at(0)).at(0);
+                double y0 = pointsRep->at(nodeList.at(0)).at(1);
+                double z0 = pointsRep->at(nodeList.at(0)).at(2);
+                double x1 = pointsRep->at(nodeList.at(1)).at(0);
+                double y1 = pointsRep->at(nodeList.at(1)).at(1);
+                double z1 = pointsRep->at(nodeList.at(1)).at(2);
+                double x2 = pointsRep->at(nodeList.at(2)).at(0);
+                double y2 = pointsRep->at(nodeList.at(2)).at(1);
+                double z2 = pointsRep->at(nodeList.at(2)).at(2);
 
-                vec_dbl_Type p1 = {0.,0.,0.}; // Dummy vector
+                vec_dbl_Type p1 = {(x0+x1+x2)/3.,(y0+y1+y2)/3.,(z0+z1+z2)/3.}; // Dummy vector
                 paramsFunc[ funcParameter.size() - 1 ] = feSub.getFlag();          
                 func( &p1[0], &valueFunc[0], paramsFunc);
   
