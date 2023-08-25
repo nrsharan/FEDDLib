@@ -389,7 +389,7 @@ void rhsHeartBeatArteryPulse(double* x, double* res, double* parameters){
     if(Qtrue){
         double t = parameters[0] - fmod(parameters[0],1.0); // t greater 0.5 as Qtrue=true only then.
     	
-        Q = Q*0.005329*cos(1/8.*M_PI*x[2]-M_PI*2*(t-0.5));
+        Q = Q*0.005329*pow(cos(1/16.*M_PI*x[2]-M_PI*(t-0.5)),2);
         
     }  
     else
