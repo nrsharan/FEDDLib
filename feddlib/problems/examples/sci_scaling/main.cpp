@@ -365,12 +365,14 @@ void rhsArteryPaperPulse(double* x, double* res, double* parameters){
     	lambda= 0.75;
     else{
         double tinc = parameters[0] - std::floor(parameters[0]);
-        double Q = -sin(1/16.*M_PI*x[2]-M_PI*tinc*3.0);
-        if(Q< 0)
+        double Q = -sin(1/16.*M_PI*x[2]-M_PI*(tinc-0.5)*3.0);
+        if(Q< 0){
             Q = 0.;
-        lambda = 0.875 - 0.125 *Q;
+            lambda=0.75;
+        }
+        else
+            lambda =0.75+0.25*Q;//0.875 - 0.125
     }
- 
     if(parameters[5]==5){
         res[0] =lambda*force;
         res[1] =lambda*force;
@@ -402,16 +404,9 @@ void rhsArteryPaper(double* x, double* res, double* parameters){
 		lambda = 0.8125+0.0625*cos(2*M_PI*parameters[0]);
     else if( parameters[0] >= heartBeatStart + 0.5 && (parameters[0] - std::floor(parameters[0]))< 0.5)
     	lambda= 0.75;
-    else{
-        double tinc = t - std::floor(t);
-        double Q = -sin(1/16.*M_PI*x[2]-M_PI*(tinc-0.5)*3.0);
-        if(Q< 0){
-            Q = 0.;
-            lambda=0.75;
-        }
-        else
-            lambda =0.75+0.25*Q;//0.875 - 0.125
-    }
+    else
+        lambda = 0.875 - 0.125 * cos(4*M_PI*(parameters[0]));
+     
  
     if(parameters[5]==5){
         res[0] =lambda*force;
