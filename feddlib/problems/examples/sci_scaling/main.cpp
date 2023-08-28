@@ -402,9 +402,16 @@ void rhsArteryPaper(double* x, double* res, double* parameters){
 		lambda = 0.8125+0.0625*cos(2*M_PI*parameters[0]);
     else if( parameters[0] >= heartBeatStart + 0.5 && (parameters[0] - std::floor(parameters[0]))< 0.5)
     	lambda= 0.75;
-    else
-        lambda = 0.875 - 0.125 * cos(4*M_PI*(parameters[0]));
-     
+    else{
+        double tinc = t - std::floor(t);
+        double Q = -sin(1/16.*M_PI*x[2]-M_PI*(tinc-0.5)*3.0);
+        if(Q< 0){
+            Q = 0.;
+            lambda=0.75;
+        }
+        else
+            lambda =0.75+0.25*Q;//0.875 - 0.125
+    }
  
     if(parameters[5]==5){
         res[0] =lambda*force;
@@ -729,9 +736,9 @@ int main(int argc, char *argv[])
                 exPara->closeExporter();
             }
            
+        
+     
         }
-                
-
 
         
     
@@ -1135,7 +1142,7 @@ int main(int argc, char *argv[])
 	
     return(EXIT_SUCCESS);
 }
-/* Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+   /*  Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
 
 
             exportSolution.reset(new MultiVector<SC,LO,GO,NO>(domainStructure->getMapVecFieldUnique()));
@@ -1151,10 +1158,12 @@ int main(int argc, char *argv[])
 
             entries  = exportSolution->getDataNonConst(0);
 
-            double T_Ramp = 2.;
+            double TRamp = 1.;
             double dt = 0.02; //parameterListAll->sublist("Timestepping Parameter").get("dt",1.0);
-            double tMax = 2.0; //parameterListAll->sublist("Timestepping Parameter").get("Final time",1.0);
+            double tMax = 5.0; //parameterListAll->sublist("Timestepping Parameter").get("Final time",1.0);
             double force = parameterListProblem->sublist("Parameter").get("Volume force",10.);
+            double loadStepSize = 0.01;
+            double heartBeatStart = 2.0;
             double r=0.;
             vec_dbl_Type res(3);
             double a = 2.;
@@ -1166,53 +1175,35 @@ int main(int argc, char *argv[])
                     if(flags->at(i) == 5){
 
                         vec_dbl_Type x = nodes->at(i);
-                        bool Qtrue=false;
-
-                        //if( t >= 0.5 && (t- std::floor(t))+1.e-10< 0.5)
+                       
+                        double lambda=0.;
+                        
+                        if(t+1e-12 < TRamp)
+                            lambda = 0.875*(t+loadStepSize)/ TRamp;
+                        else if(t <= TRamp+1.e-12)
+                            lambda = 0.875;
+                        else if (t < heartBeatStart)
+                            lambda = 0.875;
+                        else if( t < heartBeatStart + 0.5)
+                            lambda = 0.8125+0.0625*cos(2*M_PI*t);
+                        else if( t >= heartBeatStart + 0.5 && (t - std::floor(t))< 0.5)
                             lambda= 0.75;
-                        //else{
-                            lambda = 0.75; // 0.775+0.125 * cos(4*M_PI*(parameters[0]));
-                            Qtrue = true; 
-                        //} 
-
-                        double a0    = 11.693284502463376;
-                        double a [20] = {1.420706949636449,-0.937457438404759,0.281479818173732,-0.224724363786734,0.080426469802665,0.032077024077824,0.039516941555861, 
-                            0.032666881040235,-0.019948718147876,0.006998975442773,-0.033021060067630,-0.015708267688123,-0.029038419813160,-0.003001255512608,-0.009549531539299, 
-                            0.007112349455861,0.001970095816773,0.015306208420903,0.006772571935245,0.009480436178357};
-                        double b [20] = {-1.325494054863285,0.192277311734674,0.115316087615845,-0.067714675760648,0.207297536049255,-0.044080204999886,0.050362628821152,-0.063456242820606,
-                            -0.002046987314705,-0.042350454615554,-0.013150127522194,-0.010408847105535,0.011590255438424,0.013281630639807,0.014991955865968,0.016514327477078, 
-                            0.013717154383988,0.012016806933609,-0.003415634499995,0.003188511626163};
-                                    
-                        double Q = 0.5*a0;
-                        
-
-                        double t_min = t - fmod(t,1.0); //FlowConditions::t_start_unsteady;
-                        double t_max = t_min + 0.001; // One heartbeat lasts 1.0 second    
-                        double y = M_PI * ( 2.0*(t-t_min ) / ( t_max - t_min ) -0.87  );
-                        
-                        for(int i=0; i< 20; i++)
-                            Q += (a[i]*std::cos((i+1.)*y) + b[i]*std::sin((i+1.)*y) ) ;
-                        
-                        
-                        // Remove initial offset due to FFT
-                        Q -= 0.026039341343493;
-                        Q = (Q - 2.85489)/(7.96908-2.85489);
-                    
-                
-                        if( (t- std::floor(t))+1.e-10< 0.5){
-                            double tinc = t - std::floor(t); // t greater 0.5 as Qtrue=true only then.
-                            Q = -sin(1/16.*M_PI*x[2]-M_PI*tinc*3.0); // Q*0.005329
+                        else{
+                            double tinc = t - std::floor(t);
+                            double Q = -sin(1/16.*M_PI*x[2]-M_PI*(tinc-0.5)*3.0);
+                            if(Q< 0){
+                                Q = 0.;
+                                lambda=0.75;
+                            }
+                            else
+                                 lambda =0.75+0.25*Q;//0.875 - 0.125
                         }
-                        else
-                            Q =0.;
-
-                        if(Q<0+1e-13)
-                            Q = 0.;
+                
 
                         double forceDirection = force/fabs(force);
-                        res[0] =lambda*force+forceDirection*Q;
-                        res[1] =lambda*force+forceDirection*Q;
-                        res[2] =lambda*force+forceDirection*Q;        
+                        res[0] =lambda*force;
+                        res[1] =lambda*force;//+forceDirection*Q;
+                        res[2] =lambda*force;//+forceDirection*Q;        
                         
                         for(int d=0; d<dim ; d++)
                             entries[i*dim+d] = res[d];
@@ -1221,7 +1212,6 @@ int main(int argc, char *argv[])
                 exPara->save(t);
 
             }
-
-
+      
 
     */
