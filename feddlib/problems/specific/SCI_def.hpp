@@ -1032,6 +1032,8 @@ void SCI<SC,LO,GO,NO>::updateTime() const
 {
     timeSteppingTool_->t_ = timeSteppingTool_->t_ + timeSteppingTool_->dt_prev_;
 
+   // cout << " ###### Timestep in SCI dt_prev" << timeSteppingTool_->dt_prev_ << " dt= " << timeSteppingTool_->dt_ <<" time= " << timeSteppingTool_->t_ << " ####### " << endl;
+
     MultiVectorConstPtr_Type c = this->solution_->getBlock(1);
     c_rep_->importFromVector(c, true);
 

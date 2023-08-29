@@ -1095,9 +1095,10 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         }
         else{
             timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
-            sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
 
             this->problemTime_->assemble("UpdateTime"); // Updates to next timestep
+
+            sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
 
         }
 

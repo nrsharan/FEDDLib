@@ -219,21 +219,15 @@ void rhsHeartBeatCube(double* x, double* res, double* parameters){
     else if( parameters[0] >= heartBeatStart + 0.5 && (parameters[0] - std::floor(parameters[0]))+1.e-10< 0.5)
     	lambda= 0.75;
     else{
-        lambda = 0.75; // 0.775+0.125 * cos(4*M_PI*(parameters[0]));
+        lambda = 0.75+0.25*Q;//*0.005329; // 0.775+0.125 * cos(4*M_PI*(parameters[0]));
         Qtrue = true; 
     } 
-    
-    if(Qtrue){
-    	Q = Q*0.005329;
-    }  
-    else
-    	Q = 0.;
-       
+  
     double forceDirection = force/fabs(force);
-    if(parameters[5]==5 || parameters[5] == 4){
-        res[0] =lambda*force+forceDirection*Q;
-        res[1] =lambda*force+forceDirection*Q;
-        res[2] =lambda*force+forceDirection*Q;        
+    if(parameters[5]==5 || parameters[5]==4){
+        res[0] =lambda*force;//+forceDirection*Q;
+        res[1] =lambda*force;//+forceDirection*Q;
+        res[2] =lambda*force;//+forceDirection*Q;        
     } 
     
    /* if(parameters[0]< heartBeatStart){
@@ -280,8 +274,8 @@ void rhsHeartBeatArtery(double* x, double* res, double* parameters){
     
 
     double t_min = parameters[0] - fmod(parameters[0],1.0); //FlowConditions::t_start_unsteady;
-    double t_max = t_min + 0.52; // One heartbeat lasts 1.0 second    
-    double y = M_PI * ( 2.0*( parameters[0]-t_min ) / ( t_max - t_min ) -0.87  );
+    double t_max = t_min + 0.5; // One heartbeat lasts 1.0 second    
+    double y = M_PI * ( 2.0*( parameters[0]-t_min ) / ( t_max - t_min )-1.);// -0.87  );
     
     for(int i=0; i< 20; i++)
         Q += (a[i]*std::cos((i+1.)*y) + b[i]*std::sin((i+1.)*y) ) ;
@@ -303,21 +297,15 @@ void rhsHeartBeatArtery(double* x, double* res, double* parameters){
     else if( parameters[0] >= heartBeatStart + 0.5 && (parameters[0] - std::floor(parameters[0]))+1.e-10< 0.5)
     	lambda= 0.75;
     else{
-        lambda = 0.75; // 0.775+0.125 * cos(4*M_PI*(parameters[0]));
+        lambda = 0.75+0.25*Q;//*0.005329; // 0.775+0.125 * cos(4*M_PI*(parameters[0]));
         Qtrue = true; 
     } 
-    
-    if(Qtrue){
-    	Q = Q*0.005329;
-    }  
-    else
-    	Q = 0.;
-       
+  
     double forceDirection = force/fabs(force);
     if(parameters[5]==5){
-        res[0] =lambda*force+forceDirection*Q;
-        res[1] =lambda*force+forceDirection*Q;
-        res[2] =lambda*force+forceDirection*Q;        
+        res[0] =lambda*force;//+forceDirection*Q;
+        res[1] =lambda*force;//+forceDirection*Q;
+        res[2] =lambda*force;//+forceDirection*Q;        
     } 
     
    /* if(parameters[0]< heartBeatStart){
@@ -366,7 +354,7 @@ void rhsArteryPaperPulse(double* x, double* res, double* parameters){
     else{
         double tinc = parameters[0] - std::floor(parameters[0]);
         double Q = -sin(1/16.*M_PI*x[2]-M_PI*(tinc-0.5)*3.0);
-        if(Q< 0){
+        if(Q < 0+1e-12){
             Q = 0.;
             lambda=0.75;
         }
