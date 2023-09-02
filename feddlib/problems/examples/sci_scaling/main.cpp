@@ -354,19 +354,23 @@ void rhsArteryPaperPulse(double* x, double* res, double* parameters){
     else{
         double tinc = parameters[0] - std::floor(parameters[0]);
         double Q = -sin(1/16.*M_PI*x[2]-M_PI*(tinc-0.5)*3.0);
-        if(Q < 0+1e-12){
+        if(Q < 0.+1.e-12){
             Q = 0.;
             lambda=0.75;
         }
-        else
+        else{
             lambda =0.75+0.25*Q;//0.875 - 0.125
+        }
     }
+    
+
     if(parameters[5]==5){
         res[0] =lambda*force;
         res[1] =lambda*force;
         res[2] =lambda*force; 
         
-       
+       if(fabs(lambda*force)<0.75*0.016)
+        cout << " ALARMAAAAA lamba=" << lambda << " force=" << force << " t= " << parameters[0] << " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ----------------" << endl;
     }
       
 }
