@@ -324,6 +324,84 @@ void rhsHeartBeatArtery(double* x, double* res, double* parameters){
       
 }
 
+void rhsHeartBeatArteryPulse(double* x, double* res, double* parameters){
+
+    res[0] =0.;
+    res[1] =0.;
+    res[2] = 0.;
+    double lambda=0.;
+    double force = parameters[1];
+    double loadStepSize = parameters[2];
+    double TRamp = parameters[3];
+    double heartBeatStart = parameters[4];
+    
+	    
+    bool Qtrue=false;
+    if(parameters[0]+1e-12 < TRamp)
+        lambda = 0.875*(parameters[0]+loadStepSize)/ TRamp;
+    else if(parameters[0] <= TRamp+1.e-12)
+    	lambda = 0.875;
+    else if (parameters[0] < heartBeatStart)
+    	lambda = 0.875;
+    else if( parameters[0]+1.0e-10 < heartBeatStart + 0.5)
+		lambda = 0.8125+0.0625*cos(2*M_PI*parameters[0]);
+    else if( parameters[0]+1.0e-10 < heartBeatStart + 1.0)
+		lambda = 0.75;
+    else if( parameters[0] >= heartBeatStart + 0.5 && (parameters[0] - std::floor(parameters[0]))+1.e-10> 0.6)
+    	lambda= 0.75;
+    else{ // ( parameters[0] >= heartBeatStart + 0.5){ [0,0.6]
+        // Within one second the heart beat passes through the artery
+        double t= parameters[0] - std::floor(parameters[0]); // [0.5,1] Intervall
+        double z= x[2];
+        double t_z = t-1./80.*z; //  x  = 0.1 / 8 = 0.0125
+
+        if(t_z > 0. && t_z < 0.5){
+            double a0    = 11.693284502463376;
+            double a [20] = {1.420706949636449,-0.937457438404759,0.281479818173732,-0.224724363786734,0.080426469802665,0.032077024077824,0.039516941555861, 
+                0.032666881040235,-0.019948718147876,0.006998975442773,-0.033021060067630,-0.015708267688123,-0.029038419813160,-0.003001255512608,-0.009549531539299, 
+                0.007112349455861,0.001970095816773,0.015306208420903,0.006772571935245,0.009480436178357};
+            double b [20] = {-1.325494054863285,0.192277311734674,0.115316087615845,-0.067714675760648,0.207297536049255,-0.044080204999886,0.050362628821152,-0.063456242820606,
+                -0.002046987314705,-0.042350454615554,-0.013150127522194,-0.010408847105535,0.011590255438424,0.013281630639807,0.014991955865968,0.016514327477078, 
+                0.013717154383988,0.012016806933609,-0.003415634499995,0.003188511626163};
+                        
+            double Q = 0.5*a0;
+        
+
+            double t_min = 0; //parameters[0] - fmod(parameters[0],1.0); //FlowConditions::t_start_unsteady;
+            double t_max = t_min + 0.5; // One heartbeat lasts 1.0 second    
+            double y = M_PI * ( 2 * ( t_z-t_min ) / ( t_max - t_min ) - 1 );
+           
+            
+            for(int i=0; i< 20; i++)
+                Q += (a[i]*std::cos((i+1.)*y) + b[i]*std::sin((i+1.)*y) ) ;
+            
+            
+            // Remove initial offset due to FFT
+            Q -= 0.026039341343493;
+            Q = (Q - 2.85489)/(7.96908-2.85489);
+            if(Q < 0 )
+                Q = 0.;
+
+            lambda = 0.75+0.25*Q;
+
+        }
+        else
+            lambda = 0.75;
+        
+        if(lambda<0.75+1.e-12)
+            lambda=0.75;
+
+    } 
+  
+    double forceDirection = force/fabs(force);
+    if(parameters[5]==5){
+        res[0] =lambda*force;//+forceDirection*Q;
+        res[1] =lambda*force;//+forceDirection*Q;
+        res[2] =lambda*force;//+forceDirection*Q;        
+    } 
+    
+}
+
 // Parameter Structure
 // 0 : time
 // 1 : force
@@ -967,6 +1045,8 @@ int main(int argc, char *argv[])
             		 	sci.problemStructure_->addRhsFunction( rhsHeartBeatArtery,0 );
                     if(rhsType=="Paper Pulse")
             		 	sci.problemStructure_->addRhsFunction( rhsArteryPaperPulse,0 );
+                    if(rhsType=="Heart Beat Pulse")
+            		 	sci.problemStructure_->addRhsFunction(rhsHeartBeatArteryPulse,0 );
 				}
                      
                 double force = parameterListAll->sublist("Parameter").get("Volume force",1.);
@@ -999,7 +1079,10 @@ int main(int argc, char *argv[])
             		 	sci.problemStructureNonLin_->addRhsFunction( rhsHeartBeatArtery,0 );
                     if(rhsType=="Paper Pulse")
             		 	sci.problemStructureNonLin_->addRhsFunction(rhsArteryPaperPulse,0 );
+                    if(rhsType=="Heart Beat Pulse")
+            		 	sci.problemStructureNonLin_->addRhsFunction(rhsHeartBeatArteryPulse,0 );
 				}
+                
                 double force = parameterListAll->sublist("Parameter").get("Volume force",1.);
                 if(bcType == "Artery Full")
                     force = force * -1.;
