@@ -1078,7 +1078,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
 
     double inflowRamp = parameterList_->sublist("Parameter").get("Inflow Ramp",0.01);
-    std::string structureModel = parameterList_->sublist("Parameter").get("Structure Model","SCI_simple");
+    std::string structureModel = parameterList_->sublist("Parameter").get("Structure Model","SCI_NH");
     std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
 
     while(timeSteppingTool_->continueTimeStepping())
@@ -1381,6 +1381,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     
     // Notwendige Parameter
     bool geometryExplicit = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
+    std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
+
     int sizeFSI = timeStepDef_.size();
 
     // ACHTUNG
@@ -1525,29 +1527,31 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         }
     }
 
-    for (int i = 0; i < sizeChem; i++)
+    /*for (int i = 0; i < sizeChem; i++)
     {
         for (int j = 0; j < sizeChem; j++)
         {
             massCoeffFSI[i + sizeFluid+ sizeStructure][j + sizeFluid + sizeStructure] = massCoeffChem[i][j];
             problemCoeffFSI[i + sizeFluid + sizeStructure][j + sizeFluid + sizeStructure] = problemCoeffChem[i][j];
         }
-    }
+    }*/
+    massCoeffFSI[4][4] = massCoeffChem[0][0];
+    problemCoeffFSI[4][4] = problemCoeffChem[0][0];
 
     // Setze noch Einsen an die Stellen, wo Eintraege (Kopplungsbloecke) vorhanden sind.
-    problemCoeffFSI[0][4] = 1.0; // C1_T
-    problemCoeffFSI[2][4] = 1.0; // C3_T
-    problemCoeffFSI[4][0] = 1.0; // C1
-    problemCoeffFSI[4][2] = 1.0; // C2
+    problemCoeffFSI[0][3] = 1.0; // C1_T
+    problemCoeffFSI[2][3] = 1.0; // C3_T
+    problemCoeffFSI[3][0] = 1.0; // C1
+    problemCoeffFSI[3][2] = 1.0; // C2
     if(!geometryExplicit)
     {
-        problemCoeffFSI[5][2] = 1.0; // C4
-        problemCoeffFSI[5][5] = 1.0; // H (Geometrie)
+        problemCoeffFSI[4][2] = 1.0; // C4
+        problemCoeffFSI[4][4] = 1.0; // H (Geometrie)
         string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
         if(linearization == "Newton" || linearization == "NOX")
         {
-            problemCoeffFSI[0][5] = 1.0; // Shape-Derivatives Velocity
-            problemCoeffFSI[1][5] = 1.0; // Shape-Derivatives Div-Nebenbedingung
+            problemCoeffFSI[0][4] = 1.0; // Shape-Derivatives Velocity
+            problemCoeffFSI[1][4] = 1.0; // Shape-Derivatives Div-Nebenbedingung
         }
     }
 
@@ -1702,10 +1706,11 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         // Massematrix fuer FSI holen und fuer timeProblemFluid setzen (fuer BDF2)
         MatrixPtr_Type massmatrixC;
         fsci->setChemMassmatrix( massmatrixC );
-        this->problemTime_->systemMass_->addBlock( massmatrixC, 3, 3);
+        //this->problemTime_->systemMass_->addBlock( massmatrixC, 4, 4);
 
         // RHS nach BDF2
-        this->problemTime_->assemble( "ComputeChemRHSInTime" ); // hier ist massmatrix nicht relevant
+        if(couplingType=="explicit" ) //|| structureModel=="SCI_sophisticated")
+            this->problemTime_->assemble( "ComputeChemRHSInTime" ); // hier ist mas smatrix nicht relevant
         //this->problemTime_->getRhs()->addBlock( Teuchos::rcp_const_cast<MultiVector_Type>(rhs->getBlock(0)), 0 );
 
 
@@ -2524,6 +2529,7 @@ void DAESolverInTime<SC,LO,GO,NO>::exportTimestep(){
     for (int i=0; i<exporter_vector_.size(); i++) {
         
         exporter_vector_[i]->save( timeSteppingTool_->currentTime() );
+        cout << " Export component " << i << " exporter vector size " << exporter_vector_.size() <<  endl;
 
     }
 
@@ -2603,7 +2609,6 @@ void DAESolverInTime<SC,LO,GO,NO>::exportTimestep(BlockMultiVectorPtr_Type& solS
     for (int i=0; i<exporter_vector_.size(); i++) {
         
         exporter_vector_[i]->save( timeSteppingTool_->currentTime() );
-
     }
 
     if (verbose_) {
@@ -2637,8 +2642,11 @@ void DAESolverInTime<SC,LO,GO,NO>::setupExporter(){
         bool exportThisBlock  = true;
         if(this->parameterList_->sublist("Parameter").get("FSI",false) == true  )
             exportThisBlock = (i != 3);
-       else if(this->parameterList_->sublist("Parameter").get("FSCI",false) == true)
-            exportThisBlock = (i != 4);
+       else if(this->parameterList_->sublist("Parameter").get("FSCI",false) == true){
+            exportThisBlock = (i != 3);
+            //exportThisBlock = (i != 4);
+           
+       }
 
         if(exportThisBlock)
         {
@@ -2647,17 +2655,30 @@ void DAESolverInTime<SC,LO,GO,NO>::setupExporter(){
 
             DomainConstPtr_Type dom = problemTime_->getDomain(i);
 
+            if(this->parameterList_->sublist("Parameter").get("FSCI",false) == true)
+                if(i==4 )
+                    dom = problemTime_->getDomain(5);
+
             int exportEveryXTimesteps = parameterList_->sublist("Exporter").get( "Export every X timesteps", 1 );
             std::string plSuffix = "Suffix variable" + to_string(i+1);
             std::string suffix = parameterList_->sublist("Exporter").get(plSuffix, "" );
             std::string varName = problemTime_->getVariableName(i) + suffix;
+            if(this->parameterList_->sublist("Parameter").get("FSCI",false) == true)
+                if(i==4 )
+                    varName = problemTime_->getVariableName(5) + suffix;
+
             MeshPtr_Type meshNonConst = Teuchos::rcp_const_cast<Mesh_Type>(dom->getMesh());
             exporterPtr->setup(varName, meshNonConst, dom->getFEType(), parameterList_);
             
 //            exporterPtr->setup(dom->getDimension(), dom->getNumElementsGlobal(), dom->getElements(), dom->getPointsUnique(), dom->getMapUnique(), dom->getMapRepeated(), dom->getFEType(), varName, exportEveryXTimesteps, comm_ , parameterList_);
+            cout << " Setup Export component " << i << " exporter vector size " << timeStepDef_.size() << " varname " << varName <<  endl;
+
 
             UN dofsPerNode = problemTime_->getDofsPerNode(i);
-            
+            if(this->parameterList_->sublist("Parameter").get("FSCI",false) == true)
+                if(i==4 )
+                    dofsPerNode = problemTime_->getDofsPerNode(5);
+
             if (dofsPerNode == 1)
                 exporterPtr->addVariable( exportVector, varName, "Scalar", dofsPerNode, dom->getMapUnique() );
             else

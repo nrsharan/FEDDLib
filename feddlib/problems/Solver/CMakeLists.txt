@@ -20,6 +20,9 @@ SET(Solver_HEADERS
     Solver/PrecOpFaCSI.hpp
     Solver/PrecOpFaCSI_decl.hpp
     Solver/PrecOpFaCSI_def.hpp
+    Solver/PrecOpFaCSCI.hpp
+    Solver/PrecOpFaCSCI_decl.hpp
+    Solver/PrecOpFaCSCI_def.hpp
     Solver/TimeSteppingTools.hpp
 CACHE INTERNAL "")
 
@@ -31,6 +34,7 @@ SET(Solver_SOURCES
     Solver/PreconditionerOperator.cpp
     Solver/PrecBlock2x2.cpp
     Solver/PrecOpFaCSI.cpp
+    Solver/PrecOpFaCSCI.cpp
 	Solver/TimeSteppingTools.cpp
 CACHE INTERNAL "")
 

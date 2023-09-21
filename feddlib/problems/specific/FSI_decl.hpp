@@ -3,7 +3,9 @@
 #include "feddlib/problems/abstract/TimeProblem.hpp"
 #include "feddlib/problems/specific/NavierStokes.hpp"
 #include "feddlib/problems/specific/LinElas.hpp"
+#include "feddlib/problems/specific/LinElasAssFE.hpp"
 #include "feddlib/problems/specific/NonLinElasticity.hpp"
+#include "feddlib/problems/specific/NonLinElasAssFE.hpp"
 #include "feddlib/problems/specific/Geometry.hpp"
 #include "feddlib/problems/Solver/TimeSteppingTools.hpp"
 #include "Xpetra_ThyraUtils.hpp"
@@ -19,9 +21,9 @@ class Geometry;
 template <class SC , class LO , class GO , class NO >
 class NavierStokes;
 template <class SC , class LO , class GO , class NO >
-class LinElas;
+class LinElasAssFE; //LinElas;
 template <class SC , class LO , class GO , class NO >
-class NonLinElasticity;
+class NonLinElasAssFE; //NonLinElasticity;
 template <class SC = default_sc, class LO = default_lo, class GO = default_go, class NO = default_no>
 class FSI : public NonLinearProblem<SC,LO,GO,NO>  {
 
@@ -56,8 +58,10 @@ public:
     typedef Teuchos::RCP<TimeProblem_Type> TimeProblemPtr_Type;
 
     typedef NavierStokes<SC,LO,GO,NO> FluidProblem_Type;
-    typedef LinElas<SC,LO,GO,NO> StructureProblem_Type;
-    typedef NonLinElasticity<SC,LO,GO,NO> StructureNonLinProblem_Type;
+    //typedef LinElas<SC,LO,GO,NO> StructureProblem_Type;
+    typedef LinElasAssFE<SC,LO,GO,NO> StructureProblem_Type;
+   // typedef NonLinElasticity<SC,LO,GO,NO> StructureNonLinProblem_Type;
+    typedef NonLinElasAssFE<SC,LO,GO,NO> StructureNonLinProblem_Type;
     typedef Geometry<SC,LO,GO,NO> GeometryProblem_Type;
     
     typedef Teuchos::RCP<FluidProblem_Type> FluidProblemPtr_Type;
@@ -226,10 +230,11 @@ public:
     Teuchos::RCP<SmallMatrix<int>> defTS_;
     mutable Teuchos::RCP<TimeSteppingTools>	timeSteppingTool_;
 
+    bool geometryExplicit_;
+
 private:
     std::string materialModel_;
     vec_dbl_Type valuesForExport_;
-    bool geometryExplicit_;
     ExporterTxtPtr_Type exporterTxtDrag_;
     ExporterTxtPtr_Type exporterTxtLift_;
     mutable ExporterPtr_Type exporterGeo_;

@@ -5104,7 +5104,8 @@ void FE<SC,LO,GO,NO>::assemblyAdditionalConvection(int dim,
     TEUCHOS_TEST_FOR_EXCEPTION(FEType == "P0",std::logic_error, "Not implemented for P0");
     int FEloc = this->checkFE(dim,FEType);
 
-    DomainConstPtr_Type domain = domainVec_.at(FEloc);
+    DomainConstPtr_Type domain = domainVec_.at(0); //FEloc);
+    cout << " FE loc " << FEloc << endl;
     ElementsPtr_Type elements = domain->getElementsC();
     vec2D_dbl_ptr_Type pointsRep = domain->getPointsRepeated();
     MapConstPtr_Type map = domain->getMapRepeated();
@@ -5258,6 +5259,7 @@ void FE<SC,LO,GO,NO>::assemblyAdditionalConvection(int dim,
                 for(int i = 0; i < dPhiTrans[0].size(); i++)
                 {
                     LO index1 = dim * elements->getElement(T).getNode(i) + 0; // x
+                    //cout << " Index " << index1 << endl;
                     LO index2 = dim * elements->getElement(T).getNode(i) + 1; // y
                     LO index3 = dim * elements->getElement(T).getNode(i) + 2; // z
                     w11[0][k] += wArray[index1] * dPhiTrans[k][i][0];

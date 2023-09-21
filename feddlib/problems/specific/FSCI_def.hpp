@@ -53,7 +53,7 @@ FSCI<SC,LO,GO,NO>::FSCI(const DomainConstPtr_Type &domainVelocity, std::string F
                     const DomainConstPtr_Type &domainGeometry, std::string FETypeGeometry,
                     vec2D_dbl_Type diffusionTensor, RhsFunc_Type reactionFunc,
                     ParameterListPtr_Type parameterListFluid, ParameterListPtr_Type parameterListStructure,
-                    ParameterListPtr_Type parameterListChem,
+                    ParameterListPtr_Type parameterListChem, ParameterListPtr_Type parameterListSCI,
                     ParameterListPtr_Type parameterListFSCI, ParameterListPtr_Type parameterListGeometry,
                     Teuchos::RCP<SmallMatrix<int> > &defTS):
 FSI<SC,LO,GO,NO>(domainVelocity,  FETypeVelocity,
@@ -97,7 +97,7 @@ exporterGeo_()*/
     this->addVariable( domainVelocity, FETypeVelocity, "u_f", domainVelocity->getDimension() ); // Fluid-Geschw.
     this->addVariable( domainPressure, FETypePressure, "p", 1); // Fluid-Druck
     this->addVariable( domainStructure, FETypeStructure, "d_s", domainStructure->getDimension() ); */// Struktur
-    this->addVariable( domainChem, FETypeChem, "c", 1 ); // Chem
+    this->addVariable( domainChem, FETypeChem, "c", 1 ); // Chem last added component!
     /*this->addVariable( domainInterface, FETypeInterface, "lambda", domainInterface->getDimension() ); // Interface
     this->addVariable( domainGeometry, FETypeGeometry, "d_f", domainGeometry->getDimension() ); // Geometrie
 
@@ -109,8 +109,8 @@ exporterGeo_()*/
     Teuchos::RCP<SmallMatrix<int>> defTSSCI; // Seperate Timestepping Matrix for SCI
     defTSSCI.reset( new SmallMatrix<int> (2) );
     (*defTSSCI)[0][0] = (*defTS)[2][2];
-    (*defTSSCI)[1][1] = (*defTS)[3][3];
-    this->problemSCI_ = Teuchos::rcp( new SCIProblem_Type( domainStructure, FETypeStructure, domainChem, FETypeChem, diffusionTensor,reactionFunc, parameterListStructure, parameterListChem, parameterListFSCI, defTSSCI ) );
+    (*defTSSCI)[1][1] = (*defTS)[4][4];
+    this->problemSCI_ = Teuchos::rcp( new SCIProblem_Type( domainStructure, FETypeStructure, domainChem, FETypeChem, diffusionTensor,reactionFunc, parameterListStructure, parameterListChem, parameterListSCI, defTSSCI ) );
     this->problemSCI_->initializeProblem();
 
     /*if (materialModel_=="linear"){
@@ -235,17 +235,17 @@ void FSCI<SC,LO,GO,NO>::assemble( std::string type ) const
 
         // Fluid-Bloecke
         this->feFactory_->assemblyFSICoupling(this->dim_, this->domain_FEType_vec_.at(0), C1, C1_T, 0, 0,
-            this->getDomain(0)->getInterfaceMapVecFieldUnique(), this->getDomain(0)->getMapVecFieldUnique(), true);
+        this->getDomain(0)->getInterfaceMapVecFieldUnique(), this->getDomain(0)->getMapVecFieldUnique(), true);
         
         // Struktur-Bloecke
         // ACHTUNG: Die Interface-Variable \lambda wird eindeutig von der Fluid-Seite gehalten.
         // Deswegen auch getDomain(0) fuer die Spalten der Kopplungsbloecke.
         this->feFactory_->assemblyFSICoupling(this->dim_, this->domain_FEType_vec_.at(2), C2, C3_T, 0, 2,
-            this->getDomain(0)->getInterfaceMapVecFieldUnique(), this->getDomain(2)->getMapVecFieldUnique(), true);
+        this->getDomain(0)->getInterfaceMapVecFieldUnique(), this->getDomain(2)->getMapVecFieldUnique(), true);
 
         
         // Falls geometrisch implizit
-        if(!geometryExplicit_)
+        /*if(!this->geometryExplicit_)
         {
             // TODO: Wegen IndicesGlobalMatched_ vlt .sicherheitshalber FEloc = 0 nehmen.
             // TODO: Check C4
@@ -253,7 +253,7 @@ void FSCI<SC,LO,GO,NO>::assemble( std::string type ) const
                                                        this->getDomain(0)->getGlobalInterfaceMapUnique(),
                                                        this->getDomain(2)->getMapVecFieldUnique(),
                                                        this->getDomain(5)->getMapVecFieldUnique(), true);
-        }
+        }*/
         
         MatrixPtr_Type dummyC;
         // we need to set the dummy coupling conditions for monolithic preconditioning with FROSch
@@ -282,7 +282,7 @@ void FSCI<SC,LO,GO,NO>::assemble( std::string type ) const
         // C2*d_s^n
         this->C2_ = C2;
 
-        if(!geometryExplicit_)
+        if(!this->geometryExplicit_)
         {
             C4->resumeFill();
             C4->scale(-1.0);
@@ -295,7 +295,7 @@ void FSCI<SC,LO,GO,NO>::assemble( std::string type ) const
         // ###########################
         // Bloecke hinzufuegen
         // ###########################
-        if(geometryExplicit_)
+        if(this->geometryExplicit_)
             this->system_.reset(new BlockMatrix_Type(5));
         else
             this->system_.reset(new BlockMatrix_Type(6));
@@ -313,27 +313,30 @@ void FSCI<SC,LO,GO,NO>::assemble( std::string type ) const
         else
             this->system_->addBlock( this->problemStructureNonLin_->system_->getBlock(0,0), 2, 2 );*/
 
+        // Chemistry goes to the last block
         this->system_->addBlock( this->problemSCI_->system_->getBlock(0,0), 2, 2 ); // Structure
-        this->system_->addBlock( this->problemSCI_->system_->getBlock(1,1), 3, 3); // Chem
-        this->system_->addBlock( this->problemSCI_->system_->getBlock(0,1), 2, 3 ); // Coupling of chem
-        this->system_->addBlock( this->problemSCI_->system_->getBlock(1,0), 3, 2 ); // Coupling of structure
+        this->system_->addBlock( this->problemSCI_->system_->getBlock(1,1), 4, 4); // Chem
+        this->system_->addBlock( this->problemSCI_->system_->getBlock(0,1), 2, 4 ); // Coupling of chem
+        this->system_->addBlock( this->problemSCI_->system_->getBlock(1,0), 4, 2 ); // Coupling of structure
 
 
         // Kopplung
-        this->system_->addBlock( C1_T, 0, 4 );
-        this->system_->addBlock( C3_T, 2, 4 );
-        this->system_->addBlock( C1, 4, 0 );
-        this->system_->addBlock( C2, 4, 2 );
+        this->system_->addBlock( C1_T, 0, 3 );
+        this->system_->addBlock( C3_T, 2, 3 );
+        this->system_->addBlock( C1, 3, 0 );
+        this->system_->addBlock( C2, 3, 2 );
 
         if (!dummyC.is_null())
-            this->system_->addBlock( dummyC, 4, 4 );
+            this->system_->addBlock( dummyC, 3, 3 );
         
-        if(!geometryExplicit_)
+        if(!this->geometryExplicit_)
         {
+            TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "Only Geometry explicit available here");
+
             // Geometrie
-            this->system_->addBlock( this->problemGeometry_->system_->getBlock(0,0), 5, 5 );
+           // this->system_->addBlock( this->problemGeometry_->system_->getBlock(0,0), 5, 5 );
             // Kopplung
-            this->system_->addBlock( C4, 5, 2 );
+            //this->system_->addBlock( C4, 5, 2 );
         }
 
         // Sollte (bzw. muss) erst aufgerufen werden, wenn alle Bloecke aus assemble()
@@ -360,6 +363,7 @@ void FSCI<SC,LO,GO,NO>::assemble( std::string type ) const
         {
             std::cout << "Assembly done -- " << std::endl;
         }
+        this->system_->writeMM("System");
     }
     else
         reAssemble(type);
@@ -402,6 +406,8 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             std::cout << "-- Reassembly (UpdateTime)" << '\n';
 
         updateTime();
+        this->problemSCI_->reAssemble("UpdateTime");
+
         return;
     }
 
@@ -574,7 +580,7 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             
         }
     }
-    else
+    /*else
     {
         if(type == "FixedPoint")
         {
@@ -610,15 +616,15 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             this->problemSCI_->reAssemble("Newton");
 
         }
-    }
+    }*/
 
     this->system_->addBlock( this->problemFluid_->getSystem()->getBlock( 0, 0 ), 0, 0 );
     
     //if (materialModel_ != "linear")
     this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(0,0), 2, 2 );
-    this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(1,1), 3, 3 );
-    this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(0,1), 2, 3 );
-    this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(1,0), 3, 2 );
+    this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(1,1), 4, 4 );
+    this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(0,1), 2, 4 );
+    this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(1,0), 4, 2 );
 
 }
 
@@ -765,40 +771,40 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
     this->problemSCI_->calculateNonLinResidualVec( "reverse", time );
 
     this->residualVec_->addBlock(  this->problemSCI_->getResidualVector()->getBlockNonConst(0) , 2);
-    this->residualVec_->addBlock(  this->problemSCI_->getResidualVector()->getBlockNonConst(1) , 3);
+    this->residualVec_->addBlock(  this->problemSCI_->getResidualVector()->getBlockNonConst(1) , 4);
 
     MultiVectorPtr_Type residualFluidVelocityFSCI =
         Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(0) );
     MultiVectorPtr_Type residualSolidFSCI =
         Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(2) );
     MultiVectorPtr_Type residualChemFSCI =
-        Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(3) );
+        Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(4) );
 
 
     MultiVectorPtr_Type residualCouplingFSCI =
-        Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(4) );
-    residualCouplingFSCI->update( 1. , *this->rhs_->getBlock(4), 0. ); // change to -1 for standard
+        Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(3) );
+    residualCouplingFSCI->update( 1. , *this->rhs_->getBlock(3), 0. ); // change to -1 for standard
     
-    //Now we need to add the coupling blocks
-    this->system_->getBlock(0,4)->apply( *this->solution_->getBlock(4) , *residualFluidVelocityFSCI, Teuchos::NO_TRANS, -1., 1. );
+  //Now we need to add the coupling blocks
+    this->system_->getBlock(0,3)->apply( *this->solution_->getBlock(3) , *residualFluidVelocityFSCI, Teuchos::NO_TRANS, -1., 1. );
     
-    this->system_->getBlock(2,4)->apply( *this->solution_->getBlock(4) , *residualSolidFSCI, Teuchos::NO_TRANS, -1., 1. );
+    this->system_->getBlock(2,3)->apply( *this->solution_->getBlock(3) , *residualSolidFSCI, Teuchos::NO_TRANS, -1., 1. );
     
-    this->system_->getBlock(4,0)->apply( *this->solution_->getBlock(0) , *residualCouplingFSCI, Teuchos::NO_TRANS, -1., 1. );
+    this->system_->getBlock(3,0)->apply( *this->solution_->getBlock(0) , *residualCouplingFSCI, Teuchos::NO_TRANS, -1., 1. );
     
-    this->system_->getBlock(4,2)->apply( *this->solution_->getBlock(2) , *residualCouplingFSCI, Teuchos::NO_TRANS, -1., 1. );
+    this->system_->getBlock(3,2)->apply( *this->solution_->getBlock(2) , *residualCouplingFSCI, Teuchos::NO_TRANS, -1., 1. );
 
-    if (!geometryExplicit_) {
+   /* if (!this->geometryExplicit_) {
         
         MultiVectorPtr_Type residualGeometryFSCI =
-            Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(5) );
-        residualGeometryFSCI->update( 1. , *this->rhs_->getBlock(5), 0. ); // change to -1 for standard
+            Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(4) );
+        residualGeometryFSCI->update( 1. , *this->rhs_->getBlock(4), 0. ); // change to -1 for standard
 
-        this->system_->getBlock(5,5)->apply( *this->solution_->getBlock(5) , *residualGeometryFSCI, Teuchos::NO_TRANS, -1., 1. );
+        this->system_->getBlock(4,4)->apply( *this->solution_->getBlock(4) , *residualGeometryFSCI, Teuchos::NO_TRANS, -1., 1. );
         
-        this->system_->getBlock(5,2)->apply( *this->solution_->getBlock(2) , *residualGeometryFSCI, Teuchos::NO_TRANS, -1., 1. );
+        this->system_->getBlock(4,2)->apply( *this->solution_->getBlock(2) , *residualGeometryFSCI, Teuchos::NO_TRANS, -1., 1. );
         
-    }
+    }*/
     // might also be called in the sub calculateNonLinResidualVec() methods which where used above
     if (type == "reverse")
         this->bcFactory_->setBCMinusVector( this->residualVec_, this->solution_, time );
@@ -850,25 +856,25 @@ void FSCI<SC,LO,GO,NO>::setFromPartialVectorsInit() const
         this->sourceTerm_->addBlock( this->problemStructureNonLin_->getSourceTerm()->getBlockNonConst(0), 2 );
     }*/
     // Structure 
-     this->solution_->addBlock( this->problemSCI_->getSolution()->getBlockNonConst(0), 2 );
+    this->solution_->addBlock( this->problemSCI_->getSolution()->getBlockNonConst(0), 2 );
     this->residualVec_->addBlock( this->problemSCI_->getResidualVector()->getBlockNonConst(0), 2 );
     this->rhs_->addBlock( this->problemSCI_->getRhs()->getBlockNonConst(0), 2 );
     this->previousSolution_->addBlock( this->problemSCI_->getPreviousSolution()->getBlockNonConst(0), 2 );
     this->sourceTerm_->addBlock( this->problemSCI_->getSourceTerm()->getBlockNonConst(0), 2 );
 
     // Diffusion 
-    this->solution_->addBlock( this->problemSCI_->getSolution()->getBlockNonConst(1), 3 );
-    this->residualVec_->addBlock( this->problemSCI_->getResidualVector()->getBlockNonConst(1), 3 );
-    this->rhs_->addBlock( this->problemSCI_->getRhs()->getBlockNonConst(1), 3 );
-    this->previousSolution_->addBlock( this->problemSCI_->getPreviousSolution()->getBlockNonConst(1), 3 );
-    this->sourceTerm_->addBlock( this->problemSCI_->getSourceTerm()->getBlockNonConst(1), 3 );
+    this->solution_->addBlock( this->problemSCI_->getSolution()->getBlockNonConst(1), 4 );
+    this->residualVec_->addBlock( this->problemSCI_->getResidualVector()->getBlockNonConst(1), 4 );
+    this->rhs_->addBlock( this->problemSCI_->getRhs()->getBlockNonConst(1), 4 );
+    this->previousSolution_->addBlock( this->problemSCI_->getPreviousSolution()->getBlockNonConst(1), 4 );
+    this->sourceTerm_->addBlock( this->problemSCI_->getSourceTerm()->getBlockNonConst(1), 4 );
 
-    if(!this->geometryExplicit_){
+   /* if(!this->geometryExplicit_){
         this->solution_->addBlock( this->problemGeometry_->getSolution()->getBlockNonConst(0), 5 );
         // we dont have a previous solution for linear problems
         this->rhs_->addBlock( this->problemGeometry_->getRhs()->getBlockNonConst(0), 5 );
         this->sourceTerm_->addBlock( this->problemGeometry_->getSourceTerm()->getBlockNonConst(0), 5 );
-    }
+    }*/
 }
     
 template<class SC,class LO,class GO,class NO>
@@ -1388,10 +1394,10 @@ void FSCI<SC,LO,GO,NO>::moveMesh() const
 template<class SC,class LO,class GO,class NO>
 void FSCI<SC,LO,GO,NO>::addInterfaceBlockRHS() const
 {
-    MultiVectorPtr_Type vectorToAdd = Teuchos::rcp( new MultiVector_Type( this->rhs_->getBlock(4) ) );
+    MultiVectorPtr_Type vectorToAdd = Teuchos::rcp( new MultiVector_Type( this->rhs_->getBlock(3) ) );
 
     this->C2_->apply(*(this->solution_->getBlock(2)), *vectorToAdd);
-    this->rhs_->addBlock(vectorToAdd, 4);
+    this->rhs_->addBlock(vectorToAdd, 3);
 }
 
 

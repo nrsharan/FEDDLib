@@ -8,6 +8,7 @@
 #include "feddlib/problems/abstract/Problem.hpp"
 #include "feddlib/problems/abstract/TimeProblem.hpp"
 #include "feddlib/problems/Solver/PrecOpFaCSI.hpp"
+#include "feddlib/problems/Solver/PrecOpFaCSCI.hpp"
 #include "feddlib/problems/Solver/PrecBlock2x2.hpp"
 #include "feddlib/problems/specific/LaplaceBlocks.hpp"
 #include "feddlib/problems/specific/FSI.hpp"
@@ -121,6 +122,8 @@ public:
 
     void buildPreconditionerFaCSI( std::string type );
 
+    void buildPreconditionerFaCSCI(std::string type);
+
     void buildPreconditionerBlock2x2();
 
     void setPressureMassMatrix(MatrixPtr_Type massMatrix) const;
@@ -151,8 +154,11 @@ private:
     ThyraLinOpConstPtr_Type fsiLinOp_;
     ThyraLinOpPtr_Type precFluid_;
     ThyraLinOpPtr_Type precStruct_;
+    ThyraLinOpPtr_Type precSCI_;
     ThyraLinOpPtr_Type precGeo_;
+
     MinPrecProblemPtr_Type probFluid_;
+    MinPrecProblemPtr_Type probSCI_;
     MinPrecProblemPtr_Type probSolid_;
     MinPrecProblemPtr_Type probGeo_;
     BCConstPtr_Type faCSIBCFactory_;

@@ -30,6 +30,9 @@ u_rep_()
     externalForce_ =   parameterList->sublist("Parameter").get("External Force",true);
     nonlinearExternalForce_ = parameterList->sublist("Parameter").get("Nonlinear External Force",true);
 
+    concentration_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapRepeated(), 1 ) );
+    concentration_->putScalar(0.); 
+
     timeSteppingTool_ = Teuchos::rcp(new TimeSteppingTools(sublist(this->parameterList_,"Timestepping Parameter") , this->comm_));
 
 }
@@ -121,23 +124,28 @@ void NonLinElasAssFE<SC,LO,GO,NO>::reAssemble(std::string type) const {
         MatrixPtr_Type W = Teuchos::rcp(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
         this->system_->addBlock( W, 0, 0 );  
 
-        //MultiVectorPtr_Type fRep = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated(), 1 ) ); 
-        //fRep->putScalar(0.);   
-        //this->residualVec_->addBlock( fRep, 0 ); 
+        MultiVectorPtr_Type fRep = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated(), 1 ) ); 
+        fRep->putScalar(0.);   
+        this->residualVec_->addBlock( fRep, 0 ); 
 
-        if(this->parameterList_->sublist("Parameter").get("SCI",false) == true || this->parameterList_->sublist("Parameter").get("FSCI",false) == true )
+        if(this->parameterList_->sublist("Parameter").get("SCI",false) == true || this->parameterList_->sublist("Parameter").get("FSCI",false) == true)
             this->feFactory_->assemblyAceDeformDiffuBlock(this->dim_, this->getDomain(0)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,concentration_,u_rep_,this->system_,0,0,this->residualVec_,0, this->parameterList_, "Jacobian", true/*call fillComplete*/);
-       	else 
- 			this->feFactory_->assemblyNonLinearElasticity(this->dim_, this->getDomain(0)->getFEType(),2, this->dim_, u_rep_, this->system_, this->residualVec_, this->parameterList_,true);
-        //fRep->scale(-1.);
-        
-        //MultiVectorPtr_Type fUnique = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldUnique(), 1 ) );
-        //fUnique->putScalar(0.);
-        //fUnique->exportFromVector( fRep, true, "Add" );
+       	else{
 
-        //this->residualVec_->addBlock( fUnique, 0 );
+ 			this->feFactory_->assemblyNonLinearElasticity(this->dim_, this->getDomain(0)->getFEType(),2, this->dim_, u_rep_, this->system_, this->residualVec_, this->parameterList_,true);
+           
+        }
+        MultiVectorPtr_Type fUnique = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldUnique(), 1 ) );
+        fUnique->putScalar(0.);
+        fUnique->exportFromVector(this->residualVec_->getBlock(0), true, "Add" );
+
+        if(this->parameterList_->sublist("Parameter").get("FSI",false) == true)
+            fUnique->scale(-1.);
+
+        this->residualVec_->addBlock( fUnique, 0 );
+
+
             
-        //assembleSourceTermLoadstepping();
 
 
     }
@@ -355,7 +363,7 @@ void NonLinElasAssFE<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, 
      		//this->feFactory_->assemblyNonLinearElasticity(this->dim_, this->getDomain(0)->getFEType(),2, this->dim_, u_rep_, this->system_, this->residualVec_, this->parameterList_,this->getDomain(0), this->eModVec_,true);
             this->feFactory_->assemblyAceDeformDiffuBlock(this->dim_, this->getDomain(0)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,concentration_,u_rep_,this->system_,0,0,this->residualVec_,0, this->parameterList_, "Rhs", true/*call fillComplete*/);
     }
-    else{
+    //else{
         if (!type.compare("standard")){
             this->residualVec_->update(-1.,*this->rhs_,1.);
             //if ( !this->sourceTerm_.is_null() )
@@ -372,7 +380,7 @@ void NonLinElasAssFE<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, 
         
         // this might be set again by the TimeProblem after adding of M*u
         this->bcFactory_->setBCMinusVector( this->residualVec_, this->solution_, time );
-    }
+    //}
     
 }
 }

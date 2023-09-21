@@ -86,7 +86,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	lambdaBarCDotMin_= this->params_->sublist("Parameter Solid").get("LambdaBarCDotMin",-0.443e-1); // ?? 
 	gamma2_ = this->params_->sublist("Parameter Solid").get("Gamma2",50.0e0); // ??
 	gamma1_ = this->params_->sublist("Parameter Solid").get("Gamma1",0.5131e0); 
-	eta_ = this->params_->sublist("Parameter Solid").get("Eta",0.18745e0); // ??
+	eta_ = this->params_->sublist("Parameter Solid").get("Eta",0.1624e0); // ??
 	ca50_ = this->params_->sublist("Parameter Solid").get("Ca50",0.4e0); // ??
 	k2_ = this->params_->sublist("Parameter Solid").get("K2",0.2e0); 
 	k5_ = this->params_->sublist("Parameter Solid").get("K5",0.2e0);
@@ -104,7 +104,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	alpha5_ = this->params_->sublist("Parameter Solid").get("Alpha5",0.308798e1); // ?? 
 	gamma6_ = this->params_->sublist("Parameter Solid").get("Gamma6",0.15e1);
 	lambdaP50_ = this->params_->sublist("Parameter Solid").get("LambdaP50",1.0e0);
-	kDotMin_ = this->params_->sublist("Parameter Solid").get("KDotMin",-0.10694e-1);
+	kDotMin_ = this->params_->sublist("Parameter Solid").get("KDotMin",-0.10694e-2);
 	zeta1_ = this->params_->sublist("Parameter Solid").get("Zeta1",100.e0);
 	kDotMax_ = this->params_->sublist("Parameter Solid").get("KDotMax",0.9735e-3);
 	gamma4_ = this->params_->sublist("Parameter Solid").get("Gamma4",200.e0);
@@ -121,10 +121,10 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	activeStartTime_ = this->params_->sublist("Parameter Solid").get("ActiveStartTime",1.0); // At Starttime 1000 the diffused drug influences the material model. -> Active response at T=starttime	
 	kEtaPlus_ = this->params_->sublist("Parameter Solid").get("KEtaPlus",0.1e-3);
 	mEtaPlus_ = this->params_->sublist("Parameter Solid").get("MEtaPlus",5.0e0);
-	growthStartTime_ = this->params_->sublist("Parameter Solid").get("GrowthStartTime",0.e0);
-	reorientationStartTime_ = this->params_->sublist("Parameter Solid").get("ReorientationStartTime",0.e0);
-	growthEndTime_ = this->params_->sublist("Parameter Solid").get("GrowthEndTime",0.e0);
-	reorientationEndTime_ = this->params_->sublist("Parameter Solid").get("ReorientationEndTime",0.e0);
+	growthStartTime_ = this->params_->sublist("Parameter Solid").get("GrowthStartTime",1.e0);
+	reorientationStartTime_ = this->params_->sublist("Parameter Solid").get("ReorientationStartTime",20.e0);
+	growthEndTime_ = this->params_->sublist("Parameter Solid").get("GrowthEndTime",20.e0);
+	reorientationEndTime_ = this->params_->sublist("Parameter Solid").get("ReorientationEndTime",100.e0);
 	kThetaPlus_ = this->params_->sublist("Parameter Solid").get("KThetaPlus",1.e-4);
 	kThetaMinus_ = this->params_->sublist("Parameter Solid").get("KThetaMinus",1.e-4);
 	mThetaPlus_ = this->params_->sublist("Parameter Solid").get("MThetaPlus",3.e0);
@@ -139,6 +139,8 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	rho_ = this->params_->sublist("Parameter Solid").get("Rho",1.e0);
 	subiterationTolerance_ = this->params_->sublist("Parameter Solid").get("Subiteration Tolerance",1.e-7);
 	typeOfInterpol_ = 1;
+
+	//coupling_type_ = this->params_->sublist("Parameter").get("Coupling Type","implicit");
 // iCode_ = this->params_->sublist("Parameter Solid").get("Intergration Code",18);
 	iCode_=18; //Only works for 18 currently!!
 
@@ -198,7 +200,23 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assembleJacobi
 
     SmallMatrixPtr_Type elementMatrix = Teuchos::rcp( new SmallMatrix_Type(this->dofsElement_,0.));
 
-    assemble_SCI_SMC_Active_Growth_Reorientation(elementMatrix);
+	//if(couplingType_ == "implicit")
+    	assemble_SCI_SMC_Active_Growth_Reorientation(elementMatrix);
+
+	/*if(couplingType_ == "explicit"){
+		assemble_SCI_SMC_Active_Growth_Reorientation_Deformation(elementMatrix,solution_c);
+
+		assemble_SCI_SMC_Active_Growth_Reorientation_Concentration(elementMatrix,solution_c);
+
+	}
+
+	if(couplingType_ == "diagonal"){
+		assemble_SCI_SMC_Active_Growth_Reorientation(elementMatrix);
+		removeBlock(0,1,elementMatrix);
+		removeBlock(1,0,elementMatrix);
+
+	}*/
+
 
     this->jacobian_ = elementMatrix;
 	
@@ -549,7 +567,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::postProcess
                      		   1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
 	
 	AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(positions, displacements, concentrations, accelerations, rates, &domainData[0], &history[0], subIterationTolerance, deltaT, time, this->iCode_,this->getGlobalElementID());
-	elem.compute();
+	//elem.compute(); // not necessary for stress
 	double** stress = elem.postProcess(displacements, concentrations, elem.getHistoryUpdated());
 
 	for(int i=0; i< 10; i++){

@@ -237,7 +237,7 @@ void FSI<SC,LO,GO,NO>::assemble( std::string type ) const
         // ACHTUNG: Die Interface-Variable \lambda wird eindeutig von der Fluid-Seite gehalten.
         // Deswegen auch getDomain(0) fuer die Spalten der Kopplungsbloecke.
         this->feFactory_->assemblyFSICoupling(this->dim_, this->domain_FEType_vec_.at(2), C2, C3_T, 0, 2,
-            this->getDomain(0)->getInterfaceMapVecFieldUnique(), this->getDomain(2)->getMapVecFieldUnique(), true);
+        this->getDomain(0)->getInterfaceMapVecFieldUnique(), this->getDomain(2)->getMapVecFieldUnique(), true);
 
         
         // Falls geometrisch implizit
@@ -285,8 +285,6 @@ void FSI<SC,LO,GO,NO>::assemble( std::string type ) const
             // Domain = Spalten = Struktur; Range = Zeilen = Geometrie
             C4->fillComplete(this->getDomain(2)->getMapVecFieldUnique(), this->getDomain(4)->getMapVecFieldUnique());
         }
-        
-
         
         // ###########################
         // Bloecke hinzufuegen

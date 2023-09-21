@@ -180,11 +180,13 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNOX(TimeProblem_Type &problem, vec_dbl_p
     // Try to convert to a ProductVB. If resulting pointer is not null we need to use the ProductMV below, otherwise it is a monolithic vector.
     Teuchos::RCP<Thyra::ProductVectorBase<SC> > initialGuessProd = Teuchos::rcp_dynamic_cast<Thyra::ProductVectorBase<SC> >(initialGuess);
     Teuchos::RCP<Thyra::MultiVectorBase<SC> > solMV;
-    if (!initialGuessProd.is_null())
+    if (!initialGuessProd.is_null()){
         solMV = problemPtr->getSolution()->getProdThyraMultiVector();
+    }
     else
         solMV = problemPtr->getSolution()->getThyraMultiVector();
 
+    problemPtr->getSolution()->writeMM("SolNox");
     Thyra::assign(initialGuess.ptr(), *solMV->col(0));
 
     //Thyra::V_S(initialGuess.ptr(),Teuchos::ScalarTraits<SC>::zero());

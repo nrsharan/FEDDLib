@@ -70,7 +70,7 @@ namespace FEDD
 			if(this->timeStep_ +1.0e-12 > timeParametersVec_[i][0])
 				this->timeIncrement_=timeParametersVec_[i][1];
 		}*/
-       
+       //cout << " Advance in time on element " << endl;
 		this->timeStep_ = this->timeStep_ + this->timeIncrement_;
 
 		this->timeIncrement_ = dt;
@@ -143,7 +143,6 @@ namespace FEDD
 	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_NH<SC, LO, GO, NO>::assembleDeformationDiffusionNeoHook(SmallMatrixPtr_Type &elementMatrix)
 	{
-
 		std::vector<double> positions(30);
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 

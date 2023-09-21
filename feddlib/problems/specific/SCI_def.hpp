@@ -63,7 +63,7 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
     eModVec_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getElementMap() ) );
 
     couplingType_ =    parameterListSCI->sublist("Parameter").get("Coupling Type","explicit");
-    loadStepping_ =    parameterListSCI->sublist("Parameter").get("Load Stepping",true);
+    loadStepping_ =    parameterListSCI->sublist("Parameter").get("Load Stepping",false);
     externalForce_ =   parameterListSCI->sublist("Parameter").get("External Force",true);
     nonlinearExternalForce_ = parameterListSCI->sublist("Parameter").get("Nonlinear External Force",true);
     this->info();
@@ -398,6 +398,7 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             MatrixPtr_Type C(new Matrix_Type( this->getDomain(1)->getMapUnique(),this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ));
 
             this->system_->addBlock(A,0,0);
+          
             this->system_->addBlock(BT,0,1);
             this->system_->addBlock(B,1,0);
             this->system_->addBlock(C,1,1);
@@ -412,9 +413,12 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
             blockSol->addBlock(d_rep_,0);
             blockSol->addBlock(c_rep_,1);
+            cout << " #### Reassemble Newton in SCI ### " << endl;
             this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
             //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Jacobian",true);
-
+            A->resumeFill();
+            A->scale(1.0);
+            A->fillComplete( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getMapVecFieldUnique());
             
             if(nonlinearExternalForce_)
                 computeSolidRHSInTime();
@@ -894,7 +898,7 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
     vec_dbl_Type coeffTemp(1);
     coeffTemp.at(0) = 1.0;
     
-    if(  loadStepping_ == false){
+    if( loadStepping_ == false){
         // Update u und berechne u' und u'' mit Hilfe der Newmark-Vorschrift
         this->problemTimeStructure_->updateSolutionNewmarkPreviousStep(dt, beta, gamma);
         

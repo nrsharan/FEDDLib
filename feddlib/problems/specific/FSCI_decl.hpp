@@ -20,10 +20,10 @@ template <class SC , class LO , class GO , class NO >
 class Geometry;
 template <class SC , class LO , class GO , class NO >
 class NavierStokes;
-template <class SC , class LO , class GO , class NO >
-class LinElas;
-template <class SC , class LO , class GO , class NO >
-class NonLinElasticityAssFE;
+//template <class SC , class LO , class GO , class NO >
+//class LinElas;
+//template <class SC , class LO , class GO , class NO >
+//class NonLinElasticityAssFE;
 template <class SC , class LO , class GO , class NO >
 class SCI;
 template <class SC , class LO , class GO , class NO >
@@ -63,15 +63,15 @@ public:
     typedef Teuchos::RCP<TimeProblem_Type> TimeProblemPtr_Type;
 
     typedef NavierStokes<SC,LO,GO,NO> FluidProblem_Type;
-    typedef LinElas<SC,LO,GO,NO> StructureProblem_Type;
-    typedef NonLinElasticity<SC,LO,GO,NO> StructureNonLinProblem_Type;
+    //typedef LinElas<SC,LO,GO,NO> StructureProblem_Type;
+    //typedef NonLinElasticity<SC,LO,GO,NO> StructureNonLinProblem_Type;
     typedef Geometry<SC,LO,GO,NO> GeometryProblem_Type;
     typedef SCI<SC,LO,GO,NO> SCIProblem_Type;
 
     
     typedef Teuchos::RCP<FluidProblem_Type> FluidProblemPtr_Type;
-    typedef Teuchos::RCP<StructureProblem_Type> StructureProblemPtr_Type;
-    typedef Teuchos::RCP<StructureNonLinProblem_Type> StructureNonLinProblemPtr_Type;
+    //typedef Teuchos::RCP<StructureProblem_Type> StructureProblemPtr_Type;
+    //typedef Teuchos::RCP<StructureNonLinProblem_Type> StructureNonLinProblemPtr_Type;
     typedef Teuchos::RCP<GeometryProblem_Type> GeometryProblemPtr_Type;
     typedef Teuchos::RCP<SCIProblem_Type> SCIProblemPtr_Type;
 
@@ -103,7 +103,7 @@ public:
             const DomainConstPtr_Type &domainGeometry, std::string FETypeGeometry,
             vec2D_dbl_Type diffusionTensor, RhsFunc_Type reactionFunc,
             ParameterListPtr_Type parameterListFluid, ParameterListPtr_Type parameterListStructure,
-            ParameterListPtr_Type parameterListChem,
+            ParameterListPtr_Type parameterListChem, ParameterListPtr_Type parameterListSCI,
             ParameterListPtr_Type parameterListFSCI, ParameterListPtr_Type parameterListGeometry,
             Teuchos::RCP<SmallMatrix<int> > &defTS);
 
@@ -175,11 +175,11 @@ public:
     // Macht setupTimeStepping() auf problemTimeFluid_ und problemTimeStructure_
     void setupSubTimeProblems(ParameterListPtr_Type parameterListFluid, ParameterListPtr_Type parameterListStructure,ParameterListPtr_Type parameterListChem ) const;
 
-    /*FluidProblemPtr_Type getFluidProblem(){
-        return problemFluid_;
+    SCIProblemPtr_Type getSCIProblem(){
+        return problemSCI_;
     }
     
-    StructureProblemPtr_Type getStructureProblem(){
+    /*StructureProblemPtr_Type getStructureProblem(){
         return problemStructure_;
     }
     
@@ -241,7 +241,7 @@ public:
 private:
     std::string materialModel_;
     vec_dbl_Type valuesForExport_;
-    bool geometryExplicit_;
+    //bool geometryExplicit_;
     ExporterTxtPtr_Type exporterTxtDrag_;
     ExporterTxtPtr_Type exporterTxtLift_;
     mutable ExporterPtr_Type exporterGeo_;

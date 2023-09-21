@@ -114,10 +114,10 @@ typename Preconditioner<SC,LO,GO,NO>::ThyraPrecConstPtr_Type Preconditioner<SC,L
 template <class SC,class LO,class GO,class NO>
 void Preconditioner<SC,LO,GO,NO>::initializePreconditioner( std::string type )
 {
-    if ( type == "Monolithic" || type == "FaCSI" || type == "Diagonal" || type == "Triangular"){
+    if ( type == "Monolithic" || type == "FaCSI" || type== "FaCSCI" || type == "Diagonal" || type == "Triangular"){
         if (type == "Monolithic")
             initPreconditionerMonolithic( );
-        else if (type == "FaCSI" || type == "Diagonal" || type == "Triangular")
+        else if (type == "FaCSI" || type == "Diagonal" || type == "Triangular" || type== "FaCSCI")
             initPreconditionerBlock( );
         
     }
@@ -229,6 +229,9 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditioner( std::string type )
     else if( type == "FaCSI" || type == "FaCSI-Teko" ){
         buildPreconditionerFaCSI( type );
     }
+    else if( type == "FaCSCI" || type == "FaCSCI-Teko" ){
+        buildPreconditionerFaCSCI( type );
+    }
     else if(type == "Triangular" || type == "Diagonal"){
         buildPreconditionerBlock2x2( );
     }
@@ -275,6 +278,7 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
         thyraMatrix = timeProblem_->getSystemCombined()->getThyraLinOp();
 
     UN numberOfBlocks = parameterList->get("Number of blocks",1);
+    cout << " Number of blocks " << numberOfBlocks << endl;
     Teuchos::ArrayRCP<Teuchos::RCP<Xpetra::Map<LO,GO,NO> > > repeatedMaps(numberOfBlocks);
 
     typedef Xpetra::MultiVector<SC,LO,GO,NO> XMultiVector;
@@ -298,6 +302,7 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
                     if (dofsPerNodeVector[i] > 1){
 
                         if (!problem_.is_null()) {
+                            problem_->getDomain(i)->info();
                             if (problem_->getDomain(i)->getFEType() == "P0") {
                                 TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "Vector field map not implemented for P0 elements.");
                             }
@@ -842,7 +847,9 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSI( std::string type )
     }
     
     BlockMatrixPtr_Type fluidSystem = Teuchos::rcp( new BlockMatrix_Type(2) );
-    
+    // --------
+    // FLUID
+    // --------
     // We build copies of the fluid system with homogenous Dirichlet boundary conditions on the interface
     MatrixPtr_Type f = Teuchos::rcp(new Matrix_Type( fsiSystem->getBlock(0,0) ) );
     MatrixPtr_Type bt = Teuchos::rcp(new Matrix_Type( fsiSystem->getBlock(0,1) ) );
@@ -864,6 +871,9 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSI( std::string type )
 
     precFluid_ = probFluid_->getPreconditioner()->getThyraPrec()->getNonconstUnspecifiedPrecOp();
 
+    // --------
+    // Structure
+    // --------
     //Setup structure problem
     bool nonlinearStructure = false;
     if (steadyFSI->getStructureProblem().is_null())
@@ -893,7 +903,7 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSI( std::string type )
 
     probSolid_->initializeSystem( structSystem );
     
-    probSolid_->setupPreconditioner( );
+    probSolid_->setupPreconditioner( "Monolithic");
 
     precStruct_ = probSolid_->getPreconditioner()->getThyraPrec()->getNonconstUnspecifiedPrecOp();
 
@@ -968,6 +978,166 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSI( std::string type )
         Teuchos::rcp_dynamic_cast< Thyra::DefaultPreconditioner<SC> > (thyraPrec_);
     ThyraLinOpPtr_Type linOp =
         Teuchos::rcp_dynamic_cast< Thyra::LinearOpBase<SC> > (facsi);
+
+    defaultPrec->initializeUnspecified( linOp );
+
+    precondtionerIsBuilt_ = true;
+
+}
+
+
+template <class SC,class LO,class GO,class NO>
+void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSCI( std::string type )
+{
+
+    cout << "  ########## Prec: Build Preconditioner FaCSCI ########### " << endl;
+
+    typedef Domain<SC,LO,GO,NO> Domain_Type;
+    typedef Teuchos::RCP<const Domain_Type> DomainConstPtr_Type;
+    typedef std::vector<DomainConstPtr_Type> DomainConstPtr_vec_Type;
+
+    Teuchos::RCP<Teuchos::FancyOStream> out = Teuchos::VerboseObjectBase::getDefaultOStream();
+    // here we assume that FSI is always a time problem, this can be
+    ParameterListPtr_Type parameterList;
+    if (!timeProblem_.is_null())
+        parameterList = timeProblem_->getParameterList();
+    else
+        TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "Preconditioner can not be used without a time problem.");
+
+    // Get FSI problem
+    ProblemPtr_Type steadyProblem = timeProblem_->getUnderlyingProblem();
+    Teuchos::RCP< FSCI<SC,LO,GO,NO> > steadyFSI = Teuchos::rcp_dynamic_cast<FSCI<SC,LO,GO,NO> >(steadyProblem);
+    BlockMatrixPtr_Type fsiSystem = timeProblem_->getSystemCombined();
+
+    ParameterListPtr_Type pLFluid = steadyFSI->getFluidProblem()->getParameterList();
+    
+    std::string precTypeFluid;
+    if (type == "FaCSCI")
+        precTypeFluid = "Monolithic";
+    else if (type == "FaCSCI-Teko")
+        precTypeFluid = "Teko";
+
+    CommConstPtr_Type comm = timeProblem_->getComm();
+    bool useFluidPreconditioner = parameterList->sublist("General").get("Use Fluid Preconditioner", true);
+    bool useSolidPreconditioner = parameterList->sublist("General").get("Use Solid Preconditioner", true);
+    bool onlyDiagonal = parameterList->sublist("General").get("Only Diagonal", false);
+    Teuchos::RCP< PrecOpFaCSCI<SC,LO,GO,NO> > facsci
+        = Teuchos::rcp(new PrecOpFaCSCI<SC,LO,GO,NO> ( comm, precTypeFluid == "Monolithic", useFluidPreconditioner, useSolidPreconditioner, onlyDiagonal) );
+    
+    if (comm->getRank() == 0) {
+        if (onlyDiagonal)
+            std::cout << "\t### No preconditioner will be used! ###" << std::endl;
+        else
+            std::cout << "\t### FaCSI standard ###" << std::endl;
+    }
+
+    
+    //Setup fluid problem
+    if (probFluid_.is_null()){
+        probFluid_ = Teuchos::rcp( new MinPrecProblem_Type( pLFluid, timeProblem_->getComm() ) );
+        DomainConstPtr_vec_Type fluidDomains = steadyFSI->getFluidProblem()->getDomainVector();
+        probFluid_->initializeDomains( fluidDomains );
+        probFluid_->initializeLinSolverBuilder( timeProblem_->getLinearSolverBuilder() );
+    }
+    
+    BlockMatrixPtr_Type fluidSystem = Teuchos::rcp( new BlockMatrix_Type(2) );
+    // --------
+    // FLUID
+    // --------
+    // We build copies of the fluid system with homogenous Dirichlet boundary conditions on the interface
+    MatrixPtr_Type f = Teuchos::rcp(new Matrix_Type( fsiSystem->getBlock(0,0) ) );
+    MatrixPtr_Type bt = Teuchos::rcp(new Matrix_Type( fsiSystem->getBlock(0,1) ) );
+    MatrixPtr_Type b = Teuchos::rcp(new Matrix_Type( fsiSystem->getBlock(1,0) ) );
+    MatrixPtr_Type c;
+    if ( fsiSystem->blockExists(1,1) )
+        c = Teuchos::rcp(new Matrix_Type( fsiSystem->getBlock(1,1) ) );
+    fluidSystem->addBlock( f, 0, 0 );
+    fluidSystem->addBlock( bt, 0, 1 );
+    fluidSystem->addBlock( b, 1, 0 );
+    if ( fsiSystem->blockExists(1,1) )
+        fluidSystem->addBlock( c, 1, 1 );
+
+    faCSIBCFactory_->setSystem( fluidSystem );
+
+    probFluid_->initializeSystem( fluidSystem );
+
+    probFluid_->setupPreconditioner( precTypeFluid );
+
+    precFluid_ = probFluid_->getPreconditioner()->getThyraPrec()->getNonconstUnspecifiedPrecOp();
+
+    // --------
+    // Structure
+    // --------
+    //Setup structure problem
+    ParameterListPtr_Type pLSCI;
+    pLSCI = steadyFSI->getSCIProblem()->getParameterList();
+    
+    if (probSCI_.is_null()){
+        probSCI_ = Teuchos::rcp( new MinPrecProblem_Type( pLSCI, timeProblem_->getComm() ) );
+        DomainConstPtr_vec_Type sciDomains = steadyFSI->getSCIProblem()->getDomainVector();
+        probSCI_->initializeDomains( sciDomains );
+        probSCI_->initializeLinSolverBuilder( timeProblem_->getLinearSolverBuilder() );
+    }
+    BlockMatrixPtr_Type sciSystem = Teuchos::rcp( new BlockMatrix_Type(2) );
+
+    sciSystem->addBlock( fsiSystem->getBlock(2,2), 0, 0 );
+
+    sciSystem->addBlock( fsiSystem->getBlock(4,4), 1, 1 );
+    sciSystem->addBlock( fsiSystem->getBlock(2,4), 1, 2 );
+    sciSystem->addBlock( fsiSystem->getBlock(4,2), 2, 1 );
+
+
+    probSCI_->initializeSystem( sciSystem );
+    
+    probSCI_->setupPreconditioner("Monolithic");
+
+    precSCI_ = probSCI_->getPreconditioner()->getThyraPrec()->getNonconstUnspecifiedPrecOp();
+
+
+    //Setup geometry problem
+
+    /*if (timeProblem_->getSystem()->size()>4) {
+        ParameterListPtr_Type pLGeometry = steadyFSI->getGeometryProblem()->getParameterList();
+        if (probGeo_.is_null()) {
+            probGeo_ = Teuchos::rcp( new MinPrecProblem_Type( pLGeometry, timeProblem_->getComm() ) );
+            DomainConstPtr_vec_Type geoDomain = steadyFSI->getGeometryProblem()->getDomainVector();
+            probGeo_->initializeDomains( geoDomain );
+            probGeo_->initializeLinSolverBuilder( timeProblem_->getLinearSolverBuilder() );
+        }
+        
+        BlockMatrixPtr_Type geoSystem = Teuchos::rcp( new BlockMatrix_Type(1) );
+
+        geoSystem->addBlock( fsiSystem->getBlock(4,4), 0, 0 );
+
+        probGeo_->initializeSystem( geoSystem );
+
+        probGeo_->setupPreconditioner( );
+
+        precGeo_ = probGeo_->getPreconditioner()->getThyraPrec()->getNonconstUnspecifiedPrecOp();
+    }*/
+    facsci->setGE(   fsiSystem->getBlock(3,0)->getThyraLinOpNonConst()/*C1*/,
+                    fsiSystem->getBlock(0,3)->getThyraLinOpNonConst()/*C1T*/,
+                    fsiSystem->getBlock(3,2)->getThyraLinOpNonConst()/*C2*/,
+                    fsiSystem->getBlock(2,2)->getThyraLinOpNonConst(), /*S*/
+                    fsiSystem->getBlock(4,4)->getThyraLinOpNonConst(), /*C_chem*/
+                    precSCI_,
+                    precFluid_,
+                    fsiSystem->getBlock(0,0)->getThyraLinOpNonConst()/*fF*/,
+                    fsiSystem->getBlock(0,1)->getThyraLinOpNonConst()/*fBT*/ );
+
+
+    LinSolverBuilderPtr_Type solverBuilder = timeProblem_->getUnderlyingProblem()->getLinearSolverBuilder();
+
+    if ( precFactory_.is_null() )
+        precFactory_ = solverBuilder->createPreconditioningStrategy("");
+
+    if ( thyraPrec_.is_null() )
+        thyraPrec_ = precFactory_->createPrec();
+
+    Teuchos::RCP< Thyra::DefaultPreconditioner<SC> > defaultPrec =
+        Teuchos::rcp_dynamic_cast< Thyra::DefaultPreconditioner<SC> > (thyraPrec_);
+    ThyraLinOpPtr_Type linOp =
+        Teuchos::rcp_dynamic_cast< Thyra::LinearOpBase<SC> > (facsci);
 
     defaultPrec->initializeUnspecified( linOp );
 

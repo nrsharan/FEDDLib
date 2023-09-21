@@ -124,6 +124,14 @@ void TimeProblem<SC,LO,GO,NO>::combineSystems() const{
     }
     SmallMatrix<SC> ones( size , Teuchos::ScalarTraits<SC>::one());
     SmallMatrix<SC> zeros( size , Teuchos::ScalarTraits<SC>::zero());
+    /*cout << "massparameters " << endl;
+    for (int i=0; i<size; i++) {
+        for (int j=0; j<size; j++) {
+            cout<< massParameters_[i][j] << " " ;
+        }
+        cout << endl;
+    }*/
+
     systemMass_->addMatrix( massParameters_, systemCombined_, zeros );
     tmpSystem->addMatrix( timeParameters_, systemCombined_, ones );
     
@@ -445,7 +453,7 @@ void TimeProblem<SC,LO,GO,NO>::calculateNonLinResidualVec( std::string type, dou
         nonLinProb->calculateNonLinResidualVec( timeParameters_ ,type, time );
 
         // for FSI we need to reassemble the massmatrix system if the mesh was moved for geometry implicit computations
-        if (this->parameterList_->sublist("Parameter").get("FSI",false) ){
+        if (this->parameterList_->sublist("Parameter").get("FSI",false) || this->parameterList_->sublist("Parameter").get("FSCI",false) ){
             bool geometryExplicit = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
             if( !geometryExplicit ) {
                 typedef FSI<SC,LO,GO,NO> FSI_Type;
@@ -460,8 +468,8 @@ void TimeProblem<SC,LO,GO,NO>::calculateNonLinResidualVec( std::string type, dou
         // we need to add M/dt*u_(t+1)^k (the last results of the nonlinear method) to the residualVec_
         //Copy
         BlockMultiVectorPtr_Type tmpMV = Teuchos::rcp(new BlockMultiVector_Type( nonLinProb->getSolution() ) );
-        tmpMV->putScalar(0.);
-        
+        systemMass_->writeMM("MassMatrix");
+        nonLinProb->getResidualVector()->writeMM("ResVec");
         systemMass_->apply( *nonLinProb->getSolution(), *tmpMV, massParameters_ );
 
         if (type=="reverse")// reverse: b-Ax
