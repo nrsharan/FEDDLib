@@ -128,6 +128,7 @@ void NonLinElasAssFE<SC,LO,GO,NO>::reAssemble(std::string type) const {
         fRep->putScalar(0.);   
         this->residualVec_->addBlock( fRep, 0 ); 
 
+        cout << " Dimension " << this->dim_ << endl;
         if(this->parameterList_->sublist("Parameter").get("SCI",false) == true || this->parameterList_->sublist("Parameter").get("FSCI",false) == true)
             this->feFactory_->assemblyAceDeformDiffuBlock(this->dim_, this->getDomain(0)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,concentration_,u_rep_,this->system_,0,0,this->residualVec_,0, this->parameterList_, "Jacobian", true/*call fillComplete*/);
        	else{
