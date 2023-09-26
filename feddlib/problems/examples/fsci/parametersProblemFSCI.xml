@@ -13,7 +13,7 @@
         <Parameter name="FSCI" type="bool" value="true"/>
         <Parameter name="Geometry Explicit" type="bool" value="true"/>
         <Parameter name="Load Stepping" type="bool" value="false"/>
-        <Parameter name="Inflow Start Time" type="double" value="0.0"/><!-- Start of diffusion process -->
+        <Parameter name="Inflow Start Time" type="double" value="0.025"/><!-- Start of diffusion process -->
         <Parameter name="Heart Beat Start" type="double" value="70.0"/><!-- Start of diffusion process -->
         <Parameter name="Load Step Size" type="double" value="0.05"/><!-- Length/size of Loadsteps -->
         <Parameter name="Load Ramp End" type="double" value="1.0"/><!-- End of Load Stepping -->
@@ -23,26 +23,27 @@
  		<Parameter name="Structure Model" type="string" value="SCI_NH"/> <!-- SCI_Linear, SCI_NH , SCI_SMC_MLCK , SCI_SMC_Active_Growth_Reorientation -->
 
         
-        <Parameter name="relNonLinTol" type="double" value="1.0e-6"/>
+        <Parameter name="relNonLinTol" type="double" value="1.0e-8"/>
         <Parameter name="absNonLinTol" type="double" value="1.0e-7"/>
-        <Parameter name="updateTol" type="double" value="1.0e-6"/>
+        <Parameter name="updateTol" type="double" value="1.0e-8"/>
         <Parameter name="Combo" type="string" value="OR"/>
         <Parameter name="Use update tol" type="bool" value="true"/>
         <Parameter name="Use WRMS" type="bool" value="false"/>
         
-        <Parameter name="MaxNonLinIts" type="int" value="2"/>
+        <Parameter name="MaxNonLinIts" type="int" value="5"/>
 
         <Parameter name="Criterion" type="string" value="Residual"/><!-- Criterion for nonlinear solve, Residual or Update: Residual is the norm of the nonlinear residual; Update is the norm of the update -->
     </ParameterList>
-    <ParameterList name="Parameter Solid">        
-        <Parameter name="Material model" type="string" value="SCI_NH"/><!--Neo-Hooke, linear -->
+   <ParameterList name="Parameter Solid">        
+        <Parameter name="Material model" type="string" value="Neo-Hooke"/><!--Neo-Hooke, linear -->
+        <Parameter name="Neo-Hooke Modell" type="int" value="1"/><!--different energy functions -->
  	    <Parameter name="E" type="double" value="0.38"/>
         <Parameter name="E1" type="double" value="0.30"/>
         <Parameter name="c1" type="double" value="0.25"/>
         <Parameter name="Poisson Ratio" type="double" value="0.49"/>
     </ParameterList>
     
-    <ParameterList name="Parameter Fluid">
+   <ParameterList name="Parameter Fluid">
         <Parameter name="Viscosity" type="double" value="2.308"/> <!-- kinematic viscocity -->
         <Parameter name="Density" type="double" value="1.0e-6"/>
         <Parameter name="Symmetric gradient" type="bool"       value="true"/>
@@ -59,9 +60,10 @@
         <Parameter name="Symmetric gradient" type="bool" value="true"/>
     </ParameterList>
     
-    <ParameterList name="Parameter Geometry">
-        <Parameter name="Poisson Ratio" type="double" value="0.49e-0"/>
-        <Parameter name="Mu" type="double" value="402684.564"/>
+     <ParameterList name="Parameter Geometry">
+               <Parameter name="Poisson Ratio" type="double" value="0.49e-0"/>
+        <Parameter name="Mu" type="double" value="0.127551678"/>
+         	    <Parameter name="E" type="double" value="0.38"/>
         
         <Parameter name="Distance Laplace" type="double" value="0.1"/>
         <Parameter name="Coefficient Laplace" type="double" value="1000."/>
@@ -93,7 +95,7 @@
         <Parameter name="Name coarse functions block1" type="string" value="phiU"/>
         <Parameter name="Name coarse functions block2" type="string" value="phiP"/>
         <Parameter name="Name coarse functions block3" type="string" value="phiD"/>
-        <Parameter name="Exclude coarse functions block4" type="bool" value="true"/>
+        <Parameter name="Exclude coarse functions block4" type="bool" value="true"/>r
         
     </ParameterList>
     <ParameterList name="General">
@@ -122,8 +124,8 @@
         <Parameter name="Class" type="string" value="Multistep"/>
         <Parameter name="Timestepping type" type="string" value="non-adaptive"/><!--non-adaptive,adaptive:not working for BDF2-->
     
-        <Parameter name="Final time" type="double" value="0.1"/>
-        <Parameter name="dt" type="double" value="0.01"/>
+        <Parameter name="Final time" type="double" value="0.05"/>
+        <Parameter name="dt" type="double" value="0.001"/>
         <Parameter name="beta" type="double" value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma" type="double" value="0.5"/> <!-- newmark method parameter-->
     </ParameterList>
