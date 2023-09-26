@@ -1324,7 +1324,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     // problemCoeff vor A (= komplettes steady-System)
     // massCoeff vor M (= Massematrix)
     // coeffSourceTerm vor f (= rechte Seite der DGL)
-    cout << " ###### advanceInTimeFSCI #########" << endl;
+    //cout << " ###### advanceInTimeFSCI #########" << endl;
   
     
     FSCIProblemPtr_Type fsci = Teuchos::rcp_dynamic_cast<FSCIProblem_Type>( this->problemTime_->getUnderlyingProblem() );
@@ -1535,15 +1535,19 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             problemCoeffFSI[i + sizeFluid + sizeStructure][j + sizeFluid + sizeStructure] = problemCoeffChem[i][j];
         }
     }*/
-    massCoeffFSI[4][4] = massCoeffChem[0][0];
+   // massCoeffFSI[4][4] = massCoeffChem[0][0];
     problemCoeffFSI[4][4] = problemCoeffChem[0][0];
+    
+    problemCoeffFSI[2][4] = 1.; // SCI Coupling 1
+    problemCoeffFSI[4][2] = 1.; // SCI Coupling 2
 
     // Setze noch Einsen an die Stellen, wo Eintraege (Kopplungsbloecke) vorhanden sind.
     problemCoeffFSI[0][3] = 1.0; // C1_T
     problemCoeffFSI[2][3] = 1.0; // C3_T
     problemCoeffFSI[3][0] = 1.0; // C1
     problemCoeffFSI[3][2] = 1.0; // C2
-    if(!geometryExplicit)
+    
+    /*if(!geometryExplicit)
     {
         problemCoeffFSI[4][2] = 1.0; // C4
         problemCoeffFSI[4][4] = 1.0; // H (Geometrie)
@@ -1553,7 +1557,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             problemCoeffFSI[0][4] = 1.0; // Shape-Derivatives Velocity
             problemCoeffFSI[1][4] = 1.0; // Shape-Derivatives Div-Nebenbedingung
         }
-    }
+    }*/
 
     this->problemTime_->setTimeParameters(massCoeffFSI, problemCoeffFSI);
     if (printExtraData) {
@@ -1581,7 +1585,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 #endif
     while(timeSteppingTool_->continueTimeStepping())
     {
-        cout << " ###### Timeloop #########" << endl;
+        //cout << " ###### Timeloop #########" << endl;
 
         problemTime_->updateTime ( timeSteppingTool_->currentTime() );
 
@@ -1698,6 +1702,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 
         {
         //Do we need this, if BDF for FSI is used correctly? We still need it to save the mass matrices
+        if(couplingType=="explicit" ) //|| structureModel=="SCI_sophisticated")
             this->problemTime_->assemble("UpdateChemInTime");
         }
         // Aktuelle Massematrix auf dem Gitter fuer BDF2-Integration und
@@ -1706,7 +1711,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         // Massematrix fuer FSI holen und fuer timeProblemFluid setzen (fuer BDF2)
         MatrixPtr_Type massmatrixC;
         fsci->setChemMassmatrix( massmatrixC );
-        //this->problemTime_->systemMass_->addBlock( massmatrixC, 4, 4);
+        if(couplingType=="explicit" ) //|| structureModel=="SCI_sophisticated")
+            this->problemTime_->systemMass_->addBlock( massmatrixC, 4, 4);
 
         // RHS nach BDF2
         if(couplingType=="explicit" ) //|| structureModel=="SCI_sophisticated")
@@ -1750,11 +1756,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         timeSteppingTool_->advanceTime(true/*output info*/);
         this->problemTime_->assemble("UpdateTime"); // Zeit in FSI inkrementieren
 
-         std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
-
-        // Should be some place else
-        if(couplingType == "explicit")
-            this->problemTime_->assemble("UpdateCoupling");
+     
 
         if (printData) {
             exporterTimeTxt->exportData( timeSteppingTool_->currentTime() );
@@ -2529,7 +2531,6 @@ void DAESolverInTime<SC,LO,GO,NO>::exportTimestep(){
     for (int i=0; i<exporter_vector_.size(); i++) {
         
         exporter_vector_[i]->save( timeSteppingTool_->currentTime() );
-        cout << " Export component " << i << " exporter vector size " << exporter_vector_.size() <<  endl;
 
     }
 
@@ -2671,7 +2672,6 @@ void DAESolverInTime<SC,LO,GO,NO>::setupExporter(){
             exporterPtr->setup(varName, meshNonConst, dom->getFEType(), parameterList_);
             
 //            exporterPtr->setup(dom->getDimension(), dom->getNumElementsGlobal(), dom->getElements(), dom->getPointsUnique(), dom->getMapUnique(), dom->getMapRepeated(), dom->getFEType(), varName, exportEveryXTimesteps, comm_ , parameterList_);
-            cout << " Setup Export component " << i << " exporter vector size " << timeStepDef_.size() << " varname " << varName <<  endl;
 
 
             UN dofsPerNode = problemTime_->getDofsPerNode(i);

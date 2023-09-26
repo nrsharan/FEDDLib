@@ -658,6 +658,8 @@ int main(int argc, char *argv[])
         
         Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactory( new BCBuilder<SC,LO,GO,NO>( ) );
 
+        Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactorySCI( new BCBuilder<SC,LO,GO,NO>( ) );
+
         // TODO: Vermutlich braucht man keine bcFactoryFluid und bcFactoryStructure,
         // da die RW sowieso auf dem FSI-Problem gesetzt werden.
 
@@ -672,6 +674,9 @@ int main(int argc, char *argv[])
             
             bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring                
             bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
+
+            bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring                
+            bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring
 
             
             if (zeroPressure) {
@@ -703,6 +708,13 @@ int main(int argc, char *argv[])
                 bcFactoryStructure->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dim); 
                 bcFactoryStructure->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim);           
                 bcFactoryStructure->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim); 
+
+                bcFactorySCI->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim); 
+                bcFactorySCI->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim); 
+                bcFactorySCI->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dim);           
+                bcFactorySCI->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dim); 
+                bcFactorySCI->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim);           
+                bcFactorySCI->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim); 
             // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
             // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()
             if (!fsci.problemSCI_->problemStructure_.is_null())
@@ -728,11 +740,11 @@ int main(int argc, char *argv[])
             bcFactoryFluidInterface = Teuchos::rcp( new BCBuilder<SC,LO,GO,NO>( ) );
 
 
-        bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in Z direction
-        bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in X direction
+        //bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in Z direction
+        //bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in X direction
         bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // Inlet
         bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // Outlet
-        bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // Interface
+        //bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // Interface
 		/* bcFactoryGeometry->addBC(zeroDirichlet3D, 7, 0, domainGeometry, "Dirichlet", dim); // ?
 		bcFactoryGeometry->addBC(zeroDirichlet3D, 8, 0, domainGeometry, "Dirichlet", dim); // ?
 		bcFactoryGeometry->addBC(zeroDirichlet3D, 9, 0, domainGeometry, "Dirichlet", dim); // ?
@@ -759,10 +771,16 @@ int main(int argc, char *argv[])
             std::vector<double> parameter_vec(1, parameterListAll->sublist("Parameter").get("Inflow Start Time",0.));
             bcFactory->addBC(inflowChem, 6,4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactoryChem->addBC(inflowChem, 6, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactorySCI->addBC(inflowChem, 6, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+
             bcFactory->addBC(inflowChem, 9, 4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
-            bcFactoryChem->addBC(inflowChem, 9, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem            
+            bcFactoryChem->addBC(inflowChem, 9, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem    
+            bcFactorySCI->addBC(inflowChem, 9, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+        
             bcFactory->addBC(inflowChem, 10, 4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactoryChem->addBC(inflowChem, 10, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactorySCI->addBC(inflowChem, 10, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+
         }
 
     // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
@@ -774,7 +792,7 @@ int main(int argc, char *argv[])
         // Zeitintegration
         // #####################
         fsci.addBoundaries(bcFactory); // Dem Problem RW hinzufuegen
-        fsci.problemSCI_->addBoundaries(bcFactory);
+        fsci.problemSCI_->addBoundaries(bcFactorySCI);
         fsci.initializeProblem();
         
         fsci.initializeGE();

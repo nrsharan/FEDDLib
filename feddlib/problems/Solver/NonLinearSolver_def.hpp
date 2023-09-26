@@ -186,7 +186,6 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNOX(TimeProblem_Type &problem, vec_dbl_p
     else
         solMV = problemPtr->getSolution()->getThyraMultiVector();
 
-    problemPtr->getSolution()->writeMM("SolNox");
     Thyra::assign(initialGuess.ptr(), *solMV->col(0));
 
     //Thyra::V_S(initialGuess.ptr(),Teuchos::ScalarTraits<SC>::zero());
@@ -504,9 +503,6 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
         problem.assemble("Newton"); 
 
         problem.setBoundariesSystem();
-
-        problem.getSystem()->writeMM("Assembled");
-
 
         if (timestepping == "External"){//AceGen
             gmresIts += problem.solveAndUpdate( "ResidualAceGen", criterionValue );

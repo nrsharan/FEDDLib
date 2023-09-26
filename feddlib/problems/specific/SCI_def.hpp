@@ -67,7 +67,6 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
     externalForce_ =   parameterListSCI->sublist("Parameter").get("External Force",true);
     nonlinearExternalForce_ = parameterListSCI->sublist("Parameter").get("Nonlinear External Force",true);
     this->info();
-
 }
 
 
@@ -136,7 +135,7 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
                 this->feFactory_->assemblyLinElasXDimE(this->dim_, this->getDomain(0)->getFEType(), A, eModVec_, nu, true);
                 this->problemStructure_->system_->addBlock(A,0,0);// assemble(); //
 
-                double density = this->problemStructure_->getParameterList()->sublist("Parameter Solid").get("Density",1.e-0);
+                //double density = this->problemStructure_->getParameterList()->sublist("Parameter Solid").get("Density",1.e-0);
 
                //this->problemStructure_->assemble();
             }
@@ -413,7 +412,6 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
             blockSol->addBlock(d_rep_,0);
             blockSol->addBlock(c_rep_,1);
-            cout << " #### Reassemble Newton in SCI ### " << endl;
             this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
             //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Jacobian",true);
             A->resumeFill();
@@ -510,8 +508,8 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
        
         this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Rhs", true/*call fillComplete*/);
         BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
-        blockSol->addBlock(d_rep_,0);
-        blockSol->addBlock(c_rep_,1);
+        //blockSol->addBlock(d_rep_,0);
+        //blockSol->addBlock(c_rep_,1);
         //this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
         //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Rhs",true);
 
@@ -553,7 +551,6 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
        MultiVectorPtr_Type resChemNonConst = Teuchos::rcp_const_cast<MultiVector_Type> ( this->residualVec_->getBlock(1) );
        resChemNonConst->update(1., *this->problemChem_->getRhs()->getBlock(0), 1.);
       
-      // this->residualVec_->print();
 
     }
 
@@ -568,16 +565,14 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     if(this->verbose_)
         cout << "###### Residual 2-Norm displacement: " << norm_d[0] << " and concentration: " << norm_c[0] << " ######## " << endl;
 
-   // might also be called in the sub calculateNonLinResidualVec() methods which where used above
+   // might also be called in the sub calculateNonLinResidualVec() methods which were used above
    if (type == "standard")
         this->bcFactory_->setBCMinusVector( this->residualVec_, this->solution_, time );
     else if (type == "reverse"){
         //this->residualVec_->scale(-1.);
         this->bcFactory_->setVectorMinusBC( this->residualVec_, this->solution_, time );
     }
-    
-    // this->residualVec_->getBlockNonConst(0)->writeMM("residualVec_BC");
-
+  
 
 }
 
@@ -992,7 +987,7 @@ void SCI<SC,LO,GO,NO>::setSolidMassmatrix( MatrixPtr_Type& massmatrix ) const
     //######################
     // Massematrix
     //######################
-    double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter Solid").get("Density",1000.e-0);
+    double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Density",1.e-0);
     int size = this->problemTimeStructure_->getSystem()->size();
 
     if(timeSteppingTool_->currentTime() == 0.0)
@@ -1099,7 +1094,7 @@ void SCI<SC,LO,GO,NO>::moveMesh() const
 template<class SC,class LO,class GO,class NO>
 void SCI<SC,LO,GO,NO>::updateChemInTime() const
 {
-    int nmbBDF = timeSteppingTool_->getBDFNumber();
+        int nmbBDF = timeSteppingTool_->getBDFNumber();
 
     if(nmbBDF<2 && !this->parameterList_->sublist("General").get("Linearization","FixedPoint").compare("Extrapolation")) {
         if (timeSteppingTool_->currentTime()!=0.){

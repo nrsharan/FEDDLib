@@ -7,9 +7,9 @@
  Definition of PrecOpFaCSCI
 
  @brief  PrecOpFaCSCI
- @author Christian Hochmuth
+ @author Lea Sassmannshausen
  @version 1.0
- @copyright CH
+ @copyright LS
  */
 
 namespace FEDD {
@@ -117,7 +117,7 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::setFluidBT(ThyraLinOpPtr_Type fBT){
 template<class SC, class LO, class GO, class NO>
 void PrecOpFaCSCI<SC,LO,GO,NO>::initialize(){
 
-    std::cout << "  ########## Init PrecOpFaCSCI ########### " << std::endl;
+    //std::cout << "  ########## Init PrecOpFaCSCI ########### " << std::endl;
 
     TEUCHOS_TEST_FOR_EXCEPTION(fInv_.is_null(), std::runtime_error,"Can not initialize FaCSCI preconditioner: Fluid preconditioner not set.");
     TEUCHOS_TEST_FOR_EXCEPTION(sciInv_.is_null(), std::runtime_error,"Can not initialize FaCSCI preconditioner: Structure preconditioner not set.");
@@ -167,7 +167,13 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyIt(
     applyImpl(M_trans, X_in, Y_inout, alpha, beta);
 
 }
-    
+
+/// @brief The defined linear operator is then called via the iterative solver. Here, we apply the input vector x to the FaCSCI System with the preconditioned components.
+/// @param M_trans 
+/// @param X_in Input vector
+/// @param Y_inout Output vector
+/// @param alpha scalings
+/// @param beta scalings
 template<class SC, class LO, class GO, class NO>
 void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
                                    const EOpTransp M_trans,
@@ -182,7 +188,7 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
     // X_in : Input Vector for applying to system. Defined operator as system being applied. Now we partition X into the different components. 
     // Different systems contain the preconditioners then.
 
-   // std::cout << "  ########## Apply PrecOpFaCSCI ########### " << std::endl;
+   // std::cout << "  ########## Apply PrecOpFaCSCI --  alpha : " << alpha << " beta: " << beta << " ########### " << std::endl;
     using Teuchos::rcpFromRef;
     typedef Teuchos::ScalarTraits<SC> ST;
     typedef RCP<MultiVectorBase<SC> > MultiVectorPtr;
@@ -198,13 +204,19 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
     Teuchos::RCP< Thyra::ProductMultiVectorBase<SC> > Y
         = Teuchos::rcp_dynamic_cast< Thyra::ProductMultiVectorBase<SC> > ( rcpFromPtr(Y_inout) );
 
-    Y_inout->assign(0.);
+    Y_inout->assign(0.); // set to zero
+
 
 
     // SOLID : Solid at block component 2 
     Teuchos::RCP< const MultiVectorBase< SC > > X_s = X->getMultiVectorBlock(2);
     Teuchos::RCP< MultiVectorBase< SC > > Y_s = Y->getNonconstMultiVectorBlock(2);
     assign(Y_s.ptr(), *X_s); 
+
+    /*std::cout << "Y_s " << std::endl;
+    Y_s->describe(*out,Teuchos::VERB_EXTREME);
+    comm_->barrier();    comm_->barrier();    comm_->barrier();*/
+   
 
     // Chemistry: Chemistry at block component 5
     Teuchos::RCP< const MultiVectorBase< SC > > X_chem = X->getMultiVectorBlock(4);
@@ -223,9 +235,9 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
     Y_sci[0] = Y_s;
     Y_sci[1] = Y_chem;
     
+    
     //std::cout << "  ########## Apply PrecOpFaCSCI: SCI  " << std::endl;
-
-    /*if (useSolidPreconditioner_){
+    if (useSolidPreconditioner_){
     
         Teuchos::RCP< const Thyra::VectorSpaceBase< SC > > sciMonoVS = sciInv_->domain();
         // std::cout << " Initi X_scimono_ " << std::endl;
@@ -236,18 +248,18 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
         //We can/should speedup this process
        // std::cout << " Copy to mono " << std::endl;
 
-        //copyToMonoSCI(X_sci);
+        copyToMonoSCI(X_sci);
         //std::cout << " Apply " << std::endl;
 
         sciInv_->apply(NOTRANS, *X_scimono_, Y_scimono_.ptr(), 1., 0.);
-        //copyFromMonoSCI(Y_sci); 
-    }*/
+        copyFromMonoSCI(Y_sci); 
+    }
+    else{
+        assign(Y_s.ptr(), *X_s);
+        assign(Y_chem.ptr(), *X_chem);
+    }
     
-    // apply solid preconditioner
-    /*if (useSolidPreconditioner_)
-        sInv_->apply(NOTRANS, *X_s, Y_s.ptr(), 1., 0.);
-    else
-        assign(Y_s.ptr(), *X_s);*/
+  
 
     //std::cout << "  ########## Apply PrecOpFaCSCI: Geomertry  " << std::endl;
 
@@ -265,20 +277,27 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
         gInv_->apply(NOTRANS, *Y_g, Y_g.ptr(), 1., 0.);
     }*/
     
-    Teuchos::RCP< const MultiVectorBase< SC > > X_l = X->getMultiVectorBlock(3);
+    Teuchos::RCP< const MultiVectorBase< SC > > X_l = X->getMultiVectorBlock(3); // l for lambda
     Teuchos::RCP< MultiVectorBase< SC > > Y_l = Y->getNonconstMultiVectorBlock(3);
 
     assign(Y_l.ptr(), *X_l);
     
     C2_->apply( NOTRANS, *Y_s, Y_l.ptr(), -1., 1. );
-
+   
+    /*std::cout << "Ys after c2 apply" << std::endl;
+    Y_s->describe(*out,Teuchos::VERB_EXTREME);
+    comm_->barrier();    comm_->barrier();    comm_->barrier();*/
     
-    Teuchos::RCP< const MultiVectorBase< SC > > X_fv = X->getMultiVectorBlock(0);
+    Teuchos::RCP< const MultiVectorBase< SC > > X_fv = X->getMultiVectorBlock(0); // fluid veloctiy
     Teuchos::RCP< MultiVectorBase< SC > > Y_fv = Y->getNonconstMultiVectorBlock(0);
     assign(Y_fv.ptr(), *X_fv); 
 
+   // std::cout << "X_fv" << std::endl;
+   // X_fv->describe(*out,Teuchos::VERB_EXTREME);
+   // comm_->barrier();    comm_->barrier();    comm_->barrier();
+
     
-    Teuchos::RCP< const MultiVectorBase< SC > > X_fp = X->getMultiVectorBlock(1);
+    Teuchos::RCP< const MultiVectorBase< SC > > X_fp = X->getMultiVectorBlock(1); // fluid pressure
     Teuchos::RCP< MultiVectorBase< SC > > Y_fp = Y->getNonconstMultiVectorBlock(1);
     assign(Y_fp.ptr(), *X_fp);
 
@@ -293,10 +312,13 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
     else
         assign(Z_fv_.ptr(), *Y_fv);
     
+    //std::cout << "Z_fv_ set:" << std::endl;
+    //Z_fv_->describe(*out,Teuchos::VERB_EXTREME);
+    //comm_->barrier();    comm_->barrier();    comm_->barrier();
 
     //std::cout << "  ########## Apply PrecOpFaCSCI: Fluid Condensation  " << std::endl;
 
-    // fluid condensation
+    // fluid C_1 blocks
     if (tmp_l_.is_null())
         tmp_l_ = Y_l->clone_mv();
 
@@ -325,7 +347,7 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
     Y_fluid[1] = Y_fp;
 
    // std::cout << "  ########## Apply PrecOpFaCSCI: Fluid  " << std::endl;
-
+    //useFluidPreconditioner_=false;
     if (useFluidPreconditioner_){
     
         if (fluidPrecMonolithic_) {
@@ -336,9 +358,9 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
                 Y_fmono_ = createMembers( fMonoVS, Y_fluid[0]->domain()->dim() );
             }
             //We can/should speedup this process
-            //copyToMono(X_fluid);
+            copyToMono(X_fluid);
             fInv_->apply(NOTRANS, *X_fmono_, Y_fmono_.ptr(), 1., 0.);
-            //copyFromMono(Y_fluid);
+            copyFromMono(Y_fluid);
         }
         else{
             Teuchos::RCP< Thyra::ProductMultiVectorBase<SC> > prodX_f = Thyra::defaultProductMultiVector<SC>( productRangeFluid_, X_fluid );
@@ -355,8 +377,16 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
         assign(Y_fp.ptr(), *X_fp);
     }
 
-    //std::cout << "  ########## Apply PrecOpFaCSCI: Others  " << std::endl;
+    //std::cout << "Y_fv after mono" << std::endl;
+    //Y_fv->describe(*out,Teuchos::VERB_EXTREME);
+    //comm_->barrier();    comm_->barrier();    comm_->barrier();
+   // std::cout << "Y_fp after mono" << std::endl;
+   // Y_fp->describe(*out,Teuchos::VERB_EXTREME);
+   // comm_->barrier();    comm_->barrier();    comm_->barrier();
 
+
+    //std::cout << "  ########## Apply PrecOpFaCSCI: Others  " << std::endl;
+    // Condensation
 
     fBT_->apply(NOTRANS, *Y_fp, Z_fv_.ptr(), -1., 1.);
  
@@ -366,7 +396,7 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
     
         
         
-    Teuchos::RCP< Thyra::TpetraMultiVector< SC, LO, GO, NO > > Y_fvT =
+    /*Teuchos::RCP< Thyra::TpetraMultiVector< SC, LO, GO, NO > > Y_fvT =
     Teuchos::rcp_dynamic_cast< Thyra::TpetraMultiVector< SC, LO, GO, NO > > ( Y_fv );
     Teuchos::RCP< Thyra::TpetraMultiVector< SC, LO, GO, NO > > Y_fpT =
     Teuchos::rcp_dynamic_cast< Thyra::TpetraMultiVector< SC, LO, GO, NO > > ( Y_fp );
@@ -375,19 +405,18 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
     Teuchos::RCP< Thyra::TpetraMultiVector< SC, LO, GO, NO > > Y_lT =
     Teuchos::rcp_dynamic_cast< Thyra::TpetraMultiVector< SC, LO, GO, NO > > ( Y_l );
     Teuchos::RCP< Thyra::TpetraMultiVector< SC, LO, GO, NO > > Y_chemT =
-    Teuchos::rcp_dynamic_cast< Thyra::TpetraMultiVector< SC, LO, GO, NO > > ( Y_chem );
+    Teuchos::rcp_dynamic_cast< Thyra::TpetraMultiVector< SC, LO, GO, NO > > ( Y_chem );*/
         
-        
+    //TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error,"First It.");
+  
     
 }
-// private
 template<class SC, class LO, class GO, class NO>
 void PrecOpFaCSCI<SC,LO,GO,NO>::copyToMono( Teuchos::Array< Teuchos::RCP< Thyra::MultiVectorBase< SC > > > X_fluid ) const{
     
     Teuchos::RCP<const Thyra::SpmdVectorSpaceBase<SC> > mpiVS_v = Teuchos::rcp_dynamic_cast<const Thyra::SpmdVectorSpaceBase<SC> >(X_fluid[0]->range());
     Teuchos::RCP<const Thyra::SpmdVectorSpaceBase<SC> > mpiVS_p = Teuchos::rcp_dynamic_cast<const Thyra::SpmdVectorSpaceBase<SC> >(X_fluid[1]->range());
     
-
     const LO localOffset_v = mpiVS_v->localOffset();
     const LO localSubDim_v = mpiVS_v->localSubDim();
     
@@ -408,9 +437,6 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::copyToMono( Teuchos::Array< Teuchos::RCP< Thyra:
     Teuchos::RCP<Thyra::DetachedMultiVectorView<SC> > thyData_fluid =
     Teuchos::rcp(new Thyra::DetachedMultiVectorView<SC>( X_fmono_ ,Range1D(localOffset_mono,localOffset_mono+localSubDim_mono-1) ) );
 
-    std::cout << "Local Offset mono " << localOffset_mono << " local Sub dim mono " << localSubDim_mono << std::endl;
-
-
     for (int j=0; j<X_fluid[0]->domain()->dim(); j++) {
         
         for (LO i=0; i < localSubDim_v; i++)
@@ -420,63 +446,6 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::copyToMono( Teuchos::Array< Teuchos::RCP< Thyra:
             (*thyData_fluid)( i + localSubDim_v, j ) = (*thyData_p)(i,j);
 
     }
-
-}
-template<class SC, class LO, class GO, class NO>
-void PrecOpFaCSCI<SC,LO,GO,NO>::copyToMonoSCI( Teuchos::Array< Teuchos::RCP< Thyra::MultiVectorBase< SC > > > X_fluid ) const{
-    
-    Teuchos::RCP<const Thyra::SpmdVectorSpaceBase<SC> > mpiVS_v = Teuchos::rcp_dynamic_cast<const Thyra::SpmdVectorSpaceBase<SC> >(X_fluid[0]->range());
-    Teuchos::RCP<const Thyra::SpmdVectorSpaceBase<SC> > mpiVS_p = Teuchos::rcp_dynamic_cast<const Thyra::SpmdVectorSpaceBase<SC> >(X_fluid[1]->range());
-    
-    std::cout << "Copy to mono 1 " << std::endl;
-
-    const LO localOffset_v = mpiVS_v->localOffset();
-    const LO localSubDim_v = mpiVS_v->localSubDim();
-    
-    std::cout << "Local Offset v " << localOffset_v << " local Sub dim v " << localSubDim_v << std::endl;
-
-    const LO localOffset_p = mpiVS_p->localOffset();
-    const LO localSubDim_p = mpiVS_p->localSubDim();
-    
-    std::cout << "Local Offset p " << localOffset_p << " local Sub dim p " << localSubDim_p << std::endl;
-
-
-        std::cout << "Copy to mono 2 " << std::endl;
-    Teuchos::RCP<Thyra::DetachedMultiVectorView<SC> > thyData_v =
-    Teuchos::rcp(new Thyra::DetachedMultiVectorView<SC>( X_fluid[0] ,Range1D(localOffset_v,localOffset_v+localSubDim_v-1) ) );
-    
-    Teuchos::RCP<Thyra::DetachedMultiVectorView<SC> > thyData_p =
-    Teuchos::rcp(new Thyra::DetachedMultiVectorView<SC>( X_fluid[1] ,Range1D(localOffset_p,localOffset_p+localSubDim_p-1) ) );
-    
-        std::cout << "Copy to mono 3 " << std::endl;
-
-    Teuchos::RCP<const Thyra::SpmdVectorSpaceBase<SC> > mpiVS_mono = Teuchos::rcp_dynamic_cast<const Thyra::SpmdVectorSpaceBase<SC> >(X_scimono_->range());
-    
-    const LO localOffset_mono = mpiVS_mono->localOffset();
-    const LO localSubDim_mono = mpiVS_mono->localSubDim();
-    
-    std::cout << "Local Offset mono " << localOffset_mono << " local Sub dim mono " << localSubDim_mono << std::endl;
-
-
-    Teuchos::RCP<Thyra::DetachedMultiVectorView<SC> > thyData_fluid =
-    Teuchos::rcp(new Thyra::DetachedMultiVectorView<SC>( X_scimono_ ,Range1D(localOffset_mono,localOffset_mono+localSubDim_mono-1) ) );
-
-    std::cout << "Copy to mono 4 " << std::endl;
-
-    for (int j=0; j<X_fluid[0]->domain()->dim(); j++) {
-        
-        for (LO i=0; i < localSubDim_v; i++)
-            (*thyData_fluid)(i,j) = (*thyData_v)(i,j);
-        
-        std::cout << "Copy to mono 5 " << std::endl;
-
-
-        for (LO i=0; i<localSubDim_p; i++)
-            (*thyData_fluid)( i + localSubDim_v, j ) = (*thyData_p)(i,j);
-
-    }
-        std::cout << "Copy to mono 6 " << std::endl;
-
 }
 
 template<class SC, class LO, class GO, class NO>
@@ -515,6 +484,43 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::copyFromMono(Teuchos::Array< Teuchos::RCP< Thyra
             (*thyData_p)(i,j) = (*thyData_fluid)( i + localSubDim_v, j );
         
     }    
+}
+
+template<class SC, class LO, class GO, class NO>
+void PrecOpFaCSCI<SC,LO,GO,NO>::copyToMonoSCI( Teuchos::Array< Teuchos::RCP< Thyra::MultiVectorBase< SC > > > X_fluid ) const{
+    
+    Teuchos::RCP<const Thyra::SpmdVectorSpaceBase<SC> > mpiVS_v = Teuchos::rcp_dynamic_cast<const Thyra::SpmdVectorSpaceBase<SC> >(X_fluid[0]->range());
+    Teuchos::RCP<const Thyra::SpmdVectorSpaceBase<SC> > mpiVS_p = Teuchos::rcp_dynamic_cast<const Thyra::SpmdVectorSpaceBase<SC> >(X_fluid[1]->range());
+    
+    const LO localOffset_v = mpiVS_v->localOffset();
+    const LO localSubDim_v = mpiVS_v->localSubDim();
+    
+    const LO localOffset_p = mpiVS_p->localOffset();
+    const LO localSubDim_p = mpiVS_p->localSubDim();
+    
+    Teuchos::RCP<Thyra::DetachedMultiVectorView<SC> > thyData_v =
+    Teuchos::rcp(new Thyra::DetachedMultiVectorView<SC>( X_fluid[0] ,Range1D(localOffset_v,localOffset_v+localSubDim_v-1) ) );
+    
+    Teuchos::RCP<Thyra::DetachedMultiVectorView<SC> > thyData_p =
+    Teuchos::rcp(new Thyra::DetachedMultiVectorView<SC>( X_fluid[1] ,Range1D(localOffset_p,localOffset_p+localSubDim_p-1) ) );
+    
+    Teuchos::RCP<const Thyra::SpmdVectorSpaceBase<SC> > mpiVS_mono = Teuchos::rcp_dynamic_cast<const Thyra::SpmdVectorSpaceBase<SC> >(X_scimono_->range());
+    
+    const LO localOffset_mono = mpiVS_mono->localOffset();
+    const LO localSubDim_mono = mpiVS_mono->localSubDim();
+    
+    Teuchos::RCP<Thyra::DetachedMultiVectorView<SC> > thyData_fluid =
+    Teuchos::rcp(new Thyra::DetachedMultiVectorView<SC>( X_scimono_ ,Range1D(localOffset_mono,localOffset_mono+localSubDim_mono-1) ) );
+
+    for (int j=0; j<X_fluid[0]->domain()->dim(); j++) {
+        
+        for (LO i=0; i < localSubDim_v; i++)
+            (*thyData_fluid)(i,j) = (*thyData_v)(i,j);
+        
+        for (LO i=0; i<localSubDim_p; i++)
+            (*thyData_fluid)( i + localSubDim_v, j ) = (*thyData_p)(i,j);
+
+    }
 }
 
 template<class SC, class LO, class GO, class NO>

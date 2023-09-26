@@ -135,10 +135,10 @@ public:
     void setFromPartialVectorsInit() const;
     
     // Setze die aktuelle Loesung als vergangene Loesung
-    void updateMeshDisplacement() const;
+    //void updateMeshDisplacement() const;
 
     // Loese das Geometrieproblem. Das wird genutzt, wenn wir GE rechnen
-    void solveGeometryProblem() const;
+    //void solveGeometryProblem() const;
 
     // Berechnet die Massematrix und die daraus resultierende rechte Seite nach BDF2
     // void getFluidMassmatrixAndRHSInTime(BlockMatrixPtr_Type massmatrix, BlockMultiVectorPtr_Type rhs) const;
@@ -149,10 +149,10 @@ public:
 
     // Berechne die rechte Seite nach BDF2-Integration. Diese Funktion wird
     // einmal pro Zeitschritt aufgerufen
-    void computeFluidRHSInTime( ) const;
+    //void computeFluidRHSInTime( ) const;
 
     // Hier wird im Prinzip updateSolution() fuer problemTimeFluid_ aufgerufen
-    void updateFluidInTime() const;
+    //void updateFluidInTime() const;
 
     // Berechnet die Massematrix und die daraus resultierende rechte Seite nach Newmark
     // und macht direkt ein Update. Dies koennen wir bei Struktur machen, da Massematrix
@@ -167,10 +167,10 @@ public:
     void updateTime() const;
 
     // Verschiebt die notwendigen Gitter
-    void moveMesh() const;
+    //void moveMesh() const;
 
     // Fuegt den Block C2*d_s^n in die RHS in den Interface-Block
-    void addInterfaceBlockRHS() const;
+    //void addInterfaceBlockRHS() const;
 
     // Macht setupTimeStepping() auf problemTimeFluid_ und problemTimeStructure_
     void setupSubTimeProblems(ParameterListPtr_Type parameterListFluid, ParameterListPtr_Type parameterListStructure,ParameterListPtr_Type parameterListChem ) const;

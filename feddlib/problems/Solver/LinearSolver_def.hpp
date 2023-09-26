@@ -468,13 +468,13 @@ int LinearSolver<SC,LO,GO,NO>::solveBlock(TimeProblem_Type* timeProblem, BlockMu
     Teuchos::RCP< Thyra::ProductMultiVectorBase<SC> > thyraX = problem->getSolution()->getProdThyraMultiVector();
     
     Teuchos::RCP< Thyra::ProductMultiVectorBase<SC> > thyraRHS;
-    if ( rhs.is_null() )
+    if ( rhs.is_null() ){
         thyraRHS = problem->getRhs()->getProdThyraMultiVector();
-    else
+    }    
+    else{
         thyraRHS = rhs->getProdThyraMultiVector();
-    
+    }
     ParameterListPtr_Type pListThyraSolver = sublist( problem->getParameterList(), "ThyraSolver" );
-
     
     problem->getLinearSolverBuilder()->setParameterList(pListThyraSolver);
     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problem->getLinearSolverBuilder()->createLinearSolveStrategy("");
@@ -514,7 +514,8 @@ int LinearSolver<SC,LO,GO,NO>::solveBlock(TimeProblem_Type* timeProblem, BlockMu
 //            }
 //        }
 //    }
-    
+    //system->writeMM("SystemCombined");
+   //rhs->writeMM("rhs");
     ThyraLinOpConstPtr_Type thyraMatrix = timeProblem->getSystemCombined()->getThyraLinBlockOp();
 //    ThyraLinOpBlockConstPtr_Type thyraMatrixBlock = timeProblem->getSystemCombined()->getThyraLinBlockOp();
     Thyra::initializePreconditionedOp<SC>(*lowsFactory, thyraMatrix, thyraPrec.getConst(), solver.ptr());

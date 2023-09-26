@@ -12,6 +12,7 @@
 #include <Thyra_TpetraVector_decl.hpp>
 #include <Thyra_DetachedMultiVectorView.hpp>
 #include <Thyra_SpmdVectorSpaceBase_decl.hpp>
+#include <MatrixMarket_Tpetra.hpp>
 /*!
  Declaration of PrecOpFaCSCI
  

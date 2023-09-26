@@ -278,7 +278,6 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
         thyraMatrix = timeProblem_->getSystemCombined()->getThyraLinOp();
 
     UN numberOfBlocks = parameterList->get("Number of blocks",1);
-    cout << " Number of blocks " << numberOfBlocks << endl;
     Teuchos::ArrayRCP<Teuchos::RCP<Xpetra::Map<LO,GO,NO> > > repeatedMaps(numberOfBlocks);
 
     typedef Xpetra::MultiVector<SC,LO,GO,NO> XMultiVector;
@@ -302,7 +301,6 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
                     if (dofsPerNodeVector[i] > 1){
 
                         if (!problem_.is_null()) {
-                            problem_->getDomain(i)->info();
                             if (problem_->getDomain(i)->getFEType() == "P0") {
                                 TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "Vector field map not implemented for P0 elements.");
                             }
@@ -990,7 +988,7 @@ template <class SC,class LO,class GO,class NO>
 void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSCI( std::string type )
 {
 
-    cout << "  ########## Prec: Build Preconditioner FaCSCI ########### " << endl;
+    //cout << "  ########## Prec: Build Preconditioner FaCSCI ########### " << endl;
 
     typedef Domain<SC,LO,GO,NO> Domain_Type;
     typedef Teuchos::RCP<const Domain_Type> DomainConstPtr_Type;
@@ -1083,9 +1081,10 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSCI( std::string type )
     sciSystem->addBlock( fsiSystem->getBlock(2,2), 0, 0 );
 
     sciSystem->addBlock( fsiSystem->getBlock(4,4), 1, 1 );
-    sciSystem->addBlock( fsiSystem->getBlock(2,4), 1, 2 );
-    sciSystem->addBlock( fsiSystem->getBlock(4,2), 2, 1 );
+    sciSystem->addBlock( fsiSystem->getBlock(2,4), 0, 1 );
+    sciSystem->addBlock( fsiSystem->getBlock(4,2), 1, 0 );
 
+    //faCSIBCFactory_->setSystem( sciSystem );
 
     probSCI_->initializeSystem( sciSystem );
     
@@ -1118,9 +1117,9 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSCI( std::string type )
     facsci->setGE(   fsiSystem->getBlock(3,0)->getThyraLinOpNonConst()/*C1*/,
                     fsiSystem->getBlock(0,3)->getThyraLinOpNonConst()/*C1T*/,
                     fsiSystem->getBlock(3,2)->getThyraLinOpNonConst()/*C2*/,
-                    fsiSystem->getBlock(2,2)->getThyraLinOpNonConst(), /*S*/
-                    fsiSystem->getBlock(4,4)->getThyraLinOpNonConst(), /*C_chem*/
                     precSCI_,
+                    fsiSystem->getBlock(2,2)->getThyraLinOpNonConst(), /*S*/
+                    fsiSystem->getBlock(4,4)->getThyraLinOpNonConst(), /*C_chem*/                   
                     precFluid_,
                     fsiSystem->getBlock(0,0)->getThyraLinOpNonConst()/*fF*/,
                     fsiSystem->getBlock(0,1)->getThyraLinOpNonConst()/*fBT*/ );

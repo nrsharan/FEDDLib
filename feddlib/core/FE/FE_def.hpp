@@ -5105,7 +5105,6 @@ void FE<SC,LO,GO,NO>::assemblyAdditionalConvection(int dim,
     int FEloc = this->checkFE(dim,FEType);
 
     DomainConstPtr_Type domain = domainVec_.at(0); //FEloc);
-    cout << " FE loc " << FEloc << endl;
     ElementsPtr_Type elements = domain->getElementsC();
     vec2D_dbl_ptr_Type pointsRep = domain->getPointsRepeated();
     MapConstPtr_Type map = domain->getMapRepeated();

@@ -671,6 +671,9 @@ int main(int argc, char *argv[])
             bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring                
             bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
 
+            bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring                
+            bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring
+
             
             if (zeroPressure) {
                 //bcFactory->addBC(zeroBC, 4, 1, domainFluidPressure, "Dirichlet", 1); // outflow ring

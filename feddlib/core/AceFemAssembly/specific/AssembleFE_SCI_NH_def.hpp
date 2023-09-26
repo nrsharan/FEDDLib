@@ -16,8 +16,8 @@ namespace FEDD
 	AssembleFE_SCI_NH<SC, LO, GO, NO>::AssembleFE_SCI_NH(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params, tuple_disk_vec_ptr_Type tuple) : AssembleFE<SC, LO, GO, NO>(flag, nodesRefConfig, params, tuple)
 	{
 		// Extracting values from ParameterList
-		E0_ = this->params_->sublist("Parameter Solid").get("E", 379.95e-6);
-		E1_ = this->params_->sublist("Parameter Solid").get("E1", 300.0e-6);
+		E0_ = this->params_->sublist("Parameter Solid").get("E", 0.38);
+		E1_ = this->params_->sublist("Parameter Solid").get("E1", 0.3);
 		poissonRatio_ = this->params_->sublist("Parameter Solid").get("Poisson Ratio", 0.49e-0);
 		c1_ = this->params_->sublist("Parameter Solid").get("c1", 0.25e-0);
 		D0_ = this->params_->sublist("Parameter Diffusion").get("D0", 6.0e-5);
