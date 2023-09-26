@@ -2593,7 +2593,8 @@ void DAESolverInTime<SC,LO,GO,NO>::setupExporter(BlockMultiVectorPtr_Type stress
     }
     else{
         for(int i=0; i< stressVec->size(); i++){
-            exporter_vector_stress_[i]->updateVariables(stressVec->getBlock(i), "Sigma_" + to_string(i+1) + "_" + to_string(i+1));
+            MultiVectorConstPtr_Type exportMV= stressVec->getBlock(i);
+            exporter_vector_stress_[i]->updateVariables(exportMV, "Sigma_" + to_string(i+1) + "_" + to_string(i+1));
         }
     }
 }
