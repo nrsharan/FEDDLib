@@ -343,13 +343,13 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assembleRHS(){
 	double *residuumRDyn = elem.getResiduumVectorRdyn();
 	
 	for(int i=0; i< 30 ; i++){
-		(*this->rhsVec_)[i] = residuumRint[i]; //+residuumRDyn[i];
+		(*this->rhsVec_)[i] = -residuumRint[i]; //+residuumRDyn[i];
 	}
 
 	double *residuumRc = elem.getResiduumVectorRc();
 
 	for(int i=0; i< 10 ; i++){		
-		(*this->rhsVec_)[i+30] = residuumRc[i];
+		(*this->rhsVec_)[i+30] = -residuumRc[i];
 
 	}
 
@@ -464,7 +464,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assemble_SCI_S
 			//if(fabs(stiffnessMatrixKuu[i][j]) > 1e7)
 			//	cout << " !!! Sus entry Kuu [" << i << "][" << j << "] " << stiffnessMatrixKuu[i][j] << endl; 
 			
-			(*elementMatrix)[i][j]=stiffnessMatrixKuu[i][j];		
+			(*elementMatrix)[i][j]=-stiffnessMatrixKuu[i][j];		
 		}
 		
 	}
@@ -474,7 +474,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assemble_SCI_S
 			//if(fabs(stiffnessMatrixKuc[i][j]) > 1e7)
 			//	cout << " !!! Sus entry Kuc [" << i << "][" << j << "] " << stiffnessMatrixKuc[i][j] << endl; 
 			
-			(*elementMatrix)[i][j+30]=stiffnessMatrixKuc[i][j];
+			(*elementMatrix)[i][j+30]=-stiffnessMatrixKuc[i][j];
 		}
 	}
 	for(int i=0; i< 10; i++){
@@ -482,7 +482,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assemble_SCI_S
 			//if(fabs(stiffnessMatrixKcu[i][j]) > 1e7)
 			//	cout << " !!! Sus entry Kcu [" << i << "][" << j << "] " << stiffnessMatrixKcu[i][j] << endl; 
 			
-			(*elementMatrix)[i+30][j]=stiffnessMatrixKcu[i][j];
+			(*elementMatrix)[i+30][j]=-stiffnessMatrixKcu[i][j];
 		}
 	}
 	for(int i=0; i< 10; i++){
@@ -490,7 +490,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assemble_SCI_S
 			//if(fabs(massMatrixMc[i][j]) > 1e5 || fabs(stiffnessMatrixKcc[i][j]) > 1e5 )
 			//	cout << " !!! Sus entry Mass [" << i << "][" << j << "] " << massMatrixMc[i][j] << " or stiff Kcc " << stiffnessMatrixKcc[i][j] << endl; 
 			 
-			(*elementMatrix)[i+30][j+30] =stiffnessMatrixKcc[i][j] +(1./deltaT)*massMatrixMc[i][j]; //
+			(*elementMatrix)[i+30][j+30] =-stiffnessMatrixKcc[i][j] -(1./deltaT)*massMatrixMc[i][j]; //
 
 			//(*massMatrix_)[i][j] = massMatrixMc[i][j];
 		}

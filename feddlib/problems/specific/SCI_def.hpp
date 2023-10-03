@@ -145,7 +145,6 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
        
                 this->problemStructureNonLin_->updateConcentration(c_rep_);        
                 this->problemStructureNonLin_->assemble(); //system_->addBlock(A,0,0);// assemble(); //      
-        
             }
 
        
@@ -456,7 +455,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     if(couplingType_ == "explicit"){
 
         if (materialModel_!="SCI_Linear"){
-            this->problemStructureNonLin_->calculateNonLinResidualVec( "reverse", time );
+            this->problemStructureNonLin_->calculateNonLinResidualVec( "external", time );
             this->residualVec_->addBlock( this->problemStructureNonLin_->getResidualVector()->getBlockNonConst(0) , 0);
             // we need to add a possible source term
 
@@ -918,17 +917,26 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
         if(externalForce_){
 
             MultiVectorPtr_Type FERhs = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ));
-            vec_dbl_Type funcParameter(6,0.);
+            /*vec_dbl_Type funcParameter(6,0.);
             funcParameter[0] = timeSteppingTool_->t_;            
             // how can we use different parameters for different blocks here?
             funcParameter[1] =this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Volume force",0.00211);
-            funcParameter[4] =this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Heart Beat Start",70.);
-            funcParameter[5] = 0.;
             funcParameter[2]= this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Load Step Size",1.);
             funcParameter[3] = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Load Ramp End",1.);
+    
+            funcParameter[4] =this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Heart Beat Start",70.);
+            funcParameter[5] = 0.;*/
+            vec_dbl_Type funcParameter(1,0.);
+            funcParameter[0] = timeSteppingTool_->t_;            
+            // how can we use different parameters for different blocks here?
+            for (int j = 0; j < this->getParemeterCount(); j++)
+                funcParameter.push_back(this->getParemeterRhs(j));
+            funcParameter.push_back(0.);
+            
+            
             if(nonlinearExternalForce_){
 
-                MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
+                   MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
                 d_rep_->importFromVector(d, true); 
                 MatrixPtr_Type A( new Matrix_Type (this->system_->getBlock(0,0)));
                 //A->print();
@@ -951,7 +959,6 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
 
 
             this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
-            // this->sourceTerm_->getBlockNonConst(0)->writeMM("RHS_ext");
 
            
 
@@ -975,7 +982,6 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
         
         this->problemTimeStructure_->getRhs()->update(coeffSourceTermStructure, *tmpPtr, 1.);
         this->rhs_->addBlock( this->problemTimeStructure_->getRhs()->getBlockNonConst(0), 0 );
-
     }
 
 }

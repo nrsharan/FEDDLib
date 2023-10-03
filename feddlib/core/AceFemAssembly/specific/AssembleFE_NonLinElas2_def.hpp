@@ -24,9 +24,9 @@ template <class SC, class LO, class GO, class NO>
 AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params,tuple)
 {
 	/// Extracting values from ParameterList params:
-	E_ = this->params_->sublist("Parameter").get("E",1000.0); // the last value is the dafault value, in case no parameter is set
+	E_ = this->params_->sublist("Parameter").get("E",0.38); // the last value is the dafault value, in case no parameter is set
     //lambda_ = this->params_->sublist("Parameter").get("lambda",1.);
-    poissonRatio_ = this->params_->sublist("Parameter").get("Poisson Ratio",0.4e-0);
+    poissonRatio_ = this->params_->sublist("Parameter").get("Poisson Ratio",0.49e-0);
 
 	/// Tupel construction follows follwing pattern:
 	/// string: Physical Entity (i.e. Velocity) , string: Discretisation (i.e. "P2"), int: Degrees of Freedom per Node, int: Number of Nodes per element)

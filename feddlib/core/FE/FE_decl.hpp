@@ -53,6 +53,8 @@ class FE {
     typedef Teuchos::RCP<Domain_Type> DomainPtr_Type;
     typedef Teuchos::RCP<const Domain_Type> DomainConstPtr_Type;
     typedef std::vector<DomainConstPtr_Type> DomainConstPtr_vec_Type;
+    typedef std::vector<DomainPtr_Type> DomainPtr_vec_Type;
+
 
     typedef Teuchos::RCP<Mesh<SC,LO,GO,NO> > MeshPtr_Type;
     typedef MeshUnstructured<SC,LO,GO,NO> MeshUnstr_Type;
@@ -99,7 +101,7 @@ class FE {
 	typedef SmallMatrix<SC> SmallMatrix_Type;
     typedef Teuchos::RCP<SmallMatrix_Type> SmallMatrixPtr_Type;
 
-    DomainConstPtr_vec_Type	domainVec_;
+    DomainPtr_vec_Type	domainVec_;
     Teuchos::RCP<ElementSpec> es_;
 
    typedef FiniteElement FiniteElement_Type;
@@ -525,6 +527,29 @@ class FE {
             // First Solid, then Chemistry
             solution.insert( solution.end(), solution_d.begin(), solution_d.end() );
             solution.insert( solution.end(), solution_c.begin(), solution_c.end() );
+            
+            assemblyFEElements_[T]->updateSolution(solution);
+
+            assemblyFEElements_[T]->advanceInTime(dt);
+        }
+        
+    };
+
+    void advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep) 
+    {
+        //UN FElocChem = 1; //checkFE(dim,FETypeChem); // Checks for different domains which belongs to a certain fetype
+        UN FElocSolid = 0; //checkFE(dim,FETypeSolid); // Checks for different domains which belongs to a certain fetype
+
+        //ElementsPtr_Type elementsChem= domainVec_.at(FElocChem)->getElementsC();
+        ElementsPtr_Type elementsSolid = domainVec_.at(FElocSolid)->getElementsC();
+        
+	    vec_dbl_Type solution_d;
+        for (UN T=0; T<assemblyFEElements_.size(); T++) {
+		    vec_dbl_Type solution(0);
+
+            solution_d = getSolution(elementsSolid->getElement(T).getVectorNodeList(), d_rep,3);
+            // First Solid, then Chemistry
+            solution.insert( solution.end(), solution_d.begin(), solution_d.end() );
             
             assemblyFEElements_[T]->updateSolution(solution);
 

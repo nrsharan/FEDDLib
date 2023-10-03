@@ -36,6 +36,8 @@ namespace FEDD
 		solution_n_.resize(60, 0.);
 		solution_n1_.resize(60, 0.);
 
+
+		cout << " Parameters:: E=" << E0_ << " E1=" << E1_ << " poissionRation=" << poissonRatio_ << endl; 
 		/*timeParametersVec_.resize(0, vec_dbl_Type(2));
 		numSegments_ = this->params_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);
 
@@ -132,7 +134,7 @@ namespace FEDD
 		double *residuum = neoHookeElement.getResiduum();
 
 		for (int i = 0; i < 40; i++)
-			(*this->rhsVec_)[i] = residuum[i];
+			(*this->rhsVec_)[i] = -residuum[i];
 
 
 #endif
@@ -190,7 +192,7 @@ namespace FEDD
 		{
 			for (UN j = 0; j < this->dofsElement_; j++)
 			{
-				(*elementMatrix)[i][j] = stiffnessMatrix[i][j];
+				(*elementMatrix)[i][j] = -stiffnessMatrix[i][j];
 			}
 		}
 

@@ -7,6 +7,7 @@
 #include "feddlib/core/General/ExporterParaView.hpp"
 #include "feddlib/core/General/ExporterTxt.hpp"
 #include "feddlib/problems/specific/SCI.hpp"
+#include "feddlib/problems/specific/NonLinElasAssFE.hpp"
 #include "feddlib/problems/specific/FSCI.hpp"
 
 
@@ -57,9 +58,11 @@ public:
     typedef Teuchos::RCP<Exporter_Type> ExporterPtr_Type;
     typedef Teuchos::RCP<ExporterTxt> ExporterTxtPtr_Type;
 
+    typedef NonLinElasAssFE<SC,LO,GO,NO> NonLinElasProblem_Type;
+    typedef Teuchos::RCP<NonLinElasProblem_Type> NonLinElasProblemPtr_Type;
+
     typedef FSI<SC,LO,GO,NO> FSIProblem_Type;
     typedef Teuchos::RCP<FSIProblem_Type> FSIProblemPtr_Type;
-
 
     typedef FSCI<SC,LO,GO,NO> FSCIProblem_Type;
     typedef Teuchos::RCP<FSCIProblem_Type> FSCIProblemPtr_Type;

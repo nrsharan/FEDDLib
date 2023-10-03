@@ -91,6 +91,9 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(Problem_Type* problem, BlockMulti
     problem->getLinearSolverBuilder()->setParameterList(pListThyraSolver);
     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problem->getLinearSolverBuilder()->createLinearSolveStrategy("");
 
+   
+
+
     if ( type != "MonolithicConstPrec" ||  problem->getPreconditioner()->getThyraPrec().is_null() )
         problem->setupPreconditioner( "Monolithic" );
 
@@ -103,9 +106,13 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(Problem_Type* problem, BlockMulti
     }
 
     Teuchos::RCP<Teuchos::FancyOStream> out = Teuchos::VerboseObjectBase::getDefaultOStream();
+    // cout << " Solve Monolithic problem " << endl;
 
     lowsFactory->setOStream(out);
     lowsFactory->setVerbLevel(Teuchos::VERB_HIGH);
+
+    //problem->getSystem()->getBlock(0,0)->writeMM("SystemCombined");
+    //rhs->writeMM("rhs");
 
     Teuchos::RCP<Thyra::LinearOpWithSolveBase<SC> > solver = lowsFactory->createOp();
 //    Teuchos::RCP<Thyra::LinearOpWithSolveBase<SC> > solver = linearOpWithSolve(*lowsFactory, problem->getSystem()->getThyraLinOp());
@@ -180,15 +187,16 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
     Teuchos::RCP<Thyra::LinearOpWithSolveBase<SC> > solver = lowsFactory->createOp();
     //    solver = linearOpWithSolve(*lowsFactory, problem->getSystem()->getThyraLinOp());
 
-    //timeProblem->combineSystems();
-    // timeProblem->getSystemCombined()->getBlock(0,0)->writeMM("SystemCombined");
+     cout << " Solve Monolithic time problem " << endl;
+    timeProblem->getSystemCombined()->getBlock(0,0)->writeMM("SystemCombined");
 
     ThyraLinOpConstPtr_Type thyraMatrix = timeProblem->getSystemCombined()->getThyraLinOp();
 
     // Printing the stiffness matrix for the first newton iteration
     // timeProblem->getSystemCombined()->writeMM("stiffnessMatrixWihtDirichlet");
     // timeProblem->getSystem()->writeMM("stiffnessMatrixFull");
-    // rhs->writeMM("rhs");
+    
+    rhs->writeMM("rhs");
 
     if ( !pListThyraSolver->get("Linear Solver Type","Belos").compare("Belos") ) {
         ThyraPrecPtr_Type thyraPrec = problem->getPreconditioner()->getThyraPrec();

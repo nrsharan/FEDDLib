@@ -150,7 +150,7 @@ namespace FEDD
     template <class SC, class LO, class GO, class NO>
     void Problem<SC, LO, GO, NO>::addRhsFunction(RhsFunc_Type func, int i)
     {
-        if (this->rhsFuncVec_.size() <= i + 1)
+        if (this->rhsFuncVec_.size() > i)
             this->rhsFuncVec_[i] = func;
         else if (this->rhsFuncVec_.size() == i)
             this->rhsFuncVec_.push_back(func);

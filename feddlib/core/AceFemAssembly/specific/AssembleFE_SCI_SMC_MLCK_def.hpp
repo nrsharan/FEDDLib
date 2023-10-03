@@ -223,14 +223,14 @@ void AssembleFE_SCI_SMC_MLCK<SC,LO,GO,NO>::assembleRHS(){
     
 	// getResiduumVectorRdyn(&positions[0], &displacements[0], &concentrations[0], &accelerations[0],&rates[0], &domainData[0], &history[0], subIterationTolerance, deltaT, time, iCode_, &historyUpdated[0], residuumRDyn);
 	for(int i=0; i< 30 ; i++){
-		(*this->rhsVec_)[i] = residuumRint[i]; //+residuumRDyn[i];
+		(*this->rhsVec_)[i] = -residuumRint[i]; //+residuumRDyn[i];
 	}
 	double *residuumRc = elem.getResiduumVectorRc();
 	// getResiduumVectorRc(&positions[0], &displacements[0], &concentrations[0], &accelerations[0], &rates[0], &domainData[0], &history[0], subIterationTolerance, deltaT, time, iCode_, &historyUpdated[0], residuumRc);
 
 
 	for(int i=0; i< 10 ; i++){		
-		(*this->rhsVec_)[i+30] = residuumRc[i];
+		(*this->rhsVec_)[i+30] = -residuumRc[i];
 	}
 
 	// free(residuumRc);
@@ -337,7 +337,7 @@ void AssembleFE_SCI_SMC_MLCK<SC,LO,GO,NO>::assemble_SCI_SMC_MLCK(SmallMatrixPtr_
 			//if(fabs(stiffnessMatrixKuu[i][j]) > 1e7)
 			//	cout << " !!! Sus entry Kuu [" << i << "][" << j << "] " << stiffnessMatrixKuu[i][j] << endl; 
 			
-			(*elementMatrix)[i][j]=stiffnessMatrixKuu[i][j];
+			(*elementMatrix)[i][j]=-stiffnessMatrixKuu[i][j];
 		}
 	}
 	for(int i=0; i< 30; i++){
@@ -345,7 +345,7 @@ void AssembleFE_SCI_SMC_MLCK<SC,LO,GO,NO>::assemble_SCI_SMC_MLCK(SmallMatrixPtr_
 			//if(fabs(stiffnessMatrixKuc[i][j]) > 1e7)
 			//	cout << " !!! Sus entry Kuc [" << i << "][" << j << "] " << stiffnessMatrixKuc[i][j] << endl; 
 			
-			(*elementMatrix)[i][j+30]=stiffnessMatrixKuc[i][j];
+			(*elementMatrix)[i][j+30]=-stiffnessMatrixKuc[i][j];
 		}
 	}
 	for(int i=0; i< 10; i++){
@@ -353,7 +353,7 @@ void AssembleFE_SCI_SMC_MLCK<SC,LO,GO,NO>::assemble_SCI_SMC_MLCK(SmallMatrixPtr_
 			//if(fabs(stiffnessMatrixKcu[i][j]) > 1e7)
 			//	cout << " !!! Sus entry Kcu [" << i << "][" << j << "] " << stiffnessMatrixKcu[i][j] << endl; 
 			
-			(*elementMatrix)[i+30][j]=stiffnessMatrixKcu[i][j];
+			(*elementMatrix)[i+30][j]=-stiffnessMatrixKcu[i][j];
 		}
 	}
 	for(int i=0; i< 10; i++){
@@ -361,7 +361,7 @@ void AssembleFE_SCI_SMC_MLCK<SC,LO,GO,NO>::assemble_SCI_SMC_MLCK(SmallMatrixPtr_
 			//if(fabs(massMatrixMc[i][j]) > 1e5 || fabs(stiffnessMatrixKcc[i][j]) > 1e5 )
 			//	cout << " !!! Sus entry Mass [" << i << "][" << j << "] " << massMatrixMc[i][j] << " or stiff Kcc " << stiffnessMatrixKcc[i][j] << endl; 
 			 
-			(*elementMatrix)[i+30][j+30] =stiffnessMatrixKcc[i][j] +(1./deltaT)*massMatrixMc[i][j]; //
+			(*elementMatrix)[i+30][j+30] =-stiffnessMatrixKcc[i][j] -(1./deltaT)*massMatrixMc[i][j]; //
 		}
 	}
 

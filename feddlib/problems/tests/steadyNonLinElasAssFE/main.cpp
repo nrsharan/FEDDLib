@@ -112,6 +112,32 @@ void rhsYZ(double* x, double* res, double* parameters){
     return;
 }
 
+// Parameter Structure
+// 0 : time
+// 1 : force
+// 2 : loadStep (lambda)
+// 3 : LoadStep end time
+// 4 : Flag 
+
+void rhsArtery(double* x, double* res, double* parameters){
+
+
+    double force = parameters[1];
+	
+  	res[0] =0.;
+    res[1] =0.;
+    res[2] =0.;
+    
+    
+    if(parameters[2] == 5){
+      	res[0] = force;
+        res[1] = force;
+        res[2] = force;
+    }
+    
+    return;
+}
+
 
 typedef unsigned UN;
 typedef default_sc SC;
@@ -198,20 +224,26 @@ int main(int argc, char *argv[])
         Teuchos::RCP<Teuchos::Time> buildMesh(Teuchos::TimeMonitor::getNewCounter("main: Build Mesh"));
         Teuchos::RCP<Teuchos::Time> solveTime(Teuchos::TimeMonitor::getNewCounter("main: Solve problem time"));
 
+        std::string bcType = parameterListAll->sublist("Parameter").get("BC Type","Cube");
         DomainPtr_Type domain;
 
         // ########################
         // P1 und P2 Gitter bauen
         // ########################
-
         domain.reset( new Domain<SC,LO,GO,NO>( comm, dim ) );
         MeshPartitioner_Type::DomainPtrArray_Type domainP1Array(1);
         domainP1Array[0] = domain;
         
         ParameterListPtr_Type pListPartitioner = sublist( parameterListProblem, "Mesh Partitioner" );
         MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
-        
-        partitionerP1.readAndPartition();
+ 
+	    int volumeID=10;
+	    if(bcType=="Artery")
+	    	volumeID = 15;
+	     	
+	    partitionerP1.readAndPartition(volumeID);
+	       
+
         if (FEType=="P2") {
             Teuchos::RCP<Domain<SC,LO,GO,NO> > domainP2;
             domainP2.reset( new Domain_Type( comm, dim ) );
@@ -244,7 +276,8 @@ int main(int argc, char *argv[])
 		Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactory( new BCBuilder<SC,LO,GO,NO>( ) );
         if (dim == 2)
             bcFactory->addBC(zeroDirichlet2D, 1, 0, domain, "Dirichlet", dim);
-        else if (dim == 3){
+        else if (dim == 3 && bcType=="Cube"){
+                  
                       
             bcFactory->addBC(zeroDirichlet, 1, 0, domain, "Dirichlet_X", dim);
             bcFactory->addBC(zeroDirichlet, 2, 0, domain, "Dirichlet_Y", dim);
@@ -253,8 +286,31 @@ int main(int argc, char *argv[])
             bcFactory->addBC(zeroDirichlet2D, 7, 0, domain, "Dirichlet_X_Y", dim);
             bcFactory->addBC(zeroDirichlet2D, 8, 0, domain, "Dirichlet_Y_Z", dim);
             bcFactory->addBC(zeroDirichlet2D, 9, 0, domain, "Dirichlet_X_Z", dim);
+       	}     
+        else if(dim==3 && bcType=="Artery"){
         
-		}
+			bcFactory->addBC(zeroDirichlet3D, 1, 0, domain, "Dirichlet_Y", dim);
+			bcFactory->addBC(zeroDirichlet3D, 2, 0, domain, "Dirichlet_X", dim);
+			bcFactory->addBC(zeroDirichlet3D, 3, 0, domain, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 4, 0, domain, "Dirichlet_Z", dim);
+			
+			bcFactory->addBC(zeroDirichlet3D, 13, 0, domain, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 14, 0, domain, "Dirichlet_Z", dim);
+
+			bcFactory->addBC(zeroDirichlet3D, 9, 0, domain, "Dirichlet_Y_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 8, 0, domain, "Dirichlet_X_Z", dim);
+
+			bcFactory->addBC(zeroDirichlet3D, 7, 0, domain, "Dirichlet_X", dim);
+			bcFactory->addBC(zeroDirichlet3D, 10, 0, domain, "Dirichlet_Y", dim);
+
+			bcFactory->addBC(zeroDirichlet3D, 11, 0, domain, "Dirichlet_Y_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 12, 0, domain, "Dirichlet_X_Z", dim);
+
+
+		   
+        }
+        
+		
             
 
         // LinElas Objekt erstellen
@@ -262,16 +318,17 @@ int main(int argc, char *argv[])
 
         NonLinElas.addBoundaries(bcFactory); // Dem Problem RW hinzufuegen
 
-        if (dim==2)
-            NonLinElas.addRhsFunction( rhs2D );
-        else if(dim==3)
-            NonLinElas.addRhsFunction( rhsYZ );
-
-        double force = parameterListAll->sublist("Parameter").get("Volume force",0.);
-        double degree = 0;
-        
+         if(bcType=="Cube"){
+    		 	NonLinElas.addRhsFunction( rhsYZ );
+		}
+		else if(bcType=="Artery" ){
+    	 	NonLinElas.addRhsFunction( rhsArtery);
+		}
+  		double force = parameterListAll->sublist("Parameter").get("Volume force",1.);
+   
         NonLinElas.addParemeterRhs( force );
-        NonLinElas.addParemeterRhs( degree );
+
+
         // ######################
         // Matrix assemblieren, RW setzen und System loesen
         // ######################
@@ -279,6 +336,7 @@ int main(int argc, char *argv[])
         NonLinElas.assemble();                
         NonLinElas.setBoundaries(); // In der Klasse Problem
 		NonLinElas.setBoundariesRHS();
+
 
 		std::string nlSolverType = parameterListProblem->sublist("General").get("Linearization","FixedPoint");
         NonLinearSolver<SC,LO,GO,NO> nlSolver( nlSolverType );
@@ -291,13 +349,16 @@ int main(int argc, char *argv[])
 
         NonLinElasAssFE.addBoundaries(bcFactory); // Dem Problem RW hinzufuegen
 
-        if (dim==2)
-            NonLinElasAssFE.addRhsFunction( rhs2D );
-        else if(dim==3)
-            NonLinElasAssFE.addRhsFunction( rhsYZ );
-        
+        if(bcType=="Cube"){
+    		NonLinElasAssFE.addRhsFunction( rhsYZ );
+		}
+		else if(bcType=="Artery" ){
+    	 	NonLinElasAssFE.addRhsFunction( rhsArtery);
+		}
+       
         NonLinElasAssFE.addParemeterRhs( force );
-        NonLinElasAssFE.addParemeterRhs( degree );
+
+
         
         // ######################
         // Matrix assemblieren, RW setzen und System loesen
@@ -306,6 +367,7 @@ int main(int argc, char *argv[])
         NonLinElasAssFE.assemble();                
         NonLinElasAssFE.setBoundaries(); // In der Klasse Problem
         NonLinElasAssFE.setBoundariesRHS();
+
 
         NonLinearSolver<SC,LO,GO,NO> nlSolverAssFE( nlSolverType );
         nlSolverAssFE.solve( NonLinElasAssFE );

@@ -3,6 +3,7 @@
         <Parameter name="Dimension"							    type="int"   	value="3"/>
         <Parameter name="Discretization"                        type="string"   value="P2"/><!--P1, P2-->
         <Parameter name="Mesh Type" type="string" value="unstructured"/> <!--structured, unstructured -->
+                <Parameter name="BC Type" type="string" value="Artery"/><!--Artery, Cube-->
         <Parameter name="Volume force" type="double" value="0.016"/>
 	    <Parameter name="Source Type" type="string"   value="surface"/>
         <Parameter name="Mesh Delimiter"					    type="string"   value=" "/>
@@ -41,7 +42,7 @@
         
         <Parameter name="Contiguous" type="bool" value="true"/>
         
-        <Parameter name="Mesh 1 Name" type="string" value="cube_h_1.mesh"/>
+        <Parameter name="Mesh 1 Name" type="string" value="artery_h_0_8_L_0_25.mesh"/> <!-- partialArtery -->
     </ParameterList>
     
     <ParameterList name="General">

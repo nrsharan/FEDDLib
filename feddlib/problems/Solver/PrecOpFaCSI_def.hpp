@@ -211,8 +211,6 @@ void PrecOpFaCSI<SC,LO,GO,NO>::applyImpl(
 {
     Teuchos::RCP<Teuchos::FancyOStream> out = Teuchos::VerboseObjectBase::getDefaultOStream();
     
-    std::cout << "  ########## Apply PrecOpFaCSI --  alpha : " << alpha << " beta: " << beta << " ########### " << std::endl;
-
     using Teuchos::rcpFromRef;
     typedef Teuchos::ScalarTraits<SC> ST;
     typedef RCP<MultiVectorBase<SC> > MultiVectorPtr;
