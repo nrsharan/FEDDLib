@@ -531,11 +531,11 @@ public:
 
      /// @brief 
      /// @return 
-     int getDofs();
+     int getDofs() const;
 
      /// @brief Returning the physics property of domain
      /// @return physics property of unterlying component of problem i.e. velocity for Navier-Stokes
-     string getPhysicProperty();
+     string getPhysicProperty() const;
 /* ----------------------------------------------------------------------------------------*/
 
 private:

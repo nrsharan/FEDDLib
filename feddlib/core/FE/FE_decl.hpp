@@ -607,7 +607,7 @@ private:
 	AssembleFEPtr_vec_Type assemblyFEElements_;
 
 	vec2D_dbl_Type getCoordinates(vec_LO_Type localIDs, vec2D_dbl_ptr_Type points);
-	vec_dbl_Type getSolution(vec_LO_Type localIDs, MultiVectorPtr_Type u_rep, int dofsVelocity);
+	vec_dbl_Type getSolution(vec_LO_Type localIDs, MultiVectorConstPtr_Type u_rep, int dofsVelocity);
 
     //Start of AceGen code
     /*! AceGen code for 3D Neo-Hooke material model
