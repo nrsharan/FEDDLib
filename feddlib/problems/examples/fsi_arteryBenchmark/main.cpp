@@ -645,8 +645,8 @@ int main(int argc, char *argv[])
                     bcFactoryFluid->addBC(zeroDirichlet3D, 1, 0, domainFluidVelocity, "Dirichlet", dim); // wall
                  }
                 
-                bcFactory->addBC(zeroDirichlet3D, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring                
-                bcFactoryFluid->addBC(zeroDirichlet3D, 4, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
+                bcFactory->addBC(parabolicInflow3DLin, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring         
+                bcFactoryFluid->addBC(parabolicInflow3DLin, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring         
                 
                 if (zeroPressure) {
                     //bcFactory->addBC(zeroBC, 4, 1, domainFluidPressure, "Dirichlet", 1); // outflow ring
@@ -667,12 +667,17 @@ int main(int argc, char *argv[])
                 bcFactory->addBC(zeroDirichlet3D, 0, 2, domainStructure, "Dirichlet_Y_Z", dim); // inflow/outflow strip fixed in y direction
                 bcFactory->addBC(zeroDirichlet3D, 1, 2, domainStructure, "Dirichlet_X_Y", dim); // inflow/outflow strip fixed in y direction
                 bcFactory->addBC(zeroDirichlet3D, 2, 2, domainStructure, "Dirichlet_Z", dim); // inlet fixed in Z direction
+                bcFactory->addBC(zeroDirichlet3D, 5, 2, domainStructure, "Dirichlet_Z", dim); // inlet ring fixed in Z direction
                 bcFactory->addBC(zeroDirichlet3D, 3, 2, domainStructure, "Dirichlet_X", dim); // outlet fixed in X direction
-               
+                bcFactory->addBC(zeroDirichlet3D, 4, 2, domainStructure, "Dirichlet_X", dim); // outlet ring in X direction
+
                 bcFactoryStructure->addBC(zeroDirichlet3D, 0, 0, domainStructure, "Dirichlet_Y_Z", dim); 
                 bcFactoryStructure->addBC(zeroDirichlet3D, 1, 0, domainStructure, "Dirichlet_X_Y", dim); 
-                bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);           
-                bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_x", dim); 
+                bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);  
+                bcFactoryStructure->addBC(zeroDirichlet3D, 5, 2, domainStructure, "Dirichlet_Z", dim); // inlet ring fixed in Z direction
+                bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_X", dim); 
+                bcFactoryStructure->addBC(zeroDirichlet3D, 4, 0, domainStructure, "Dirichlet_X", dim); 
+
                 // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
                 // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()
                 if (!fsi.problemStructure_.is_null())

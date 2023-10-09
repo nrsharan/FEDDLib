@@ -37,7 +37,7 @@ namespace FEDD
 		solution_n1_.resize(60, 0.);
 
 
-		cout << " Parameters:: E=" << E0_ << " E1=" << E1_ << " poissionRation=" << poissonRatio_ << endl; 
+		//cout << " Parameters:: E=" << E0_ << " E1=" << E1_ << " poissionRation=" << poissonRatio_ << endl; 
 		/*timeParametersVec_.resize(0, vec_dbl_Type(2));
 		numSegments_ = this->params_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);
 

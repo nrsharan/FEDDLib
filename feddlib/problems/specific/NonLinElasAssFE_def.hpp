@@ -292,11 +292,10 @@ void NonLinElasAssFE<SC,LO,GO,NO>::assembleSourceTermLoadstepping(double time) c
 
             MultiVectorPtr_Type FERhs = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ));
             vec_dbl_Type funcParameter(1,0.);
-
             funcParameter[0] = timeSteppingTool_->t_;            
             // how can we use different parameters for different blocks here?
-            for (int j = 0; j < this->getParemeterCount(); j++)
-                funcParameter.push_back(this->getParemeterRhs(j));
+            for (int j = 0; j < this->getParameterCount(); j++)
+                funcParameter.push_back(this->getParameterRhs(j));
             funcParameter.push_back(0.);
             if(nonlinearExternalForce_){
 

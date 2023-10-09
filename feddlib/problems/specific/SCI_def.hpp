@@ -929,14 +929,14 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
             vec_dbl_Type funcParameter(1,0.);
             funcParameter[0] = timeSteppingTool_->t_;            
             // how can we use different parameters for different blocks here?
-            for (int j = 0; j < this->getParemeterCount(); j++)
-                funcParameter.push_back(this->getParemeterRhs(j));
+            for (int j = 0; j < this->problemTimeStructure_->getUnderlyingProblem()->getParameterCount(); j++)
+                funcParameter.push_back(this->problemTimeStructure_->getUnderlyingProblem()->getParameterRhs(j));
             funcParameter.push_back(0.);
             
             
             if(nonlinearExternalForce_){
 
-                   MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
+                MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
                 d_rep_->importFromVector(d, true); 
                 MatrixPtr_Type A( new Matrix_Type (this->system_->getBlock(0,0)));
                 //A->print();

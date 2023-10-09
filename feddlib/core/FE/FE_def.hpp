@@ -6654,7 +6654,7 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegralExternal(int dim,
             }
         }
     }
-    //f->scale(-1.);
+    f->scale(-1.);
 
 }
     
@@ -6759,13 +6759,6 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
                     elementMatrixPrint.print();
                     cout << " --------------" << endl;*/
 
-
-                    SmallMatrix_Type elementMatrixWrite(18,0.);
-
-                    SmallMatrix_Type elementMatrixIDsRow(18,0.);
-                    SmallMatrix_Type elementMatrixIDsCol(18,0.);
-
-
                     for (UN i=0; i < numNodes1 ; i++) {
                         for(int di=0; di<dim; di++){
                             Teuchos::Array<SC> value1( numNodes1*dim, 0. );
@@ -6777,14 +6770,7 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
                                 for(int d=0; d<dim; d++){
                                     columnIndices1[dim*j+d] = GO ( dim * map->getGlobalElement( nodeList[j] ) + d );
                                     value1[dim*j+d] = stiffMat[rowLO][dim*j+d];	
-                                    if(fabs(stiffMat[rowLO][dim*j+d]) >1.e-13)
-                                        elementMatrixWrite[rowLO][dim*j+d] = stiffMat[rowLO][dim*j+d];
-                                    else
-                                        elementMatrixWrite[rowLO][dim*j+d] = 0.;
-                                    elementMatrixIDsCol[rowLO][dim*j+d] = columnIndices1[dim*j+d];
-                                    elementMatrixIDsRow[rowLO][dim*j+d] = row;
-
-
+                                   
                                 }
                             }  
                             Kext->insertGlobalValues( row, columnIndices1(), value1() ); // Automatically adds entries if a value already exists 
@@ -6814,7 +6800,7 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
             }
         }
     }
-    //f->scale(-1.);
+    f->scale(-1.);
     Kext->fillComplete(domainVec_.at(FEloc)->getMapVecFieldUnique(),domainVec_.at(FEloc)->getMapVecFieldUnique());
     // Kext->writeMM("K_ext1");
 }
@@ -6950,7 +6936,7 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegral(int dim,
             }
         }
     }
-    f->scale(-1.); // Generally the pressure is definied in opposite direction of the normal
+    //f->scale(-1.); // Generally the pressure is definied in direction of the normal
 }
     
 template <class SC, class LO, class GO, class NO>

@@ -203,9 +203,9 @@ public:
     
     void addParemeterRhs(double para){ parasSourceFunc_.push_back( para ); }
     
-    double getParemeterRhs(int i ) const { return parasSourceFunc_[i]; }
+    double getParameterRhs(int i ) const { return parasSourceFunc_[i]; }
 
-    double getParemeterCount( ) const { return parasSourceFunc_.size(); }
+    double getParameterCount( ) const { return parasSourceFunc_.size(); }
 
 	double calculateH1Norm(MultiVectorConstPtr_Type mv, int blockId1=0, int blockId2=0, int domainInd=0); // Function that calculates H1 Error in the 'mv * K * mv' sense, with K beeing the Stiffness Matrix
 
