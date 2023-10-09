@@ -1385,7 +1385,7 @@ vec2D_dbl_Type FE<SC,LO,GO,NO>::getCoordinates(vec_LO_Type localIDs, vec2D_dbl_p
 */
 
 template <class SC, class LO, class GO, class NO>
-vec_dbl_Type FE<SC,LO,GO,NO>::getSolution(vec_LO_Type localIDs, MultiVectorPtr_Type u_rep, int dofsVelocity){
+vec_dbl_Type FE<SC,LO,GO,NO>::getSolution(vec_LO_Type localIDs, MultiVectorConstPtr_Type u_rep, int dofsVelocity){
 
     Teuchos::ArrayRCP<SC>  uArray = u_rep->getDataNonConst(0);
 	
@@ -1394,7 +1394,6 @@ vec_dbl_Type FE<SC,LO,GO,NO>::getSolution(vec_LO_Type localIDs, MultiVectorPtr_T
 		for(int d=0; d<dofsVelocity; d++)
 			solution.push_back(uArray[localIDs[i]*dofsVelocity+d]);
 	}
-
     return solution;
 }
 

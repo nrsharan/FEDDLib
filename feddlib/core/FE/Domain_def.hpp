@@ -283,14 +283,15 @@ void Domain<SC, LO, GO, NO>::setDofs(int dofs)
 }
 
 template <class SC, class LO, class GO, class NO>
-int Domain<SC, LO, GO, NO>::getDofs()
+int Domain<SC, LO, GO, NO>::getDofs() const
 {
     return dofs_;
 }
 
 
 template <class SC, class LO, class GO, class NO>
-string Domain<SC,LO,GO,NO>::getPhysicProperty(){
+string Domain<SC,LO,GO,NO>::getPhysicProperty() const
+{
     return physics_;
 }
 

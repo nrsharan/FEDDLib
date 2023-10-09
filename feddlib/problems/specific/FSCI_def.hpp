@@ -442,7 +442,7 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
     // Fluid: A+P+N+W
     MatrixPtr_Type APNW = Teuchos::rcp(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
 
-    if(geometryExplicit_)
+    if(this->geometryExplicit_)
     {
         
         if(type == "FixedPoint")
