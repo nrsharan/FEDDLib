@@ -674,7 +674,7 @@ int main(int argc, char *argv[])
                 bcFactoryStructure->addBC(zeroDirichlet3D, 0, 0, domainStructure, "Dirichlet_Y_Z", dim); 
                 bcFactoryStructure->addBC(zeroDirichlet3D, 1, 0, domainStructure, "Dirichlet_X_Y", dim); 
                 bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);  
-                bcFactoryStructure->addBC(zeroDirichlet3D, 5, 2, domainStructure, "Dirichlet_Z", dim); // inlet ring fixed in Z direction
+                bcFactoryStructure->addBC(zeroDirichlet3D, 5, 0, domainStructure, "Dirichlet_Z", dim); // inlet ring fixed in Z direction
                 bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_X", dim); 
                 bcFactoryStructure->addBC(zeroDirichlet3D, 4, 0, domainStructure, "Dirichlet_X", dim); 
 
