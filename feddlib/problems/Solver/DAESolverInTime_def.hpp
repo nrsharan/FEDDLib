@@ -1538,6 +1538,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     // Notwendige Parameter
     bool geometryExplicit = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
     std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
+    bool withDynamic = parameterList_->sublist("Parameter").get("Dynamic",true);
 
     int sizeFSI = timeStepDef_.size();
 
@@ -1815,11 +1816,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
                 // We extract the underlying FSI problem
                 MatrixPtr_Type massmatrix;
                 fsci->setSolidMassmatrix( massmatrix );
-                this->problemTime_->systemMass_->addBlock( massmatrix, 2, 2 );
+                if(withDynamic)
+                    this->problemTime_->systemMass_->addBlock( massmatrix, 2, 2 );
             }
             // this should be done automatically rhs will not be used here
 //            this->problemTime_->getRhs()->addBlock( Teuchos::rcp_const_cast<MultiVector_Type>(rhs->getBlock(0)), 2 );
-            this->problemTime_->assemble("ComputeSolidRHSInTime");
+            if(withDynamic)
+                this->problemTime_->assemble("ComputeSolidRHSInTime");
         }
 
         if(geometryExplicit) //  && linearization != "Extrapolation"
@@ -2013,6 +2016,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
     
     // Notwendige Parameter
     bool geometryExplicit = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
+    bool withDynamic = parameterList_->sublist("Parameter").get("Dynamic",true);
+
     int sizeFSI = timeStepDef_.size();
 
     // ACHTUNG
@@ -2241,11 +2246,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
                 // We extract the underlying FSI problem
                 MatrixPtr_Type massmatrix;
                 fsi->setSolidMassmatrix( massmatrix );
-                this->problemTime_->systemMass_->addBlock( massmatrix, 2, 2 );
+                if(withDynamic)
+                    this->problemTime_->systemMass_->addBlock( massmatrix, 2, 2 );
             }
             // this should be done automatically rhs will not be used here
 //            this->problemTime_->getRhs()->addBlock( Teuchos::rcp_const_cast<MultiVector_Type>(rhs->getBlock(0)), 2 );
-            this->problemTime_->assemble("ComputeSolidRHSInTime");
+            if(withDynamic)
+                this->problemTime_->assemble("ComputeSolidRHSInTime");
         }
 
 
