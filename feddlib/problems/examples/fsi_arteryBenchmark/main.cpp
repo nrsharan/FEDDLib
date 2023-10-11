@@ -49,7 +49,7 @@ void parabolicInflow3D(double* x, double* res, double t, const double* parameter
         res[1] = 0.;
         res[2] = -parameters[0] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
     }
-    if(t > hearBeatStart)
+    if(t > heartBeatStart)
     {
     
         double a0    = 11.693284502463376;
