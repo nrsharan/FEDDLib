@@ -143,7 +143,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTime(){
     {
         advanceInTimeFSI();
     }
-    else if(this->parameterList_->sublist("Parameter").get("SCI",false) && parameterList_->sublist("Timestepping Parameter").get("Class","Singlestep").compare("Loadstepping"))
+    else if(this->parameterList_->sublist("Parameter").get("SCI",false) && !parameterList_->sublist("Timestepping Parameter").get("Class","Singlestep").compare("Multistep"))
     {
         advanceInTimeSCI();
         
@@ -692,6 +692,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinearNewmark()
     // ######################
     while(timeSteppingTool_->continueTimeStepping())
     {
+        cout << "  ############## Timeloop Newmark ##########" << endl;
         // Stelle (massCoeff*M + problemCoeff*A) auf
         problemTime_->combineSystems();
         
@@ -704,6 +705,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinearNewmark()
         // Bei Newmark lautet dies:
         // M*[\frac{1}{dt^2*beta}*u_n + \frac{1}{dt*beta}*u'_n + \frac{0.5 - beta}{beta}*u''_n],
         // wobei u' = v (velocity) und u'' = w (acceleration).
+        cout << " Beta " << beta << " gamma " << gamma << endl;
         problemTime_->updateNewmarkRhs(dt, beta, gamma, coeffTemp);
         
         // TODO: SourceTerm wird in jedem Zeitschritt neu berechnet; auch wenn konstant!!!

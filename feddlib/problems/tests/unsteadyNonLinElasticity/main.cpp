@@ -719,7 +719,7 @@ int main(int argc, char *argv[])
         defTS.reset( new SmallMatrix<int> (1) );
 
         // Stucture
-        (*defTS)[0][0] = 0.;
+        (*defTS)[0][0] = 1.;
        
         NonLinElasAssFE<SC,LO,GO,NO> NonLinElasAssFE( domainStructure, discType, parameterListAll );      
             
