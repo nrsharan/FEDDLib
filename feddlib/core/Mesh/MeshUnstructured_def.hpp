@@ -201,7 +201,7 @@ void MeshUnstructured<SC,LO,GO,NO>::buildP2ofP1MeshEdge( MeshUnstrPtr_Type meshP
         vec_int_Type feNodeList = elements->getElement( i ).getVectorNodeListNonConst(); // get a copy
         for (int j=0; j<newElementNodes[i].size(); j++)
             feNodeList.push_back( newElementNodes[i][j] + numberLocalP1Nodes );
-        FiniteElement feP2( feNodeList );
+        FiniteElement feP2( feNodeList,elements->getElement( i ).getFlag() );
         this->elementsC_->addElement(feP2);
     }
     

@@ -50,38 +50,49 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 													
 		*/
 
-	fA_= this->params_->sublist("Parameter Solid").get("FA",30.e0); // ??
-	lambdaC50_ = this->params_->sublist("Parameter Solid").get("LambdaC50",0.12e1); // ??
-	gamma3_= this->params_->sublist("Parameter Solid").get("Gamma3",0.9e0);
-	lambdaBarCDotMax_= this->params_->sublist("Parameter Solid").get("LambdaBarCDotMax",0.3387e-1); // ??
-	lambdaBarCDotMin_= this->params_->sublist("Parameter Solid").get("LambdaBarCDotMin",-0.3387e-1); // ?? 
-	gamma2_ = this->params_->sublist("Parameter Solid").get("Gamma2",50.0e0); // ??
-	gamma1_ = this->params_->sublist("Parameter Solid").get("Gamma1",0.50247e0); 
-	eta1_ = this->params_->sublist("Parameter Solid").get("Eta1",0.18745e0); // ??
-	ca50_ = this->params_->sublist("Parameter Solid").get("Ca50",0.4e0); // ??
-	k2_ = this->params_->sublist("Parameter Solid").get("K2",0.2e0); 
-	k5_ = this->params_->sublist("Parameter Solid").get("K5",0.2e0);
-	k3_ = this->params_->sublist("Parameter Solid").get("K3",0.134e0); // ??
-	k4_ = this->params_->sublist("Parameter Solid").get("K4",0.166e-2); // ??
-	k7_= this->params_->sublist("Parameter Solid").get("K7",0.66e-4); // ?? 
-	kappaC_ = this->params_->sublist("Parameter Solid").get("KappaC",146.36600000000002e0);
-	beta1_ = this->params_->sublist("Parameter Solid").get("Beta1",0.10097e-2); // ??
-	muA_ = this->params_->sublist("Parameter Solid").get("MuA",0.9291e1); 
-	alpha_ = this->params_->sublist("Parameter Solid").get("Alpha",0.2668e2); 
-	epsilon1_ = this->params_->sublist("Parameter Solid").get("Epsilon1", 0.15173775e3);
-	epsilon2_ = this->params_->sublist("Parameter Solid").get("Epsilon2",0.27566199999999996e1); // ??
-	c1_ = this->params_->sublist("Parameter Solid").get("C1",11.52507e0);
-	alpha1_ = this->params_->sublist("Parameter Solid").get("Alpha1",1.27631e0);
-	alpha2_ = this->params_->sublist("Parameter Solid").get("Alpha2",0.308798e1); // ?? 
-	p1_ = this->params_->sublist("Parameter Solid").get("P1",0.3e0);
-	p3_ = this->params_->sublist("Parameter Solid").get("P3",0.2e0);
-	c50_ = this->params_->sublist("Parameter Solid").get("C50",0.5e0);
-	d0_ = this->params_->sublist("Parameter Diffusion").get("D0",6.e-05);
-	m_ = this->params_->sublist("Parameter Solid").get("m",0.e0);
-	startTime_ = this->params_->sublist("Parameter Solid").get("ActiveStartTime",1001.e0); // At Starttime 1000 the diffused drug influences the material model. -> Active response at T=starttime
-	rho_ = this->params_->sublist("Parameter Solid").get("Rho",1.e0);
+	int numMaterials =  this->params_->sublist("Parameter Solid").get("Number of Materials", 1);
+	int materialID = 0;
 
-	// iCode_ = this->params_->sublist("Parameter Solid").get("Intergration Code",18);
+	for(int i=1; i<= numMaterials; i++)
+		if( this->params_->sublist("Parameter Solid").sublist(std::to_string(i)).get("Volume Flag", 15) == this->flag_)
+			materialID = i;
+	
+	if(materialID == 0)
+		cout << "!!! Warning: No corresponding parameterslist for the element flag="<< this->flag_ << ". Please Check volume flags of elements and Mesh Data !!! " << endl;
+
+
+	fA_= this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("FA",30.e0); // ??
+	lambdaC50_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("LambdaC50",0.12e1); // ??
+	gamma3_= this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Gamma3",0.9e0);
+	lambdaBarCDotMax_= this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("LambdaBarCDotMax",0.3387e-1); // ??
+	lambdaBarCDotMin_= this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("LambdaBarCDotMin",-0.3387e-1); // ?? 
+	gamma2_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Gamma2",50.0e0); // ??
+	gamma1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Gamma1",0.50247e0); 
+	eta1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Eta1",0.18745e0); // ??
+	ca50_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Ca50",0.4e0); // ??
+	k2_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("K2",0.2e0); 
+	k5_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("K5",0.2e0);
+	k3_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("K3",0.134e0); // ??
+	k4_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("K4",0.166e-2); // ??
+	k7_= this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("K7",0.66e-4); // ?? 
+	kappaC_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("KappaC",146.36600000000002e0);
+	beta1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Beta1",0.10097e-2); // ??
+	muA_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("MuA",0.9291e1); 
+	alpha_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Alpha",0.2668e2); 
+	epsilon1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Epsilon1", 0.15173775e3);
+	epsilon2_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Epsilon2",0.27566199999999996e1); // ??
+	c1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("C1",11.52507e0);
+	alpha1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Alpha1",1.27631e0);
+	alpha2_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Alpha2",0.308798e1); // ?? 
+	p1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("P1",0.3e0);
+	p3_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("P3",0.2e0);
+	c50_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("C50",0.5e0);
+	d0_ = this->params_->sublist("Parameter Diffusion").get("D0",6.e-05);
+	m_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("m",0.e0);
+	startTime_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("ActiveStartTime",1001.e0); // At Starttime 1000 the diffused drug influences the material model. -> Active response at T=starttime
+	rho_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Rho",1.e0);
+
+	// iCode_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Intergration Code",18);
 	iCode_=18; //Only works for 18 currently!!
 
     FEType_ = std::get<1>(this->diskTuple_->at(0)); // FEType of Disk

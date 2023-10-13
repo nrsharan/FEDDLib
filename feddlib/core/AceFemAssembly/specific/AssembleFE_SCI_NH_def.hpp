@@ -16,13 +16,23 @@ namespace FEDD
 	AssembleFE_SCI_NH<SC, LO, GO, NO>::AssembleFE_SCI_NH(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params, tuple_disk_vec_ptr_Type tuple) : AssembleFE<SC, LO, GO, NO>(flag, nodesRefConfig, params, tuple)
 	{
 		// Extracting values from ParameterList
-		E0_ = this->params_->sublist("Parameter Solid").get("E", 0.38);
-		E1_ = this->params_->sublist("Parameter Solid").get("E1", 0.3);
-		poissonRatio_ = this->params_->sublist("Parameter Solid").get("Poisson Ratio", 0.49e-0);
-		c1_ = this->params_->sublist("Parameter Solid").get("c1", 0.25e-0);
-		D0_ = this->params_->sublist("Parameter Diffusion").get("D0", 6.0e-5);
-		m_ = this->params_->sublist("Parameter Diffusion").get("m", 0.0);
-		dofOrdering_ = this->params_->sublist("Parameter").get("Ordering", 2);
+		int numMaterials =  this->params_->sublist("Parameter Solid").get("Number of Materials", 1);
+		int materialID = 0;
+
+		for(int i=1; i<= numMaterials; i++)
+			if( this->params_->sublist("Parameter Solid").sublist(std::to_string(i)).get("Volume Flag", 15) == this->flag_)
+				materialID = i;
+		
+		if(materialID == 0)
+			cout << "!!! Warning: No corresponding parameterslist for the element flag="<< this->flag_ << ". Please Check volume flags of elements and Mesh Data !!! " << endl;
+
+		E0_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("E", 0.38);
+		E1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("E1", 0.3);
+		poissonRatio_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Poisson Ratio", 0.49e-0);
+		c1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("c1", 0.25e-0);
+		D0_ = this->params_->sublist("Parameter Diffusion").sublist(std::to_string(materialID)).get("D0", 6.0e-5);
+		m_ = this->params_->sublist("Parameter Diffusion").sublist(std::to_string(materialID)).get("m", 0.0);
+		dofOrdering_ = this->params_->sublist("Parameter").sublist(std::to_string(materialID)).get("Ordering", 2);
 
 		FEType_ = std::get<1>(this->diskTuple_->at(0));	   // FEType of Disk
 		dofsSolid_ = std::get<2>(this->diskTuple_->at(0)); // Degrees of freedom per node
