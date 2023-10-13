@@ -112,6 +112,25 @@ void parabolicInflow3DArtery(double* x, double* res, double t, const double* par
     return;
 }
 
+void pressureBC(double* x, double* res, double t, const double* parameters)
+{
+    // parameters[0] is the maxium desired velocity
+    // parameters[1] end of ramp
+    // parameters[2] is the maxium solution value of the laplacian parabolic inflow problme
+    // we use x[0] for the laplace solution in the considered point. Therefore, point coordinates are missing
+    double scale =  parameters[1];
+    if(t < parameters[0])
+    {
+        res[0] =  0.001066576; // * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
+    }
+    else
+    {
+        res[0] =  0.001066576;
+    }
+    
+    return;
+}
+
 void parabolicInflow3DLinArtery(double* x, double* res, double t, const double* parameters)
 {
     // parameters[0] is the maxium desired velocity
@@ -596,6 +615,10 @@ int main(int argc, char *argv[])
         std::vector<double> parameter_vec(1, parameterListProblem->sublist("Parameter").get("Max Velocity",1.));
         parameter_vec.push_back( parameterListProblem->sublist("Parameter").get("Max Ramp Time",2.) );
         
+        std::vector<double> parameter_vec_pressure(1, parameterListProblem->sublist("Parameter").get("Max Ramp Time",1.));
+        parameter_vec_pressure.push_back( parameterListProblem->sublist("Parameter").get("Scale Pressure",1.) );
+
+
         TEUCHOS_TEST_FOR_EXCEPTION(bcType != "Compute Inflow", std::logic_error, "Select a valid boundary condition. Only Compute Inflow available.");
 
         //#############################################
@@ -674,6 +697,8 @@ int main(int argc, char *argv[])
             bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring                
             bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring
 
+            bcFactory->addBC(pressureBC, 5, 1, domainFluidPressure, "Dirichlet", 1,parameter_vec_pressure); // outflow                
+            bcFactoryFluid->addBC(pressureBC, 5, 1, domainFluidPressure, "Dirichlet", 1,parameter_vec_pressure); // outflow
             
             if (zeroPressure) {
                 //bcFactory->addBC(zeroBC, 4, 1, domainFluidPressure, "Dirichlet", 1); // outflow ring

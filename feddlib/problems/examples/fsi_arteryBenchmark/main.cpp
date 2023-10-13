@@ -166,6 +166,7 @@ void parabolicInflow3DArtery(double* x, double* res, double t, const double* par
         res[2] = -parameters[0] / parameters[2] * x[0];
 
     }
+    cout << " Velocity " << res[2] << endl;
 
     return;
 }

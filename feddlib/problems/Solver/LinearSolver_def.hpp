@@ -522,7 +522,7 @@ int LinearSolver<SC,LO,GO,NO>::solveBlock(TimeProblem_Type* timeProblem, BlockMu
 //            }
 //        }
 //    }
-    //system->writeMM("SystemCombined");
+    system->writeMM("SystemCombined");
    //rhs->writeMM("rhs");
     ThyraLinOpConstPtr_Type thyraMatrix = timeProblem->getSystemCombined()->getThyraLinBlockOp();
 //    ThyraLinOpBlockConstPtr_Type thyraMatrixBlock = timeProblem->getSystemCombined()->getThyraLinBlockOp();

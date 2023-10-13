@@ -717,7 +717,7 @@ int main(int argc, char *argv[])
 		    MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
 		    
 		    int volumeID=10;
-		    if(bcType=="Artery" || bcType == "Artery Full")
+		    if(bcType=="Artery" || bcType == "Artery Full" || bcType == "Artery Plaque")
 		    	volumeID = 15;
 		    else if(bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2")
 		    	volumeID = 21;
