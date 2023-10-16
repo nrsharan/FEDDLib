@@ -506,7 +506,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
         d_rep_->importFromVector(d, true); 
        
         this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Rhs", true/*call fillComplete*/);
-        BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
+        //BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
         //blockSol->addBlock(d_rep_,0);
         //blockSol->addBlock(c_rep_,1);
         //this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
@@ -525,7 +525,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
        
         }
         else if(!type.compare("reverse")){
-            //this->residualVec_->getBlockNonConst(1)->scale(-1.0); 
+            this->residualVec_->getBlockNonConst(1)->scale(-1.0); 
 
             if(this->verbose_)
                 cout << " Residual Type : " << type  << endl;
@@ -535,8 +535,8 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
             //     this->residualVec_->getBlockNonConst(0)->update(1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);
            
         }
-
-        //  this->residualVec_->getBlockNonConst(0)->writeMM("residualVec");
+        this->residualVec_->getBlockNonConst(1)->print();
+        //this->residualVec_->getBlockNonConst(1)->writeMM("residualVec");
 
 
         /*this->problemChem_->assemble();

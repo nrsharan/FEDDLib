@@ -30,7 +30,7 @@ namespace FEDD
 		E1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("E1", 0.3);
 		poissonRatio_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Poisson Ratio", 0.49e-0);
 		c1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("c1", 0.25e-0);
-		D0_ = this->params_->sublist("Parameter Diffusion").sublist(std::to_string(materialID)).get("D0", 6.0e-5);
+		D0_ = this->params_->sublist("Parameter Diffusion").get("D0", 6.0e-5);
 		m_ = this->params_->sublist("Parameter Diffusion").sublist(std::to_string(materialID)).get("m", 0.0);
 		dofOrdering_ = this->params_->sublist("Parameter").sublist(std::to_string(materialID)).get("Ordering", 2);
 

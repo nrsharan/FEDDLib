@@ -1,6 +1,6 @@
 <ParameterList name="SCI">
     <ParameterList name="Parameter Solid"> 
-    	<Parameter name="Number of Materials" type="int" value="2"/>
+    	<Parameter name="Number of Materials" type="int" value="1"/>
           	<ParameterList name="1">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="15"/>
