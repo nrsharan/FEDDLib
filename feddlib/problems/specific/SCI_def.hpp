@@ -535,7 +535,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
             //     this->residualVec_->getBlockNonConst(0)->update(1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);
            
         }
-        this->residualVec_->getBlockNonConst(1)->print();
+       // this->residualVec_->getBlockNonConst(1)->print();
         //this->residualVec_->getBlockNonConst(1)->writeMM("residualVec");
 
 

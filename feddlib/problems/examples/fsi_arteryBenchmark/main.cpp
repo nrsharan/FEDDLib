@@ -120,7 +120,7 @@ void parabolicInflow3DArtery(double* x, double* res, double t, const double* par
     // parameters[1] end of ramp
     // parameters[2] is the maxium solution value of the laplacian parabolic inflow problme
     // we use x[0] for the laplace solution in the considered point. Therefore, point coordinates are missing
-    double heartBeatStart = parameters[4];
+    double heartBeatStart = parameters[3];
 
     if(t < parameters[1])
     {
