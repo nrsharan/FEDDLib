@@ -7,7 +7,7 @@
         
         <Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  unstructured -->
         
-        <Parameter name="Max Velocity" type="double" value="100.0"/>        
+        <Parameter name="Max Velocity" type="double" value="42.0"/>        
         <Parameter name="Max Ramp Time" type="double" value="0.1"/>
         
         <Parameter name="Model Geometry" type="string" value="Elasticity"/>
@@ -48,6 +48,8 @@
         
         <Parameter name="Ramp type" type="string" value="cos"/><!--cos, linear -->
         <Parameter name="Set Outflow Pressure to Zero" type="bool" value="false"/>
+        <Parameter name="Pressure Boundary Condition" type="string" value="Restriction"/>
+        <Parameter name="Pressure Load" type="double" value="0.0001"/>
     </ParameterList>
     
     <ParameterList name="Parameter Geometry">

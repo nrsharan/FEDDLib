@@ -171,6 +171,7 @@ void BCBuilder<SC,LO,GO,NO>::setRHS(const BlockMultiVectorPtr_Type &blockMV, dou
         //Code below is experimental
         for (int i=0; i<vecBCType_.size(); i++) {
             if( vecBCType_.at(i) == "Neumann" &&  vecBlockID_.at(i)==block){
+                cout << "######################## Neumann " << endl;
                 DomainPtr_Type domain = vecDomain_.at(i);
                 FEFacPtr_Type feFactory = Teuchos::rcp( new FEFac_Type() );
                 feFactory->addFE(domain);
@@ -188,6 +189,7 @@ void BCBuilder<SC,LO,GO,NO>::setRHS(const BlockMultiVectorPtr_Type &blockMV, dou
                     feFactory->assemblySurfaceIntegralFlag( dim, domain->getFEType(), a, "Vector", vecBC_func_.at(i), funcParameter );
                 }
                 else{
+                    cout << " Dofs = 1 " << endl;
                     a = Teuchos::rcp(new MultiVector_Type ( domain->getMapRepeated() ) );
                     aUnique = Teuchos::rcp(new MultiVector_Type ( domain->getMapUnique() ) );
                     feFactory->assemblySurfaceIntegralFlag( dim, domain->getFEType(), a, "Scalar", vecBC_func_.at(i), funcParameter );

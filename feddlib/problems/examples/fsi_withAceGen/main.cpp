@@ -121,11 +121,31 @@ void pressureBC(double* x, double* res, double t, const double* parameters)
     double scale =  parameters[1];
     if(t < parameters[0])
     {
-        res[0] =  0.001066576; // * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
+        res[0] =  scale*0.001066576; // * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
     }
     else
     {
-        res[0] =  0.001066576;
+        res[0] =  scale*0.001066576;
+    }
+    
+    return;
+}
+
+void rhsRestriction(double* x, double* res, double* parameters){
+
+    double pressureValue = parameters[1];
+    double flag = parameters[2];
+
+  	res[0] =0.;
+    
+    /*if(parameters[0]+1.e-12 < TRamp)
+        force = (parameters[0]+loadStepSize) * parameters[1] / TRamp ;
+    else
+        force = parameters[1];*/
+
+    if(flag == 5){
+      	res[0] = pressureValue;
+        
     }
     
     return;
@@ -578,31 +598,17 @@ int main(int argc, char *argv[])
             
         }
 
-        vec2D_dbl_Type diffusionTensor(dim,vec_dbl_Type(3));
-        double D0 = parameterListAll->sublist("Parameter Diffusion").get("D0",1.);
-        for(int i=0; i<dim; i++){
-            diffusionTensor[0][0] =D0;
-            diffusionTensor[1][1] =D0;
-            diffusionTensor[2][2] =D0;
-
-            if(i>0){
-            diffusionTensor[i][i-1] = 0;
-            diffusionTensor[i-1][i] = 0;
-            }
-            else
-            diffusionTensor[i][i+1] = 0;				
-        }
- 
-                   FSI<SC,LO,GO,NO> fsi(domainFluidVelocity, discType,
-                                 domainFluidPressure, "P1",
-                                 domainStructure, discType,
-                                 domainInterface, discType,
-                                 domainGeometry, discType,
-                                 parameterListFluidAll,
-                                 parameterListStructureAll,
-                                 parameterListAll,
-                                 parameterListGeometry,
-                                 defTS);
+       
+        FSI<SC,LO,GO,NO> fsi(domainFluidVelocity, discType,
+                        domainFluidPressure, "P1",
+                        domainStructure, discType,
+                        domainInterface, discType,
+                        domainGeometry, discType,
+                        parameterListFluidAll,
+                        parameterListStructureAll,
+                        parameterListAll,
+                        parameterListGeometry,
+                        defTS);
 
 
         domainFluidVelocity->info();
@@ -697,15 +703,15 @@ int main(int argc, char *argv[])
             bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring                
             bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring
 
-            bcFactory->addBC(pressureBC, 5, 1, domainFluidPressure, "Dirichlet", 1,parameter_vec_pressure); // outflow                
-            bcFactoryFluid->addBC(pressureBC, 5, 1, domainFluidPressure, "Dirichlet", 1,parameter_vec_pressure); // outflow
+            //bcFactory->addBC(pressureBC, 5, 1, domainFluidPressure, "Neumann", 1,parameter_vec_pressure); // outflow                
+            //bcFactoryFluid->addBC(pressureBC, 5, 1, domainFluidPressure, "Neumann", 1,parameter_vec_pressure); // outflow
             
             if (zeroPressure) {
                 //bcFactory->addBC(zeroBC, 4, 1, domainFluidPressure, "Dirichlet", 1); // outflow ring
-                    bcFactory->addBC(zeroBC, 3, 1, domainFluidPressure, "Dirichlet", 1); // outflow
+                    bcFactory->addBC(zeroBC, 5, 1, domainFluidPressure, "Dirichlet", 1); // outflow
                 
                 //bcFactoryFluid->addBC(zeroBC, 4, 1, domainFluidPressure, "Dirichlet", 1); // outflow ring
-                    bcFactoryFluid->addBC(zeroBC, 3, 1, domainFluidPressure, "Dirichlet", 1); // outflow
+                    bcFactoryFluid->addBC(zeroBC, 5, 1, domainFluidPressure, "Dirichlet", 1); // outflow
             }
             
             // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
@@ -716,20 +722,20 @@ int main(int argc, char *argv[])
         // Struktur-RW
         {
             Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryStructure( new BCBuilder<SC,LO,GO,NO>( ) );
-                bcFactory->addBC(zeroDirichlet3D, 14, 2, domainStructure, "Dirichlet_Y_Z", dim); // inflow/outflow strip fixed in y direction
-                bcFactory->addBC(zeroDirichlet3D, 13, 2, domainStructure, "Dirichlet_X_Z", dim); // inflow/outflow strip fixed in y direction
-                bcFactory->addBC(zeroDirichlet3D, 7, 2, domainStructure, "Dirichlet_Z", dim); // inlet fixed in Z direction
-                bcFactory->addBC(zeroDirichlet3D, 8, 2, domainStructure, "Dirichlet_Z", dim); // outlet fixed in Z direction
-                bcFactory->addBC(zeroDirichlet3D, 9, 2, domainStructure, "Dirichlet_Z", dim); // inlet ring in Z direction
-                bcFactory->addBC(zeroDirichlet3D, 10, 2, domainStructure, "Dirichlet_Z", dim); // outlet ring in Z direction
+            bcFactory->addBC(zeroDirichlet3D, 14, 2, domainStructure, "Dirichlet_Y_Z", dim); // inflow/outflow strip fixed in y direction
+            bcFactory->addBC(zeroDirichlet3D, 13, 2, domainStructure, "Dirichlet_X_Z", dim); // inflow/outflow strip fixed in y direction
+            bcFactory->addBC(zeroDirichlet3D, 7, 2, domainStructure, "Dirichlet_Z", dim); // inlet fixed in Z direction
+            bcFactory->addBC(zeroDirichlet3D, 8, 2, domainStructure, "Dirichlet_Z", dim); // outlet fixed in Z direction
+            bcFactory->addBC(zeroDirichlet3D, 9, 2, domainStructure, "Dirichlet_Z", dim); // inlet ring in Z direction
+            bcFactory->addBC(zeroDirichlet3D, 10, 2, domainStructure, "Dirichlet_Z", dim); // outlet ring in Z direction
 
-                bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim); 
-                bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim); 
-                bcFactoryStructure->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dim);           
-                bcFactoryStructure->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dim); 
-                bcFactoryStructure->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim);           
-                bcFactoryStructure->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim); 
-            // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
+            bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim); 
+            bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim); 
+            bcFactoryStructure->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dim);           
+            bcFactoryStructure->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dim); 
+            bcFactoryStructure->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim);           
+            bcFactoryStructure->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim); 
+        // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
             // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()
         		if (!fsi.problemStructure_.is_null())
                     fsi.problemStructure_->addBoundaries(bcFactoryStructure);
@@ -743,6 +749,10 @@ int main(int argc, char *argv[])
         else
         fsi.problemStructureNonLin_->addRhsFunction( rhsDummy );
     
+
+        fsi.problemFluid_->addRhsFunction(rhsRestriction,0);
+        double pressureLoad= parameterListAll->sublist("Parameter Fluid").get("Pressure Load",0.);
+        fsi.problemFluid_->addParemeterRhs( pressureLoad);
         // Geometrie-RW separat, falls geometrisch explizit.
         // Bei Geometrisch implizit: Keine RW in die factoryFSI fuer das
         // Geometrie-Teilproblem, da sonst (wg. dem ZeroDirichlet auf dem Interface,

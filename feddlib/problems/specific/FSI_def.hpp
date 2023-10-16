@@ -435,7 +435,16 @@ void FSI<SC,LO,GO,NO>::reAssemble(std::string type) const
         computeSolidRHSInTime( );
         return;
     }
-
+    if(type == "ComputePressureRHSInTime")
+    {
+        if(this->verbose_)
+            std::cout << "-- Reassembly (ComputePressureRHSInTime)" << '\n';
+        
+        computePressureRHSInTime()
+;
+        return;
+    }
+    
     
     // ###############
     // Berechne die Gittergeschwindigkeit w und FSI-Konvektion-Anteil (u-w)
@@ -1134,9 +1143,9 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
     }
 
     // TODO
-    if (this->problemTimeFluid_->hasSourceTerm()) {
+    /*if (this->problemTimeFluid_->hasSourceTerm()) {
         TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Check sourceterm.");
-    }
+    }*/
 
     // Wieder zu den eigentlichen Parametern zuruecksetzen, nachdem die temporaeren
     // genommen wurden.
@@ -1449,6 +1458,53 @@ void FSI<SC,LO,GO,NO>::initializeGE(){
         this->residualVec_->resize( 4 );
         this->initVectorSpaces();  //reinitialize NOX vector spaces
     }
+}
+
+template<class SC,class LO,class GO,class NO>
+void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
+
+    string pressureRB = this->parameterList_->sublist("Parameter Fluid").get("Pressure Boundary Condition","None");
+
+    cout << " ##### Pressure RB APPLY ##### " << endl;
+    if (pressureRB == "Restriction")
+    {
+        cout << " ##### Restriction RB ##### " << endl;
+
+        MultiVectorPtr_Type FERhs = Teuchos::rcp(new MultiVector_Type( this->getDomain(1)->getMapRepeated() ));
+
+        vec_dbl_Type funcParameter(1,0.);
+        funcParameter[0] = timeSteppingTool_->t_;            
+        // how can we use different parameters for different blocks here?
+        for (int j = 0; j < this->problemTimeFluid_->getUnderlyingProblem()->getParameterCount(); j++)
+            funcParameter.push_back(this->problemTimeFluid_->getUnderlyingProblem()->getParameterRhs(j));
+        funcParameter.push_back(0.);
+        
+        
+
+        MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
+        u_rep_->importFromVector(u, true); 
+         
+        this->feFactory_->assemblyRestrictionBoundary(this->dim_, this->getDomain(1)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],this->parameterList_,1);
+                  
+        this->sourceTerm_->getBlockNonConst(1)->exportFromVector( FERhs, false, "Add" );
+
+       // this->sourceTerm_->getBlockNonConst(1)->print();
+    //this->problemTimeStructure_->getSourceTerm()->scale(density);
+        // Fuege die rechte Seite der DGL (f bzw. f_{n+1}) der rechten Seite hinzu (skaliert mit coeffSourceTerm)
+        // Die Skalierung mit der Dichte erfolgt schon in der Assemblierungsfunktion!
+        
+        // addSourceTermToRHS() aus DAESolverInTime
+        double coeffSourceTermStructure = 1.0;
+       // BlockMultiVectorPtr_Type tmpSourceterm = Teuchos::rcp(new BlockMultiVector_Type(1)) ;
+       // tmpSourceterm->addBlock(this->sourceTerm_->getBlockNonConst(1),0);
+
+            
+        this->problemTimeFluid_->getRhs()->getBlockNonConst(1)->update(coeffSourceTermStructure, *this->sourceTerm_->getBlockNonConst(1), 1.);
+        this->rhs_->addBlock( this->problemTimeFluid_->getRhs()->getBlockNonConst(1), 1 );
+    
+    }
+        
+  
 }
 
 }

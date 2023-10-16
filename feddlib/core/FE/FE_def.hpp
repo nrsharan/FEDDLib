@@ -6560,6 +6560,129 @@ void FE<SC,LO,GO,NO>::assemblyShapeDerivativeDivergence(int dim,
 
 }
 
+
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
+                                              std::string FEType,
+                                              MultiVectorPtr_Type f,
+                                              MultiVectorPtr_Type u_rep,
+                                              std::vector<SC>& funcParameter,
+                                              RhsFunc_Type func,
+                                              ParameterListPtr_Type params,
+                                              int FEloc) {
+    ElementsPtr_Type elements = domainVec_.at(FEloc)->getElementsC();
+
+    vec2D_dbl_ptr_Type pointsRep = domainVec_.at(FEloc)->getPointsRepeated();
+    
+    vec2D_dbl_ptr_Type phi;
+    vec_dbl_ptr_Type weights = Teuchos::rcp(new vec_dbl_Type(0));
+    UN degFunc = funcParameter[funcParameter.size()-1] + 1.e-14;
+    UN deg = determineDegree( dim-1, FEType, Std);// + 1.0;
+
+    getPhi(phi, weights, dim-1, FEType, deg);
+
+    vec2D_dbl_ptr_Type quadPoints;
+    vec_dbl_ptr_Type w = Teuchos::rcp(new vec_dbl_Type(0));
+    getQuadratureValues(dim-1, deg, quadPoints, w, FEType);
+    w.reset();
+
+
+    SC elScaling;
+    SmallMatrix<SC> B(dim);
+    vec_dbl_Type b(dim);
+    f->putScalar(0.);
+    Teuchos::ArrayRCP< SC > valuesF = f->getDataNonConst(0);
+       
+    std::vector<double> valueFunc(dim);
+
+    SC* paramsFunc = &(funcParameter[0]);
+
+    // The second last entry is a placeholder for the surface element flag. It will be set below
+    for (UN T=0; T<elements->numberElements(); T++) {
+        FiniteElement fe = elements->getElement( T );
+        ElementsPtr_Type subEl = fe.getSubElements(); // might be null
+        for (int surface=0; surface<fe.numSubElements(); surface++) {
+            FiniteElement feSub = subEl->getElement( surface  );
+            if(subEl->getDimension() == dim-1 ){
+               
+                vec_int_Type nodeList = feSub.getVectorNodeListNonConst ();
+            
+		        vec_dbl_Type solution_u = getSolution(nodeList, u_rep,dim);
+                vec2D_dbl_Type nodes;
+		        nodes = getCoordinates(nodeList, pointsRep);
+
+                vec_dbl_Type p1(dim),p2(dim),v_E(dim,1.);
+
+   				double norm_v_E = 1.;
+   				if(dim==2){
+	   				v_E[0] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[1]).at(1);
+					v_E[1] = -(pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[1]).at(0));
+					norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2));	
+	   				
+   				}
+   				else if(dim==3){
+
+		            p1[0] = pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[1]).at(0);
+					p1[1] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[1]).at(1);
+					p1[2] = pointsRep->at(nodeList[0]).at(2) - pointsRep->at(nodeList[1]).at(2);
+
+					p2[0] = pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[2]).at(0);
+					p2[1] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[2]).at(1);
+					p2[2] = pointsRep->at(nodeList[0]).at(2) - pointsRep->at(nodeList[2]).at(2);
+
+					v_E[0] = p1[1]*p2[2] - p1[2]*p2[1];
+					v_E[1] = p1[2]*p2[0] - p1[0]*p2[2];
+					v_E[2] = p1[0]*p2[1] - p1[1]*p2[0];
+		            
+				    norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2)+pow(v_E[2],2));
+                  
+                   
+
+				}
+                vec_dbl_Type x(dim,0.); //dummy
+                paramsFunc[ funcParameter.size() - 1 ] = feSub.getFlag();          
+
+                func( &x[0], &valueFunc[0], paramsFunc);
+                if(valueFunc[0] > 0.){
+                    buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
+                    elScaling = B.computeScaling( );
+                    // loop over basis functions
+                    for (UN i=0; i < phi->at(0).size(); i++) {
+                        Teuchos::Array<SC> value(0);
+                        
+                        value.resize( dim, 0. );
+                        // loop over basis functions quadrature points
+                        for (UN w=0; w<phi->size(); w++) {
+                            /*vec_dbl_Type x(dim,0.); //coordinates
+                            for (int k=0; k<dim; k++) {// transform quad points to global coordinates
+                                for (int l=0; l<dim-1; l++){
+                                    x[ k ] += B[k][l] * (*quadPoints)[ w ][ l ];
+                                }   
+                                x[k] += b[k];
+                            }*/
+       
+                            for (int j=0; j<value.size(); j++){
+                                value[j] += weights->at(w) * valueFunc[0]*v_E[j]/norm_v_E *solution_u[j]* (*phi)[w][i];
+                            }
+                        }
+
+                        for (int j=0; j<value.size(); j++)
+                            value[j] *= elScaling;
+                        
+
+                        for (int j=0; j<value.size(); j++)
+                            valuesF[nodeList[ i ] ] += value[j];
+                        
+                    }
+                }
+                    
+            }
+        }
+    }
+}
+
+
+
 template <class SC, class LO, class GO, class NO>
 void FE<SC,LO,GO,NO>::assemblySurfaceIntegralExternal(int dim,
                                               std::string FEType,

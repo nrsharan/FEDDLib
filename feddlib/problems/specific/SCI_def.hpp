@@ -525,7 +525,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
        
         }
         else if(!type.compare("reverse")){
-            this->residualVec_->getBlockNonConst(1)->scale(-1.0); 
+            //this->residualVec_->getBlockNonConst(1)->scale(-1.0); 
 
             if(this->verbose_)
                 cout << " Residual Type : " << type  << endl;

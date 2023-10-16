@@ -47,8 +47,11 @@
         <Parameter name="Density" type="double" value="1.0e-6"/>
         <Parameter name="Symmetric gradient" type="bool"       value="true"/>
         
-        <Parameter name="Ramp type" type="string" value="cos"/><!--cos, linear -->
+           <Parameter name="Ramp type" type="string" value="cos"/><!--cos, linear -->
         <Parameter name="Set Outflow Pressure to Zero" type="bool" value="false"/>
+        <Parameter name="Pressure Boundary Condition" type="string" value="Restriction"/>
+        <Parameter name="Pressure Load" type="bool" value="0.0001"/>
+
     </ParameterList>
     
       <ParameterList name="Parameter Diffusion">

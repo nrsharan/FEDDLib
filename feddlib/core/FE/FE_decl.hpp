@@ -118,7 +118,16 @@ class FE {
                                  std::string fieldType,
                                  RhsFunc_Type func,
                                  std::vector<SC>& funcParameter);
-                    
+
+    void assemblyRestrictionBoundary(int dim, 
+                                std::string FEType, 
+                                MultiVectorPtr_Type f, 
+                                MultiVectorPtr_Type u_rep, 
+                                std::vector<SC>& funcParameter, 
+                                RhsFunc_Type func, 
+                                ParameterListPtr_Type params, 
+                                int FEloc);
+                
     void assemblySurfaceIntegralExternal(int dim,
                                     std::string FEType,
                                     MultiVectorPtr_Type f,

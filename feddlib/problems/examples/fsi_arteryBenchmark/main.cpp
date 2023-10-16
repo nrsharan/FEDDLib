@@ -128,7 +128,7 @@ void parabolicInflow3DArtery(double* x, double* res, double t, const double* par
         res[1] = 0.;
         res[2] = -parameters[0] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
     }
-    if(t > heartBeatStart)
+    else if(t > heartBeatStart)
     {
     
         double a0    = 11.693284502463376;
@@ -166,7 +166,6 @@ void parabolicInflow3DArtery(double* x, double* res, double t, const double* par
         res[2] = -parameters[0] / parameters[2] * x[0];
 
     }
-    cout << " Velocity " << res[2] << endl;
 
     return;
 }
@@ -211,6 +210,25 @@ void dummyFunc(double* x, double* res, double t, const double* parameters)
     return;
 }
 
+void rhsRestriction(double* x, double* res, double* parameters){
+
+    double pressureValue = parameters[1];
+    double flag = parameters[2];
+
+  	res[0] =0.;
+    
+    /*if(parameters[0]+1.e-12 < TRamp)
+        force = (parameters[0]+loadStepSize) * parameters[1] / TRamp ;
+    else
+        force = parameters[1];*/
+
+    if(flag == 5){
+      	res[0] = pressureValue;
+        
+    }
+    
+    return;
+}
 
 typedef unsigned UN;
 typedef double SC;
@@ -759,6 +777,10 @@ int main(int argc, char *argv[])
             else
                 fsi.problemStructureNonLin_->addRhsFunction( rhsDummy );
         
+
+            fsi.problemFluid_->addRhsFunction(rhsRestriction,0);
+            double pressureLoad= parameterListAll->sublist("Parameter Fluid").get("Pressure Load",0.);
+            fsi.problemFluid_->addParemeterRhs( pressureLoad);
             // Geometrie-RW separat, falls geometrisch explizit.
             // Bei Geometrisch implizit: Keine RW in die factoryFSI fuer das
             // Geometrie-Teilproblem, da sonst (wg. dem ZeroDirichlet auf dem Interface,
