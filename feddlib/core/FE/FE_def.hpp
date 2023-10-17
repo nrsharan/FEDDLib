@@ -6659,7 +6659,7 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                             }*/
        
                             for (int j=0; j<value.size(); j++){
-                                value[j] += weights->at(w) * valueFunc[0]*v_E[j]/norm_v_E *solution_u[j]* (*phi)[w][i];
+                                value[j] += weights->at(w) * valueFunc[0]*abs(v_E[j]/norm_v_E *solution_u[j])* (*phi)[w][i];
                             }
                         }
 
