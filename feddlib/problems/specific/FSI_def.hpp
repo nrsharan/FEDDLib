@@ -1470,7 +1470,7 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
     {
         cout << " ##### Restriction RB ##### " << endl;
 
-        MultiVectorPtr_Type FERhs = Teuchos::rcp(new MultiVector_Type( this->getDomain(1)->getMapRepeated() ));
+        MultiVectorPtr_Type FERhs = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ));
 
         vec_dbl_Type funcParameter(1,0.);
         funcParameter[0] = timeSteppingTool_->t_;            
@@ -1484,11 +1484,11 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
         MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
         u_rep_->importFromVector(u, true); 
          
-        this->feFactory_->assemblyRestrictionBoundary(this->dim_, this->getDomain(1)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],this->parameterList_,1);
+        this->feFactory_->assemblyRestrictionBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],this->parameterList_,0);
                   
-        this->sourceTerm_->getBlockNonConst(1)->exportFromVector( FERhs, false, "Add" );
+        this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
 
-       // this->sourceTerm_->getBlockNonConst(1)->print();
+        //this->sourceTerm_->getBlockNonConst(0)->print();
     //this->problemTimeStructure_->getSourceTerm()->scale(density);
         // Fuege die rechte Seite der DGL (f bzw. f_{n+1}) der rechten Seite hinzu (skaliert mit coeffSourceTerm)
         // Die Skalierung mit der Dichte erfolgt schon in der Assemblierungsfunktion!
@@ -1499,8 +1499,8 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
        // tmpSourceterm->addBlock(this->sourceTerm_->getBlockNonConst(1),0);
 
             
-        this->problemTimeFluid_->getRhs()->getBlockNonConst(1)->update(coeffSourceTermStructure, *this->sourceTerm_->getBlockNonConst(1), 1.);
-        this->rhs_->addBlock( this->problemTimeFluid_->getRhs()->getBlockNonConst(1), 1 );
+        this->problemTimeFluid_->getRhs()->getBlockNonConst(0)->update(coeffSourceTermStructure, *this->sourceTerm_->getBlockNonConst(0), 1.);
+        this->rhs_->addBlock( this->problemTimeFluid_->getRhs()->getBlockNonConst(0), 0 );
     
     }
         
