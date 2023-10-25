@@ -6580,7 +6580,6 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
     vec_dbl_ptr_Type weights = Teuchos::rcp(new vec_dbl_Type(0));
     UN degFunc = funcParameter[funcParameter.size()-1] + 1.e-14;
     UN deg = determineDegree( dim-1, FEType, Std);// + 1.0;
-    cout << " Degree " << deg << endl;
     getDPhi(dPhi, weights, dim, FEType, deg);
     getPhi(phi, weights, dim-1, FEType, deg);
 
@@ -6589,8 +6588,9 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
     getQuadratureValues(dim-1, deg, quadPoints, w, FEType);
     w.reset();
 
-    double poissonRatio=0.49;
+    double poissonRatio=params->sublist("Parameter Fluid").get("Poisson Ratio",0.49); 
 
+    double normalScale = params->sublist("Parameter Fluid").get("Normal Scale",1.0); 
 
     SC elScaling;
     SmallMatrix<SC> B(dim);
@@ -6740,10 +6740,10 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                     // Resulting Quad Points allways (0.5,0,0) (0.5,0.5,0) (0,0.5,0)
                     buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
                     elScaling = B.computeScaling( );
-                    vec2D_dbl_Type flowRate(numNodes_T, vec_dbl_Type(dim,0.));
+                    double flowRate; //vec2D_dbl_Type flowRate(numNodes_T, vec_dbl_Type(dim,0.));
                     // 1. Determine volumetric Flowrate: \int_gamma u_f n ds
                     // loop over basis functions (one per)
-                    vec2D_dbl_Type phi1( quadPSize,vec_dbl_Type(numNodes,0.))  ;
+                    /*vec2D_dbl_Type phi1( quadPSize,vec_dbl_Type(numNodes,0.))  ;
                     //vec_dbl_ptr_Type value(new vec_dbl_Type(dim,0.0));
 
                     for(int l=0; l< quadPSize; l++){
@@ -6753,7 +6753,7 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                             phi1[l][i] = value;
                             
                         }
-                    }
+                    }*/
                     for (UN i=0; i < numNodes_T; i++) {
                         Teuchos::Array<SC> value(0);
                         value.resize(  dim, 0. ); // Volumetric flow rate over one surface is a skalar value
@@ -6761,16 +6761,16 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                         for (UN w=0; w<phi->size(); w++) {
                             for (int j=0; j<dim; j++){
                                 LO index = dim * i + j;
-                                value[j] += weights->at(w) *v_E[j]/norm_v_E *valueFunc[0]*solution_u[index]*(*phi)[w][i]; // valueFunc[0]* = 1.0
+                                value[j] +=weights->at(w) *v_E[j]/norm_v_E *solution_u[index]*(*phi)[w][i]; // valueFunc[0]* = 1.0
                             }
                         }             
 
-                        //cout << " Volmetric flow rate over reference Element " << value[0] << " " << value[1] << " " << value[2] << endl;
-                        flowRate[i][0]=  value[0] * elScaling;
-                        flowRate[i][1]=  value[1] * elScaling;
-                        flowRate[i][2]=  value[2] * elScaling;
+                        flowRate +=   (value[0]+value[1]+value[2]) * elScaling;
+                       
 
                     }
+                    cout << " Volmetric flow rate over reference Element " << flowRate<< " and resistance: " << valueFunc[0]/(flowRate)   << endl;
+
                     for (UN i=0; i < numNodes_T; i++) {
        
                         // 2.   
@@ -6779,13 +6779,13 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                         // loop over basis functions quadrature points
                         for (UN w=0; w<phi->size(); w++) {       
                             for (int j=0; j<dim; j++){
-                                value[j] += weights->at(w) *v_E[j]/norm_v_E *flowRate[i][j]*(*phi)[w][i];
+                                value[j] += weights->at(w) *v_E[j]/norm_v_E *valueFunc[0]*(*phi)[w][i];
                             }
                         }             
 
                         //cout << " Value First component " << value[0] << " " << value[1] << " " << value[2] << endl;
                         for (int j=0; j<value.size(); j++)
-                            valuesF[ dim * nodeList[ i ] + j ] += value[j] * elScaling;
+                            valuesF[ dim * nodeList[ i ] + j ] += normalScale*value[j] * elScaling;
                     }
                    
                     // We make the distinction between a gradient jump calculation or a simple jump calculation 
@@ -6818,7 +6818,7 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                         }   
                         //cout << " Value Second component " << value[0] << " " << value[1] << " " << value[2]  << endl;
                         for (int j=0; j<value.size(); j++)
-                            valuesF[ dim * nodeList[ t ] + j ] -= value[j] *elScaling*poissonRatio;
+                            valuesF[ dim * nodeList[ t ] + j ] -= normalScale*value[j] *elScaling*poissonRatio;
                         
                             
                                 

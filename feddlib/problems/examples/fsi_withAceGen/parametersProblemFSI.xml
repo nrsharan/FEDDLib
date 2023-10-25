@@ -51,6 +51,8 @@
         <Parameter name="Set Outflow Pressure to Zero" type="bool" value="false"/>
         <Parameter name="Pressure Boundary Condition" type="string" value="Restriction"/>
         <Parameter name="Pressure Load" type="double" value="1.16"/>
+        <Parameter name="Normal Scale" type="double" value="-1.0"/>
+        <Parameter name="Poisson Ratio" type="double" value="0.49"/>
 
     </ParameterList>
     

@@ -468,8 +468,6 @@ void TimeProblem<SC,LO,GO,NO>::calculateNonLinResidualVec( std::string type, dou
         // we need to add M/dt*u_(t+1)^k (the last results of the nonlinear method) to the residualVec_
         //Copy
         BlockMultiVectorPtr_Type tmpMV = Teuchos::rcp(new BlockMultiVector_Type( nonLinProb->getSolution() ) );
-        systemMass_->writeMM("MassMatrix");
-        nonLinProb->getResidualVector()->writeMM("ResVec");
         systemMass_->apply( *nonLinProb->getSolution(), *tmpMV, massParameters_ );
 
         if (type=="reverse")// reverse: b-Ax
