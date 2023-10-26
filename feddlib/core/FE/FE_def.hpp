@@ -21,8 +21,12 @@ int MMAInitialisationCode[]={
     0,0
 };
 
+using Teuchos::reduceAll;
+using Teuchos::REDUCE_SUM;
+using Teuchos::outArg;
 
 namespace FEDD {
+    
 DataElement::DataElement():
 ht_(1,0.),
 hp_(1,0.)
@@ -6575,13 +6579,18 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
     vec2D_dbl_ptr_Type pointsRep = domainVec_.at(FEloc)->getPointsRepeated();
     
     vec2D_dbl_ptr_Type phi;
+    vec2D_dbl_ptr_Type phi1;
+
     vec3D_dbl_ptr_Type 	dPhi;
 
     vec_dbl_ptr_Type weights = Teuchos::rcp(new vec_dbl_Type(0));
+    vec_dbl_ptr_Type weights1 = Teuchos::rcp(new vec_dbl_Type(0));
+
     UN degFunc = funcParameter[funcParameter.size()-1] + 1.e-14;
     UN deg = determineDegree( dim-1, FEType, Std);// + 1.0;
     getDPhi(dPhi, weights, dim, FEType, deg);
     getPhi(phi, weights, dim-1, FEType, deg);
+    getPhi(phi1, weights1, dim-1, FEType, 2);
 
     vec2D_dbl_ptr_Type quadPoints;
     vec_dbl_ptr_Type w = Teuchos::rcp(new vec_dbl_Type(0));
@@ -6603,9 +6612,84 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
        
     std::vector<double> valueFunc(dim);
 
-      SC* paramsFunc = &(funcParameter[0]);
+    SC* paramsFunc = &(funcParameter[0]);
+    double flowRate=0.;
 
-    // The second last entry is a placeholder for the surface element flag. It will be set below
+// First step: determine flow rate on outlet:
+    for (UN T=0; T<elements->numberElements(); T++) {
+        FiniteElement fe = elements->getElement( T );
+        ElementsPtr_Type subEl = fe.getSubElements(); // might be null
+        for (int surface=0; surface<fe.numSubElements(); surface++) {
+            FiniteElement feSub = subEl->getElement( surface  );
+            if(subEl->getDimension() == dim-1 ){
+                vec_int_Type nodeList = feSub.getVectorNodeListNonConst ();
+                int numNodes_T = nodeList.size();
+		        vec_dbl_Type solution_u = getSolution(nodeList, u_rep,dim);
+
+                vec_dbl_Type p1(dim),p2(dim),v_E(dim,1.);
+
+   				double norm_v_E = 1.;
+   				if(dim==2){
+	   				v_E[0] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[1]).at(1);
+					v_E[1] = -(pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[1]).at(0));
+					norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2));	
+	   				
+   				}
+   				else if(dim==3){
+
+		            p1[0] = pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[1]).at(0);
+					p1[1] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[1]).at(1);
+					p1[2] = pointsRep->at(nodeList[0]).at(2) - pointsRep->at(nodeList[1]).at(2);
+
+					p2[0] = pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[2]).at(0);
+					p2[1] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[2]).at(1);
+					p2[2] = pointsRep->at(nodeList[0]).at(2) - pointsRep->at(nodeList[2]).at(2);
+
+					v_E[0] = p1[1]*p2[2] - p1[2]*p2[1];
+					v_E[1] = p1[2]*p2[0] - p1[0]*p2[2];
+					v_E[2] = p1[0]*p2[1] - p1[1]*p2[0];
+		            
+				    norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2)+pow(v_E[2],2));
+                  
+
+				}
+                vec_dbl_Type x(dim,0.); //dummy
+                paramsFunc[ funcParameter.size() - 1 ] = feSub.getFlag();          
+
+                func( &x[0], &valueFunc[0], paramsFunc);
+                // Calculating R * Q = R * v * A , A = norm_v_E * 0.5
+               // Step 1: Quadrature Points on physical surface:
+                if(valueFunc[0] > 0.){
+ 
+                    buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
+                    elScaling = B.computeScaling( );
+                    
+                    Teuchos::Array<SC> value(0);
+                    value.resize(  numNodes_T, 0. ); // Volumetric flow rate over one surface is a skalar value
+                    //cout << " Velocity over node ";
+                    for (UN i=0; i < numNodes_T; i++) {
+                        // loop over basis functions quadrature points
+                        for (UN w=0; w<phi1->size(); w++) {
+                            for (int j=0; j<dim; j++){
+                                LO index = dim * i + j;
+                                value[i] += normalScale*weights1->at(w) *v_E[j]/norm_v_E *solution_u[index]*(*phi1)[w][i]; // valueFunc[0]* = 1.0
+                            }
+                        }             
+                        flowRate +=  value[i] * elScaling;
+                       
+
+                    }
+                }
+
+
+            }
+        }
+    }
+    reduceAll<int, double> (*domainVec_.at(0)->getComm(), REDUCE_SUM, flowRate, outArg (flowRate));
+
+    cout << " Flowrate Outlet: " << flowRate << endl;
+
+    // Second step: use flow rate to determine pressure with resistance
     for (UN T=0; T<elements->numberElements(); T++) {
         FiniteElement fe = elements->getElement( T );
         ElementsPtr_Type subEl = fe.getSubElements(); // might be null
@@ -6656,62 +6740,23 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                 if(valueFunc[0] > 0.){
 
                     vec_dbl_Type quadWeights(dim);
+                    quadWeights[0] = 1/6.;
+                    quadWeights[1] = 1/6.;
+                    quadWeights[2] = 1/6.;
                     vec2D_dbl_Type quadPoints(quadWeights.size(), vec_dbl_Type(dim));
-                    int intFE = 1;
-                    int numNodes= dim+1;
-                    int quadPSize = 1;
 
-                    if(FEType == "P2"){
-                        quadPSize=3; // Number of Surface Quadrature Points
-                    }
-                    if(FEType == "P2"){
-                        numNodes=6;
-                        intFE =2;
-                        if(dim ==3){
-                            numNodes=10;
-                        }
-                    }
-                    if(dim==3){
+                    vec_int_Type kn1= elements->getElement(T).getVectorNodeListNonConst();
 
-                        if(FEType == "P2"){
-                            double x0 = pointsRep->at(nodeList[0]).at(0);
-                            double y0 = pointsRep->at(nodeList[0]).at(1);
-                            double z0 = pointsRep->at(nodeList[0]).at(2);
-                            double x1 = pointsRep->at(nodeList[1]).at(0);
-                            double y1 = pointsRep->at(nodeList[1]).at(1);
-                            double z1 = pointsRep->at(nodeList[1]).at(2);
-                            double x2 = pointsRep->at(nodeList[2]).at(0);
-                            double y2 = pointsRep->at(nodeList[2]).at(1);
-                            double z2 = pointsRep->at(nodeList[2]).at(2);
-
-                            quadPoints[0][0] =  (x0+x1)/2.;
-                            quadPoints[0][1] =  (y0+y1)/2.;
-                            quadPoints[0][2] =  (z0+z1)/2.;
-                            quadPoints[1][0] =  (x0+x2)/2.;
-                            quadPoints[1][1] =  (y0+y2)/2.;
-                            quadPoints[1][2] =  (z0+z2)/2.;
-                            quadPoints[2][0] =  (x1+x2)/2.;
-                            quadPoints[2][1] =  (y1+y2)/2.;
-                            quadPoints[2][2] =  (z1+z2)/2.;
-
-                            quadWeights[0] = 1/6.;
-                            quadWeights[1] = 1/6.;
-                            quadWeights[2] = 1/6.;
-
-                            
-
-                        }                        
-                    }
-                    else 
-                        TEUCHOS_TEST_FOR_EXCEPTION(true,std::logic_error, "Only 3D!");
+                    vec2D_dbl_Type quadPointsT1(quadWeights.size(),vec_dbl_Type(dim));
+                    quadPointsT1.push_back({0.5,0.5,0.0});
+                    quadPointsT1.push_back({0.0,0.5,0.0});
+                    quadPointsT1.push_back({0.5,0.0,0.0});
 
                     SC detB1;
                     SC absDetB1;
                     SmallMatrix<SC> B1(dim);
                     SmallMatrix<SC> Binv1(dim);  
                     int index0,index;
-                    vec_int_Type kn1= elements->getElement(T).getVectorNodeListNonConst();
-                    vec_dbl_Type solution_u_E = getSolution(kn1, u_rep,dim);
 
                     index0 = kn1[0];
                     for (int s=0; s<dim; s++) {
@@ -6724,52 +6769,12 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                     detB1 = B1.computeInverse(Binv1);
                     detB1 = std::fabs(detB1);
 
-                    vec2D_dbl_Type quadPointsT1(quadPSize,vec_dbl_Type(dim));
-                    quadPointsT1.push_back({0.5,0.5,0.0});
-                    quadPointsT1.push_back({0.0,0.5,0.0});
-                    quadPointsT1.push_back({0.5,0.0,0.0});
-
-                    /*for(int l=0; l< quadPSize; l++){
-                        for(int p=0; p< dim ; p++){
-                            for(int q=0; q< dim; q++){
-                                quadPointsT1[l][p] += Binv1[p][q]* (quadPoints[l][q] - pointsRep->at(elements->getElement(T).getNode(0)).at(q))  ; 
-                            }
-                        }
-                                            
-                    }*/
                     // Resulting Quad Points allways (0.5,0,0) (0.5,0.5,0) (0,0.5,0)
                     buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
                     elScaling = B.computeScaling( );
-                    double flowRate; //vec2D_dbl_Type flowRate(numNodes_T, vec_dbl_Type(dim,0.));
-                    // 1. Determine volumetric Flowrate: \int_gamma u_f n ds
-                    // loop over basis functions (one per)
-                    /*vec2D_dbl_Type phi1( quadPSize,vec_dbl_Type(numNodes,0.))  ;
-                    //vec_dbl_ptr_Type value(new vec_dbl_Type(dim,0.0));
-
-                    for(int l=0; l< quadPSize; l++){
-                        for (int i=0; i<numNodes; i++) {
-                            double value;  
-                            this->phi(dim,intFE,i,quadPointsT1[l],&value);
-                            phi1[l][i] = value;
-                            
-                        }
-                    }*/
-                    for (UN i=0; i < numNodes_T; i++) {
-                        Teuchos::Array<SC> value(0);
-                        value.resize(  dim, 0. ); // Volumetric flow rate over one surface is a skalar value
-                        // loop over basis functions quadrature points
-                        for (UN w=0; w<phi->size(); w++) {
-                            for (int j=0; j<dim; j++){
-                                LO index = dim * i + j;
-                                value[j] +=weights->at(w) *v_E[j]/norm_v_E *solution_u[index]*(*phi)[w][i]; // valueFunc[0]* = 1.0
-                            }
-                        }             
-
-                        flowRate +=   (value[0]+value[1]+value[2]) * elScaling;
-                       
-
-                    }
-                    cout << " Volmetric flow rate over reference Element " << flowRate<< " and resistance: " << valueFunc[0]/(flowRate)   << endl;
+                   
+                    //cout << endl;
+                    cout << " Volmetric flow rate over reference Element " << flowRate<< " and resistance: " << valueFunc[0] << " leading to pressure: " << valueFunc[0]*(flowRate)   << endl;
 
                     for (UN i=0; i < numNodes_T; i++) {
        
@@ -6779,13 +6784,13 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                         // loop over basis functions quadrature points
                         for (UN w=0; w<phi->size(); w++) {       
                             for (int j=0; j<dim; j++){
-                                value[j] += weights->at(w) *v_E[j]/norm_v_E *valueFunc[0]*(*phi)[w][i];
+                                value[j] += weights->at(w) *normalScale*v_E[j]/norm_v_E *flowRate*valueFunc[0]*(*phi)[w][i];
                             }
                         }             
 
                         //cout << " Value First component " << value[0] << " " << value[1] << " " << value[2] << endl;
                         for (int j=0; j<value.size(); j++)
-                            valuesF[ dim * nodeList[ i ] + j ] += normalScale*value[j] * elScaling;
+                            valuesF[ dim * nodeList[ i ] + j ] += value[j] * elScaling;
                     }
                    
                     // We make the distinction between a gradient jump calculation or a simple jump calculation 
@@ -6793,14 +6798,14 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
 				   
                     for (UN t=0; t < numNodes_T; t++) {
                         Teuchos::Array<SC> value( dim, 0. ); //These are value (W_ix,W_iy,W_iz)
-                        for(int l=0; l< quadPSize; l++){
+                        for(int l=0; l< quadWeights.size(); l++){
                             vec_dbl_Type deriPhi1( dim,0.0)  ;
                             vec_dbl_ptr_Type valuePhi(new vec_dbl_Type(dim,0.0));
 
                             auto it1 = find( kn1.begin(), kn1.end() ,nodeList[t] );
                             int id_in_element = distance( kn1.begin() , it1 );
 
-                            this->gradPhi(dim,intFE,id_in_element,quadPointsT1[l],valuePhi);
+                            this->gradPhi(dim,2,id_in_element,quadPointsT1[l],valuePhi);
                             for (int j=0; j<3; j++) {
                                 deriPhi1[j] = valuePhi->at(j);
                             }
@@ -6816,7 +6821,7 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                                 value[d] += quadWeights[l] *solution_u[t*dim+d] * deriPhi1[d]* v_E[d]/norm_v_E * (*phi)[l][t];
                             }
                         }   
-                        //cout << " Value Second component " << value[0] << " " << value[1] << " " << value[2]  << endl;
+                       // cout << " Value Second component " << value[0] << " " << value[1] << " " << value[2]  << endl;
                         for (int j=0; j<value.size(); j++)
                             valuesF[ dim * nodeList[ t ] + j ] -= normalScale*value[j] *elScaling*poissonRatio;
                         

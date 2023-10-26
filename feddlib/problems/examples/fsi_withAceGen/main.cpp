@@ -138,10 +138,10 @@ void rhsRestriction(double* x, double* res, double* parameters){
 
   	res[0] =0.;
     
-    //if(parameters[0]+1.e-12 < 0.1)
-    //    pressureValue = parameters[0]*pressureValue/0.1;
-    /*else
-        force = parameters[1];*/
+    /*if(parameters[0]+1.e-12 < 0.1)
+        pressureValue = parameters[0]*pressureValue/0.1;
+    else
+        pressureValue = parameters[1];*/
 
     if(flag == 5){
       	res[0] = pressureValue;
