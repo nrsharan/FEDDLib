@@ -48,7 +48,7 @@ typename AssembleFEFactory<SC,LO,GO,NO>::AssembleFEPtr_Type AssembleFEFactory<SC
 		Teuchos::RCP<AssembleFE_SCI_NH<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_SCI_NH<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
 		assembleFE = assembleFESpecific;
 	}
-	// Structure interaction model established by Klemens Uhlmann
+	// Structure interaction model established by Balzani, Uhlmann et al.
 	else if(problemType == "SCI_SMC_MLCK"){
 		Teuchos::RCP<AssembleFE_SCI_SMC_MLCK<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_SCI_SMC_MLCK<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
 		assembleFE = assembleFESpecific;

@@ -1338,13 +1338,23 @@ template <class SC, class LO, class GO, class NO>
 void FE<SC,LO,GO,NO>::initAssembleFEElements(string elementType,tuple_disk_vec_ptr_Type problemDisk,ElementsPtr_Type elements, ParameterListPtr_Type params,vec2D_dbl_ptr_Type pointsRep, MapConstPtr_Type elementMap){
     
 	vec2D_dbl_Type nodes;
+    // Extracting values from ParameterList
+	int numMaterials = params->sublist("Parameter Solid").get("Number of Materials", 0);
+    int materialID=1;
 	for (UN T=0; T<elements->numberElements(); T++) {
 		
 		nodes = getCoordinates(elements->getElement(T).getVectorNodeList(), pointsRep);
 
 		AssembleFEFactory<SC,LO,GO,NO> assembleFEFactory;
 
-		AssembleFEPtr_Type assemblyFE = assembleFEFactory.build(elementType,elements->getElement(T).getFlag(),nodes, params,problemDisk);
+        for(int i=1; i<= numMaterials; i++){
+		    if(params->sublist("Parameter Solid").sublist(std::to_string(i)).get("Volume Flag", 15) == elements->getElement(T).getFlag()){
+                elementType = params->sublist("Parameter Solid").sublist(std::to_string(i)).get("Material Model", "SCI_NH");
+                materialID= i;
+            }
+        }
+
+		AssembleFEPtr_Type assemblyFE = assembleFEFactory.build(elementType,elements->getElement(T).getFlag(),nodes, params/*->sublist("Parameter Solid")->sublist(std::to_string(i))*/,problemDisk);
 
         assemblyFE->setGlobalElementID(elementMap->getGlobalElement(T));
 
