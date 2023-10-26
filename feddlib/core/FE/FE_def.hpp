@@ -6672,7 +6672,7 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                         for (UN w=0; w<phi1->size(); w++) {
                             for (int j=0; j<dim; j++){
                                 LO index = dim * i + j;
-                                value[i] += normalScale*weights1->at(w) *v_E[j]/norm_v_E *solution_u[index]*(*phi1)[w][i]; // valueFunc[0]* = 1.0
+                                value[i] += weights1->at(w) *v_E[j]/norm_v_E *solution_u[index]*(*phi1)[w][i]; // valueFunc[0]* = 1.0
                             }
                         }             
                         flowRate +=  value[i] * elScaling;
