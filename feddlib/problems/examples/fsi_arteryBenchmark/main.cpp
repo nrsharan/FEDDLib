@@ -288,6 +288,8 @@ int main(int argc, char *argv[])
     myCLP.setOption("precfileFluidTeko",&xmlPrecFileFluidTeko,".xml file with Inputparameters.");
     string xmlProblemFileFluid = "parametersProblemFluid.xml";
     myCLP.setOption("problemFileFluid",&xmlProblemFileFluid,".xml file with Inputparameters.");
+    string xmlProblemFileStructure = "parametersProblemStructure.xml";
+    myCLP.setOption("problemFileStructure",&xmlProblemFileStructure,".xml file with Inputparameters.");
     string xmlPrecFileStructure = "parametersPrecStructure.xml";
     myCLP.setOption("precfileStructure",&xmlPrecFileStructure,".xml file with Inputparameters.");
     string xmlPrecFileGeometry = "parametersPrecGeometry.xml";
@@ -313,6 +315,8 @@ int main(int argc, char *argv[])
 
     {
         ParameterListPtr_Type parameterListProblem = Teuchos::getParametersFromXmlFile(xmlProblemFile);
+        ParameterListPtr_Type parameterListStructure = Teuchos::getParametersFromXmlFile(xmlProblemFileStructure);
+
         ParameterListPtr_Type parameterListSolverFSI = Teuchos::getParametersFromXmlFile(xmlSolverFileFSI);
         ParameterListPtr_Type parameterListSolverGeometry = Teuchos::getParametersFromXmlFile(xmlSolverFileGeometry);
         ParameterListPtr_Type parameterListPrecGeometry = Teuchos::getParametersFromXmlFile(xmlPrecFileGeometry);
@@ -341,9 +345,10 @@ int main(int argc, char *argv[])
 
         
         ParameterListPtr_Type parameterListStructureAll(new Teuchos::ParameterList(*parameterListPrecStructure));
+        sublist(parameterListStructureAll, "Parameter Solid")->setParameters( parameterListStructure->sublist("Parameter Solid") );
         sublist(parameterListStructureAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Solid") );
+        sublist(parameterListStructureAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter") );
 
-        parameterListStructureAll->setParameters(*parameterListPrecStructure);
         
         // Fuer das Geometrieproblem, falls GE
         // CH: We might want to add a paramterlist, which defines the Geometry problem

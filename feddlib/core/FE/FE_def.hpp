@@ -733,7 +733,7 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
 	tuple_disk_vec_ptr_Type problemDiskChem = Teuchos::rcp(new tuple_disk_vec_Type(0));
     problemDiskChem->push_back(chem);
 
-	string SCIModel = params->sublist("Parameter").get("Structure Model","SCI_simple");
+	string SCIModel = params->sublist("Parameter").get("Structure Model","SCI_NH");
 
 	if(assemblyFEElements_.size()== 0){
        	initAssembleFEElements(SCIModel,problemDisk,elementsChem, params,pointsRep,domainVec_.at(FElocSolid)->getElementMap());
@@ -909,7 +909,7 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffuBlock(int dim,
 	problemDisk->push_back(solid);
 	problemDisk->push_back(chem);
 	
-	string SCIModel = params->sublist("Parameter").get("Structure Model","SCI_simple");
+	string SCIModel = params->sublist("Parameter").get("Structure Model","SCI_NH");
 
 	if(assemblyFEElements_.size()== 0){
        	initAssembleFEElements(SCIModel,problemDisk,elementsChem, params,pointsRep,domainVec_.at(FElocSolid)->getElementMap());

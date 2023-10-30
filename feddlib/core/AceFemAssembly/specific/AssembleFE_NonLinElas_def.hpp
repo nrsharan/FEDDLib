@@ -27,6 +27,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params,tuple)
 	E_ = this->params_->sublist("Parameter").get("E",0.38); // the last value is the dafault value, in case no parameter is set
     //lambda_ = this->params_->sublist("Parameter").get("lambda",1.);
     poissonRatio_ = this->params_->sublist("Parameter").get("Poisson Ratio",0.49e-0);
+		cout << "--- Init AssembleFE_NonLinElas Element --- EMOD " << E_  << endl;
 
 	/// Tupel construction follows follwing pattern:
 	/// string: Physical Entity (i.e. Velocity) , string: Discretisation (i.e. "P2"), int: Degrees of Freedom per Node, int: Number of Nodes per element)
