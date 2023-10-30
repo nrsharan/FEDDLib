@@ -26,6 +26,8 @@ namespace FEDD
 		if(materialID == 0)
 			cout << "!!! Warning: No corresponding parameterslist for the element flag="<< this->flag_ << ". Please Check volume flags of elements and Mesh Data !!! " << endl;
 
+		cout << "--- Init AssembleFE_SCI_NH Element ---" << endl;
+
 		E0_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("E", 0.38);
 		E1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("E1", 0.3);
 		poissonRatio_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Poisson Ratio", 0.49e-0);

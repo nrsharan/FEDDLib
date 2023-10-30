@@ -222,7 +222,7 @@ void rhsRestriction(double* x, double* res, double* parameters){
     else
         force = parameters[1];*/
 
-    if(flag == 5){
+    if(flag == 3){
       	res[0] = pressureValue;
         
     }

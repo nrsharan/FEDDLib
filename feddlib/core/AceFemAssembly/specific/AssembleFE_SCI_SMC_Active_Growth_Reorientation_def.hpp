@@ -86,7 +86,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	if(materialID == 0)
 		cout << "!!! Warning: No corresponding parameterslist for the element flag="<< this->flag_ << ". Please Check volume flags of elements and Mesh Data !!! " << endl;
 
-	
+	cout << "--- Init AssembleFE_SCI_SCM_Active_Growth_Reorientation Element ---" << endl;
 	// -------------------- Parameter ---------------------
 	fA_= this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("FA",30.e0); // ??
 	lambdaC50_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("LambdaC50",0.12e1); // ??
@@ -127,7 +127,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	c50_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("C50",0.5e0);
 	d0_ = this->params_->sublist("Parameter Diffusion").get("D0",6.e-05);
 	m_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("m",0.e0);
-	activeStartTime_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("ActiveStartTime",1.0); // At Starttime 1000 the diffused drug influences the material model. -> Active response at T=starttime	
+	activeStartTime_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("ActiveStartTime",1.001); // At Starttime 1000 the diffused drug influences the material model. -> Active response at T=starttime	
 	kEtaPlus_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("KEtaPlus",0.1e-3);
 	mEtaPlus_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("MEtaPlus",5.0e0);
 	growthStartTime_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("GrowthStartTime",1.e0);
