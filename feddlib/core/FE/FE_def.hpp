@@ -771,10 +771,11 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
  		SmallMatrixPtr_Type elementMatrix;
 
         // ------------------------
-        /*buildTransformation(elementsSolid->getElement(T).getVectorNodeList(), pointsRep, B, FETypeSolid);
+        buildTransformation(elementsSolid->getElement(T).getVectorNodeList(), pointsRep, B, FETypeSolid);
         detB = B.computeInverse(Binv);
         absDetB = std::fabs(detB);
-        cout << " Determinante " << detB << endl;*/
+        if(detB<0)
+        cout << " Determinante " << detB << endl;
         // ------------------------
 
 		if(assembleMode == "Jacobian"){
@@ -6626,7 +6627,7 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
     double flowRate=0.;
 
 // Step 0: determie flowrate on inlet to calculate resistance
-    /*for (UN T=0; T<elements->numberElements(); T++) {
+    /* for (UN T=0; T<elements->numberElements(); T++) {
         FiniteElement fe = elements->getElement( T );
         ElementsPtr_Type subEl = fe.getSubElements(); // might be null
         for (int surface=0; surface<fe.numSubElements(); surface++) {

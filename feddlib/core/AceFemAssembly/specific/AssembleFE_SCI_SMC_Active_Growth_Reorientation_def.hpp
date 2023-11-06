@@ -125,7 +125,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	p1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("P1",0.6e0);
 	p3_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("P3",0.6e0);
 	c50_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("C50",0.5e0);
-	d0_ = this->params_->sublist("Parameter Diffusion").get("D0",6.e-05);
+	d0_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("D0",6.e-05);
 	m_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("m",0.e0);
 	activeStartTime_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("ActiveStartTime",1.001); // At Starttime 1000 the diffused drug influences the material model. -> Active response at T=starttime	
 	kEtaPlus_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("KEtaPlus",0.1e-3);

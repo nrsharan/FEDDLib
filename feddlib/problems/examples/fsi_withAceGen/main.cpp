@@ -140,9 +140,9 @@ void parabolicInflow3DArteryHeartBeat(double* x, double* res, double t, const do
         double Q = 0.5*a0;
         
 
-        double t_min = t - fmod(t,1.0) ; //FlowConditions::t_start_unsteady;
-        double t_max = t_min + 1.0; // One heartbeat lasts 1.0 second    
-        double y = M_PI * ( 2.0*( t-t_min ) / ( t_max - t_min ) +1.0+ fmod(heartBeatStart,1.0))  ;
+        double t_min = t - fmod(t,1.0)+heartBeatStart-std::floor(t); ; //FlowConditions::t_start_unsteady;
+        double t_max = t_min + 0.5; // One heartbeat lasts 1.0 second    
+        double y = M_PI * ( 2.0*( t-t_min ) / ( t_max - t_min ) -1.0)  ;
         
         for(int i=0; i< 20; i++)
             Q += (a[i]*std::cos((i+1.)*y) + b[i]*std::sin((i+1.)*y) ) ;
@@ -152,7 +152,6 @@ void parabolicInflow3DArteryHeartBeat(double* x, double* res, double t, const do
         Q -= 0.026039341343493;
         Q = (Q - 2.85489)/(7.96908-2.85489);
 
-        cout << " Q  with y= " << y << " Q= " << Q << endl;
         res[0] = 0.;
         res[1] = 0.;
         res[2] = (parameters[0] / parameters[2] * (x[0] + x[0] * Q)) ;

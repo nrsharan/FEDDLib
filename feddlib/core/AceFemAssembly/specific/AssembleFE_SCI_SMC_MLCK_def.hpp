@@ -87,7 +87,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	p1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("P1",0.3e0);
 	p3_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("P3",0.2e0);
 	c50_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("C50",0.5e0);
-	d0_ = this->params_->sublist("Parameter Diffusion").get("D0",6.e-05);
+	d0_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("D0",6.e-05);
 	m_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("m",0.e0);
 	startTime_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("ActiveStartTime",1001.e0); // At Starttime 1000 the diffused drug influences the material model. -> Active response at T=starttime
 	rho_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Rho",1.e0);
