@@ -34,7 +34,7 @@ namespace FEDD
 		D0_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("D0",6.e-05);
 		m_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("m", 0.0);
 		dofOrdering_ = this->params_->sublist("Parameter").sublist(std::to_string(materialID)).get("Ordering", 2);
-		cout << "--- Init AssembleFE_SCI_NH Element --- EMOD " << E0_  << endl;
+		cout << "--- Init AssembleFE_SCI_NH Element --- EMOD " << E0_  << " D0_ " << D0_ << endl;
 
 		FEType_ = std::get<1>(this->diskTuple_->at(0));	   // FEType of Disk
 		dofsSolid_ = std::get<2>(this->diskTuple_->at(0)); // Degrees of freedom per node

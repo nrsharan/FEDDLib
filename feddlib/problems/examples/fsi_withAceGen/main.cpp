@@ -141,7 +141,7 @@ void parabolicInflow3DArteryHeartBeat(double* x, double* res, double t, const do
         
 
         double t_min = t - fmod(t,1.0)+heartBeatStart-std::floor(t); ; //FlowConditions::t_start_unsteady;
-        double t_max = t_min + 0.5; // One heartbeat lasts 1.0 second    
+        double t_max = t_min + 1.0; // One heartbeat lasts 1.0 second    
         double y = M_PI * ( 2.0*( t-t_min ) / ( t_max - t_min ) -1.0)  ;
         
         for(int i=0; i< 20; i++)
@@ -828,10 +828,10 @@ int main(int argc, char *argv[])
             bcFactoryFluidInterface = Teuchos::rcp( new BCBuilder<SC,LO,GO,NO>( ) );
 
 
-       // bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in Z direction
-       // bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in X direction
-        //bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // Inlet
-        //bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // Outlet
+        bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in Z direction
+        bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in X direction
+        bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // Inlet
+        bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // Outlet
         bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // Interface
 		/* bcFactoryGeometry->addBC(zeroDirichlet3D, 7, 0, domainGeometry, "Dirichlet", dim); // ?
 		bcFactoryGeometry->addBC(zeroDirichlet3D, 8, 0, domainGeometry, "Dirichlet", dim); // ?

@@ -774,8 +774,7 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
         buildTransformation(elementsSolid->getElement(T).getVectorNodeList(), pointsRep, B, FETypeSolid);
         detB = B.computeInverse(Binv);
         absDetB = std::fabs(detB);
-        if(detB<0)
-        cout << " Determinante " << detB << endl;
+       
         // ------------------------
 
 		if(assembleMode == "Jacobian"){
@@ -6609,8 +6608,10 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
     w.reset();
 
     double poissonRatio=params->sublist("Parameter Fluid").get("Poisson Ratio",0.49); 
+    int inletFlag=params->sublist("Parameter Fluid").get("Fluid Flag",4); 
 
     double normalScale = params->sublist("Parameter Fluid").get("Normal Scale",1.0); 
+    double pressureLoad = params->sublist("Parameter Fluid").get("Pressure Load",1.0); 
 
     SC elScaling;
     SmallMatrix<SC> B(dim);
@@ -6625,53 +6626,52 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
 
     SC* paramsFunc = &(funcParameter[0]);
     double flowRate=0.;
+    double flowRateInlet=0.;
 
-// Step 0: determie flowrate on inlet to calculate resistance
-    /* for (UN T=0; T<elements->numberElements(); T++) {
+    // Step 0: determie flowrate on inlet to calculate resistance
+    for (UN T=0; T<elements->numberElements(); T++) {
         FiniteElement fe = elements->getElement( T );
         ElementsPtr_Type subEl = fe.getSubElements(); // might be null
         for (int surface=0; surface<fe.numSubElements(); surface++) {
             FiniteElement feSub = subEl->getElement( surface  );
             if(subEl->getDimension() == dim-1 ){
-                vec_int_Type nodeList = feSub.getVectorNodeListNonConst ();
-                int numNodes_T = nodeList.size();
-		        vec_dbl_Type solution_u = getSolution(nodeList, u_rep,dim);
+                if(feSub.getFlag() == inletFlag){
+                    vec_int_Type nodeList = feSub.getVectorNodeListNonConst ();
+                    int numNodes_T = nodeList.size();
+                    vec_dbl_Type solution_u = getSolution(nodeList, u_rep,dim);
 
-                vec_dbl_Type p1(dim),p2(dim),v_E(dim,1.);
+                    vec_dbl_Type p1(dim),p2(dim),v_E(dim,1.);
 
-   				double norm_v_E = 1.;
-   				if(dim==2){
-	   				v_E[0] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[1]).at(1);
-					v_E[1] = -(pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[1]).at(0));
-					norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2));	
-	   				
-   				}
-   				else if(dim==3){
+                    double norm_v_E = 1.;
+                    if(dim==2){
+                        v_E[0] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[1]).at(1);
+                        v_E[1] = -(pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[1]).at(0));
+                        norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2));	
+                        
+                    }
+                    else if(dim==3){
 
-		            p1[0] = pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[1]).at(0);
-					p1[1] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[1]).at(1);
-					p1[2] = pointsRep->at(nodeList[0]).at(2) - pointsRep->at(nodeList[1]).at(2);
+                        p1[0] = pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[1]).at(0);
+                        p1[1] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[1]).at(1);
+                        p1[2] = pointsRep->at(nodeList[0]).at(2) - pointsRep->at(nodeList[1]).at(2);
 
-					p2[0] = pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[2]).at(0);
-					p2[1] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[2]).at(1);
-					p2[2] = pointsRep->at(nodeList[0]).at(2) - pointsRep->at(nodeList[2]).at(2);
+                        p2[0] = pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[2]).at(0);
+                        p2[1] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[2]).at(1);
+                        p2[2] = pointsRep->at(nodeList[0]).at(2) - pointsRep->at(nodeList[2]).at(2);
 
-					v_E[0] = p1[1]*p2[2] - p1[2]*p2[1];
-					v_E[1] = p1[2]*p2[0] - p1[0]*p2[2];
-					v_E[2] = p1[0]*p2[1] - p1[1]*p2[0];
-		            
-				    norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2)+pow(v_E[2],2));
+                        v_E[0] = p1[1]*p2[2] - p1[2]*p2[1];
+                        v_E[1] = p1[2]*p2[0] - p1[0]*p2[2];
+                        v_E[2] = p1[0]*p2[1] - p1[1]*p2[0];
+                        
+                        norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2)+pow(v_E[2],2));
+                    
+
+                    }
+                    
+                    // Calculating R * Q = R * v * A , A = norm_v_E * 0.5
+                    // Step 1: Quadrature Points on physical surface:
                   
-
-				}
-                vec_dbl_Type x(dim,0.); //dummy
-                paramsFunc[ funcParameter.size() - 1 ] = feSub.getFlag();          
-
-                func( &x[0], &valueFunc[0], paramsFunc);
-                // Calculating R * Q = R * v * A , A = norm_v_E * 0.5
-               // Step 1: Quadrature Points on physical surface:
-                if(valueFunc[0] > 0.){
- 
+    
                     buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
                     elScaling = B.computeScaling( );
                     
@@ -6686,9 +6686,8 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                                 value[i] += weights1->at(w) *v_E[j]/norm_v_E *solution_u[index]*(*phi1)[w][i]; // valueFunc[0]* = 1.0
                             }
                         }             
-                        flowRate +=  value[i] * elScaling;
-                       
-
+                        flowRateInlet +=  value[i] * elScaling;
+    
                     }
                 }
 
@@ -6696,9 +6695,8 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
             }
         }
     }
-    reduceAll<int, double> (*domainVec_.at(0)->getComm(), REDUCE_SUM, flowRate, outArg (flowRate));*/
+    reduceAll<int, double> (*domainVec_.at(0)->getComm(), REDUCE_SUM, flowRateInlet, outArg (flowRateInlet));
 
-    cout << " Flowrate Outlet: " << flowRate << endl;
 // First step: determine flow rate on outlet:
     for (UN T=0; T<elements->numberElements(); T++) {
         FiniteElement fe = elements->getElement( T );
@@ -6770,9 +6768,22 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
         }
     }
     reduceAll<int, double> (*domainVec_.at(0)->getComm(), REDUCE_SUM, flowRate, outArg (flowRate));
+    double resistance = flowRateInlet/1.016;
 
-    cout << " Flowrate Outlet: " << flowRate << endl;
+    if(domainVec_.at(0)->getComm()->getRank()==0){
+        cout << " ---------------------------------------------------------- " << endl;
+        cout << " ---------------------------------------------------------- " << endl;
+        cout << " Resistance Boundary Condition " << endl;
+        cout << " Volmetric flow Inlet: " << flowRateInlet << endl;
+        cout << " Volmetric flow Outlet: " << flowRate << endl;
+        cout << " Resistance per Input: " << pressureLoad << endl;
+        cout << " Assumed pressure at outlet: " << 1.016 << " approx. 80 mmhg " << endl;
+        cout << " Implicit pressure at outlet with p=R*Q: " << flowRate*pressureLoad << endl;
+        cout << " Resistance based on FlowrateInlet/pressure at this point would be: " << resistance << endl;
+        cout << " --------------------------------------------------------- " << endl;
+        cout << " --------------------------------------------------------- " << endl;
 
+    }
     // Second step: use flow rate to determine pressure with resistance
     for (UN T=0; T<elements->numberElements(); T++) {
         FiniteElement fe = elements->getElement( T );
@@ -6858,7 +6869,6 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                     elScaling = B.computeScaling( );
                    
                     //cout << endl;
-                    cout << " Volmetric flow rate over reference Element " << flowRate<< " and resistance: " << valueFunc[0] << " leading to pressure: " << valueFunc[0]*(flowRate)   << endl;
 
                     for (UN i=0; i < numNodes_T; i++) {
        
@@ -6868,7 +6878,7 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
                         // loop over basis functions quadrature points
                         for (UN w=0; w<phi->size(); w++) {       
                             for (int j=0; j<dim; j++){
-                                value[j] += weights->at(w) *normalScale*v_E[j]/norm_v_E *flowRate*valueFunc[0]*(*phi)[w][i];
+                                value[j] += weights->at(w) *normalScale*v_E[j]/norm_v_E *flowRate*valueFunc[0]*(*phi)[w][i];//valueFunc[0]
                             }
                         }             
 

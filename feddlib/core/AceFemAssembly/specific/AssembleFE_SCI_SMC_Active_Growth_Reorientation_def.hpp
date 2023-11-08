@@ -86,7 +86,6 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	if(materialID == 0)
 		cout << "!!! Warning: No corresponding parameterslist for the element flag="<< this->flag_ << ". Please Check volume flags of elements and Mesh Data !!! " << endl;
 
-	cout << "--- Init AssembleFE_SCI_SCM_Active_Growth_Reorientation Element ---" << endl;
 	// -------------------- Parameter ---------------------
 	fA_= this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("FA",30.e0); // ??
 	lambdaC50_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("LambdaC50",0.12e1); // ??
@@ -148,6 +147,8 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	rho_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Rho",1.e0);
 	subiterationTolerance_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Subiteration Tolerance",1.e-7);
 	typeOfInterpol_ = 1;
+
+	cout << "--- Init AssembleFE_SCI_SCM_Active_Growth_Reorientation Element --- D0=" << d0_ << endl;
 
 	//coupling_type_ = this->params_->sublist("Parameter").get("Coupling Type","implicit");
 // iCode_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Intergration Code",18);
