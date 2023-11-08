@@ -13,8 +13,8 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(data_fsci
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(meshes_fsci
 	SOURCE_DIR ${CMAKE_SOURCE_DIR}/meshes
-    SOURCE_FILES fluid_safe.mesh solid_safe.mesh 
+    SOURCE_FILES fluid_safe.mesh solid_safe.mesh fsi_tube_fluid_1_5_cm.mesh fsi_tube_solid_1_5_cm.mesh
 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	DEST_FILES fluid_safe.mesh solid_safe.mesh  
+	DEST_FILES fluid_safe.mesh solid_safe.mesh  fsi_tube_fluid_1_5_cm.mesh fsi_tube_solid_1_5_cm.mesh
 	EXEDEPS fsci
 )

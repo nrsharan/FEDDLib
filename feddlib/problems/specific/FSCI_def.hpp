@@ -356,6 +356,14 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
         this->computeSolidRHSInTime( );
         return;
     }
+    if(type == "ComputePressureRHSInTime")
+    {
+        if(this->verbose_)
+            std::cout << "-- Reassembly (ComputePressureRHSInTime)" << '\n';
+        
+        this->computePressureRHSInTime();
+        return;
+    }
 
     
     // ###############

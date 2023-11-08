@@ -111,7 +111,61 @@ void parabolicInflow3DArtery(double* x, double* res, double t, const double* par
 
     return;
 }
+void parabolicInflow3DArteryHeartBeat(double* x, double* res, double t, const double* parameters)
+{
+    // parameters[0] is the maxium desired velocity
+    // parameters[1] end of ramp
+    // parameters[2] is the maxium solution value of the laplacian parabolic inflow problme
+    // we use x[0] for the laplace solution in the considered point. Therefore, point coordinates are missing
+    double heartBeatStart = parameters[3];
 
+    if(t < parameters[1])
+    {
+        res[0] = 0.;
+        res[1] = 0.;
+        res[2] = parameters[0] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
+    }
+    else if(t > heartBeatStart)
+    {
+    
+        double a0    = 11.693284502463376;
+        double a [20] = {1.420706949636449,-0.937457438404759,0.281479818173732,-0.224724363786734,0.080426469802665,0.032077024077824,0.039516941555861, 
+            0.032666881040235,-0.019948718147876,0.006998975442773,-0.033021060067630,-0.015708267688123,-0.029038419813160,-0.003001255512608,-0.009549531539299, 
+            0.007112349455861,0.001970095816773,0.015306208420903,0.006772571935245,0.009480436178357};
+        double b [20] = {-1.325494054863285,0.192277311734674,0.115316087615845,-0.067714675760648,0.207297536049255,-0.044080204999886,0.050362628821152,-0.063456242820606,
+            -0.002046987314705,-0.042350454615554,-0.013150127522194,-0.010408847105535,0.011590255438424,0.013281630639807,0.014991955865968,0.016514327477078, 
+            0.013717154383988,0.012016806933609,-0.003415634499995,0.003188511626163};
+                    
+        double Q = 0.5*a0;
+        
+
+        double t_min = t - fmod(t,1.0)+heartBeatStart-std::floor(t); ; //FlowConditions::t_start_unsteady;
+        double t_max = t_min + 1.0; // One heartbeat lasts 1.0 second    
+        double y = M_PI * ( 2.0*( t-t_min ) / ( t_max - t_min ) -1.0)  ;
+        
+        for(int i=0; i< 20; i++)
+            Q += (a[i]*std::cos((i+1.)*y) + b[i]*std::sin((i+1.)*y) ) ;
+        
+        
+        // Remove initial offset due to FFT
+        Q -= 0.026039341343493;
+        Q = (Q - 2.85489)/(7.96908-2.85489);
+
+        res[0] = 0.;
+        res[1] = 0.;
+        res[2] = (parameters[0] / parameters[2] * (x[0] + x[0] * Q)) ;
+        
+    }
+    else
+    {
+        res[0] = 0.;
+        res[1] = 0.;
+        res[2] = parameters[0] / parameters[2] * x[0];
+
+    }
+
+    return;
+}
 void parabolicInflow3DLinArtery(double* x, double* res, double t, const double* parameters)
 {
     // parameters[0] is the maxium desired velocity
@@ -157,6 +211,25 @@ void reactionFunc(double* x, double* res, double* parameters){
     double m = 0.0;	
     res[0] = m * x[0];
 
+}
+void rhsRestriction(double* x, double* res, double* parameters){
+
+    double pressureValue = parameters[1];
+    double flag = parameters[2];
+
+  	res[0] =0.;
+    
+    /*if(parameters[0]+1.e-12 < 0.1)
+        pressureValue = parameters[0]*pressureValue/0.1;
+    else
+        pressureValue = parameters[1];*/
+
+    if(flag == 5){
+      	res[0] = pressureValue;
+        
+    }
+    
+    return;
 }
 
 
@@ -218,11 +291,12 @@ int main(int argc, char *argv[])
     myCLP.setOption("precfileFluidTeko",&xmlPrecFileFluidTeko,".xml file with Inputparameters.");
     string xmlProblemFileFluid = "parametersProblemFluid.xml";
     myCLP.setOption("problemFileFluid",&xmlProblemFileFluid,".xml file with Inputparameters.");
+    string xmlProblemFileStructure = "parametersProblemStructure.xml";
+    myCLP.setOption("problemFileStructure",&xmlProblemFileStructure,".xml file with Inputparameters.");
     string xmlPrecFileStructure = "parametersPrecStructure.xml";
     myCLP.setOption("precfileStructure",&xmlPrecFileStructure,".xml file with Inputparameters.");
     string xmlPrecFileGeometry = "parametersPrecGeometry.xml";
     myCLP.setOption("precfileGeometry",&xmlPrecFileGeometry,".xml file with Inputparameters.");
-    
     string xmlProbL = "plistProblemLaplace.xml";
     myCLP.setOption("probLaplace",&xmlProbL,".xml file with Inputparameters.");
     string xmlPrecL = "plistPrecLaplace.xml";
@@ -246,6 +320,7 @@ int main(int argc, char *argv[])
 
     {
         ParameterListPtr_Type parameterListProblem = Teuchos::getParametersFromXmlFile(xmlProblemFile);
+        ParameterListPtr_Type parameterListStructure = Teuchos::getParametersFromXmlFile(xmlProblemFileStructure);
         ParameterListPtr_Type parameterListSolverFSI = Teuchos::getParametersFromXmlFile(xmlSolverFileFSI);
         ParameterListPtr_Type parameterListSolverGeometry = Teuchos::getParametersFromXmlFile(xmlSolverFileGeometry);
         ParameterListPtr_Type parameterListPrecGeometry = Teuchos::getParametersFromXmlFile(xmlPrecFileGeometry);
@@ -275,18 +350,21 @@ int main(int argc, char *argv[])
         parameterListFluidAll->setParameters(*parameterListPrecFluidTeko);
 
         
-        ParameterListPtr_Type parameterListStructureAll(new Teuchos::ParameterList(*parameterListPrecStructure));
+         ParameterListPtr_Type parameterListStructureAll(new Teuchos::ParameterList(*parameterListPrecStructure));
+        sublist(parameterListStructureAll, "Parameter Solid")->setParameters( parameterListStructure->sublist("Parameter Solid") );
         sublist(parameterListStructureAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Solid") );
         sublist(parameterListStructureAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter") );
+        parameterListStructureAll->setParameters(*parameterListPrecStructure);
 
+     
         ParameterListPtr_Type parameterListChemAll(new Teuchos::ParameterList(*parameterListPrecChem));
         sublist(parameterListChemAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Chem") );
         sublist(parameterListChemAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter") );
 
         ParameterListPtr_Type parameterListSCIAll(new Teuchos::ParameterList(*parameterListPrecStructure));
         parameterListSCIAll->setParameters(*parameterListProblem);
-        //sublist(parameterListSCIAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Solid") );
-        //sublist(parameterListSCIAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter") );
+        sublist(parameterListSCIAll, "Parameter Solid")->setParameters( parameterListStructure->sublist("Parameter Solid") );
+        sublist(parameterListSCIAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter") );
 
         
         parameterListStructureAll->setParameters(*parameterListPrecStructure);
@@ -641,6 +719,7 @@ int main(int argc, char *argv[])
             SC maxValue = solutionLaplace->getMax();
             
             parameter_vec.push_back(maxValue);
+            parameter_vec.push_back( parameterListProblem->sublist("Parameter").get("Heart Beat Start",2.) );
 
             Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
             
@@ -668,8 +747,8 @@ int main(int argc, char *argv[])
             bool zeroPressure = parameterListProblem->sublist("Parameter Fluid").get("Set Outflow Pressure to Zero",false);
             Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryFluid( new BCBuilder<SC,LO,GO,NO>( ) );
                             
-            bcFactory->addBC(parabolicInflow3D, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
-            bcFactoryFluid->addBC(parabolicInflow3D, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
+            bcFactory->addBC(parabolicInflow3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
+            bcFactoryFluid->addBC(parabolicInflow3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
 
             
             bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring                
@@ -729,6 +808,9 @@ int main(int argc, char *argv[])
         else
             fsci.problemSCI_->problemStructureNonLin_->addRhsFunction( rhsDummy );
     
+        fsci.problemFluid_->addRhsFunction(rhsRestriction,0);
+        double pressureLoad= parameterListAll->sublist("Parameter Fluid").get("Pressure Load",0.);
+        fsci.problemFluid_->addParemeterRhs( pressureLoad);
         // Geometrie-RW separat, falls geometrisch explizit.
         // Bei Geometrisch implizit: Keine RW in die factoryFSI fuer das
         // Geometrie-Teilproblem, da sonst (wg. dem ZeroDirichlet auf dem Interface,
@@ -740,10 +822,10 @@ int main(int argc, char *argv[])
             bcFactoryFluidInterface = Teuchos::rcp( new BCBuilder<SC,LO,GO,NO>( ) );
 
 
-        //bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in Z direction
-        //bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in X direction
-        //bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // Inlet
-        //bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // Outlet
+        bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in Z direction
+        bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in X direction
+        bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // Inlet
+        bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // Outlet
         bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // Interface
 		/* bcFactoryGeometry->addBC(zeroDirichlet3D, 7, 0, domainGeometry, "Dirichlet", dim); // ?
 		bcFactoryGeometry->addBC(zeroDirichlet3D, 8, 0, domainGeometry, "Dirichlet", dim); // ?

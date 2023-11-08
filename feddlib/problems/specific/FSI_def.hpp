@@ -440,8 +440,7 @@ void FSI<SC,LO,GO,NO>::reAssemble(std::string type) const
         if(this->verbose_)
             std::cout << "-- Reassembly (ComputePressureRHSInTime)" << '\n';
         
-        computePressureRHSInTime()
-;
+        computePressureRHSInTime();
         return;
     }
     
