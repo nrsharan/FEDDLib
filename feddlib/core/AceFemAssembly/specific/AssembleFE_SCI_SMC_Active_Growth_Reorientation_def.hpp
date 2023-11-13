@@ -148,7 +148,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	subiterationTolerance_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Subiteration Tolerance",1.e-7);
 	typeOfInterpol_ = 1;
 
-	cout << "--- Init AssembleFE_SCI_SCM_Active_Growth_Reorientation Element --- D0=" << d0_ << endl;
+	//cout << "--- Init AssembleFE_SCI_SCM_Active_Growth_Reorientation Element --- D0=" << d0_ << endl;
 
 	//coupling_type_ = this->params_->sublist("Parameter").get("Coupling Type","implicit");
 // iCode_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Intergration Code",18);

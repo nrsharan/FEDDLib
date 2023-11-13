@@ -6768,7 +6768,7 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
         }
     }
     reduceAll<int, double> (*domainVec_.at(0)->getComm(), REDUCE_SUM, flowRate, outArg (flowRate));
-    double resistance = flowRateInlet/1.016;
+    double resistance = 1.016/flowRateInlet;
 
     if(domainVec_.at(0)->getComm()->getRank()==0){
         cout << " ---------------------------------------------------------- " << endl;
@@ -6779,7 +6779,7 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
         cout << " Resistance per Input: " << pressureLoad << endl;
         cout << " Assumed pressure at outlet: " << 1.016 << " approx. 80 mmhg " << endl;
         cout << " Implicit pressure at outlet with p=R*Q: " << flowRate*pressureLoad << endl;
-        cout << " Resistance based on FlowrateInlet/pressure at this point would be: " << resistance << endl;
+        cout << " Resistance based on pressure/flowRateInlet at this point would be: " << resistance << endl;
         cout << " --------------------------------------------------------- " << endl;
         cout << " --------------------------------------------------------- " << endl;
 

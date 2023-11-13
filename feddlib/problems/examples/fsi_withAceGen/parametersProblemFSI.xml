@@ -11,6 +11,7 @@
         <Parameter name="Max Ramp Time" type="double" value=".1"/>
                 
         <Parameter name="FSI" type="bool" value="true"/>
+        <Parameter name="SCI" type="bool" value="true"/>
         <Parameter name="Geometry Explicit" type="bool" value="true"/>
         <Parameter name="Load Stepping" type="bool" value="false"/>
         <Parameter name="Inflow Start Time" type="double" value="0.0"/><!-- Start of diffusion process -->
@@ -43,8 +44,8 @@
     </ParameterList>
     
     <ParameterList name="Parameter Fluid">
-        <Parameter name="Viscosity" type="double" value="3.0e-3"/> <!-- kinematic viscocity -->
-        <Parameter name="Density" type="double" value="1.0e-3"/>
+        <Parameter name="Viscosity" type="double" value="3.0e-2"/> <!-- kinematic viscocity -->
+        <Parameter name="Density" type="double" value="1.0e-0"/>
         <Parameter name="Symmetric gradient" type="bool"       value="true"/>
         
            <Parameter name="Ramp type" type="string" value="cos"/><!--cos, linear -->
@@ -119,7 +120,8 @@
         <Parameter name="Scale mass matrix" type="bool" value="true"/>
         <Parameter name="Set Zeros" type="bool" value="true"/>
         
-        <Parameter name="Linearization" type="string" value="Newton"/> <!-- FixedPoint, Newton, Extrapolation-->
+        <Parameter name="Linearization" type="string" value="NOX"/> <!-- FixedPoint, Newton, Extrapolation-->
+        <Parameter name="Use steady fluid solution" type="bool" value="true"/>
     </ParameterList>
     <ParameterList name="Timestepping Parameter">
         

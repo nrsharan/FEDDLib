@@ -206,6 +206,7 @@ public:
     
     virtual void computeValuesOfInterestAndExport();
     /*####################*/
+    void solveSteadyStateNavierStokes() const;
 
     // Alternativ wie in reAssembleExtrapolation() in NS?
 
@@ -222,6 +223,8 @@ public:
     mutable int counterP;
     // stationaere Systeme
     FluidProblemPtr_Type problemFluid_;
+    FluidProblemPtr_Type problemSteadyFluid_;
+
     StructureProblemPtr_Type problemStructure_;
     StructureNonLinProblemPtr_Type problemStructureNonLin_; // CH: we want to combine both structure models to one general model later
     GeometryProblemPtr_Type problemGeometry_;

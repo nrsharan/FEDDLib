@@ -94,6 +94,10 @@ exporterGeo_()
     
     problemFluid_ = Teuchos::rcp( new FluidProblem_Type( domainVelocity, FETypeVelocity, domainPressure, FETypePressure, parameterListFluid ) );
     problemFluid_->initializeProblem();
+
+    if(parameterListFSI->sublist("General").get("Use steady fluid solution",true)){
+        problemSteadyFluid_ = Teuchos::rcp( new FluidProblem_Type( domainVelocity, FETypeVelocity, domainPressure, FETypePressure, parameterListFluid ) );
+    }
     
     if (materialModel_=="linear"){
         problemStructure_ = Teuchos::rcp( new StructureProblem_Type( domainStructure, FETypeStructure, parameterListStructure ) );
@@ -173,7 +177,7 @@ void FSI<SC,LO,GO,NO>::assemble( std::string type ) const
         }
 
     //    P_.reset(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), 10 ) );
-        
+
         this->problemFluid_->assemble();
         
         // steady rhs wird hier assembliert.
@@ -956,6 +960,14 @@ void FSI<SC,LO,GO,NO>::solveGeometryProblem() const
 
 
 template<class SC,class LO,class GO,class NO>
+void FSI<SC,LO,GO,NO>::solveSteadyStateNavierStokes() const
+{
+    
+
+
+}
+
+template<class SC,class LO,class GO,class NO>
 void FSI<SC,LO,GO,NO>::setupSubTimeProblems(ParameterListPtr_Type parameterListFluid, ParameterListPtr_Type parameterListStructure) const
 {
     if(this->verbose_)
@@ -1108,7 +1120,7 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
         coeffPrevSteps.at(i) = timeSteppingTool_->getInformationBDF(i+2) / dt;
     }
 
-    if (timeSteppingTool_->currentTime()==0.) {
+    /*if (timeSteppingTool_->currentTime()==0.) {
         SmallMatrix<double> tmpmassCoeff(sizeFluid);
         SmallMatrix<double> tmpproblemCoeff(sizeFluid);
         for (int i=0; i<sizeFluid; i++) {
@@ -1132,7 +1144,7 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
             }
         }
         this->problemTimeFluid_->setTimeParameters(tmpmassCoeff, tmpproblemCoeff);
-    }
+    }*/
     if (timeSteppingTool_->currentTime()==0.) {
         vec_dbl_Type tmpcoeffPrevSteps(1, 1. / dt);
         this->problemTimeFluid_->updateMultistepRhsFSI(tmpcoeffPrevSteps,1);/*apply (mass matrix_t / dt) to u_t*/
@@ -1148,7 +1160,7 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
 
     // Wieder zu den eigentlichen Parametern zuruecksetzen, nachdem die temporaeren
     // genommen wurden.
-    if (timeSteppingTool_->currentTime()==0.) {
+    /*if (timeSteppingTool_->currentTime()==0.) {
         SmallMatrix<double> massCoeffFluid(sizeFluid);
         SmallMatrix<double> problemCoeffFluid(sizeFluid);
 
@@ -1174,7 +1186,7 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
         }
 
         this->problemTimeFluid_->setTimeParameters(massCoeffFluid, problemCoeffFluid);
-    }
+    }*/
 }
 
 
@@ -1276,7 +1288,9 @@ template<class SC,class LO,class GO,class NO>
 void FSI<SC,LO,GO,NO>::updateTime() const
 {
     timeSteppingTool_->t_ = timeSteppingTool_->t_ + timeSteppingTool_->dt_prev_;
+
 }
+
 
 template<class SC,class LO,class GO,class NO>
 void FSI<SC,LO,GO,NO>::moveMesh() const

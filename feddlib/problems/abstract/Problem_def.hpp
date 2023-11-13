@@ -345,7 +345,6 @@ namespace FEDD
     template <class SC, class LO, class GO, class NO>
     void Problem<SC, LO, GO, NO>::addBoundaries(const BCConstPtr_Type &bcFactory)
     {
-
         bcFactory_ = bcFactory;
     }
 

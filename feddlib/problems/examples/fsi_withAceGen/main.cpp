@@ -168,6 +168,22 @@ void parabolicInflow3DArteryHeartBeat(double* x, double* res, double t, const do
     return;
 }
 
+void parabolicInflowSteady(double* x, double* res, double t, const double* parameters)
+{
+    // parameters[0] is the maxium desired velocity
+    // parameters[1] end of ramp
+    // parameters[2] is the maxium solution value of the laplacian parabolic inflow problme
+    // we use x[0] for the laplace solution in the considered point. Therefore, point coordinates are missing
+   
+    res[0] = 0.;
+    res[1] = 0.;
+    res[2] = parameters[0] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( 1./2* M_PI*parameters[4]/parameters[1]) ));
+    
+    
+
+    return;
+}
+
 void pressureBC(double* x, double* res, double t, const double* parameters)
 {
     // parameters[0] is the maxium desired velocity
@@ -270,6 +286,8 @@ int main(int argc, char *argv[])
 
 
     typedef MeshUnstructured<SC,LO,GO,NO> MeshUnstr_Type;
+    typedef Mesh<SC,LO,GO,NO> Mesh_Type;
+    typedef RCP<Mesh_Type> MeshPtr_Type;
     typedef RCP<MeshUnstr_Type> MeshUnstrPtr_Type;
     typedef Domain<SC,LO,GO,NO> Domain_Type;
     typedef RCP<Domain_Type > DomainPtr_Type;
@@ -372,6 +390,10 @@ int main(int argc, char *argv[])
         ParameterListPtr_Type parameterListFluidAll(new Teuchos::ParameterList(*parameterListPrecFluidMono)) ;
         sublist(parameterListFluidAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Fluid") );
         parameterListFluidAll->setParameters(*parameterListPrecFluidTeko);
+        parameterListFluidAll->setParameters(*parameterListPrecFluidMono);
+        parameterListFluidAll->setParameters(*parameterListSolverFSI);
+
+
 
         
         ParameterListPtr_Type parameterListStructureAll(new Teuchos::ParameterList(*parameterListPrecStructure));
@@ -732,7 +754,8 @@ int main(int argc, char *argv[])
             
             parameter_vec.push_back(maxValue);
             parameter_vec.push_back( parameterListProblem->sublist("Parameter").get("Heart Beat Start",2.) );
-        
+            parameter_vec.push_back(parameterListProblem->sublist("Timestepping Parameter").get("dt",0.001));
+
             Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
             
             exPara->setup("parabolicInflow", domainFluidVelocity->getMesh(), discType);
@@ -756,16 +779,21 @@ int main(int argc, char *argv[])
         {
             bool zeroPressure = parameterListProblem->sublist("Parameter Fluid").get("Set Outflow Pressure to Zero",false);
             Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryFluid( new BCBuilder<SC,LO,GO,NO>( ) );
+            Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactorySteadyFluid( new BCBuilder<SC,LO,GO,NO>( ) );
+
                             
             bcFactory->addBC(parabolicInflow3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
             bcFactoryFluid->addBC(parabolicInflow3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
+            bcFactorySteadyFluid->addBC(parabolicInflowSteady, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
 
-            
             bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring                
             bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
+            bcFactorySteadyFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
 
             bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring                
             bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring
+            bcFactorySteadyFluid->addBC(zeroDirichlet3D, 6, 0, domainFluidVelocity, "Dirichlet", dim); // Interface
+            bcFactorySteadyFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // Outflow ring
 
             //bcFactory->addBC(pressureBC, 5, 1, domainFluidPressure, "Neumann", 1,parameter_vec_pressure); // outflow                
             //bcFactoryFluid->addBC(pressureBC, 5, 1, domainFluidPressure, "Neumann", 1,parameter_vec_pressure); // outflow
@@ -781,6 +809,8 @@ int main(int argc, char *argv[])
             // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
             // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()
             fsi.problemFluid_->addBoundaries(bcFactoryFluid);
+            fsi.problemSteadyFluid_->addBoundaries(bcFactorySteadyFluid);
+
         }
 
         // Struktur-RW
@@ -852,7 +882,49 @@ int main(int argc, char *argv[])
     // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()
 
 
-        // #####################
+     
+        // Matrizen assemblieren
+        if(parameterListAll->sublist("General").get("Use steady fluid solution",true)){
+            cout << " Solve Steady State Navier-Stokes " << endl;
+            // Defining steady state Navier Stokes problem.
+            //this->problemSteadyFluid_->addBoundaries(this->bcFactory_);
+            fsi.problemSteadyFluid_->initializeProblem();
+
+            fsi.problemSteadyFluid_->assemble();
+            fsi.problemSteadyFluid_->setBoundariesRHS();
+
+            // Solving the problem
+            std::string nlSolverType = "NOX";
+            NonLinearSolver<SC,LO,GO,NO> nlSolver( nlSolverType );
+            nlSolver.solve( *(fsi.problemSteadyFluid_) );
+
+            // Using velocity and pressure as start solution
+            fsi.problemFluid_->getSolution()->getBlockNonConst(0)->update(1.0, *fsi.problemSteadyFluid_->getSolution()->getBlockNonConst(0), 1.);
+            fsi.problemFluid_->getSolution()->getBlockNonConst(1)->update(1.0, *fsi.problemSteadyFluid_->getSolution()->getBlockNonConst(1), 1.);
+
+            ExporterPVPtr_Type exporterSteadyFluid = Teuchos::rcp(new ExporterPV_Type());
+            ExporterPVPtr_Type exporterSteadyPressure = Teuchos::rcp(new ExporterPV_Type());
+            
+            MeshPtr_Type meshNonConstF = Teuchos::rcp_const_cast<Mesh_Type>( domainFluidVelocity->getMesh() );
+            MeshPtr_Type meshNonConstP = Teuchos::rcp_const_cast<Mesh_Type>( domainFluidPressure->getMesh() );
+
+            exporterSteadyFluid->setup("u_f_steady", meshNonConstF, domainFluidVelocity->getFEType(), parameterListAll);
+            exporterSteadyPressure->setup("p_steady", meshNonConstP, domainFluidPressure->getFEType(), parameterListAll);
+
+            MultiVectorConstPtr_Type u_f_steady = fsi.problemSteadyFluid_->getSolution()->getBlock(0);            
+            MultiVectorConstPtr_Type p_steady = fsi.problemSteadyFluid_->getSolution()->getBlock(1);
+
+            exporterSteadyFluid->addVariable( u_f_steady, "u", "Vector", 3, domainFluidVelocity->getMapUnique() );
+            exporterSteadyPressure->addVariable( p_steady, "p", "Scalar", 1, domainFluidPressure->getMapUnique() );
+
+            exporterSteadyFluid->save( 0. );
+            exporterSteadyPressure->save(0. );
+
+            exporterSteadyFluid->closeExporter();
+            exporterSteadyPressure->closeExporter();
+
+        }
+           // #####################
         // Zeitintegration
         // #####################
         fsi.addBoundaries(bcFactory); // Dem Problem RW hinzufuegen
@@ -860,7 +932,6 @@ int main(int argc, char *argv[])
         fsi.initializeProblem();
         
         fsi.initializeGE();
-        // Matrizen assemblieren
 
         fsi.assemble();
     

@@ -769,6 +769,8 @@ int main(int argc, char *argv[])
             // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
             // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()
             fsci.problemFluid_->addBoundaries(bcFactoryFluid);
+            fsci.problemSteadyFluid_->addBoundaries(bcFactoryFluid);
+
         }
 
         // Struktur-RW
@@ -879,7 +881,46 @@ int main(int argc, char *argv[])
         
         fsci.initializeGE();
         // Matrizen assemblieren
+        if(parameterListAll->sublist("General").get("Use steady fluid solution",true)){
+            cout << " Solve Steady State Navier-Stokes " << endl;
+            // Defining steady state Navier Stokes problem.
+            //this->problemSteadyFluid_->addBoundaries(this->bcFactory_);
+            fsci.problemSteadyFluid_->initializeProblem();
 
+            fsci.problemSteadyFluid_->assemble();
+            fsci.problemSteadyFluid_->setBoundariesRHS();
+
+            // Solving the problem
+            std::string nlSolverType = "NOX";
+            NonLinearSolver<SC,LO,GO,NO> nlSolver( nlSolverType );
+            nlSolver.solve( *(fsci.problemSteadyFluid_) );
+
+            // Using velocity and pressure as start solution
+            fsci.problemFluid_->getSolution()->getBlockNonConst(0)->update(1.0, *fsci.problemSteadyFluid_->getSolution()->getBlockNonConst(0), 1.);
+            fsci.problemFluid_->getSolution()->getBlockNonConst(1)->update(1.0, *fsci.problemSteadyFluid_->getSolution()->getBlockNonConst(1), 1.);
+
+            ExporterPVPtr_Type exporterSteadyFluid = Teuchos::rcp(new ExporterPV_Type());
+            ExporterPVPtr_Type exporterSteadyPressure = Teuchos::rcp(new ExporterPV_Type());
+            
+            MeshPtr_Type meshNonConstF = Teuchos::rcp_const_cast<Mesh_Type>( domainFluidVelocity->getMesh() );
+            MeshPtr_Type meshNonConstP = Teuchos::rcp_const_cast<Mesh_Type>( domainFluidPressure->getMesh() );
+
+            exporterSteadyFluid->setup("u_f_steady", meshNonConstF, domainFluidVelocity->getFEType(), parameterListAll);
+            exporterSteadyPressure->setup("p_steady", meshNonConstP, domainFluidPressure->getFEType(), parameterListAll);
+
+            MultiVectorConstPtr_Type u_f_steady = fsci.problemSteadyFluid_->getSolution()->getBlock(0);            
+            MultiVectorConstPtr_Type p_steady = fsci.problemSteadyFluid_->getSolution()->getBlock(1);
+
+            exporterSteadyFluid->addVariable( u_f_steady, "u", "Vector", 3, domainFluidVelocity->getMapUnique() );
+            exporterSteadyPressure->addVariable( p_steady, "p", "Scalar", 1, domainFluidPressure->getMapUnique() );
+
+            exporterSteadyFluid->save( 0. );
+            exporterSteadyPressure->save(0. );
+
+            exporterSteadyFluid->closeExporter();
+            exporterSteadyPressure->closeExporter();
+
+        }
         fsci.assemble();
     
         DAESolverInTime<SC,LO,GO,NO> daeTimeSolver(parameterListAll, comm);

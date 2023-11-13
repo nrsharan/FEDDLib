@@ -1536,7 +1536,27 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         exporterDisplYTxt->setup( "displ_y" + suffix, this->comm_ , targetRank);
         
     }
+    vec2D_dbl_Type timeParametersVec(0,vec_dbl_Type(2));
     
+    int numSegments = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);
+
+ 	for(int i=1; i <= numSegments; i++){
+
+        double startTime = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("Start Time",0.);
+        double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("dt",0.1);
+        
+        vec_dbl_Type segment = {startTime,dtTmp};
+        timeParametersVec.push_back(segment);
+    }
+    double dt;
+    for(int i=0; i<numSegments ; i++){
+        if(timeSteppingTool_->currentTime()+1.0e-12 > timeParametersVec[i][0]){
+            dt=timeParametersVec[i][1];
+            timeSteppingTool_->dt_ = dt;
+        }
+
+    }
+
     // Notwendige Parameter
     bool geometryExplicit = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
     std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
@@ -1549,7 +1569,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     int sizeStructure = 1; // d_s
     int sizeChem =1; // c
 
-    double dt = timeSteppingTool_->get_dt();
+    dt = timeSteppingTool_->get_dt();
     double beta = timeSteppingTool_->get_beta();
     double gamma = timeSteppingTool_->get_gamma();
     int nmbBDF = timeSteppingTool_->getBDFNumber();
@@ -1745,8 +1765,26 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     while(timeSteppingTool_->continueTimeStepping())
     {
         //cout << " ###### Timeloop #########" << endl;
+        for(int i=0; i<numSegments ; i++){
+            if(timeSteppingTool_->currentTime()+1.0e-12 > timeParametersVec[i][0])
+                dt=timeParametersVec[i][1];
+        }
+        timeSteppingTool_->dt_= dt;
+        fsci->timeSteppingTool_->dt_ = dt;
+        fsci->problemSCI_->timeSteppingTool_->dt_ = dt;
+        if(timeSteppingTool_->currentTime() <= 0. + 1e-12){
+            timeSteppingTool_->dt_prev_= dt;        
+            fsci->timeSteppingTool_->dt_prev_= dt;        
+        }
+        else{
+            timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
 
-        problemTime_->updateTime ( timeSteppingTool_->currentTime() );
+            this->problemTime_->assemble("UpdateTime"); // Updates to next timestep previously:problemTime_->updateTime ( timeSteppingTool_->currentTime() );
+
+
+            fsci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
+            fsci->problemSCI_->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
+        }
 
         string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
 
