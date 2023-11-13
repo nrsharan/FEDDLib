@@ -1120,7 +1120,7 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
         coeffPrevSteps.at(i) = timeSteppingTool_->getInformationBDF(i+2) / dt;
     }
 
-    /*if (timeSteppingTool_->currentTime()==0.) {
+    if (timeSteppingTool_->currentTime()==0.) {
         SmallMatrix<double> tmpmassCoeff(sizeFluid);
         SmallMatrix<double> tmpproblemCoeff(sizeFluid);
         for (int i=0; i<sizeFluid; i++) {
@@ -1144,7 +1144,7 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
             }
         }
         this->problemTimeFluid_->setTimeParameters(tmpmassCoeff, tmpproblemCoeff);
-    }*/
+    }
     if (timeSteppingTool_->currentTime()==0.) {
         vec_dbl_Type tmpcoeffPrevSteps(1, 1. / dt);
         this->problemTimeFluid_->updateMultistepRhsFSI(tmpcoeffPrevSteps,1);/*apply (mass matrix_t / dt) to u_t*/
@@ -1160,7 +1160,7 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
 
     // Wieder zu den eigentlichen Parametern zuruecksetzen, nachdem die temporaeren
     // genommen wurden.
-    /*if (timeSteppingTool_->currentTime()==0.) {
+    if (timeSteppingTool_->currentTime()==0.) {
         SmallMatrix<double> massCoeffFluid(sizeFluid);
         SmallMatrix<double> problemCoeffFluid(sizeFluid);
 
@@ -1186,7 +1186,7 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
         }
 
         this->problemTimeFluid_->setTimeParameters(massCoeffFluid, problemCoeffFluid);
-    }*/
+    }
 }
 
 

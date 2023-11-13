@@ -786,14 +786,18 @@ int main(int argc, char *argv[])
             bcFactoryFluid->addBC(parabolicInflow3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
             bcFactorySteadyFluid->addBC(parabolicInflowSteady, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
 
-            bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring                
-            bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
-            bcFactorySteadyFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
+            bcFactory->addBC(parabolicInflow3DArteryHeartBeat, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
+            bcFactoryFluid->addBC(parabolicInflow3DArteryHeartBeat, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
+            bcFactorySteadyFluid->addBC(parabolicInflowSteady, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
 
-            bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring                
-            bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring
-            bcFactorySteadyFluid->addBC(zeroDirichlet3D, 6, 0, domainFluidVelocity, "Dirichlet", dim); // Interface
-            bcFactorySteadyFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // Outflow ring
+            //bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring                
+            //bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
+            //bcFactorySteadyFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
+
+            //bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring                
+            //bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring
+            //bcFactorySteadyFluid->addBC(zeroDirichlet3D, 6, 0, domainFluidVelocity, "Dirichlet", dim); // Interface
+            //bcFactorySteadyFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // Outflow ring
 
             //bcFactory->addBC(pressureBC, 5, 1, domainFluidPressure, "Neumann", 1,parameter_vec_pressure); // outflow                
             //bcFactoryFluid->addBC(pressureBC, 5, 1, domainFluidPressure, "Neumann", 1,parameter_vec_pressure); // outflow
@@ -884,7 +888,7 @@ int main(int argc, char *argv[])
 
      
         // Matrizen assemblieren
-        if(parameterListAll->sublist("General").get("Use steady fluid solution",true)){
+        if(parameterListAll->sublist("General").get("Use steady fluid solution",false) == true){
             cout << " Solve Steady State Navier-Stokes " << endl;
             // Defining steady state Navier Stokes problem.
             //this->problemSteadyFluid_->addBoundaries(this->bcFactory_);
