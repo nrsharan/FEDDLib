@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    {
+    { 
         ParameterListPtr_Type parameterListProblem = Teuchos::getParametersFromXmlFile(xmlProblemFile);
 
         ParameterListPtr_Type parameterListPrec = Teuchos::getParametersFromXmlFile(xmlPrecFile);

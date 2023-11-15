@@ -6934,6 +6934,120 @@ void FE<SC,LO,GO,NO>::assemblyRestrictionBoundary(int dim,
 }
 
 
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
+                                        double &flowRateParabolic,
+                                        string FEType, 
+                                        int dofs,
+                                        int inflowFlag,
+                                        MultiVectorPtr_Type solution_rep,
+                                        int FEloc){
+
+    ElementsPtr_Type elements = domainVec_.at(FEloc)->getElementsC();
+
+    vec2D_dbl_ptr_Type pointsRep = domainVec_.at(FEloc)->getPointsRepeated();
+    
+    vec2D_dbl_ptr_Type phi;
+
+    vec_dbl_ptr_Type weights = Teuchos::rcp(new vec_dbl_Type(0));
+   
+    getPhi(phi, weights, dim-1, FEType, 2);
+
+    vec2D_dbl_ptr_Type quadPoints;
+    vec_dbl_ptr_Type w = Teuchos::rcp(new vec_dbl_Type(0));
+    getQuadratureValues(dim-1, 2, quadPoints, w, FEType);
+    w.reset();
+
+    int inletFlag=inflowFlag; //params->sublist("Parameter Fluid").get("Fluid Flag",4); 
+
+   
+    SC elScaling;
+    vec_dbl_Type b(dim);
+    SmallMatrix<SC> B(dim);
+    SmallMatrix<SC> Binv(dim);
+    SC detB;
+    SC absDetB;
+  
+    double flowRateInlet=0.;
+
+    // Step 0: determie flowrate on inlet to calculate resistance
+    for (UN T=0; T<elements->numberElements(); T++) {
+        FiniteElement fe = elements->getElement( T );
+        ElementsPtr_Type subEl = fe.getSubElements(); // might be null
+        for (int surface=0; surface<fe.numSubElements(); surface++) {
+            FiniteElement feSub = subEl->getElement( surface  );
+            if(subEl->getDimension() == dim-1 ){
+                if(feSub.getFlag() == inletFlag){
+                    vec_int_Type nodeList = feSub.getVectorNodeListNonConst ();
+                    int numNodes_T = nodeList.size();
+                    vec_dbl_Type solution_u = getSolution(nodeList, solution_rep,dofs);
+
+                    vec_dbl_Type p1(dim),p2(dim),v_E(dim,1.);
+
+                    double norm_v_E = 1.;
+                    if(dim==2){
+                        v_E[0] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[1]).at(1);
+                        v_E[1] = -(pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[1]).at(0));
+                        norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2));	
+                        
+                    }
+                    else if(dim==3){
+
+                        p1[0] = pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[1]).at(0);
+                        p1[1] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[1]).at(1);
+                        p1[2] = pointsRep->at(nodeList[0]).at(2) - pointsRep->at(nodeList[1]).at(2);
+
+                        p2[0] = pointsRep->at(nodeList[0]).at(0) - pointsRep->at(nodeList[2]).at(0);
+                        p2[1] = pointsRep->at(nodeList[0]).at(1) - pointsRep->at(nodeList[2]).at(1);
+                        p2[2] = pointsRep->at(nodeList[0]).at(2) - pointsRep->at(nodeList[2]).at(2);
+
+                        v_E[0] = p1[1]*p2[2] - p1[2]*p2[1];
+                        v_E[1] = p1[2]*p2[0] - p1[0]*p2[2];
+                        v_E[2] = p1[0]*p2[1] - p1[1]*p2[0];
+                        
+                        norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2)+pow(v_E[2],2));
+                    
+
+                    }
+                    
+                    // Calculating R * Q = R * v * A , A = norm_v_E * 0.5
+                    // Step 1: Quadrature Points on physical surface:    
+                    buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
+                    elScaling = B.computeScaling( );
+                    
+                    Teuchos::Array<SC> value(0);
+                    value.resize(  numNodes_T, 0. ); // Volumetric flow rate over one surface is a skalar value
+                    //cout << " Velocity over node ";
+                    for (UN i=0; i < numNodes_T; i++) {
+                        // loop over basis functions quadrature points
+                        for (UN w=0; w<phi->size(); w++) {
+                            for (int j=0; j<dim; j++){
+                                if(dofs==1){
+                                    value[i] += weights->at(w) *v_E[j]/norm_v_E *solution_u[i]*(*phi)[w][i]; // valueFunc[0]* = 1.0
+                                }
+                                else{
+                                    LO index = dim * i + j;
+                                    value[i] += weights->at(w) *v_E[j]/norm_v_E *solution_u[index]*(*phi)[w][i]; // valueFunc[0]* = 1.0
+                                }
+
+                            }
+                        }             
+                        flowRateInlet +=  value[i] * elScaling;
+    
+                    }
+                }
+
+
+            }
+        }
+    }
+    reduceAll<int, double> (*domainVec_.at(0)->getComm(), REDUCE_SUM, flowRateInlet, outArg (flowRateInlet));
+
+    flowRateParabolic = flowRateInlet;
+
+}
+
+
 
 template <class SC, class LO, class GO, class NO>
 void FE<SC,LO,GO,NO>::assemblySurfaceIntegralExternal(int dim,

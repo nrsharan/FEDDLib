@@ -12,6 +12,10 @@
  @copyright CH
  */
 
+void dummyFuncBC(double* x, double* res, double t, const double* parameters)
+{
+    return;
+}
 namespace FEDD {
 template<class SC,class LO,class GO,class NO>
 BCBuilder<SC,LO,GO,NO>::BCBuilder():
@@ -47,6 +51,9 @@ void BCBuilder<SC,LO,GO,NO>::addBC(BC_func_Type funcBC, int flag, int block, con
     vecBC_Parameters_.push_back(dummy);
     MultiVectorConstPtr_Type dummyMV;
     vecExternalSol_.push_back(dummyMV);
+    vecFlowRateBool_.push_back(false);
+    vecBC_func_direction_.push_back(dummyFuncBC);
+
     
 }
 
@@ -62,6 +69,10 @@ void BCBuilder<SC,LO,GO,NO>::addBC(BC_func_Type funcBC, int flag, int block, con
     vecBC_Parameters_.push_back(parameter_vec);
     MultiVectorConstPtr_Type dummyMV;
     vecExternalSol_.push_back(dummyMV);
+    vecFlowRateBool_.push_back(false);
+    vecBC_func_direction_.push_back(dummyFuncBC);
+
+
 
 }
 
@@ -76,9 +87,28 @@ void BCBuilder<SC,LO,GO,NO>::addBC(BC_func_Type funcBC, int flag, int block, con
     vecDofs_.push_back(dofs);
     vecBC_Parameters_.push_back(parameter_vec);
     vecExternalSol_.push_back(externalSol);
+    vecFlowRateBool_.push_back(false);
+    vecBC_func_direction_.push_back(dummyFuncBC);
+
+
 
 }
+template<class SC,class LO,class GO,class NO>
+void BCBuilder<SC,LO,GO,NO>::addBC(BC_func_Type funcBC, int flag, int block, const DomainPtr_Type &domain, std::string type, int dofs, vec_dbl_Type &parameter_vec, MultiVectorConstPtr_Type& externalSol, bool determineFlowRate, BC_func_Type funcBC_direction){
+    
+    vecBC_func_.push_back(funcBC);
+    vecFlag_.push_back(flag);
+    vecBlockID_.push_back(block);
+    vecDomain_.push_back(domain);
+    vecBCType_.push_back(type);
+    vecDofs_.push_back(dofs);
+    vecBC_Parameters_.push_back(parameter_vec);
+    vecExternalSol_.push_back(externalSol);
+    vecFlowRateBool_.push_back(true);
+    vecBC_func_direction_.push_back(funcBC_direction);
 
+
+}
 
 template<class SC,class LO,class GO,class NO>
 void BCBuilder<SC,LO,GO,NO>::set(const BlockMatrixPtr_Type &blockMatrix, const BlockMultiVectorPtr_Type &blockMV, double t) const{
@@ -99,7 +129,10 @@ void BCBuilder<SC,LO,GO,NO>::setRHS(const BlockMultiVectorPtr_Type &blockMV, dou
     int loc = 0;
     for (int block = 0; block < blockMV->size(); block++) { // blocks of RHS vector
         if(blockHasDirichletBC(block, loc)){
-                        
+            if (vecFlowRateBool_[loc]) { // we use the external vector here with flowrate
+                this->determineVelocityForFlowrate(loc,t);
+            }
+
             vec_int_ptr_Type bcFlags = vecDomain_.at(loc)->getBCFlagUnique();
             vec2D_dbl_ptr_Type vecPoints = vecDomain_.at(loc)->getPointsUnique();
             int dim = vecDomain_.at(loc)->getDimension();
@@ -171,7 +204,6 @@ void BCBuilder<SC,LO,GO,NO>::setRHS(const BlockMultiVectorPtr_Type &blockMV, dou
         //Code below is experimental
         for (int i=0; i<vecBCType_.size(); i++) {
             if( vecBCType_.at(i) == "Neumann" &&  vecBlockID_.at(i)==block){
-                cout << "######################## Neumann " << endl;
                 DomainPtr_Type domain = vecDomain_.at(i);
                 FEFacPtr_Type feFactory = Teuchos::rcp( new FEFac_Type() );
                 feFactory->addFE(domain);
@@ -209,8 +241,12 @@ void BCBuilder<SC,LO,GO,NO>::setDirichletBoundaryFromExternal(Teuchos::ArrayRCP<
         
     (*pointPtr_)[0] = valuesEx[index]; // laplace solution in current point
                 
-    vecBC_func_.at(loc)( &((*pointPtr_)[0]), &((*resultPtr_)[0]), time, &(vecBC_Parameters_.at(loc).at(0)));
-        
+    if (vecFlowRateBool_[loc]) { // Function to tell us the direction of the flow with the calculated velocity
+        vecBC_func_direction_.at(loc)( &((*pointPtr_)[0]), &((*resultPtr_)[0]), time, &(vecBC_Parameters_.at(loc).at(0)));
+    }
+    else
+        vecBC_func_.at(loc)( &((*pointPtr_)[0]), &((*resultPtr_)[0]), time, &(vecBC_Parameters_.at(loc).at(0)));
+    
     int dofs = resultPtr_->size();
     if ( !vecBCType_.at(loc).compare("Dirichlet") ) {
         if (type == "standard") {
@@ -233,6 +269,43 @@ void BCBuilder<SC,LO,GO,NO>::setDirichletBoundaryFromExternal(Teuchos::ArrayRCP<
 }
 
 template<class SC,class LO,class GO,class NO>
+void BCBuilder<SC,LO,GO,NO>::determineVelocityForFlowrate(LO i, double time) const{
+    
+    DomainPtr_Type domain = vecDomain_.at(i);
+    MultiVectorConstPtr_Type parabolic_unique =  vecExternalSol_[i]; // Laplace soution
+   
+    MultiVectorPtr_Type parabolic_rep = Teuchos::rcp(new MultiVector_Type ( domain->getMapRepeated() ) );
+    SC maxValue = parabolic_rep->getMax();
+    parabolic_rep->scale(1./maxValue); // normalizing solution
+           
+    parabolic_rep->importFromVector(parabolic_unique,false,"Insert");
+
+    FEFacPtr_Type feFactory = Teuchos::rcp( new FEFac_Type() );
+    feFactory->addFE(domain);
+    
+    std::vector<SC> funcParameter = vecBC_Parameters_[i];
+    vec_dbl_Type p1 = {1.,1.,1.}; // Dummy vector
+    vec_dbl_Type flowRate = {0.}; //
+    vecBC_func_.at(i)( &(p1[0]), &(flowRate[0]), time, &(funcParameter[0])); // Determine Flowrate based on BC function
+
+    int dim = domain->getDimension();
+    double flowRateParabolic=0.;
+    int dofs = 1; // vecDofs_.at(i);
+
+    // We assemble the flowrate for parabolic inflow profile. As we have the inflow profile normalized we have: vec* u_max = RB Inlet normally
+    feFactory->assemblyFlowRate(dim, flowRateParabolic, domain->getFEType(),dofs, vecFlag_[i] , parabolic_rep);
+
+    // Then we have flowRateParabolic * u_max == Q  <=> u_max = Q/flowRateParabolic, and Q is given as 'desired flowrate' in flowrate
+    double maxVelocity = flowRate[0] / flowRateParabolic;
+    if(domain->getComm()->getRank() == 0)
+        cout << " --- Desired Flow Rate: " << flowRate[0] << " --- flowrate for parabolic inflow profile: " << flowRateParabolic  << " --- v_max based on flowrate and inflow profile: " << maxVelocity << " --- " << endl;
+    
+    vecBC_Parameters_[i][0] = maxVelocity;
+
+}
+
+
+template<class SC,class LO,class GO,class NO>
 void BCBuilder<SC,LO,GO,NO>::setBCMinusVector(const BlockMultiVectorPtr_Type &outBlockMV, const BlockMultiVectorPtr_Type &substractBlockMV, double t ) const{
     
     TEUCHOS_TEST_FOR_EXCEPTION( outBlockMV->getNumVectors()>1, std::runtime_error, "BCBuilder::setRHS() only for getNumVectors == 1.");
@@ -243,6 +316,9 @@ void BCBuilder<SC,LO,GO,NO>::setBCMinusVector(const BlockMultiVectorPtr_Type &ou
 
     for (int block = 0; block < outBlockMV->size(); block++) { // blocks of RHS vector
         if(blockHasDirichletBC(block, loc)){
+            if (vecFlowRateBool_[loc]) { // we use the external vector here with flowrate
+                this->determineVelocityForFlowrate(loc,t);
+            }
             vec_int_ptr_Type     bcFlags = vecDomain_.at(loc)->getBCFlagUnique();
             vec2D_dbl_ptr_Type     vecPoints = vecDomain_.at(loc)->getPointsUnique();
             int dim = vecDomain_.at(loc)->getDimension();
@@ -358,6 +434,9 @@ void BCBuilder<SC,LO,GO,NO>::setVectorMinusBC(const BlockMultiVectorPtr_Type &ou
     
     for (int block = 0; block < outBlockMV->size(); block++) { // blocks of RHS vector
         if(blockHasDirichletBC(block, loc)){
+            if (vecFlowRateBool_[loc]) { // we use the external vector here with flowrate
+                this->determineVelocityForFlowrate(loc,t);
+            }
             vec_int_ptr_Type     bcFlags = vecDomain_.at(loc)->getBCFlagUnique();
             vec2D_dbl_ptr_Type     vecPoints = vecDomain_.at(loc)->getPointsUnique();
             int dim = vecDomain_.at(loc)->getDimension();
@@ -468,6 +547,7 @@ void BCBuilder<SC,LO,GO,NO>::setAllDirichletZero(const BlockMultiVectorPtr_Type 
     int loc = 0;
     for (int block = 0; block < blockMV->size(); block++) { // blocks of RHS vector
         if(blockHasDirichletBC(block, loc)){
+            
             vec_int_ptr_Type 	bcFlags = vecDomain_.at(loc)->getBCFlagUnique();
             vec2D_dbl_ptr_Type 	vecPoints = vecDomain_.at(loc)->getPointsUnique();
             int dim = vecDomain_.at(loc)->getDimension();

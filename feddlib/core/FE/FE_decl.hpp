@@ -126,8 +126,16 @@ class FE {
                                 std::vector<SC>& funcParameter, 
                                 RhsFunc_Type func, 
                                 ParameterListPtr_Type params, 
-                                int FEloc);
+                                int FEloc=0);
                 
+    void assemblyFlowRate(int dim,
+                            double &flowRateParabolic,
+                            string FEType, 
+                            int dofs,
+                            int inflowFlag,
+                            MultiVectorPtr_Type solution_rep,
+                            int FEloc=0) ;
+
     void assemblySurfaceIntegralExternal(int dim,
                                     std::string FEType,
                                     MultiVectorPtr_Type f,
