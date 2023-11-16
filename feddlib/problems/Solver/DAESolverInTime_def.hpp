@@ -1489,6 +1489,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     
     bool print = parameterList_->sublist("General").get("ParaViewExport",false);
     bool printData = parameterList_->sublist("General").get("Export Data",false);
+    bool printFlowRate = parameterList_->sublist("General").get("Export Flow Rate",true);
     bool printExtraData = parameterList_->sublist("General").get("Export Extra Data",false);
         
     if (print)
@@ -1503,6 +1504,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     ExporterTxtPtr_Type exporterDisplYTxt;
     ExporterTxtPtr_Type exporterIterations;
     ExporterTxtPtr_Type exporterNewtonIterations;
+    ExporterTxtPtr_Type exporterFlowRateInlet;
+    ExporterTxtPtr_Type exporterFlowRateOutlet;
+
     
     if (printData) {
         exporterTimeTxt = Teuchos::rcp(new ExporterTxt());
@@ -1517,6 +1521,16 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         
         exporterIterations = Teuchos::rcp(new ExporterTxt());
         exporterIterations->setup( "linearIterations" + suffix, this->comm_ );
+
+    }
+    if (printFlowRate) {
+        std::string suffix = parameterList_->sublist("General").get("Export Suffix","");
+
+        exporterFlowRateInlet = Teuchos::rcp(new ExporterTxt());
+        exporterFlowRateInlet->setup( "flowRateInlet" + suffix, this->comm_ );
+
+        exporterFlowRateOutlet = Teuchos::rcp(new ExporterTxt());
+        exporterFlowRateOutlet->setup( "flowRateOutlet" + suffix, this->comm_ );
     }
     if (printExtraData) {
 
@@ -1965,6 +1979,25 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             exporterIterations->exportData( (*its)[0] );
             exporterNewtonIterations->exportData( (*its)[1] );
         }
+        if(printFlowRate){
+            FE<SC,LO,GO,NO> fe;
+		    fe.addFE(problemTime_->getDomain(0));
+            double flowRateInlet;
+            double flowRateOutlet;
+
+            int flagInlet = this->parameterList_->sublist("General").get("Flag Inlet Fluid", 4);
+            int flagOutlet = this->parameterList_->sublist("General").get("Flag Outlet Fluid", 5);
+
+            MultiVectorPtr_Type u_rep = Teuchos::rcp(new MultiVector_Type ( problemTime_->getDomain(0)->getMapVecFieldRepeated() ) );   
+    	    u_rep->importFromVector(problemTime_->getSolution()->getBlock(0),false,"Insert");
+            fe.assemblyFlowRate(problemTime_->getDomain(0)->getDimension(), flowRateInlet, problemTime_->getDomain(0)->getFEType() , problemTime_->getDomain(0)->getDimension(), flagInlet , u_rep);
+            fe.assemblyFlowRate(problemTime_->getDomain(0)->getDimension(), flowRateOutlet, problemTime_->getDomain(0)->getFEType() , problemTime_->getDomain(0)->getDimension(), flagOutlet , u_rep);
+
+            exporterFlowRateInlet->exportData( flowRateInlet );
+            exporterFlowRateOutlet->exportData( flowRateOutlet );
+
+
+        }
         if (printExtraData) {
             vec_dbl_Type v(3,-9999.);
             this->problemTime_->getValuesOfInterest(v);
@@ -1988,6 +2021,10 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     if (printExtraData) {
         exporterDisplXTxt->closeExporter();
         exporterDisplYTxt->closeExporter();        
+    }
+    if(printFlowRate){
+        exporterFlowRateOutlet->closeExporter();
+        exporterFlowRateOutlet->closeExporter();
     }
     if (print)
     {

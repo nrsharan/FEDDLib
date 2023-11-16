@@ -87,7 +87,7 @@ namespace FEDD
 		this->timeStep_ = this->timeStep_ + this->timeIncrement_;
 
 		this->timeIncrement_ = dt;
-        cout << " Advance in time on element timestep: " << this->timeStep_ << " increment: " << this->timeIncrement_ << endl;
+        //cout << " Advance in time on element timestep: " << this->timeStep_ << " increment: " << this->timeIncrement_ << endl;
 
 		for (int i = 0; i < 40; i++)
 		{

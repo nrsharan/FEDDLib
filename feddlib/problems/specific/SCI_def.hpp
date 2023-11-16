@@ -636,7 +636,7 @@ void SCI<SC,LO,GO,NO>::setupSubTimeProblems(ParameterListPtr_Type parameterListC
         sizeStructure = this->problemStructureNonLin_->getSystem()->size();
     
     if(this->verbose_)
-        std::cout << "-- Setup SCI Sub-TimeProblem for Chem " << std::endl;
+        std::cout << "-- Setup SCI Sub-TimeProblem for Chem ";
 
     problemTimeChem_.reset(new TimeProblem<SC,LO,GO,NO>(*this->problemChem_, this->comm_));
         
@@ -644,7 +644,7 @@ void SCI<SC,LO,GO,NO>::setupSubTimeProblems(ParameterListPtr_Type parameterListC
         std::cout << "-- done " << endl;
 
     if(this->verbose_)
-        std::cout << "-- Setup SCI Sub-TimeProblem for Elasticity " << endl;
+        std::cout << "-- Setup SCI Sub-TimeProblem for Elasticity " ;
 
     if (materialModel_=="SCI_Linear")
         problemTimeStructure_.reset(new TimeProblem<SC,LO,GO,NO>(*this->problemStructure_, this->comm_));
@@ -742,11 +742,8 @@ void SCI<SC,LO,GO,NO>::setupSubTimeProblems(ParameterListPtr_Type parameterListC
     this->problemTimeStructure_->setTimeParameters(massCoeffStructure,problemCoeffStructure);
 
     this->problemTimeChem_->assemble( "MassSystem" );
-    if(this->verbose_)
-        std::cout << "done for chem -- \n" <<endl;
     this->problemTimeStructure_->assemble( "MassSystem" );
-    if(this->verbose_)
-        std::cout << "done for displacement -- \n" << endl;
+  
     if(this->verbose_)
         std::cout << "done -- \n" << endl;
 

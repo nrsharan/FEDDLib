@@ -116,10 +116,12 @@ e -->
         <Parameter name="ParaViewExport" type="bool" value="true"/>
         <Parameter name="ParaViewCoarse" type="bool" value="false"/>
         <Parameter name="ParaView export subdomains" type="bool" value="true"/>
-
+        <Parameter name="Flag Inlet Fluid" type="int" value="4"/>
+        <Parameter name="Flag Outlet Fluid" type="int" value="5"/>
+        <Parameter name="Export Flow Rate" type="bool" value="true"/>
         <Parameter name="Export Suffix" type="string" value=""/>
         <Parameter name="Export Data" type="bool" value="true"/>
-
+        
         <Parameter name="Preconditioner Method" type="string" value="FaCSCI"/><!-- Monolithic, FaCSI, FaCSI-Teko -->
         <Parameter name="Use Fluid Preconditioner" type="bool" value="true"/>
         <Parameter name="Use Solid Preconditioner" type="bool" value="true"/>
@@ -128,9 +130,9 @@ e -->
 
         <Parameter name="Scale mass matrix" type="bool" value="true"/>
         <Parameter name="Set Zeros" type="bool" value="true"/>
-
+        
         <Parameter name="Linearization" type="string" value="NOX"/> <!-- FixedPoint, Newton, Extrapolation-->
-        <Parameter name="Use steady fluid solution" type="bool" value="true"/>
+
     </ParameterList>
     <ParameterList name="Timestepping Parameter">
 
