@@ -244,6 +244,8 @@ private:
     ExporterTxtPtr_Type exporterTxtDrag_;
     ExporterTxtPtr_Type exporterTxtLift_;
     mutable ExporterPtr_Type exporterGeo_;
+    mutable double areaInlet_init_=0.;
+    mutable double areaOutlet_init_ =0.;
     /*####################*/
 
 public:

@@ -119,7 +119,7 @@ class FE {
                                  RhsFunc_Type func,
                                  std::vector<SC>& funcParameter);
 
-    void assemblyRestrictionBoundary(int dim, 
+    void assemblyResistanceBoundary(int dim, 
                                 std::string FEType, 
                                 MultiVectorPtr_Type f, 
                                 MultiVectorPtr_Type u_rep, 
@@ -127,7 +127,17 @@ class FE {
                                 RhsFunc_Type func, 
                                 ParameterListPtr_Type params, 
                                 int FEloc=0);
-                
+    void assemblyAbsorbingBoundary(int dim, 
+                                std::string FEType, 
+                                MultiVectorPtr_Type f, 
+                                MultiVectorPtr_Type u_rep, 
+                                double areaOutlet_init, 
+                                ParameterListPtr_Type params, 
+                                int FEloc=0);
+    void assemblyArea(int dim,
+                            double &area,
+                            int inflowFlag,
+                            int FEloc=0);            
     void assemblyFlowRate(int dim,
                             double &flowRateParabolic,
                             string FEType, 

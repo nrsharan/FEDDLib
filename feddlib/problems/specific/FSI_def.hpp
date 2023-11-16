@@ -95,9 +95,9 @@ exporterGeo_()
     problemFluid_ = Teuchos::rcp( new FluidProblem_Type( domainVelocity, FETypeVelocity, domainPressure, FETypePressure, parameterListFluid ) );
     problemFluid_->initializeProblem();
 
-    if(parameterListFSI->sublist("General").get("Use steady fluid solution",true)){
+    /*if(parameterListFSI->sublist("General").get("Use steady fluid solution",true)){
         problemSteadyFluid_ = Teuchos::rcp( new FluidProblem_Type( domainVelocity, FETypeVelocity, domainPressure, FETypePressure, parameterListFluid ) );
-    }
+    }*/
     
     if (materialModel_=="linear"){
         problemStructure_ = Teuchos::rcp( new StructureProblem_Type( domainStructure, FETypeStructure, parameterListStructure ) );
@@ -729,7 +729,8 @@ void FSI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
         
         this->system_->addBlock( this->problemFluid_->system_->getBlock(0,1), 0, 1 );
         this->system_->addBlock( this->problemFluid_->system_->getBlock(1,0), 1, 0 );
-        TEUCHOS_TEST_FOR_EXCEPTION(this->problemFluid_->system_->blockExists(1,1) , std::runtime_error, "Stabilization is used. Account for it.");
+       
+        TEUCHOS_TEST_FOR_EXCEPTION( !(this->domain_FEType_vec_.at(0).compare("P1")) , std::runtime_error, "Stabilization is used. Account for it.");
     }
     if ( this->verbose_ )
         std::cout << "Warning: Wrong consideration of temporal discretization for multi-stage RK methods!" << std::endl;
@@ -1478,10 +1479,10 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
 
     string pressureRB = this->parameterList_->sublist("Parameter Fluid").get("Pressure Boundary Condition","None");
 
-    cout << " ##### Pressure RB APPLY ##### " << endl;
-    if (pressureRB == "Restriction")
+    if (pressureRB == "Resistance")
     {
-        cout << " ##### Restriction RB ##### " << endl;
+        if(verbose_)
+            cout << " Computing resistance boundary condition .. " << endl;
 
         MultiVectorPtr_Type FERhs = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ));
 
@@ -1497,7 +1498,7 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
         MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
         u_rep_->importFromVector(u, true); 
          
-        this->feFactory_->assemblyRestrictionBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],this->parameterList_,0);
+        this->feFactory_->assemblyResistanceBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],this->parameterList_,0);
                   
         this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
 
@@ -1514,9 +1515,58 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
             
         this->problemTimeFluid_->getRhs()->getBlockNonConst(0)->update(coeffSourceTermStructure, *this->sourceTerm_->getBlockNonConst(0), 1.);
         this->rhs_->addBlock( this->problemTimeFluid_->getRhs()->getBlockNonConst(0), 0 );
+
+        if(verbose_)
+            cout << "  .. done " << endl;
+
     
     }
+    if (pressureRB == "Absorbing")
+    {
+        if(verbose_)
+            cout << " Computing absorbing boundary condition .. " << endl;
+
+        MultiVectorPtr_Type FERhs = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ));
+
+        vec_dbl_Type funcParameter(1,0.);
+        funcParameter[0] = timeSteppingTool_->t_;            
+        // how can we use different parameters for different blocks here?
+        for (int j = 0; j < this->problemTimeFluid_->getUnderlyingProblem()->getParameterCount(); j++)
+            funcParameter.push_back(this->problemTimeFluid_->getUnderlyingProblem()->getParameterRhs(j));
+        funcParameter.push_back(0.);
         
+        MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
+        u_rep_->importFromVector(u, true); 
+         
+        if (timeSteppingTool_->currentTime()==0.) { 
+            int flagInlet =this->parameterList_->sublist("General").get("Flag Inlet Fluid", 4);
+            int flagOutlet = this->parameterList_->sublist("General").get("Flag Outlet Fluid", 5);
+            double areaInlet_init = 0.;
+            double areaOutlet_init = 0.;
+
+            this->feFactory_->assemblyArea(this->dim_,areaInlet_init, flagInlet);
+            this->feFactory_->assemblyArea(this->dim_, areaOutlet_init, flagOutlet);
+
+            areaInlet_init_ = areaInlet_init;
+            areaOutlet_init_ = areaOutlet_init;
+        }    
+        this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, areaInlet_init_,this->parameterList_,0);
+                  
+        this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
+
+        
+        // addSourceTermToRHS() aus DAESolverInTime
+        double coeffSourceTermStructure = 1.0;
+       
+            
+        this->problemTimeFluid_->getRhs()->getBlockNonConst(0)->update(coeffSourceTermStructure, *this->sourceTerm_->getBlockNonConst(0), 1.);
+        this->rhs_->addBlock( this->problemTimeFluid_->getRhs()->getBlockNonConst(0), 0 );
+
+        if(verbose_)
+            cout << "  .. done " << endl;
+
+    
+    }    
   
 }
 
