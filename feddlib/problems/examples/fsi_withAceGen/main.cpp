@@ -822,7 +822,7 @@ int main(int argc, char *argv[])
             solutionLaplace->scale(1./maxValue); // normalizing solution
             
             solutionLaplaceConst = solutionLaplace; 
-
+ 
             parameter_vec.push_back(1.0); // We scaled the solution beforehand, so we dont need the actual maxValue any more and replace it with 1.
             parameter_vec.push_back( parameterListProblem->sublist("Parameter").get("Heart Beat Start",2.) );
             parameter_vec.push_back(parameterListProblem->sublist("Timestepping Parameter").get("dt",0.001));

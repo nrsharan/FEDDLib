@@ -6641,7 +6641,7 @@ void FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
         cout << " Volmetric flow Outlet: " << flowRateOutlet << endl;
         cout << " Resistance per Input: " << resistance << endl;
         cout << " Assumed pressure at outlet: " << 1.016 << " approx. 80 mmhg " << endl;
-        cout << " Implicit pressure at outlet with p=R*Q: " << flowRateOutlet*restiance << endl;
+        cout << " Implicit pressure at outlet with p=R*Q: " << flowRateOutlet*resistance << endl;
         cout << " Resistance based on pressure/flowRateInlet at this point would be: " << resistanceRef << endl;
         cout << " --------------------------------------------------------- " << endl;
         cout << " --------------------------------------------------------- " << endl;
