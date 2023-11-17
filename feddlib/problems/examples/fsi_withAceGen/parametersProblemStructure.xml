@@ -7,8 +7,8 @@
 				<Parameter name="Material Model" type="string" value="SCI_NH"/> 
 				<!-- For Explicit Coupling and SCI_NH -->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
-				<Parameter name="E" type="double" value="0.38"/>
-				<Parameter name="E1" type="double" value="0.38"/>
+				<Parameter name="E" type="double" value="380158.5"/> <!-- N/m²-->
+				<Parameter name="E1" type="double" value="380158.5"/><!-- N/m²-->
 				<Parameter name="c1" type="double" value="0.25"/>
 				<Parameter name="Poisson Ratio" type="double" value="0.49"/>
 				<!-- ######################################## -->

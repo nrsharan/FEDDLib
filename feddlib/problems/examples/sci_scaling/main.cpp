@@ -774,6 +774,24 @@ int main(int argc, char *argv[])
 			exParaF->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainStructure->getMapUnique(), domainStructure->getMapUniqueP2());
 
 			exParaF->save(0.0);
+
+
+            Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaE(new ExporterParaView<SC,LO,GO,NO>());
+
+			Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolutionE(new MultiVector<SC,LO,GO,NO>(domainStructure->getElementMap()));
+			
+			Teuchos::ArrayRCP< SC > entriesE  = exportSolutionE->getDataNonConst(0);
+			for(int i=0; i<domainStructure->getElementsC()->numberElements(); i++){
+				entriesE[i] = domainStructure->getElementsC()->getElement(i).getFlag();
+			}
+
+			Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConstE = exportSolutionE;
+
+			exParaE->setup("Flags_Elements", domainStructure->getMesh(), "P0");
+
+			exParaE->addVariable(exportSolutionConstE, "Flags_Elements", "Scalar", 1,domainStructure->getElementMap());
+
+			exParaE->save(0.0);
 		
 	
 

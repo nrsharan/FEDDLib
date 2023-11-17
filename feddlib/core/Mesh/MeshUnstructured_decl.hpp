@@ -67,7 +67,7 @@ public:
 
     MeshUnstructured();
     
-    MeshUnstructured( CommConstPtr_Type comm, int volumeID=10 );
+    MeshUnstructured( CommConstPtr_Type comm, int volumeID=10, string meshUnit = "m", bool convertToSI = false );
     
     ~MeshUnstructured();
        
@@ -256,6 +256,9 @@ public:
     int numSurfaces_;
     int numEdges_;
     int numNodes_;
+	string meshUnitRead_; // unit of the read mesh
+	bool convertToSI_; // Whether to convert it into SI Unit
+	string meshUnitFinal_; // If converted unit changes
 
 private:
     

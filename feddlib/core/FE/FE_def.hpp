@@ -6832,7 +6832,7 @@ void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
 
     double normalScale = params->sublist("Parameter Fluid").get("Normal Scale",1.0); 
     double E = params->sublist("Parameter Fluid").get("E",12.0); 
-    double wallThickness = params->sublist("Parameter Fluid").get("Wall thickness",12.0); 
+    double wallThickness = params->sublist("Parameter Fluid").get("Wall thickness",0.001); 
     double density = params->sublist("Parameter Fluid").get("Density",1.0); 
     double p_ref = params->sublist("Parameter Fluid").get("Reference fluid pressure",1.016); 
 
@@ -6857,9 +6857,9 @@ void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     double areaOutlet = 0.;
     this->assemblyArea(dim, areaOutlet, flagOutlet);
 
-    double beta = (wallThickness* E)/pow((1-poissonRatio),2) * M_PI/areaOutlet_init;
+    double beta = (((wallThickness* E)/(1-pow(poissonRatio,2))) * M_PI/areaOutlet_init ) *sqrt(areaOutlet_init);
     // Value of h_x for this timestep
-    double h_x =   ( pow( (sqrt(density)/(2*sqrt(2)) * flowRateOutlet/areaOutlet + sqrt(beta*sqrt(areaOutlet_init))),2) - beta* sqrt(areaOutlet_init)) + p_ref;
+    double h_x =  pow( (sqrt(density)/(2*sqrt(2)) * flowRateOutlet/areaOutlet + sqrt(beta)),2) - beta + p_ref;
 
     if(domainVec_.at(0)->getComm()->getRank()==0){
         cout << " ---------------------------------------------------------- " << endl;
@@ -6867,7 +6867,7 @@ void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
         cout << " Absorbing Boundary Condition " << endl;
         cout << " Volmetric flow Inlet: " << flowRateInlet << endl;
         cout << " Volmetric flow Outlet: " << flowRateOutlet << endl;
-        cout << " beta per Input: " << beta << endl;
+        cout << " beta*sqrt(A_0) per Input: " << beta << endl;
         cout << " Area_init outlet: " << areaOutlet_init << endl;
         cout << " Area outlet: " << areaOutlet << endl;
         cout << " Value h_x at outlet: " << h_x << endl;

@@ -578,9 +578,9 @@ int main(int argc, char *argv[])
             pListPartitioner->set("Build Edge List",false);
             pListPartitioner->set("Build Surface List",false);
         }
-        MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
+        MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim);
         
-        partitionerP1.readAndPartition(15);
+        partitionerP1.readAndPartition(15,"cm" , true );
         
         if (!discType.compare("P2")){
             domainP2fluid->buildP2ofP1Domain( domainP1fluid );

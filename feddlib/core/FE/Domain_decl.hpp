@@ -472,11 +472,13 @@ public:
 
     /*!
          \brief Generally the domain object holds only meshes from type 'Mesh'. If we read a mesh from file it becomes the type 'MeshUnstructured' and needs to be initialized
-         @param[in] dimension
-         @param[in] FEType
-         @param[in] volumeID       
+          @param[in] dimension
+          @param[in] FEType
+          @param[in] volumeID 
+          @param[in] unit of read mesh (i.e. cm, mm ..)
+          @param[in] converToSI option to convert unit to SI unit which is m
     */
-    void initializeUnstructuredMesh(int dimension, string feType, int volumeID=10);
+    void initializeUnstructuredMesh(int dimension, string feType, int volumeID=10, string meshUnit = "m", bool convertToSI = false);
 
     /*!
 		 \brief Hilfsfunktion fuer buildLocalInterfaceIDInGlobal().
