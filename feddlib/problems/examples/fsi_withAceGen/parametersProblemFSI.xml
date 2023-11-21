@@ -13,7 +13,7 @@
         <Parameter name="FSI" type="bool" value="true"/>
         <Parameter name="SCI" type="bool" value="true"/>
         <Parameter name="Geometry Explicit" type="bool" value="true"/>   
-        <Parameter name="Heart Beat Start" type="double" value="1.0"/><!-- Start of diffusion process -->       
+        <Parameter name="Heart Beat Start" type="double" value="0.2"/><!-- Start of diffusion process -->       
         <Parameter name="Coupling Type" type="string" value="implicit"/>
  		<Parameter name="Structure Model" type="string" value="SCI_NH"/> <!-- SCI_Linear, SCI_NH , SCI_SMC_MLCK , SCI_SMC_Active_Growth_Reorientation -->
 
@@ -34,7 +34,7 @@
     </ParameterList>
     
     <ParameterList name="Parameter Fluid">
-        <Parameter name="Viscosity" type="double" value="3.0e-3"/> <!-- kinematic viscocity m²/s-->
+        <Parameter name="Viscosity" type="double" value="3.0e-6"/> <!-- kinematic viscocity m²/s-->
         <Parameter name="Density" type="double" value="1000.0e-0"/> <!-- kg/m³ -->
         <Parameter name="Symmetric gradient" type="bool"       value="true"/>
         
@@ -45,6 +45,7 @@
         <Parameter name="Pressure Boundary Condition" type="string" value="Absorbing"/>         <!-- Resistance , Absorbing -->
        	<!-- Resistance boundary condition -->
         <Parameter name="Resistance" type="double" value="4666.0e6"/> <!-- N/m² s/m³ (eigentliche Einheit mPa*s/m³ , 1mPa = 10e6 N/m² -->
+        <Parameter name="Resistance Ramp" type="double" value="0.1"/>
         <Parameter name="Normal Scale" type="double" value="-1.0"/>
         <Parameter name="Poisson Ratio" type="double" value="0.49"/>
      	<!-- Absorbing boundary condition -->
@@ -128,7 +129,7 @@
         <Parameter name="Class" type="string" value="Multistep"/>
         <Parameter name="Timestepping type" type="string" value="non-adaptive"/><!--non-adaptive,adaptive:not working for BDF2-->
     
-        <Parameter name="Final time" type="double" value="0.2"/>
+        <Parameter name="Final time" type="double" value="1.2"/>
         <Parameter name="dt" type="double" value="0.001"/>
         <Parameter name="beta" type="double" value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma" type="double" value="0.5"/> <!-- newmark method parameter-->

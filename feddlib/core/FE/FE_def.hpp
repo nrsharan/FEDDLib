@@ -6857,6 +6857,9 @@ void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     double areaOutlet = 0.;
     this->assemblyArea(dim, areaOutlet, flagOutlet);
 
+    double areaInlet =0.;
+    this->assemblyArea(dim, areaInlet, flagInlet);
+
     double beta = (((wallThickness* E)/(1-pow(poissonRatio,2))) * M_PI/areaOutlet_init ) *sqrt(areaOutlet_init);
     // Value of h_x for this timestep
     double h_x =  pow( (sqrt(density)/(2*sqrt(2)) * flowRateOutlet/areaOutlet + sqrt(beta)),2) - beta + p_ref;
@@ -6869,6 +6872,7 @@ void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
         cout << " Volmetric flow Outlet: " << flowRateOutlet << endl;
         cout << " beta*sqrt(A_0) per Input: " << beta << endl;
         cout << " Area_init outlet: " << areaOutlet_init << endl;
+        cout << " Area inlet: " << areaInlet << endl;
         cout << " Area outlet: " << areaOutlet << endl;
         cout << " Value h_x at outlet: " << h_x << endl;
         cout << " --------------------------------------------------------- " << endl;

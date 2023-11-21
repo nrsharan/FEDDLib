@@ -244,7 +244,7 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
         Q -= 0.026039341343493;
         Q = (Q - 2.85489)/(7.96908-2.85489);
 
-        res[0] = (parameters[5] / parameters[2] * (x[0] + x[0] * Q)) ;
+        res[0] = (parameters[5] / parameters[2] * (x[0] + 1.6*x[0] * Q)) ;
         
     }
     else
@@ -277,13 +277,15 @@ void rhsRestriction(double* x, double* res, double* parameters){
 
     double pressureValue = parameters[1];
     double flag = parameters[2];
+    double ramp = parameters[3];
+
 
   	res[0] =0.;
     
-    /*if(parameters[0]+1.e-12 < 0.1)
-        pressureValue = parameters[0]*pressureValue/0.1;
+    if(parameters[0]+1.e-12 < ramp)
+        pressureValue = parameters[0]*pressureValue/ramp;
     else
-        pressureValue = parameters[1];*/
+        pressureValue = parameters[1];
 
     if(flag == 5){
       	res[0] = pressureValue;
@@ -918,7 +920,10 @@ int main(int argc, char *argv[])
 
         fsi.problemFluid_->addRhsFunction(rhsRestriction,0);
         double resistance= parameterListAll->sublist("Parameter Fluid").get("Resistance",0.5);
+
         fsi.problemFluid_->addParemeterRhs( resistance);
+        fsi.problemFluid_->addParemeterRhs( parameterListProblem->sublist("Parameter Fluid").get("Resistance Ramp",0.1));
+
         // Geometrie-RW separat, falls geometrisch explizit.
         // Bei Geometrisch implizit: Keine RW in die factoryFSI fuer das
         // Geometrie-Teilproblem, da sonst (wg. dem ZeroDirichlet auf dem Interface,
