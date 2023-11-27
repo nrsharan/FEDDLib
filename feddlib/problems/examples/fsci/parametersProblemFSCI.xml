@@ -6,21 +6,16 @@
         <Parameter name="Geometry Type" type ="string" value="Artery"/><!--partialCFD,Richter3DFull-->
 
         <Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  unstructured -->
-
-        <Parameter name="Flowrate" type="double" value="5.0"/>
+		
+		<Parameter name="Flowrate" type="double" value="3.0e-6"/>     <!-- m³/s -->   
         <Parameter name="Max Ramp Time" type="double" value=".1"/>
-
+ 
         <Parameter name="FSCI" type="bool" value="true"/>
         <Parameter name="Geometry Explicit" type="bool" value="true"/>
-        <Parameter name="Load Stepping" type="bool" value="false"/>
         <Parameter name="Inflow Start Time" type="double" value="3.0"/><!-- Start of diffusion process -->
         <Parameter name="Heart Beat Start" type="double" value="0.5"/><!-- Start of diffusion process -->
-        <Parameter name="Load Step Size" type="double" value="0.05"/><!-- Length/size of Loadsteps -->
-        <Parameter name="Load Ramp End" type="double" value="1.0"/><!-- End of Load Stepping -->
-        <Parameter name="External Force" type="bool" value="false"/>
-        <Parameter name="Nonlinear External Force" type="bool" value="false"/>
         <Parameter name="Coupling Type" type="string" value="implicit"/>
-                <Parameter name="Structure Model" type="string" value="SCI_NH"/> <!-- SCI_Linear, SCI_NH , SCI_SMC_MLCK , SCI_SMC_Active_Growth_Reorientation -->
+        <Parameter name="Structure Model" type="string" value="SCI_NH"/> <!-- SCI_Linear, SCI_NH , SCI_SMC_MLCK , SCI_SMC_Active_Growth_Reorientation -->
 
 
         <Parameter name="relNonLinTol" type="double" value="1.0e-8"/>
@@ -37,14 +32,10 @@ e -->
     </ParameterList>
     <ParameterList name="Parameter Solid">
         <Parameter name="Material model" type="string" value="Neo-Hooke"/><!--Neo-Hooke, linear -->
-            <Parameter name="E" type="double" value="38."/>
-        <Parameter name="E1" type="double" value="30.0"/>
-        <Parameter name="c1" type="double" value="0.25"/>
-        <Parameter name="Poisson Ratio" type="double" value="0.49"/>
     </ParameterList>
- <ParameterList name="Parameter Fluid">
-        <Parameter name="Viscosity" type="double" value="3.0e-2"/> <!-- kinematic viscocity -->
-        <Parameter name="Density" type="double" value="1.0e-0"/>
+    <ParameterList name="Parameter Fluid">
+        <Parameter name="Viscosity" type="double" value="3.0e-06"/> <!-- kinematic viscocity m²/s-->
+        <Parameter name="Density" type="double" value="1000.0e-0"/> <!-- kg/m³ -->
         <Parameter name="Symmetric gradient" type="bool"       value="true"/>
         
         <!-- Boundary Conditions -->
@@ -53,16 +44,16 @@ e -->
 
         <Parameter name="Pressure Boundary Condition" type="string" value="Absorbing"/>         <!-- Resistance , Absorbing -->
        	<!-- Resistance boundary condition -->
-        <Parameter name="Resistance" type="double" value="0.5"/>
+        <Parameter name="Resistance" type="double" value="3666.0e6"/> <!-- N/m² s/m³ (eigentliche Einheit mPa*s/m³ , 1mPa = 10e6 N/m² -->
         <Parameter name="Normal Scale" type="double" value="-1.0"/>
         <Parameter name="Poisson Ratio" type="double" value="0.49"/>
      	<!-- Absorbing boundary condition -->
-        <Parameter name="E" type="double" value="12.0"/>
-        <Parameter name="Wall thickness" type="double" value="0.2"/>
-        <Parameter name="Reference fluid pressure" type="double" value="1.016"/>
+        <Parameter name="E" type="double" value="120000"/>
+        <Parameter name="Wall thickness" type="double" value="0.001"/>
+        <Parameter name="Reference fluid pressure" type="double" value="8000"/><!-- N/m² -->
 
     </ParameterList>
-
+    
       <ParameterList name="Parameter Diffusion">
         <Parameter name="Viscosity" type="double" value="1.0"/>
         <Parameter name="Density" type="double" value="1000.0"/>
@@ -141,18 +132,18 @@ e -->
         <Parameter name="Timestepping type" type="string" value="non-adaptive"/><!--non-adaptive,adaptive:not working for BDF2-->
 
         <Parameter name="Final time" type="double" value="2.0"/>
-        <Parameter name="dt" type="double" value="0.001"/>
+        <Parameter name="dt" type="double" value="0.005"/>
         <Parameter name="beta" type="double" value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma" type="double" value="0.5"/> <!-- newmark method parameter-->
         <ParameterList name="Timestepping Intervalls">
             <Parameter name="Number of Segments" type="int" value="2"/>
             <ParameterList name="1">
                 <Parameter name="Start Time" type="double" value="0."/>
-                <Parameter name="dt" type="double" value="0.001"/>
+                <Parameter name="dt" type="double" value="0.005"/>
             </ParameterList>
              <ParameterList name="2">
-                <Parameter name="Start Time" type="double" value="0.002"/>
-                <Parameter name="dt" type="double" value="0.002"/>
+                <Parameter name="Start Time" type="double" value="0.005"/>
+                <Parameter name="dt" type="double" value="0.0075"/>
             </ParameterList>
              <ParameterList name="3">
                 <Parameter name="Start Time" type="double" value="2."/>

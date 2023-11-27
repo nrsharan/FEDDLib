@@ -64,8 +64,8 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
 
     couplingType_ =    parameterListSCI->sublist("Parameter").get("Coupling Type","explicit");
     loadStepping_ =    parameterListSCI->sublist("Parameter").get("Load Stepping",false);
-    externalForce_ =   parameterListSCI->sublist("Parameter").get("External Force",true);
-    nonlinearExternalForce_ = parameterListSCI->sublist("Parameter").get("Nonlinear External Force",true);
+    externalForce_ =   parameterListSCI->sublist("Parameter").get("External Force",false);
+    nonlinearExternalForce_ = parameterListSCI->sublist("Parameter").get("Nonlinear External Force",false);
     this->info();
 }
 

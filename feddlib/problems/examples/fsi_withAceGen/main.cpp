@@ -273,7 +273,7 @@ void parabolicInflowSteady(double* x, double* res, double t, const double* param
 
 
 
-void rhsRestriction(double* x, double* res, double* parameters){
+void rhsResistance(double* x, double* res, double* parameters){
 
     double pressureValue = parameters[1];
     double flag = parameters[2];
@@ -918,7 +918,7 @@ int main(int argc, char *argv[])
         fsi.problemStructureNonLin_->addRhsFunction( rhsDummy );
     
 
-        fsi.problemFluid_->addRhsFunction(rhsRestriction,0);
+        fsi.problemFluid_->addRhsFunction(rhsResistance,0);
         double resistance= parameterListAll->sublist("Parameter Fluid").get("Resistance",0.5);
 
         fsi.problemFluid_->addParemeterRhs( resistance);

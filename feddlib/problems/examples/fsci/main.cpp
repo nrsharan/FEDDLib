@@ -66,6 +66,21 @@ void parabolicInflow3D(double* x, double* res, double t, const double* parameter
     return;
 }
 
+void parabolicInflowDirection3D(double* x, double* res, double t, const double* parameters)
+{
+    // parameters[0] is the maxium desired velocity
+    // parameters[1] end of ramp
+    // parameters[2] is the maxium solution value of the laplacian parabolic inflow problme
+    // we use x[0] for the laplace solution in the considered point. Therefore, point coordinates are missing
+
+    res[0] = 0.;
+    res[1] = 0.;
+    res[2] = parameters[0] * x[0];
+
+    return;
+}
+
+
 void parabolicInflow3DLin(double* x, double* res, double t, const double* parameters)
 {
     // parameters[0] is the maxium desired velocity
@@ -88,19 +103,8 @@ void parabolicInflow3DLin(double* x, double* res, double t, const double* parame
 
     return;
 }
-void parabolicInflowDirection3D(double* x, double* res, double t, const double* parameters)
-{
-    // parameters[0] is the maxium desired velocity
-    // parameters[1] end of ramp
-    // parameters[2] is the maxium solution value of the laplacian parabolic inflow problme
-    // we use x[0] for the laplace solution in the considered point. Therefore, point coordinates are missing
 
-    res[0] = 0.;
-    res[1] = 0.;
-    res[2] = parameters[0] * x[0];
 
-    return;
-}
 void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* parameters)
 {
     // parameters[0] is the maxium desired velocity
@@ -139,7 +143,7 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
         Q -= 0.026039341343493;
         Q = (Q - 2.85489)/(7.96908-2.85489);
 
-        res[0] = (parameters[5] / parameters[2] * (x[0] + x[0] * Q)) ;
+        res[0] = (parameters[5] / parameters[2] * (x[0] + 1.6*x[0] * Q)) ;
         
     }
     else
@@ -274,17 +278,18 @@ void reactionFunc(double* x, double* res, double* parameters){
     res[0] = m * x[0];
 
 }
-void rhsRestriction(double* x, double* res, double* parameters){
+void rhsResistance(double* x, double* res, double* parameters){
 
     double pressureValue = parameters[1];
     double flag = parameters[2];
+    double ramp = parameters[3];
 
   	res[0] =0.;
     
-    /*if(parameters[0]+1.e-12 < 0.1)
-        pressureValue = parameters[0]*pressureValue/0.1;
+    if(parameters[0]+1.e-12 < ramp)
+        pressureValue = parameters[0]*pressureValue/ramp;
     else
-        pressureValue = parameters[1];*/
+        pressureValue = parameters[1];
 
     if(flag == 5){
       	res[0] = pressureValue;
@@ -526,18 +531,14 @@ int main(int argc, char *argv[])
         }
         MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
         
-        partitionerP1.readAndPartition(15);
+        partitionerP1.readAndPartition(15,"cm" , true ); // Convert it from cm to m
         
         if (!discType.compare("P2")){
             domainP2fluid->buildP2ofP1Domain( domainP1fluid );
             domainP2struct->buildP2ofP1Domain( domainP1struct );
         }
         
-        
-        
-
         // Calculate distances is done in: identifyInterfaceParallelAndDistance
-
 
         Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
 
@@ -748,12 +749,12 @@ int main(int argc, char *argv[])
         MultiVectorConstPtr_Type solutionLaplace;
         MultiVectorConstPtr_Type solutionLaplaceConst;
 
-        {
+       {
             Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryLaplace(new BCBuilder<SC,LO,GO,NO>( ));
             
-                bcFactoryLaplace->addBC(zeroBC, 2, 0, domainFluidVelocity, "Dirichlet", 1); //inflow ring
-                bcFactoryLaplace->addBC(zeroBC, 3, 0, domainFluidVelocity, "Dirichlet", 1); //outflow ring
-                bcFactoryLaplace->addBC(zeroBC, 6, 0, domainFluidVelocity, "Dirichlet", 1); //surface
+            bcFactoryLaplace->addBC(zeroBC, 2, 0, domainFluidVelocity, "Dirichlet", 1); //inflow ring
+            bcFactoryLaplace->addBC(zeroBC, 3, 0, domainFluidVelocity, "Dirichlet", 1); //outflow ring
+            bcFactoryLaplace->addBC(zeroBC, 6, 0, domainFluidVelocity, "Dirichlet", 1); //surface
             
             ParameterListPtr_Type parameterListProblemL = Teuchos::getParametersFromXmlFile(xmlProbL);
             ParameterListPtr_Type parameterListPrecL = Teuchos::getParametersFromXmlFile(xmlPrecL);
@@ -783,8 +784,9 @@ int main(int argc, char *argv[])
             SC maxValue = solutionLaplace->getMax();
             solutionLaplace->scale(1./maxValue); // normalizing solution
             
-            solutionLaplaceConst = solutionLaplace;             
-            parameter_vec.push_back(1.0);
+            solutionLaplaceConst = solutionLaplace; 
+ 
+            parameter_vec.push_back(1.0); // We scaled the solution beforehand, so we dont need the actual maxValue any more and replace it with 1.
             parameter_vec.push_back( parameterListProblem->sublist("Parameter").get("Heart Beat Start",2.) );
             parameter_vec.push_back(parameterListProblem->sublist("Timestepping Parameter").get("dt",0.001));
             parameter_vec.push_back(parameterListProblem->sublist("Parameter").get("Flowrate",3.0));
@@ -882,9 +884,11 @@ int main(int argc, char *argv[])
         else
             fsci.problemSCI_->problemStructureNonLin_->addRhsFunction( rhsDummy );
     
-        fsci.problemFluid_->addRhsFunction(rhsRestriction,0);
+        fsci.problemFluid_->addRhsFunction(rhsResistance,0);
         double resistance= parameterListAll->sublist("Parameter Fluid").get("Resistance",0.5);
         fsci.problemFluid_->addParemeterRhs( resistance);
+        fsci.problemFluid_->addParemeterRhs( parameterListProblem->sublist("Parameter Fluid").get("Resistance Ramp",0.1));
+
         // Geometrie-RW separat, falls geometrisch explizit.
         // Bei Geometrisch implizit: Keine RW in die factoryFSI fuer das
         // Geometrie-Teilproblem, da sonst (wg. dem ZeroDirichlet auf dem Interface,

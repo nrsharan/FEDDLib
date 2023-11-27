@@ -1788,13 +1788,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         fsci->problemSCI_->timeSteppingTool_->dt_ = dt;
         if(timeSteppingTool_->currentTime() <= 0. + 1e-12){
             timeSteppingTool_->dt_prev_= dt;        
-            fsci->timeSteppingTool_->dt_prev_= dt;        
+            fsci->timeSteppingTool_->dt_prev_= dt;  
+            fsci->problemSCI_->timeSteppingTool_->dt_prev_ = dt; 
         }
         else{
             timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
 
             this->problemTime_->assemble("UpdateTime"); // Updates to next timestep previously:problemTime_->updateTime ( timeSteppingTool_->currentTime() );
-
 
             fsci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
             fsci->problemSCI_->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;

@@ -91,9 +91,6 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(Problem_Type* problem, BlockMulti
     problem->getLinearSolverBuilder()->setParameterList(pListThyraSolver);
     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problem->getLinearSolverBuilder()->createLinearSolveStrategy("");
 
-   
-
-
     if ( type != "MonolithicConstPrec" ||  problem->getPreconditioner()->getThyraPrec().is_null() )
         problem->setupPreconditioner( "Monolithic" );
 
