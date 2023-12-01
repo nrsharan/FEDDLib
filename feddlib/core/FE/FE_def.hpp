@@ -6631,7 +6631,7 @@ void FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
     this->assemblyFlowRate(dim, flowRateInlet, FEType , dim, flagInlet , u_rep);
     this->assemblyFlowRate(dim, flowRateOutlet, FEType , dim, flagOutlet , u_rep);  
     
-    double resistanceRef = 1.016/flowRateInlet;
+    double resistanceRef = 10666/flowRateInlet;
 
     if(domainVec_.at(0)->getComm()->getRank()==0){
         cout << " ---------------------------------------------------------- " << endl;
@@ -6640,9 +6640,9 @@ void FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
         cout << " Volmetric flow Inlet: " << flowRateInlet << endl;
         cout << " Volmetric flow Outlet: " << flowRateOutlet << endl;
         cout << " Resistance per Input: " << resistance << endl;
-        cout << " Assumed pressure at outlet: " << 1.016 << " approx. 80 mmhg " << endl;
+        cout << " Assumed pressure at outlet: approx. 10.66kPa " << endl;
         cout << " Implicit pressure at outlet with p=R*Q: " << flowRateOutlet*resistance << endl;
-        cout << " Resistance based on pressure/flowRateInlet at this point would be: " << resistanceRef << endl;
+        cout << " Resistance based on (desired pressure)/flowRateInlet at this point would be: " << resistanceRef << endl;
         cout << " --------------------------------------------------------- " << endl;
         cout << " --------------------------------------------------------- " << endl;
 

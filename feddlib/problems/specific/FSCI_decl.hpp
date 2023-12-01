@@ -164,7 +164,7 @@ public:
     void computeSolidRHSInTime() const;
     
     // Hier wird timeSteppingTool_->t_ inkrementiert
-    void updateTime() const;
+    //void updateTime() const;
 
     // Verschiebt die notwendigen Gitter
     //void moveMesh() const;

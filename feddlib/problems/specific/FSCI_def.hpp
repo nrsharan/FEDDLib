@@ -257,7 +257,7 @@ template<class SC,class LO,class GO,class NO>
 void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
 {
 
-    double dt = this->parameterList_->sublist("Timestepping Parameter").get("dt",0.02);
+    double dt = this->timeSteppingTool_->dt_;
 
     // Fluid-Dichte
     double density = this->problemFluid_->getParameterList()->sublist("Parameter").get("Density",1.);
@@ -288,7 +288,7 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
         if(this->verbose_)
             std::cout << "-- Reassembly (UpdateTime)" << '\n';
 
-        updateTime();
+        this->updateTime();
         this->problemSCI_->reAssemble("UpdateTime");
 
         return;
@@ -537,7 +537,7 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
     
     *this->w_rep_ = *this->meshDisplacementNew_rep_;
     this->w_rep_->update(-1.0, *this->meshDisplacementOld_rep_, 1.0);
-    double dt = this->parameterList_->sublist("Timestepping Parameter").get("dt",0.02);
+    double dt = this->timeSteppingTool_->dt_;
     this->w_rep_->scale(1.0/dt);
     
     this->u_minus_w_rep_->update(-1.0, *this->w_rep_, 1.0);
@@ -855,15 +855,6 @@ void FSCI<SC,LO,GO,NO>::setChemMassmatrix( MatrixPtr_Type& massmatrix ) const
     //######################
     this->problemSCI_->setChemMassmatrix(massmatrix);
     
-
-}
-
-
-// Damit die richtige timeSteppingTool_->currentTime() genommen wird.
-template<class SC,class LO,class GO,class NO>
-void FSCI<SC,LO,GO,NO>::updateTime() const
-{
-    this->timeSteppingTool_->t_ = this->timeSteppingTool_->t_ + this->timeSteppingTool_->dt_prev_;
 
 }
 

@@ -4,7 +4,7 @@
           	<ParameterList name="1">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="15"/>
-				<Parameter name="Material Model" type="string" value="SCI_NH"/> 
+				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
 				<!-- For Explicit Coupling and SCI_NH , SCI_SMC_Active_Growth_Reorientation-->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
 				<Parameter name="E" type="double" value="380158.5"/> <!-- N/m²-->
@@ -26,14 +26,14 @@
                 <Parameter name="K3" type="double" value="0.134e0"/>
                 <Parameter name="K4" type="double" value="0.166e-2"/>
                 <Parameter name="K7" type="double" value="0.66e-4"/>
-                <Parameter name="Kappa" type="double" value="0.148262"/>
+                <Parameter name="Kappa" type="double" value="0.148262e6"/>
                 <Parameter name="Beta1" type="double" value="0.001006"/>
-                <Parameter name="MuA" type="double" value="0.011857"/>
+                <Parameter name="MuA" type="double" value="0.011857e6"/>
                 <Parameter name="Beta2" type="double" value="0.02668"/>
-                <Parameter name="Alpha2" type="double" value="0.15173775"/>
+                <Parameter name="Alpha2" type="double" value="0.15173775e6"/>
                 <Parameter name="Alpha3" type="double" value="2.75662"/>
-                <Parameter name="Alpha1" type="double" value="11.52507e-3"/>
-                <Parameter name="Alpha4" type="double" value="1.27631e-3"/>
+                <Parameter name="Alpha1" type="double" value="11.52507e3"/>
+                <Parameter name="Alpha4" type="double" value="1.27631e3"/>
                 <Parameter name="Alpha5" type="double" value="0.308798e1"/>
                 <Parameter name="Gamma6" type="double" value="0.15e1"/>
                 <Parameter name="LambdaP50" type="double" value="1.0e0"/>
