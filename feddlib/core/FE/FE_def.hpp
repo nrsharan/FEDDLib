@@ -6841,7 +6841,7 @@ void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     double E = params->sublist("Parameter Fluid").get("E",12.0); 
     double wallThickness = params->sublist("Parameter Fluid").get("Wall thickness",0.001); 
     double density = params->sublist("Parameter Fluid").get("Density",1.0); 
-    double p_ref = params->sublist("Parameter Fluid").get("Reference fluid pressure",1.016); 
+    double p_ref = params->sublist("Parameter Fluid").get("Reference fluid pressure",8000.); 
 
 
     SC elScaling;
@@ -6872,9 +6872,9 @@ void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     SC* paramsFunc = &(funcParameter[0]);
     vec_dbl_Type x_tmp(dim,0.); //dummy
     paramsFunc[ funcParameter.size() - 1 ] =flagOutlet;          
-
+    paramsFunc[ 1 ]  = p_ref;
     func( &x_tmp[0], &valueFunc[0], paramsFunc);
-
+    p_ref = valueFunc[0];
     // Value of h_x for this timestep
     double h_x =  pow( (sqrt(density)/(2*sqrt(2)) * flowRateOutlet/areaOutlet + sqrt(beta)),2) - beta + p_ref;
 
