@@ -131,6 +131,8 @@ class FE {
                                 std::string FEType, 
                                 MultiVectorPtr_Type f, 
                                 MultiVectorPtr_Type u_rep, 
+                                std::vector<SC>& funcParameter, 
+                                RhsFunc_Type func, 
                                 double areaOutlet_init, 
                                 ParameterListPtr_Type params, 
                                 int FEloc=0);

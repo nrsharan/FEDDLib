@@ -90,7 +90,7 @@ void DiffusionReaction<SC,LO,GO,NO>::assembleConstantMatrices( std::string type 
         std::cout << "done -- " << std::endl;
 
     //this->bcFactory_->setRHS( this->getSolution(), 0.);
-    this->getSolution()->putScalar(1.);
+
 }
 
 /*!

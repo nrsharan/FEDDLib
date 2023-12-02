@@ -1503,8 +1503,8 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
         this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
 
         //this->sourceTerm_->getBlockNonConst(0)->print();
-        double density = this->parameterList_->sublist("Parameter").get("Density",1.);
-        this->problemTimeFluid_->getSourceTerm()->scale(density);
+        //double density = this->parameterList_->sublist("Parameter").get("Density",1.);
+        //this->problemTimeFluid_->getSourceTerm()->scale(density);
         // Fuege die rechte Seite der DGL (f bzw. f_{n+1}) der rechten Seite hinzu (skaliert mit coeffSourceTerm)
         // Die Skalierung mit der Dichte erfolgt schon in der Assemblierungsfunktion!
         
@@ -1551,7 +1551,7 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
             areaInlet_init_ = areaInlet_init;
             areaOutlet_init_ = areaOutlet_init;
         }    
-        this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, areaInlet_init_,this->parameterList_,0);
+        this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaInlet_init_,this->parameterList_,0);
                   
         this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
 

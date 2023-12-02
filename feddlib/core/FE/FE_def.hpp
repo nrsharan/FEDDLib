@@ -6633,15 +6633,21 @@ void FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
     
     double resistanceRef = 10666/flowRateInlet;
 
+
+    vec_dbl_Type x_tmp(dim,0.); //dummy
+    paramsFunc[ funcParameter.size() - 1 ] =flagOutlet;          
+
+    func( &x_tmp[0], &valueFunc[0], paramsFunc);
+
     if(domainVec_.at(0)->getComm()->getRank()==0){
         cout << " ---------------------------------------------------------- " << endl;
         cout << " ---------------------------------------------------------- " << endl;
         cout << " Resistance Boundary Condition " << endl;
         cout << " Volmetric flow Inlet: " << flowRateInlet << endl;
         cout << " Volmetric flow Outlet: " << flowRateOutlet << endl;
-        cout << " Resistance per Input: " << resistance << endl;
+        cout << " Resistance per Input: " << valueFunc[0] << endl;
         cout << " Assumed pressure at outlet: approx. 10.66kPa " << endl;
-        cout << " Implicit pressure at outlet with p=R*Q: " << flowRateOutlet*resistance << endl;
+        cout << " Implicit pressure at outlet with p=R*Q: " << flowRateOutlet*valueFunc[0] << endl;
         cout << " Resistance based on (desired pressure)/flowRateInlet at this point would be: " << resistanceRef << endl;
         cout << " --------------------------------------------------------- " << endl;
         cout << " --------------------------------------------------------- " << endl;
@@ -6697,7 +6703,6 @@ void FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
                 // Calculating R * Q = R * v * A , A = norm_v_E * 0.5
                // Step 1: Quadrature Points on physical surface:
                 if(valueFunc[0] > 0.){
-
                     vec_dbl_Type quadWeights(dim);
                     quadWeights[0] = 1/6.;
                     quadWeights[1] = 1/6.;
@@ -6803,6 +6808,8 @@ void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
                                               std::string FEType,
                                               MultiVectorPtr_Type f,
                                               MultiVectorPtr_Type u_rep,
+                                              std::vector<SC>& funcParameter, 
+                                              RhsFunc_Type func, 
                                               double areaOutlet_init,
                                               ParameterListPtr_Type params,
                                               int FEloc) {
@@ -6861,6 +6868,13 @@ void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     this->assemblyArea(dim, areaInlet, flagInlet);
 
     double beta = (((wallThickness* E)/(1-pow(poissonRatio,2))) * M_PI/areaOutlet_init ) *sqrt(areaOutlet_init);
+    // We determine p_ref via a ramp
+    SC* paramsFunc = &(funcParameter[0]);
+    vec_dbl_Type x_tmp(dim,0.); //dummy
+    paramsFunc[ funcParameter.size() - 1 ] =flagOutlet;          
+
+    func( &x_tmp[0], &valueFunc[0], paramsFunc);
+
     // Value of h_x for this timestep
     double h_x =  pow( (sqrt(density)/(2*sqrt(2)) * flowRateOutlet/areaOutlet + sqrt(beta)),2) - beta + p_ref;
 

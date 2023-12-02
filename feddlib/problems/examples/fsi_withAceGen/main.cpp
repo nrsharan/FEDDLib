@@ -276,8 +276,8 @@ void parabolicInflowSteady(double* x, double* res, double t, const double* param
 void rhsResistance(double* x, double* res, double* parameters){
 
     double pressureValue = parameters[1];
-    double flag = parameters[2];
-    double ramp = parameters[3];
+    double flag = parameters[3];
+    double ramp = parameters[2];
 
 
   	res[0] =0.;

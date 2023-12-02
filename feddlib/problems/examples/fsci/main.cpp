@@ -278,12 +278,11 @@ void reactionFunc(double* x, double* res, double* parameters){
     res[0] = m * x[0];
 
 }
-void rhsResistance(double* x, double* res, double* parameters){
+void rhsFluidRB(double* x, double* res, double* parameters){
 
     double pressureValue = parameters[1];
-    double flag = parameters[2];
-    double ramp = parameters[3];
-
+    double flag = parameters[3];
+    double ramp = parameters[2];
   	res[0] =0.;
     
     if(parameters[0]+1.e-12 < ramp)
@@ -295,7 +294,7 @@ void rhsResistance(double* x, double* res, double* parameters){
       	res[0] = pressureValue;
         
     }
-    
+
     return;
 }
 
@@ -884,10 +883,11 @@ int main(int argc, char *argv[])
         else
             fsci.problemSCI_->problemStructureNonLin_->addRhsFunction( rhsDummy );
     
-        fsci.problemFluid_->addRhsFunction(rhsResistance,0);
+        fsci.problemFluid_->addRhsFunction(rhsFluidRB,0);
         double resistance= parameterListAll->sublist("Parameter Fluid").get("Resistance",0.5);
         fsci.problemFluid_->addParemeterRhs( resistance);
-        fsci.problemFluid_->addParemeterRhs( parameterListProblem->sublist("Parameter Fluid").get("Resistance Ramp",0.1));
+        fsci.problemFluid_->addParemeterRhs( parameterListProblem->sublist("Parameter Fluid").get("BC Ramp",0.1));
+  
 
         // Geometrie-RW separat, falls geometrisch explizit.
         // Bei Geometrisch implizit: Keine RW in die factoryFSI fuer das

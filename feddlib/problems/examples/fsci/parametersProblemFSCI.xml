@@ -43,6 +43,7 @@ e -->
         <Parameter name="Set Outflow Pressure to Zero" type="bool" value="false"/>
 
         <Parameter name="Pressure Boundary Condition" type="string" value="Absorbing"/>         <!-- Resistance , Absorbing -->
+        <Parameter name="BC Ramp" type="double" value="0.5"/>
        	<!-- Resistance boundary condition -->
         <Parameter name="Resistance" type="double" value="3666.0e6"/> <!-- N/m² s/m³ (eigentliche Einheit mPa*s/m³ , 1mPa = 10e6 N/m² -->
         <Parameter name="Normal Scale" type="double" value="-1.0"/>
