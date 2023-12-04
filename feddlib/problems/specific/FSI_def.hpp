@@ -1498,7 +1498,7 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
         MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
         u_rep_->importFromVector(u, true); 
          
-        this->feFactory_->assemblyResistanceBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],this->parameterList_,0);
+        pressureOutlet_ = this->feFactory_->assemblyResistanceBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],this->parameterList_,0);
                   
         this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
 
@@ -1551,7 +1551,7 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
             areaInlet_init_ = areaInlet_init;
             areaOutlet_init_ = areaOutlet_init;
         }    
-        this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaInlet_init_,this->parameterList_,0);
+        pressureOutlet_ = this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaInlet_init_,this->parameterList_,0);
                   
         this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
 

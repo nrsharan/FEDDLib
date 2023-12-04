@@ -208,6 +208,7 @@ public:
     /*####################*/
     void solveSteadyStateNavierStokes() const;
 
+    double getPressureOutlet(){return pressureOutlet_;};
     // Alternativ wie in reAssembleExtrapolation() in NS?
 
     MultiVectorPtr_Type meshDisplacementOld_rep_;
@@ -246,6 +247,7 @@ private:
     mutable ExporterPtr_Type exporterGeo_;
     mutable double areaInlet_init_=0.;
     mutable double areaOutlet_init_ =0.;
+    mutable double pressureOutlet_ =0.;
     /*####################*/
 
 public:

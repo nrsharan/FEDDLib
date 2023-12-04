@@ -3,6 +3,7 @@
 
 
 #include "feddlib/core/FEDDCore.hpp"
+#include "feddlib/core/General/ExporterTxt.hpp"
 #include "feddlib/core/General/SmallMatrix.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 #include "feddlib/core/LinearAlgebra/Matrix.hpp"
@@ -100,6 +101,7 @@ class FE {
 
 	typedef SmallMatrix<SC> SmallMatrix_Type;
     typedef Teuchos::RCP<SmallMatrix_Type> SmallMatrixPtr_Type;
+    
 
     DomainPtr_vec_Type	domainVec_;
     Teuchos::RCP<ElementSpec> es_;
@@ -119,7 +121,7 @@ class FE {
                                  RhsFunc_Type func,
                                  std::vector<SC>& funcParameter);
 
-    void assemblyResistanceBoundary(int dim, 
+    double assemblyResistanceBoundary(int dim, 
                                 std::string FEType, 
                                 MultiVectorPtr_Type f, 
                                 MultiVectorPtr_Type u_rep, 
@@ -127,7 +129,7 @@ class FE {
                                 RhsFunc_Type func, 
                                 ParameterListPtr_Type params, 
                                 int FEloc=0);
-    void assemblyAbsorbingBoundary(int dim, 
+    double assemblyAbsorbingBoundary(int dim, 
                                 std::string FEType, 
                                 MultiVectorPtr_Type f, 
                                 MultiVectorPtr_Type u_rep, 

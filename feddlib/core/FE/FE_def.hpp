@@ -6573,7 +6573,7 @@ void FE<SC,LO,GO,NO>::assemblyShapeDerivativeDivergence(int dim,
 
 
 template <class SC, class LO, class GO, class NO>
-void FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
+double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
                                               std::string FEType,
                                               MultiVectorPtr_Type f,
                                               MultiVectorPtr_Type u_rep,
@@ -6653,7 +6653,7 @@ void FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
         cout << " --------------------------------------------------------- " << endl;
 
     }
-    
+    double p_out = flowRateOutlet*valueFunc[0];
     // Second step: use flow rate to determine pressure with resistance
     for (UN T=0; T<elements->numberElements(); T++) {
         FiniteElement fe = elements->getElement( T );
@@ -6800,11 +6800,12 @@ void FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
             }
         }
     }
+    return p_out; 
 }
 
 
 template <class SC, class LO, class GO, class NO>
-void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
+double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
                                               std::string FEType,
                                               MultiVectorPtr_Type f,
                                               MultiVectorPtr_Type u_rep,
@@ -6878,6 +6879,7 @@ void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     // Value of h_x for this timestep
     double h_x =  pow( (sqrt(density)/(2*sqrt(2)) * flowRateOutlet/areaOutlet + sqrt(beta)),2) - beta + p_ref;
 
+    
     if(domainVec_.at(0)->getComm()->getRank()==0){
         cout << " ---------------------------------------------------------- " << endl;
         cout << " ---------------------------------------------------------- " << endl;
@@ -6966,6 +6968,8 @@ void FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
             }
         }
     }
+    double p_out = h_x;
+    return p_out;
 }
 
 template <class SC, class LO, class GO, class NO>
