@@ -703,6 +703,9 @@ void FSI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     
     meshDisplacementNew_rep_->importFromVector(geometrySolution, true);
     
+    if(this->parameterList_->sublist("Parameter Fluid").get("Implicit BC",false));
+        computePressureRHSInTime();
+
     MultiVectorConstPtr_Type fluidSolution = this->solution_->getBlock(0);
     u_rep_->importFromVector(fluidSolution, true);
     u_minus_w_rep_->importFromVector(fluidSolution, true); //    u_minus_w_rep_ = *u_rep_;

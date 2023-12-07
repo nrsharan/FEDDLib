@@ -25,7 +25,7 @@
         <Parameter name="Use update tol" type="bool" value="true"/>
         <Parameter name="Use WRMS" type="bool" value="false"/>
 
-        <Parameter name="MaxNonLinIts" type="int" value="5"/>
+        <Parameter name="MaxNonLinIts" type="int" value="15"/>
 
         <Parameter name="Criterion" type="string" value="Residual"/><!-- Criterion for nonlinear solve, Residual or Update: Residual is the norm of the nonlinear residual; Update is the norm of the updat\
 e -->
@@ -44,7 +44,8 @@ e -->
 
         <Parameter name="Pressure Boundary Condition" type="string" value="Absorbing"/>         <!-- Resistance , Absorbing -->
         <Parameter name="Average Flowrate" type="bool" value="true"/>
-        <Parameter name="BC Ramp" type="double" value="0.5"/>
+        <Parameter name="Implicit BC" type="bool" value="true"/>
+        <Parameter name="BC Ramp" type="double" value="0.1"/>
        	<!-- Resistance boundary condition -->
         <Parameter name="Resistance" type="double" value="3666.0e6"/> <!-- N/m² s/m³ (eigentliche Einheit mPa*s/m³ , 1mPa = 10e6 N/m² -->
         <Parameter name="Normal Scale" type="double" value="-1.0"/>
