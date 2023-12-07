@@ -6577,6 +6577,7 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
                                               std::string FEType,
                                               MultiVectorPtr_Type f,
                                               MultiVectorPtr_Type u_rep,
+                                              vec_dbl_Type flowRate_vec, 
                                               std::vector<SC>& funcParameter,
                                               RhsFunc_Type func,
                                               ParameterListPtr_Type params,
@@ -6633,6 +6634,7 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
     
     double resistanceRef = 10666/flowRateInlet;
 
+    double flowRateOutletAveraged = (flowRate_vec[0] + flowRate_vec[1]) / 2.;
 
     vec_dbl_Type x_tmp(dim,0.); //dummy
     paramsFunc[ funcParameter.size() - 1 ] =flagOutlet;          
@@ -6645,6 +6647,7 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
         cout << " Resistance Boundary Condition " << endl;
         cout << " Volmetric flow Inlet: " << flowRateInlet << endl;
         cout << " Volmetric flow Outlet: " << flowRateOutlet << endl;
+        cout << " Averaged volmetric flow Outlet: " << flowRateOutletAveraged << endl;
         cout << " Resistance per Input: " << valueFunc[0] << endl;
         cout << " Assumed pressure at outlet: approx. 10.66kPa " << endl;
         cout << " Implicit pressure at outlet with p=R*Q: " << flowRateOutlet*valueFunc[0] << endl;
@@ -6653,7 +6656,13 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
         cout << " --------------------------------------------------------- " << endl;
 
     }
-    double p_out = flowRateOutlet*valueFunc[0];
+
+    double flowRateUse = flowRateOutlet;
+    if(params->sublist("Parameter Fluid").get("Average Flowrate",false) )
+        flowRateUse = flowRateOutletAveraged;
+
+    double p_out = flowRateUse*valueFunc[0];
+
     // Second step: use flow rate to determine pressure with resistance
     for (UN T=0; T<elements->numberElements(); T++) {
         FiniteElement fe = elements->getElement( T );
@@ -6747,7 +6756,7 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
                         // loop over basis functions quadrature points
                         for (UN w=0; w<phi->size(); w++) {       
                             for (int j=0; j<dim; j++){
-                                value[j] += weights->at(w) *normalScale*v_E[j]/norm_v_E *flowRateOutlet*valueFunc[0]*(*phi)[w][i];//valueFunc[0]
+                                value[j] += weights->at(w) *normalScale*v_E[j]/norm_v_E *flowRateUse*valueFunc[0]*(*phi)[w][i];//valueFunc[0]
                             }
                         }             
 
@@ -6787,11 +6796,7 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
                        // cout << " Value Second component " << value[0] << " " << value[1] << " " << value[2]  << endl;
                         for (int j=0; j<value.size(); j++)
                             valuesF[ dim * nodeList[ t ] + j ] -= normalScale*value[j] *elScaling*poissonRatio;
-                        
-                            
-                                
-
-                        
+                                 
                     }
 
 
@@ -6809,6 +6814,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
                                               std::string FEType,
                                               MultiVectorPtr_Type f,
                                               MultiVectorPtr_Type u_rep,
+                                              vec_dbl_Type flowRate_vec,
                                               std::vector<SC>& funcParameter, 
                                               RhsFunc_Type func, 
                                               double areaOutlet_init,
@@ -6862,6 +6868,8 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     this->assemblyFlowRate(dim, flowRateInlet, FEType , dim, flagInlet , u_rep);
     this->assemblyFlowRate(dim, flowRateOutlet, FEType , dim, flagOutlet , u_rep);
     
+    double flowRateOutletAveraged = (flowRate_vec[0] + flowRate_vec[1]) / 2.;
+
     double areaOutlet = 0.;
     this->assemblyArea(dim, areaOutlet, flagOutlet);
 
@@ -6877,7 +6885,11 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     func( &x_tmp[0], &valueFunc[0], paramsFunc);
     p_ref = valueFunc[0];
     // Value of h_x for this timestep
-    double h_x =  pow( (sqrt(density)/(2*sqrt(2)) * flowRateOutlet/areaOutlet + sqrt(beta)),2) - beta + p_ref;
+    double flowRateUse = flowRateOutlet;
+    if(params->sublist("Parameter Fluid").get("Average Flowrate",false) )
+        flowRateUse = flowRateOutletAveraged;
+
+    double h_x =  pow( (sqrt(density)/(2*sqrt(2)) * flowRateUse/areaOutlet + sqrt(beta)),2) - beta + p_ref;
 
     
     if(domainVec_.at(0)->getComm()->getRank()==0){
@@ -6886,6 +6898,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
         cout << " Absorbing Boundary Condition " << endl;
         cout << " Volmetric flow Inlet: " << flowRateInlet << endl;
         cout << " Volmetric flow Outlet: " << flowRateOutlet << endl;
+        cout << " Averaged volmetric flow Outlet: " << flowRateOutletAveraged << endl;
         cout << " beta*sqrt(A_0) per Input: " << beta << endl;
         cout << " Area_init outlet: " << areaOutlet_init << endl;
         cout << " Area inlet: " << areaInlet << endl;

@@ -43,6 +43,7 @@ e -->
         <Parameter name="Set Outflow Pressure to Zero" type="bool" value="false"/>
 
         <Parameter name="Pressure Boundary Condition" type="string" value="Absorbing"/>         <!-- Resistance , Absorbing -->
+        <Parameter name="Average Flowrate" type="bool" value="true"/>
         <Parameter name="BC Ramp" type="double" value="0.5"/>
        	<!-- Resistance boundary condition -->
         <Parameter name="Resistance" type="double" value="3666.0e6"/> <!-- N/m² s/m³ (eigentliche Einheit mPa*s/m³ , 1mPa = 10e6 N/m² -->
@@ -65,7 +66,7 @@ e -->
 
     <ParameterList name="Parameter Geometry">
         <Parameter name="Poisson Ratio" type="double" value="0.49e-0"/>
-        <Parameter name="Mu" type="double" value="12.67"/>
+        <Parameter name="Mu" type="double" value="126700"/>
 
         <Parameter name="Distance Laplace" type="double" value="0.1"/>
         <Parameter name="Coefficient Laplace" type="double" value="1000."/>

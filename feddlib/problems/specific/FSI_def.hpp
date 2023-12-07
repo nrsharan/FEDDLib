@@ -1493,13 +1493,29 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
             funcParameter.push_back(this->problemTimeFluid_->getUnderlyingProblem()->getParameterRhs(j));
         funcParameter.push_back(0.);
         
-        
+        int flagInlet =this->parameterList_->sublist("General").get("Flag Inlet Fluid", 4);
+        int flagOutlet = this->parameterList_->sublist("General").get("Flag Outlet Fluid", 5);
+
+        if (timeSteppingTool_->currentTime()==0.) { 
+            double flowRateInlet_n_1 = 0.;
+            this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n_1, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
+            flowRateOutlet_n_1_ = flowRateInlet_n_1; 
+        }  
+        double flowRateInlet_n = 0.;
+        this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
+        flowRateOutlet_n_ = flowRateInlet_n; 
+
+        vec_dbl_Type flowRateOutlet_timesteps(2);
+        flowRateOutlet_timesteps[0] = flowRateOutlet_n_1_;
+        flowRateOutlet_timesteps[1] = flowRateOutlet_n_;        
 
         MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
         u_rep_->importFromVector(u, true); 
          
-        pressureOutlet_ = this->feFactory_->assemblyResistanceBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],this->parameterList_,0);
+        pressureOutlet_ = this->feFactory_->assemblyResistanceBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],this->parameterList_,0);
                   
+        flowRateOutlet_n_1_ = flowRateOutlet_n_;
+
         this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
 
         //this->sourceTerm_->getBlockNonConst(0)->print();
@@ -1539,9 +1555,10 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
         MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
         u_rep_->importFromVector(u, true); 
          
+        int flagInlet =this->parameterList_->sublist("General").get("Flag Inlet Fluid", 4);
+        int flagOutlet = this->parameterList_->sublist("General").get("Flag Outlet Fluid", 5);
+
         if (timeSteppingTool_->currentTime()==0.) { 
-            int flagInlet =this->parameterList_->sublist("General").get("Flag Inlet Fluid", 4);
-            int flagOutlet = this->parameterList_->sublist("General").get("Flag Outlet Fluid", 5);
             double areaInlet_init = 0.;
             double areaOutlet_init = 0.;
 
@@ -1550,12 +1567,24 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
 
             areaInlet_init_ = areaInlet_init;
             areaOutlet_init_ = areaOutlet_init;
-        }    
-        pressureOutlet_ = this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaInlet_init_,this->parameterList_,0);
+
+            double flowRateInlet_n_1 = 0.;
+            this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n_1, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
+            flowRateOutlet_n_1_ = flowRateInlet_n_1; 
+        }  
+        double flowRateInlet_n = 0.;
+        this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
+        flowRateOutlet_n_ = flowRateInlet_n; 
+
+        vec_dbl_Type flowRateOutlet_timesteps(2);
+        flowRateOutlet_timesteps[0] = flowRateOutlet_n_1_;
+        flowRateOutlet_timesteps[1] = flowRateOutlet_n_;
+
+        pressureOutlet_ = this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaInlet_init_,this->parameterList_,0);
                   
         this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
 
-        
+        flowRateOutlet_n_1_ = flowRateOutlet_n_;
         // addSourceTermToRHS() aus DAESolverInTime
         double coeffSourceTermStructure = 1.0;
        
