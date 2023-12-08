@@ -1506,6 +1506,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     ExporterTxtPtr_Type exporterNewtonIterations;
     ExporterTxtPtr_Type exporterFlowRateInlet;
     ExporterTxtPtr_Type exporterFlowRateOutlet;
+    ExporterTxtPtr_Type exporterAreaInlet;
+    ExporterTxtPtr_Type exporterAreaOutlet;
     ExporterTxtPtr_Type exporterPressureOutlet;
 
 
@@ -1536,6 +1538,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 
         exporterPressureOutlet = Teuchos::rcp(new ExporterTxt());
         exporterPressureOutlet->setup( "pressureOutlet" + suffix, this->comm_ );
+
+        exporterAreaInlet = Teuchos::rcp(new ExporterTxt());
+        exporterAreaInlet->setup( "areaInlet" + suffix, this->comm_ );
+
+        exporterAreaOutlet = Teuchos::rcp(new ExporterTxt());
+        exporterAreaOutlet->setup( "areaOutlet" + suffix, this->comm_ );
+
 
     }
     if (printExtraData) {
@@ -2013,6 +2022,14 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 
             exporterPressureOutlet->exportData( fsci->getPressureOutlet() );
 
+            double areaInlet=0.;
+            fe.assemblyArea(problemTime_->getDomain(0)->getDimension(), areaInlet, flagInlet);
+
+            double areaOutlet=0.;
+            fe.assemblyArea(problemTime_->getDomain(0)->getDimension(), areaOutlet, flagOutlet);
+
+            exporterAreaInlet->exportData( areaInlet);
+            exporterAreaOutlet->exportData( areaOutlet );
 
         }
         if (printExtraData) {
@@ -2041,7 +2058,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     }
     if(printFlowRate){
         exporterFlowRateOutlet->closeExporter();
-        exporterFlowRateOutlet->closeExporter();
+        exporterFlowRateInlet->closeExporter();
+        exporterAreaOutlet->closeExporter();
+        exporterAreaInlet->closeExporter();
         exporterPressureOutlet->closeExporter();
 
     }
