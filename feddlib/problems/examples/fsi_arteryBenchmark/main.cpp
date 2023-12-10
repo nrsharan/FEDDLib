@@ -128,12 +128,13 @@ void rhsFluidRB(double* x, double* res, double* parameters){
     double ramp = parameters[2];
   	res[0] =0.;
     
+    cout << " Param0 " << parameters[0] << " 1 " << parameters[1] << " 2 " << parameters[2] << " " << parameters[3] << endl;
     if(parameters[0]+1.e-12 < ramp)
         pressureValue = parameters[0]*pressureValue/ramp;
     else
         pressureValue = parameters[1];
 
-    if(flag == 5){
+    if(flag == 3){
       	res[0] = pressureValue;
         
     }
@@ -249,12 +250,12 @@ int main(int argc, char *argv[])
         
         parameterListAll->setParameters(*parameterListSolverFSI);
 
-        
+          
         ParameterListPtr_Type parameterListFluidAll(new Teuchos::ParameterList(*parameterListPrecFluidMono)) ;
         sublist(parameterListFluidAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Fluid") );
         parameterListFluidAll->setParameters(*parameterListPrecFluidTeko);
 
-        
+      
         ParameterListPtr_Type parameterListStructureAll(new Teuchos::ParameterList(*parameterListPrecStructure));
         sublist(parameterListStructureAll, "Parameter Solid")->setParameters( parameterListStructure->sublist("Parameter Solid") );
         sublist(parameterListStructureAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Solid") );
