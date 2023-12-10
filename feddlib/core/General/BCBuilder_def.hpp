@@ -275,8 +275,8 @@ void BCBuilder<SC,LO,GO,NO>::determineVelocityForFlowrate(LO i, double time) con
     MultiVectorConstPtr_Type parabolic_unique =  vecExternalSol_[i]; // Laplace soution
    
     MultiVectorPtr_Type parabolic_rep = Teuchos::rcp(new MultiVector_Type ( domain->getMapRepeated() ) );
-    SC maxValue = parabolic_rep->getMax();
-    parabolic_rep->scale(1./maxValue); // normalizing solution
+    SC maxValue = parabolic_unique->getMax();
+    parabolic_unique->scale(1./maxValue); // normalizing solution
            
     parabolic_rep->importFromVector(parabolic_unique,false,"Insert");
 

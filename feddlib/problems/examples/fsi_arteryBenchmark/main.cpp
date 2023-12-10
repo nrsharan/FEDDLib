@@ -35,86 +35,23 @@ void zeroDirichlet3D(double* x, double* res, double t, const double* parameters)
     return;
 }
 
-void parabolicInflow3D(double* x, double* res, double t, const double* parameters)
+
+void parabolicInflowDirection3D(double* x, double* res, double t, const double* parameters)
 {
     // parameters[0] is the maxium desired velocity
     // parameters[1] end of ramp
     // parameters[2] is the maxium solution value of the laplacian parabolic inflow problme
     // we use x[0] for the laplace solution in the considered point. Therefore, point coordinates are missing
-    double heartBeatStart = parameters[4];
 
-    if(t < parameters[1])
-    {
-        res[0] = 0.;
-        res[1] = 0.;
-        res[2] = -parameters[0] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
-    }
-    if(t > heartBeatStart)
-    {
-    
-        double a0    = 11.693284502463376;
-        double a [20] = {1.420706949636449,-0.937457438404759,0.281479818173732,-0.224724363786734,0.080426469802665,0.032077024077824,0.039516941555861, 
-            0.032666881040235,-0.019948718147876,0.006998975442773,-0.033021060067630,-0.015708267688123,-0.029038419813160,-0.003001255512608,-0.009549531539299, 
-            0.007112349455861,0.001970095816773,0.015306208420903,0.006772571935245,0.009480436178357};
-        double b [20] = {-1.325494054863285,0.192277311734674,0.115316087615845,-0.067714675760648,0.207297536049255,-0.044080204999886,0.050362628821152,-0.063456242820606,
-            -0.002046987314705,-0.042350454615554,-0.013150127522194,-0.010408847105535,0.011590255438424,0.013281630639807,0.014991955865968,0.016514327477078, 
-            0.013717154383988,0.012016806933609,-0.003415634499995,0.003188511626163};
-                    
-        double Q = 0.5*a0;
-        
-
-        double t_min = parameters[0] - fmod(parameters[0],1.0); //FlowConditions::t_start_unsteady;
-        double t_max = t_min + 0.52; // One heartbeat lasts 1.0 second    
-        double y = M_PI * ( 2.0*( parameters[0]-t_min ) / ( t_max - t_min ) -0.87  );
-        
-        for(int i=0; i< 20; i++)
-            Q += (a[i]*std::cos((i+1.)*y) + b[i]*std::sin((i+1.)*y) ) ;
-        
-        
-        // Remove initial offset due to FFT
-        Q -= 0.026039341343493;
-        Q = (Q - 2.85489)/(7.96908-2.85489);
-
-        res[0] = 0.;
-        res[1] = 1.;
-        res[2] = -(parameters[0] / parameters[2] * (x[0] + x[0] * Q)) ;
-        
-    }
-    else
-    {
-        res[0] = 0.;
-        res[1] = 0.;
-        res[2] = -parameters[0] / parameters[2] * x[0];
-
-    }
+    res[0] = 0.;
+    res[1] = 0.;
+    res[2] = -parameters[0] * x[0];
 
     return;
 }
 
-void parabolicInflow3DLin(double* x, double* res, double t, const double* parameters)
-{
-    // parameters[0] is the maxium desired velocity
-    // parameters[1] end of ramp
-    // parameters[2] is the maxium solution value of the laplacian parabolic inflow problme
-    // we use x[0] for the laplace solution in the considered point. Therefore, point coordinates are missing
-    
-    if(t < parameters[1])
-    {
-        res[0] = 0.;
-        res[1] = 0.;
-        res[2] = -parameters[0] / parameters[2] * x[0] * t / parameters[1];
-    }
-    else
-    {
-        res[0] = 0.;
-        res[1] = 0.;
-        res[2] = -parameters[0] / parameters[2] * x[0];
-    }
 
-    return;
-}
-
-void parabolicInflow3DArtery(double* x, double* res, double t, const double* parameters)
+void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* parameters)
 {
     // parameters[0] is the maxium desired velocity
     // parameters[1] end of ramp
@@ -124,9 +61,7 @@ void parabolicInflow3DArtery(double* x, double* res, double t, const double* par
 
     if(t < parameters[1])
     {
-        res[0] = 0.;
-        res[1] = 0.;
-        res[2] = -parameters[0] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
+        res[0] = -parameters[5] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
     }
     else if(t > heartBeatStart)
     {
@@ -142,9 +77,9 @@ void parabolicInflow3DArtery(double* x, double* res, double t, const double* par
         double Q = 0.5*a0;
         
 
-        double t_min = parameters[0] - fmod(parameters[0],1.0); //FlowConditions::t_start_unsteady;
-        double t_max = t_min + 0.52; // One heartbeat lasts 1.0 second    
-        double y = M_PI * ( 2.0*( parameters[0]-t_min ) / ( t_max - t_min ) -0.87  );
+        double t_min = t - fmod(t,1.0)+heartBeatStart-std::floor(t); ; //FlowConditions::t_start_unsteady;
+        double t_max = t_min + 1.0; // One heartbeat lasts 1.0 second    
+        double y = M_PI * ( 2.0*( t-t_min ) / ( t_max - t_min ) -1.0)  ;
         
         for(int i=0; i< 20; i++)
             Q += (a[i]*std::cos((i+1.)*y) + b[i]*std::sin((i+1.)*y) ) ;
@@ -154,44 +89,20 @@ void parabolicInflow3DArtery(double* x, double* res, double t, const double* par
         Q -= 0.026039341343493;
         Q = (Q - 2.85489)/(7.96908-2.85489);
 
-        res[0] = 0.;
-        res[1] = 1.;
-        res[2] = -(parameters[0] / parameters[2] * (x[0] + x[0] * Q)) ;
+        res[0] = -(parameters[5] / parameters[2] * (x[0] + 1.6*x[0] * Q)) ;
         
     }
     else
     {
-        res[0] = 0.;
-        res[1] = 0.;
-        res[2] = -parameters[0] / parameters[2] * x[0];
+        res[0] = -parameters[5] / parameters[2] * x[0];
 
     }
 
     return;
 }
 
-void parabolicInflow3DLinArtery(double* x, double* res, double t, const double* parameters)
-{
-    // parameters[0] is the maxium desired velocity
-    // parameters[1] end of ramp
-    // parameters[2] is the maxium solution value of the laplacian parabolic inflow problme
-    // we use x[0] for the laplace solution in the considered point. Therefore, point coordinates are missing
-    
-    if(t < parameters[1])
-    {
-        res[0] = 0.;
-        res[1] = 0.;
-        res[2] = -parameters[0] / parameters[2] * x[0] * t / parameters[1];
-    }
-    else
-    {
-        res[0] = 0.;
-        res[1] = 0.;
-        res[2] = -parameters[0] / parameters[2] * x[0];
-    }
 
-    return;
-}
+
 
 void rhsDummy(double* x, double* res, double* parameters){
     // parameters[0] is the time, not needed here
@@ -210,23 +121,23 @@ void dummyFunc(double* x, double* res, double t, const double* parameters)
     return;
 }
 
-void rhsRestriction(double* x, double* res, double* parameters){
+void rhsFluidRB(double* x, double* res, double* parameters){
 
     double pressureValue = parameters[1];
-    double flag = parameters[2];
-
+    double flag = parameters[3];
+    double ramp = parameters[2];
   	res[0] =0.;
     
-    /*if(parameters[0]+1.e-12 < TRamp)
-        force = (parameters[0]+loadStepSize) * parameters[1] / TRamp ;
+    if(parameters[0]+1.e-12 < ramp)
+        pressureValue = parameters[0]*pressureValue/ramp;
     else
-        force = parameters[1];*/
+        pressureValue = parameters[1];
 
-    if(flag == 3){
+    if(flag == 5){
       	res[0] = pressureValue;
         
     }
-    
+
     return;
 }
 
@@ -439,7 +350,7 @@ int main(int argc, char *argv[])
                         }
                         MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
                         
-                        partitionerP1.readAndPartition();
+                        partitionerP1.readAndPartition(10,"cm" , true ); // Convert it from cm to m
                         
                         if (!discType.compare("P2")){
                             domainP2fluid->buildP2ofP1Domain( domainP1fluid );
@@ -631,6 +542,8 @@ int main(int argc, char *argv[])
             //#############################################
             //#############################################
             MultiVectorConstPtr_Type solutionLaplace;
+            MultiVectorConstPtr_Type solutionLaplaceConst;
+
             {
                 Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryLaplace(new BCBuilder<SC,LO,GO,NO>( ));
                 
@@ -664,9 +577,13 @@ int main(int argc, char *argv[])
                 solutionLaplace = laplace.getSolution()->getBlock(0);
             
                 SC maxValue = solutionLaplace->getMax();
+                solutionLaplace->scale(1./maxValue); // normalizing solution
                 
-                parameter_vec.push_back(maxValue);
+                solutionLaplaceConst = solutionLaplace;                 
+                parameter_vec.push_back(1.0);
                 parameter_vec.push_back( parameterListProblem->sublist("Parameter").get("Heart Beat Start",2.) );
+                parameter_vec.push_back(parameterListProblem->sublist("Timestepping Parameter").get("dt",0.001));
+                parameter_vec.push_back(parameterListProblem->sublist("Parameter").get("Flowrate",3.0));
 
                 Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
                 
@@ -692,52 +609,12 @@ int main(int argc, char *argv[])
                 bool zeroPressure = parameterListProblem->sublist("Parameter Fluid").get("Set Outflow Pressure to Zero",false);
                 Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryFluid( new BCBuilder<SC,LO,GO,NO>( ) );
                                
-                //bcFactory->addBC(zeroDirichlet3D, 1, 0, domainFluidVelocity, "Dirichlet", dim); // wall
-                 string rampType = parameterListProblem->sublist("Parameter Fluid").get("Ramp type","cos");
-                if (rampType == "cos") {
-                
-                	if(geometryType == "Artery"){
-                    	bcFactory->addBC(parabolicInflow3DArtery, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring
-                    	//bcFactory->addBC(parabolicInflow3DArtery, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
-                    	bcFactoryFluid->addBC(parabolicInflow3DArtery, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring
-                    	//bcFactoryFluid->addBC(parabolicInflow3DArtery, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
-            
-                    }
-                    else {
-                        bcFactory->addBC(parabolicInflow3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring
-                    	//bcFactory->addBC(parabolicInflow3D, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
-                    	bcFactoryFluid->addBC(parabolicInflow3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring
-                    	//bcFactoryFluid->addBC(parabolicInflow3D, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
-                    
-            		}
-                    bcFactoryFluid->addBC(zeroDirichlet3D, 1, 0, domainFluidVelocity, "Dirichlet", dim); // wall
-                  
-                }
-                else if(rampType == "linear"){
-                
-                    if(geometryType == "Artery"){
-                    	bcFactory->addBC(parabolicInflow3DLinArtery, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow 
-                    	//bcFactory->addBC(parabolicInflow3DLinArtery, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring
-                    	bcFactoryFluid->addBC(parabolicInflow3DLinArtery, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
-                   		//bcFactoryFluid->addBC(parabolicInflow3DLinArtery, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring
-            
-                    }
-                    else {
-                        bcFactory->addBC(parabolicInflow3DLin, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring
-                    	//bcFactory->addBC(parabolicInflow3DLin, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
-                    	
-                    	bcFactoryFluid->addBC(parabolicInflow3DLin, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring
-                    	//bcFactoryFluid->addBC(parabolicInflow3DLin, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow
-            
-            		}
-                
+                bcFactory->addBC(flowRate3DArteryHeartBeat, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                bcFactoryFluid->addBC(flowRate3DArteryHeartBeat, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true,parabolicInflowDirection3D); // inflow 
 
-                    bcFactoryFluid->addBC(zeroDirichlet3D, 1, 0, domainFluidVelocity, "Dirichlet", dim); // wall
-                 }
-                
-                bcFactory->addBC(parabolicInflow3DLin, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring         
-                bcFactoryFluid->addBC(parabolicInflow3DLin, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplace); // inflow ring         
-                
+                //bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                //bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+
                 if (zeroPressure) {
                     //bcFactory->addBC(zeroBC, 4, 1, domainFluidPressure, "Dirichlet", 1); // outflow ring
                     bcFactory->addBC(zeroBC, 3, 1, domainFluidPressure, "Dirichlet", 1); // outflow
@@ -783,9 +660,10 @@ int main(int argc, char *argv[])
                 fsi.problemStructureNonLin_->addRhsFunction( rhsDummy );
         
 
-            fsi.problemFluid_->addRhsFunction(rhsRestriction,0);
-            double pressureLoad= parameterListAll->sublist("Parameter Fluid").get("Pressure Load",0.);
-            fsi.problemFluid_->addParemeterRhs( pressureLoad);
+            fsi.problemFluid_->addRhsFunction(rhsFluidRB,0);
+            double resistance= parameterListAll->sublist("Parameter Fluid").get("Resistance",0.5);
+            fsi.problemFluid_->addParemeterRhs( resistance);
+            fsi.problemFluid_->addParemeterRhs( parameterListProblem->sublist("Parameter Fluid").get("BC Ramp",0.1));
             // Geometrie-RW separat, falls geometrisch explizit.
             // Bei Geometrisch implizit: Keine RW in die factoryFSI fuer das
             // Geometrie-Teilproblem, da sonst (wg. dem ZeroDirichlet auf dem Interface,
@@ -800,8 +678,8 @@ int main(int argc, char *argv[])
             //bcFactoryGeometry->addBC(zeroDirichlet3D, 1, 0, domainGeometry, "Dirichlet", dim); // inflow/outflow strip fixed in y direction
             //bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in Z direction
             //bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in X direction
-            //bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // inlet/outlet Ring
-            //bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // ?
+            bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // inlet/outlet Ring
+            bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // ?
             bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // Interface
           
             // Die RW, welche nicht Null sind in der rechten Seite (nur Interface) setzen wir spaeter per Hand.
