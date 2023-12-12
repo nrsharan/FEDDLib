@@ -7090,7 +7090,7 @@ void FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
     SC absDetB;
   
     double flowRateInlet=0.;
-
+ 
     // Step 0: determie flowrate on inlet to calculate resistance
     for (UN T=0; T<elements->numberElements(); T++) {
         FiniteElement fe = elements->getElement( T );
@@ -7103,6 +7103,7 @@ void FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
                     int numNodes_T = nodeList.size();
                     vec_dbl_Type solution_u = getSolution(nodeList, solution_rep,dofs);
 
+                    
                     vec_dbl_Type p1(dim),p2(dim),v_E(dim,1.);
 
                     double norm_v_E = 1.;
@@ -7128,7 +7129,7 @@ void FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
                         
                         norm_v_E = sqrt(pow(v_E[0],2)+pow(v_E[1],2)+pow(v_E[2],2));
                     
-
+                       // cout << " Normal Vector " << v_E[0] << " " << v_E[1] << " "<< v_E[2] << endl; 
                     }
                     
                     // Calculating R * Q = R * v * A , A = norm_v_E * 0.5
@@ -7147,6 +7148,7 @@ void FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
                                     value[i] += weights->at(w) *v_E[j]/norm_v_E *solution_u[i]*(*phi)[w][i]; // valueFunc[0]* = 1.0
                                 }
                                 else{
+                                     
                                     LO index = dim * i + j;
                                     value[i] += weights->at(w) *v_E[j]/norm_v_E *solution_u[index]*(*phi)[w][i]; // valueFunc[0]* = 1.0
                                 }
@@ -7163,8 +7165,9 @@ void FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
         }
     }
     reduceAll<int, double> (*domainVec_.at(0)->getComm(), REDUCE_SUM, flowRateInlet, outArg (flowRateInlet));
-
-    flowRateParabolic = flowRateInlet;
+    if(flowRateInlet < 0  && domainVec_.at(0)->getComm()->getRank() == 0)
+        cout << " ###### WARNING: the flow rate you computed is negative. Either the surface normal has the wrong orientation, or your solution is negative. Or both :D. Flowrate:"<< flowRateInlet << " ####### " << endl; 
+    flowRateParabolic = fabs(flowRateInlet);
 
 }
 

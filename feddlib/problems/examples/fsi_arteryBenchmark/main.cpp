@@ -61,7 +61,7 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
 
     if(t < parameters[1])
     {
-        res[0] = -parameters[5] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
+        res[0] = parameters[5] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
     }
     else if(t > heartBeatStart)
     {
@@ -89,12 +89,12 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
         Q -= 0.026039341343493;
         Q = (Q - 2.85489)/(7.96908-2.85489);
 
-        res[0] = -(parameters[5] / parameters[2] * (x[0] + 1.6*x[0] * Q)) ;
+        res[0] = (parameters[5] / parameters[2] * (x[0] + 1.6*x[0] * Q)) ;
         
     }
     else
     {
-        res[0] = -parameters[5] / parameters[2] * x[0];
+        res[0] = parameters[5] / parameters[2] * x[0];
 
     }
 
@@ -128,7 +128,6 @@ void rhsFluidRB(double* x, double* res, double* parameters){
     double ramp = parameters[2];
   	res[0] =0.;
     
-    cout << " Param0 " << parameters[0] << " 1 " << parameters[1] << " 2 " << parameters[2] << " " << parameters[3] << endl;
     if(parameters[0]+1.e-12 < ramp)
         pressureValue = parameters[0]*pressureValue/ramp;
     else
