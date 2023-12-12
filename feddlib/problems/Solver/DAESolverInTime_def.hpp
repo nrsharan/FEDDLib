@@ -1996,8 +1996,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         timeSteppingTool_->advanceTime(false/*output info*/);
         //this->problemTime_->assemble("UpdateTime"); // Zeit in FSI inkrementieren
 
-     
-
         if (printData) {
             exporterTimeTxt->exportData( timeSteppingTool_->currentTime() );
             exporterIterations->exportData( (*its)[0] );
@@ -2161,6 +2159,26 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
         
     }
     
+    vec2D_dbl_Type timeParametersVec(0,vec_dbl_Type(2));
+    
+    int numSegments = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);
+
+ 	for(int i=1; i <= numSegments; i++){
+
+        double startTime = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("Start Time",0.);
+        double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("dt",0.1);
+        
+        vec_dbl_Type segment = {startTime,dtTmp};
+        timeParametersVec.push_back(segment);
+    }
+    double dt;
+    for(int i=0; i<numSegments ; i++){
+        if(timeSteppingTool_->currentTime()+1.0e-12 > timeParametersVec[i][0]){
+            dt=timeParametersVec[i][1];
+            timeSteppingTool_->dt_ = dt;
+        }
+
+    }
     // Notwendige Parameter
     bool geometryExplicit = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
     bool withDynamic = parameterList_->sublist("Parameter").get("Dynamic",true);
@@ -2171,7 +2189,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
     int sizeFluid = 2; // u_f  + p
     int sizeStructure = 1; // d_s
 
-    double dt = timeSteppingTool_->get_dt();
+    dt = timeSteppingTool_->get_dt();
     double beta = timeSteppingTool_->get_beta();
     double gamma = timeSteppingTool_->get_gamma();
     int nmbBDF = timeSteppingTool_->getBDFNumber();
@@ -2320,10 +2338,153 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
 #endif
     while(timeSteppingTool_->continueTimeStepping())
     {
-        problemTime_->updateTime ( timeSteppingTool_->currentTime() );
+         //cout << " ###### Timeloop #########" << endl;
+        for(int i=0; i<numSegments ; i++){
+            if(timeSteppingTool_->currentTime()+1.0e-12 > timeParametersVec[i][0])
+                dt=timeParametersVec[i][1];
+        }
+        timeSteppingTool_->dt_= dt;
+        fsi->timeSteppingTool_->dt_ = dt;
+        if(timeSteppingTool_->currentTime() <= 0. + 1e-12){
+            timeSteppingTool_->dt_prev_= dt;        
+            fsi->timeSteppingTool_->dt_prev_= dt;  
+            //fsci->problemFluid_->timeSteppingTool_->dt_prev_= dt; 
+        }
+        else{
+            timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
+
+            this->problemTime_->assemble("UpdateTime"); // Updates to next timestep previously:problemTime_->updateTime ( timeSteppingTool_->currentTime() );
+
+            fsi->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
+            //fsci->problemFluid_->timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_; 
+
+        }
+
+        timeSteppingTool_->printInfo();
 
         string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
 
+        problemTime_->updateTime ( timeSteppingTool_->currentTime() );
+
+
+        // ######################
+        // Fluid: Mass-, Problem, SourceTerm Koeffizienten
+        // ######################
+        SmallMatrix<double> massCoeffFluid(sizeFluid);
+        SmallMatrix<double> problemCoeffFluid(sizeFluid);
+        double coeffSourceTermFluid = 0.0;
+
+        for (int i=0; i<sizeFluid; i++) {
+            for (int j=0; j<sizeFluid; j++) {
+                if (timeStepDef_[i][j]>0 && i==j) {
+                    massCoeffFluid[i][j] = timeSteppingTool_->getInformationBDF(0) / dt;
+                }
+                else{
+                    massCoeffFluid[i][j] = 0.0;
+                }
+            }
+        }
+        for (int i=0; i<sizeFluid; i++) {
+            for (int j=0; j<sizeFluid; j++){
+                if (timeStepDef_[i][j]>0){
+                    problemCoeffFluid[i][j] = timeSteppingTool_->getInformationBDF(1);
+                    coeffSourceTermFluid = timeSteppingTool_->getInformationBDF(1);
+                }
+                else{
+                    problemCoeffFluid[i][j] = 1.;
+                }
+            }
+        }
+
+
+        // ######################
+        // Struktur: Mass-, Problem, SourceTerm Koeffizienten
+        // ######################
+        // Koeffizienten vor der Massematrix und vor der Systemmatrix des steady-Problems
+        SmallMatrix<double> massCoeffStructure(sizeStructure);
+        SmallMatrix<double> problemCoeffStructure(sizeStructure);
+        double coeffSourceTermStructure = 0.0; // Koeffizient fuer den Source-Term (= rechte Seite der DGL); mit Null initialisieren
+
+        // Koeffizient vor der Massematrix
+        for(int i = 0; i < sizeStructure; i++)
+        {
+            for(int j = 0; j < sizeStructure; j++)
+            {
+                // Falls in dem Block von timeStepDef_ zeitintegriert werden soll.
+                // i == j, da vektorwertige Massematrix blockdiagonal ist
+                if(timeStepDef_[i + sizeFluid][j + sizeFluid] > 0  && i == j) // Weil: (u_f, p, d_s,...) und timeStepDef_ von FSI
+                {
+                // Vorfaktor der Massematrix in der LHS
+                    massCoeffStructure[i][j] = 1.0/(dt*dt*beta);
+                }
+                else
+                {
+                    massCoeffStructure[i][j] = 0.;
+                }
+            }
+        }
+
+        
+        // Die anderen beiden Koeffizienten
+        for(int i = 0; i < sizeStructure; i++)
+        {
+            for(int j = 0; j < sizeStructure; j++)
+            {
+                if(timeStepDef_[i + sizeFluid][j + sizeFluid] > 0 )
+                {
+                    problemCoeffStructure[i][j] =  1.0;
+                    // Der Source Term ist schon nach der Assemblierung mit der Dichte \rho skaliert worden
+                    coeffSourceTermStructure = 1.0; // ACHTUNG FUER SOURCE TERM, DER NICHT IN DER ZEIT DISKRETISIERT WIRD!
+                }
+                else // Die steady-Systemmatrix ist nicht zwingend blockdiagonal
+                {
+                    problemCoeffStructure[i][j] = 1.0;
+                }
+            }
+        }
+
+
+        // ######################
+        // FSI: Mass-, Problem-Koeffizienten
+        // ######################
+        SmallMatrix<double> massCoeffFSI(sizeFSI);
+        SmallMatrix<double> problemCoeffFSI(sizeFSI);
+        for (int i = 0; i < sizeFluid; i++)
+        {
+            for (int j = 0; j < sizeFluid; j++)
+            {
+                massCoeffFSI[i][j] = massCoeffFluid[i][j];
+                problemCoeffFSI[i][j] = problemCoeffFluid[i][j];
+            }
+        }
+
+        for (int i = 0; i < sizeStructure; i++)
+        {
+            for (int j = 0; j < sizeStructure; j++)
+            {
+                massCoeffFSI[i + sizeFluid][j + sizeFluid] = massCoeffStructure[i][j];
+                problemCoeffFSI[i + sizeFluid][j + sizeFluid] = problemCoeffStructure[i][j];
+            }
+        }
+
+        // Setze noch Einsen an die Stellen, wo Eintraege (Kopplungsbloecke) vorhanden sind.
+        problemCoeffFSI[0][3] = 1.0; // C1_T
+        problemCoeffFSI[2][3] = 1.0; // C3_T
+        problemCoeffFSI[3][0] = 1.0; // C1
+        problemCoeffFSI[3][2] = 1.0; // C2
+        if(!geometryExplicit)
+        {
+            problemCoeffFSI[4][2] = 1.0; // C4
+            problemCoeffFSI[4][4] = 1.0; // H (Geometrie)
+            string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
+            if(linearization == "Newton" || linearization == "NOX")
+            {
+                problemCoeffFSI[0][4] = 1.0; // Shape-Derivatives Velocity
+                problemCoeffFSI[1][4] = 1.0; // Shape-Derivatives Div-Nebenbedingung
+            }
+        }
+
+        this->problemTime_->setTimeParameters(massCoeffFSI, problemCoeffFSI);
         // Ist noetig, falls wir extrapolieren, damit wir
         // immer die korrekten previousSolution_ haben.
         // TODO: Vermutlich reicht lediglich (da erstmal nur BDF2):
@@ -2454,10 +2615,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
             }
             this->problemTime_->setTimeParameters(massCoeffFSI, problemCoeffFSI);
         }
-        
-        
-        double time = timeSteppingTool_->currentTime() + dt;
-        problemTime_->updateTime ( time );        
+            
+        double time = timeSteppingTool_->currentTime() +  timeSteppingTool_->dt_;
+        problemTime_->updateTime ( time );            
         NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
 
         nlSolver.solve(*this->problemTime_, time, its);
@@ -2474,8 +2634,10 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
         
         this->problemTime_->computeValuesOfInterestAndExport();
 
-        timeSteppingTool_->advanceTime(true/*output info*/);
-        this->problemTime_->assemble("UpdateTime"); // Zeit in FSI inkrementieren
+        //timeSteppingTool_->advanceTime(true/*output info*/);
+        //this->problemTime_->assemble("UpdateTime"); // Zeit in FSI inkrementieren
+        timeSteppingTool_->advanceTime(false/*output info*/);
+
         if (printData) {
             exporterTimeTxt->exportData( timeSteppingTool_->currentTime() );
             exporterIterations->exportData( (*its)[0] );
