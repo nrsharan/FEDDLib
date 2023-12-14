@@ -756,7 +756,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     SCIProblemPtr_Type sci = Teuchos::rcp_dynamic_cast<SCIProblem_Type>( this->problemTime_->getUnderlyingProblem() );
     
     bool print = parameterList_->sublist("General").get("ParaViewExport",false);
-    bool printStress = parameterList_->sublist("General").get("StressExport",false);
+    bool printStress = parameterList_->sublist("General").get("Export Stress",false);
     bool printData = parameterList_->sublist("General").get("Export Data",true);
     bool printExtraData = parameterList_->sublist("General").get("Export Extra Data",false);
 
@@ -1238,7 +1238,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceWithLoadStepping()
     NonLinElasProblemPtr_Type nonLinElas = Teuchos::rcp_dynamic_cast<NonLinElasProblem_Type>( this->problemTime_->getUnderlyingProblem() );
 
     bool print = parameterList_->sublist("General").get("ParaViewExport",false);
-    bool printStress = parameterList_->sublist("General").get("StressExport",false);
+    bool printStress = parameterList_->sublist("General").get("Export Stress",false);
     bool printData = parameterList_->sublist("General").get("Export Data",true);
     bool printExtraData = parameterList_->sublist("General").get("Export Extra Data",false);
 
@@ -1489,9 +1489,12 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     
     bool print = parameterList_->sublist("General").get("ParaViewExport",false);
     bool printData = parameterList_->sublist("General").get("Export Data",false);
+    bool printStress = parameterList_->sublist("General").get("Export Stress",false);
     bool printFlowRate = parameterList_->sublist("General").get("Export Flow Rate",true);
     bool printExtraData = parameterList_->sublist("General").get("Export Extra Data",false);
-        
+
+    BlockMultiVectorPtr_Type stressVec;
+  
     if (print)
     {
         exportTimestep();
@@ -2036,6 +2039,12 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             
             exporterDisplXTxt->exportData( v[0] );
             exporterDisplYTxt->exportData( v[1] );
+        }
+        if (printStress){
+            BlockMultiVectorPtr_Type stressVecTmp= fsci->problemSCI_->getPostProcessingData();
+            stressVec = stressVecTmp;
+            exportStress(stressVec,fsci->problemSCI_->getDomain(0));                 
+
         }
         if (print)
         {

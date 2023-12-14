@@ -611,8 +611,8 @@ void FE<SC,LO,GO,NO>::addFeBlockMv(BlockMultiVectorPtr_Type &res, vec_dbl_ptr_Ty
 template <class SC, class LO, class GO, class NO>
 void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &res)
 {
-    MapConstPtr_Type mapRep = domainVec_[0]->getMapRepeated();
-    MapConstPtr_Type mapUni = domainVec_[0]->getMapUnique();
+    MapConstPtr_Type mapRep = this->domainVec_[0]->getMapRepeated();
+    MapConstPtr_Type mapUni = this->domainVec_[0]->getMapUnique();
 
     MultiVectorPtr_Type multiRep = Teuchos::rcp( new MultiVector_Type(mapRep, 1 ) );
     multiRep->putScalar(0.);
@@ -627,7 +627,7 @@ void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &r
 
     //BlockMultiVectorPtr_Type resVecRep = Teuchos::rcp( new BlockMultiVector_Type( 9) );
 
-	ElementsPtr_Type elements = domainVec_[0]->getElementsC();
+	ElementsPtr_Type elements = this->domainVec_[0]->getElementsC();
 
     if(type == "Stress"){
         for (UN T=0; T<assemblyFEElements_.size(); T++) {

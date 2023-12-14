@@ -465,9 +465,6 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assemble_SCI_S
 	double** stiffnessMatrixKcc = elem.getStiffnessMatrixKcc();
 	double** massMatrixMc = elem.getMassMatrixMc();
 
-	for(int i=0; i< this->historyLength_; i++){
-		this->historyUpdated_[i] = historyUpdated[i];
-	}
 
 	for(int i=0; i< 30; i++){
 		for(int j=0; j<30; j++){
@@ -570,15 +567,15 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::postProcess
 
     double subIterationTolerance = subiterationTolerance_;
  
-    // immer speicher und wenn es konvergiert, dann zur history machen
-    double historyUpdated[] = {1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                    		   1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                    		   1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-                     		   1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.512656, 1.512656, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
+  	std::vector<double> historyUpdated(this->historyLength_,0.0);
+	for(int i=0; i< this->historyLength_; i++){
+		historyUpdated[i] = this->historyUpdated_[i];
+	}
+	
 	
 	AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(positions, displacements, concentrations, accelerations, rates, &domainData[0], &history[0], subIterationTolerance, deltaT, time, this->iCode_,this->getGlobalElementID());
 	//elem.compute(); // not necessary for stress
-	double** stress = elem.postProcess(displacements, concentrations, elem.getHistoryUpdated());
+	double** stress = elem.postProcess(displacements, concentrations, &historyUpdated[0]);
 
 	for(int i=0; i< 10; i++){
 		//for(int  j=0; j<10; j++){

@@ -12,8 +12,8 @@
  
         <Parameter name="FSCI" type="bool" value="true"/>
         <Parameter name="Geometry Explicit" type="bool" value="true"/>
-        <Parameter name="Inflow Start Time" type="double" value="3.0"/><!-- Start of diffusion process -->
-        <Parameter name="Heart Beat Start" type="double" value="0.5"/><!-- Start of diffusion process -->
+        <Parameter name="Inflow Start Time" type="double" value="800.0"/><!-- Start of diffusion process -->
+        <Parameter name="Heart Beat Start" type="double" value="1500.0"/><!-- Start of diffusion process -->
         <Parameter name="Coupling Type" type="string" value="implicit"/>
         <Parameter name="Structure Model" type="string" value="SCI_NH"/> <!-- SCI_Linear, SCI_NH , SCI_SMC_MLCK , SCI_SMC_Active_Growth_Reorientation -->
 
@@ -49,7 +49,7 @@ e -->
        	<!-- Resistance boundary condition -->
         <Parameter name="Resistance" type="double" value="3666.0e6"/> <!-- N/m² s/m³ (eigentliche Einheit mPa*s/m³ , 1mPa = 10e6 N/m² -->
         <Parameter name="Normal Scale" type="double" value="-1.0"/>
-        <Parameter name="Poisson Ratio" type="double" value="0.49"/>
+        <Parameter name="Poisson Ratio" type="double" value="3.0e-06"/>
      	<!-- Absorbing boundary condition -->
         <Parameter name="E" type="double" value="120000"/>
         <Parameter name="Wall thickness" type="double" value="0.001"/>
@@ -115,6 +115,7 @@ e -->
         <Parameter name="Export Flow Rate" type="bool" value="true"/>
         <Parameter name="Export Suffix" type="string" value=""/>
         <Parameter name="Export Data" type="bool" value="true"/>
+  		  <Parameter name="Export Stress" type="bool" value="true"/>	
         
         <Parameter name="Preconditioner Method" type="string" value="FaCSCI"/><!-- Monolithic, FaCSI, FaCSI-Teko -->
         <Parameter name="Use Fluid Preconditioner" type="bool" value="true"/>
