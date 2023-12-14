@@ -209,8 +209,7 @@ namespace FEDD
 		}
 
 	
-#endif
+	#endif
 	}
-
 } // namespace FEDD
 #endif // ASSEMBLEFE_SCI_NH_DEF_hpp

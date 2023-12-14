@@ -579,7 +579,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::postProcess
 
 	for(int i=0; i< 10; i++){
 		//for(int  j=0; j<10; j++){
-			(*this->postProcessingData_)[i][0] = fabs(stress[i][0]);
+			(*this->postProcessingData_)[i][0] = stress[i][0]; // Some sort of scaling for the values of the stress. As there are negative components, we take the absolute value. We need to determine why
 		//}
 	}
 	// For each node:
@@ -594,9 +594,10 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::postProcess
 		}
 		s=sigma;
 		for(int j=0; j<3; j++){
-			s[j][j] = sigma[j][j] - sigma[j][j] / 3.;
+			s[j][j] = sigma[j][j] - (sigma[0][0] +sigma[1][1] +sigma[2][2]) / 3.;
 		}
-		(*this->postProcessingData_)[i][1] = sqrt(3/2. * (pow(s[0][0],2)+ pow(s[0][1],2)+pow(s[0][2],2)+pow(s[1][0],2)+pow(s[1][1],2)+pow(s[1][2],2)+pow(s[2][0],2)+pow(s[2][1],2)+pow(s[2][2],2)));
+		//(*this->postProcessingData_)[i][1] = sqrt(3/2. * (pow(s[0][0],2)+ pow(s[0][1],2)+pow(s[0][2],2)+pow(s[1][0],2)+pow(s[1][1],2)+pow(s[1][2],2)+pow(s[2][0],2)+pow(s[2][1],2)+pow(s[2][2],2)));
+		(*this->postProcessingData_)[i][1] =  sqrt(1/2.*(pow(sigma[0][0]-sigma[1][1],2)+pow(sigma[1][1]-sigma[2][2],2)+pow(sigma[2][2]-sigma[0][0],2))+3*(pow(sigma[0][1],2)+pow(sigma[1][2],2)+pow(sigma[2][0],2)));
 	}
 
 

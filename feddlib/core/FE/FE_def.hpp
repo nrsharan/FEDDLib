@@ -637,7 +637,7 @@ void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &r
                 
                 // We only do sigma_11 now
                 for(int i=0; i< 10; i++){
-                    arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0];
+                    arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0]; // this column of the postprocessing data contains some sort of scaling.
                     arrayRep[nodeList[i]] +=  (*postProcessingData)[i][1];///*(*postProcessingData)[i][0];
                     //arrayMultiRep[nodeList[i]] += 1;
                 }
@@ -657,7 +657,7 @@ void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &r
     //res->getBlock(0)->print();
 
     for(int i= 0; i< arrayUni.size() ; i++)
-       arrayUni[i]  = arrayUni[i]/ arrayMultiUni[i]; 
+       arrayUni[i]  = arrayUni[i]/ fabs(arrayMultiUni[i]); 
 }
 
 
