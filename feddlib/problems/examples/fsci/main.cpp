@@ -80,6 +80,19 @@ void parabolicInflowDirection3D(double* x, double* res, double t, const double* 
     return;
 }
 
+void parabolicInflowDirection3DNeg(double* x, double* res, double t, const double* parameters)
+{
+    // parameters[0] is the maxium desired velocity
+    // parameters[1] end of ramp
+    // parameters[2] is the maxium solution value of the laplacian parabolic inflow problme
+    // we use x[0] for the laplace solution in the considered point. Therefore, point coordinates are missing
+
+    res[0] = 0.;
+    res[1] = 0.;
+    res[2] = -parameters[0] * x[0];
+
+    return;
+}
 
 void parabolicInflow3DLin(double* x, double* res, double t, const double* parameters)
 {
@@ -835,8 +848,8 @@ int main(int argc, char *argv[])
 
             }
             if(bcType=="Benchmark"){
-                bcFactory->addBC(flowRate3DArteryHeartBeat, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
-                bcFactoryFluid->addBC(flowRate3DArteryHeartBeat, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true,parabolicInflowDirection3D); // inflow 
+                bcFactory->addBC(flowRate3DArteryHeartBeat, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true , parabolicInflowDirection3DNeg); // inflow 
+                bcFactoryFluid->addBC(flowRate3DArteryHeartBeat, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true,parabolicInflowDirection3DNeg); // inflow 
 
                 //bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
                 //bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
