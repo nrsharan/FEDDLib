@@ -2,7 +2,7 @@
     <ParameterList name="Parameter">                                                                                                                           
        <Parameter name="Dimension" type="int" value="3"/>
         <Parameter name="Discretization" type="string" value="P2"/><!--P2-->
-        <Parameter name="BC Type" type="string" value="Compute Inflow"/><!--partialCFD,Richter3DFull-->
+        <Parameter name="BC Type" type="string" value="Tube"/><!--Tube, Benchmark-->
         <Parameter name="Geometry Type" type ="string" value="Artery"/><!--partialCFD,Richter3DFull-->
 
         <Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  unstructured -->
@@ -77,8 +77,8 @@ e -->
  <ParameterList name="Mesh Partitioner">
         <Parameter name="Contiguous" type="bool" value="true"/>
 
-        <Parameter name="Mesh 1 Name" type="string" value="fsi_tube_fluid_1_5_cm.mesh"/>
-        <Parameter name="Mesh 2 Name" type="string" value="fsi_tube_solid_1_5_cm.mesh"/>
+        <Parameter name="Mesh 1 Name" type="string" value="fluidBenchmark2.mesh"/> <!--fluidBenchmark2.mesh , fsi_tube_fluid_1_5_cm.mesh   -->
+        <Parameter name="Mesh 2 Name" type="string" value="structureBenchmark2.mesh"/> <!--structureBenchmark2.mesh , fsi_tube_solid_1_5_cm.mesh  -->
 
         <Parameter name="Automatic partition" type="bool" value="false"/> <!-- find ratio for ranks based on the number of elements of each mesh -->
 

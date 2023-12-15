@@ -490,7 +490,7 @@ int main(int argc, char *argv[])
         DomainPtr_Type domainStructure;
         DomainPtr_Type domainGeometry;
         
-        std::string bcType = parameterListAll->sublist("Parameter").get("BC Type","Compute Inflow");
+        std::string bcType = parameterListAll->sublist("Parameter").get("BC Type","Tube");
         std::string geometryType = parameterListAll->sublist("Parameter").get("Geometry Type","Artery");
         
         
@@ -751,8 +751,8 @@ int main(int argc, char *argv[])
        {
             Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryLaplace(new BCBuilder<SC,LO,GO,NO>( ));
             
-            bcFactoryLaplace->addBC(zeroBC, 2, 0, domainFluidVelocity, "Dirichlet", 1); //inflow ring
-            bcFactoryLaplace->addBC(zeroBC, 3, 0, domainFluidVelocity, "Dirichlet", 1); //outflow ring
+            //bcFactoryLaplace->addBC(zeroBC, 2, 0, domainFluidVelocity, "Dirichlet", 1); //inflow ring
+            //bcFactoryLaplace->addBC(zeroBC, 3, 0, domainFluidVelocity, "Dirichlet", 1); //outflow ring
             bcFactoryLaplace->addBC(zeroBC, 6, 0, domainFluidVelocity, "Dirichlet", 1); //surface
             
             ParameterListPtr_Type parameterListProblemL = Teuchos::getParametersFromXmlFile(xmlProbL);
@@ -775,8 +775,20 @@ int main(int argc, char *argv[])
             }
             
             //We need the values in the inflow area. Therefore, we use the above bcFactory and the volume flag 10 and the outlet flag 5 and set zero Dirichlet boundary values
-            bcFactoryLaplace->addBC(zeroBC, 5, 0, domainFluidVelocity, "Dirichlet", 1);
-            bcFactoryLaplace->addBC(zeroBC, 15, 0, domainFluidVelocity, "Dirichlet", 1);
+            if(bcType=="Tube"){
+                bcFactoryLaplace->addBC(zeroBC, 5, 0, domainFluidVelocity, "Dirichlet", 1);
+                bcFactoryLaplace->addBC(zeroBC, 15, 0, domainFluidVelocity, "Dirichlet", 1);
+
+            }
+            else if(bcType=="Benchmark"){
+                bcFactoryLaplace->addBC(zeroBC, 3, 0, domainFluidVelocity, "Dirichlet", 1);
+                bcFactoryLaplace->addBC(zeroBC, 10, 0, domainFluidVelocity, "Dirichlet", 1);
+
+            }
+            else             
+               TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "Wrong BC Type- Please choose either Tube or Benchmark");                               
+
+
             bcFactoryLaplace->setRHS( laplace.getSolution(), 0.);
             solutionLaplace = laplace.getSolution()->getBlockNonConst(0);
         
@@ -815,22 +827,26 @@ int main(int argc, char *argv[])
         {
             bool zeroPressure = parameterListProblem->sublist("Parameter Fluid").get("Set Outflow Pressure to Zero",false);
             Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryFluid( new BCBuilder<SC,LO,GO,NO>( ) );
-                            
-            bcFactory->addBC(flowRate3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
-            bcFactoryFluid->addBC(flowRate3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true,parabolicInflowDirection3D); // inflow 
 
-            bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
-            bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
 
-            //bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring                
-            //bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
-            //bcFactorySteadyFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim); // inflow ring
+            if(bcType=="Tube"){
+                bcFactory->addBC(flowRate3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                bcFactoryFluid->addBC(flowRate3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true,parabolicInflowDirection3D); // inflow 
 
-            //bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring                
-            //bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // outflow ring
-            //bcFactorySteadyFluid->addBC(zeroDirichlet3D, 6, 0, domainFluidVelocity, "Dirichlet", dim); // Interface
-            //bcFactorySteadyFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim); // Outflow ring
-    
+                //bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                //bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+
+
+            }
+            if(bcType=="Benchmark"){
+                bcFactory->addBC(flowRate3DArteryHeartBeat, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                bcFactoryFluid->addBC(flowRate3DArteryHeartBeat, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true,parabolicInflowDirection3D); // inflow 
+
+                //bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                //bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+            }
+
+           
             if (zeroPressure) {
                 //bcFactory->addBC(zeroBC, 5, 1, domainFluidPressure, "Dirichlet", 1); // outflow ring
                 bcFactory->addBC(zeroBC, 3, 1, domainFluidPressure, "Dirichlet", 1); // outflow
@@ -847,8 +863,10 @@ int main(int argc, char *argv[])
         }
 
         // Struktur-RW
-        {
-            Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryStructure( new BCBuilder<SC,LO,GO,NO>( ) );
+        Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryStructure( new BCBuilder<SC,LO,GO,NO>( ) );
+
+        if(bcType=="Tube"){
+
                 bcFactory->addBC(zeroDirichlet3D, 14, 2, domainStructure, "Dirichlet_Y_Z", dim); // inflow/outflow strip fixed in y direction
                 bcFactory->addBC(zeroDirichlet3D, 13, 2, domainStructure, "Dirichlet_X_Z", dim); // inflow/outflow strip fixed in y direction
                 bcFactory->addBC(zeroDirichlet3D, 7, 2, domainStructure, "Dirichlet_Z", dim); // inlet fixed in Z direction
@@ -871,11 +889,34 @@ int main(int argc, char *argv[])
                 bcFactorySCI->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim); 
             // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
             // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()
-            if (!fsci.problemSCI_->problemStructure_.is_null())
-                fsci.problemSCI_->problemStructure_->addBoundaries(bcFactoryStructure);
-            else
-                fsci.problemSCI_->problemStructureNonLin_->addBoundaries(bcFactoryStructure);
+          
         }
+        if(bcType=="Benchmark"){
+                bcFactory->addBC(zeroDirichlet3D, 0, 2, domainStructure, "Dirichlet_Y_Z", dim); // inflow/outflow strip fixed in y direction
+                bcFactory->addBC(zeroDirichlet3D, 1, 2, domainStructure, "Dirichlet_X_Y", dim); // inflow/outflow strip fixed in y direction
+                bcFactory->addBC(zeroDirichlet3D, 2, 2, domainStructure, "Dirichlet_Z", dim); // inlet fixed in Z direction
+                bcFactory->addBC(zeroDirichlet3D, 5, 2, domainStructure, "Dirichlet_Z", dim); // inlet ring fixed in Z direction
+                bcFactory->addBC(zeroDirichlet3D, 3, 2, domainStructure, "Dirichlet_X", dim); // outlet fixed in X direction
+                bcFactory->addBC(zeroDirichlet3D, 4, 2, domainStructure, "Dirichlet_X", dim); // outlet ring in X direction
+
+                bcFactoryStructure->addBC(zeroDirichlet3D, 0, 0, domainStructure, "Dirichlet_Y_Z", dim); 
+                bcFactoryStructure->addBC(zeroDirichlet3D, 1, 0, domainStructure, "Dirichlet_X_Y", dim); 
+                bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);  
+                bcFactoryStructure->addBC(zeroDirichlet3D, 5, 0, domainStructure, "Dirichlet_Z", dim); // inlet ring fixed in Z direction
+                bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_X", dim); 
+                bcFactoryStructure->addBC(zeroDirichlet3D, 4, 0, domainStructure, "Dirichlet_X", dim); 
+
+                bcFactorySCI->addBC(zeroDirichlet3D, 0, 0, domainStructure, "Dirichlet_Y_Z", dim); 
+                bcFactorySCI->addBC(zeroDirichlet3D, 1, 0, domainStructure, "Dirichlet_X_Y", dim); 
+                bcFactorySCI->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);  
+                bcFactorySCI->addBC(zeroDirichlet3D, 5, 0, domainStructure, "Dirichlet_Z", dim); // inlet ring fixed in Z direction
+                bcFactorySCI->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_X", dim); 
+                bcFactorySCI->addBC(zeroDirichlet3D, 4, 0, domainStructure, "Dirichlet_X", dim);         
+        }
+        if (!fsci.problemSCI_->problemStructure_.is_null())
+            fsci.problemSCI_->problemStructure_->addBoundaries(bcFactoryStructure);
+        else
+            fsci.problemSCI_->problemStructureNonLin_->addBoundaries(bcFactoryStructure);
         // RHS dummy for structure
                 
         if (!fsci.problemSCI_->problemStructure_.is_null())
@@ -902,9 +943,16 @@ int main(int argc, char *argv[])
 
         //bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in Z direction
         //bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // inlet fixed in X direction
-        bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // Inlet
-        bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // Outlet
-        bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // Interface
+        if(bcType=="Tube"){
+            bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // Inlet
+            bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // Outlet
+            bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // Interface
+        }
+        if(bcType=="Benchmark"){
+            bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // inlet/outlet Ring
+            bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // ?
+            bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // Interface  
+        }
 		/* bcFactoryGeometry->addBC(zeroDirichlet3D, 7, 0, domainGeometry, "Dirichlet", dim); // ?
 		bcFactoryGeometry->addBC(zeroDirichlet3D, 8, 0, domainGeometry, "Dirichlet", dim); // ?
 		bcFactoryGeometry->addBC(zeroDirichlet3D, 9, 0, domainGeometry, "Dirichlet", dim); // ?
@@ -912,7 +960,7 @@ int main(int argc, char *argv[])
         
         // Die RW, welche nicht Null sind in der rechten Seite (nur Interface) setzen wir spaeter per Hand.
         // Hier erstmal Dirichlet Nullrand, wird spaeter von der Sturkturloesung vorgegeben
-            bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // interface
+        // bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // interface
         if (preconditionerMethod == "FaCSCI" ) //|| preconditionerMethod == "FaCSI-Teko")
                 bcFactoryFluidInterface->addBC(zeroDirichlet3D, 6, 0, domainFluidVelocity, "Dirichlet", dim);
 
@@ -933,13 +981,13 @@ int main(int argc, char *argv[])
             bcFactoryChem->addBC(inflowChem, 6, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactorySCI->addBC(inflowChem, 6, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
 
-            bcFactory->addBC(inflowChem, 9, 4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            /*bcFactory->addBC(inflowChem, 9, 4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactoryChem->addBC(inflowChem, 9, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem    
             bcFactorySCI->addBC(inflowChem, 9, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
         
             bcFactory->addBC(inflowChem, 10, 4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactoryChem->addBC(inflowChem, 10, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
-            bcFactorySCI->addBC(inflowChem, 10, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactorySCI->addBC(inflowChem, 10, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem*/
 
         }
 
