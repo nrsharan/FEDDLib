@@ -290,7 +290,7 @@ void rhsFluidRB(double* x, double* res, double* parameters){
     else
         pressureValue = parameters[1];
 
-    res[0] = pressureValue;  
+    res[0] = pressureValue;  // Usually we check here for the correct flag. But as the boundary condition is limited to the outlet anyway, we have no issues
     
 
     return;
