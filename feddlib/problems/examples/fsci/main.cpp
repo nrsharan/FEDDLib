@@ -290,10 +290,8 @@ void rhsFluidRB(double* x, double* res, double* parameters){
     else
         pressureValue = parameters[1];
 
-    if(flag == 5){
-      	res[0] = pressureValue;
-        
-    }
+    res[0] = pressureValue;  
+    
 
     return;
 }
