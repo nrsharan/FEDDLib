@@ -601,7 +601,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::postProcess
 	}
 
 
-	this->postProcessingData_->print();
+	//this->postProcessingData_->print();
 #endif
 }
 
