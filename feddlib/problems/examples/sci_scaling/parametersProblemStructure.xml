@@ -4,7 +4,7 @@
           	<ParameterList name="1">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="12"/>
-				<Parameter name="Material model" type="string" value="SCI_NH"/> <!-- SCI_Linear, SCI_NH , SCI_SMC_MLCK , SCI_SMC_Active_Growth_Reorientation -->
+				<Parameter name="Material Model" type="string" value="SCI_NH"/> <!-- SCI_Linear, SCI_NH , SCI_SMC_MLCK , SCI_SMC_Active_Growth_Reorientation -->
 				<!-- For Explicit Coupling and SCI_NH -->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
 				<Parameter name="E" type="double" value="0.38"/>
@@ -74,7 +74,7 @@
             <ParameterList name="2">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="13"/>
-				<Parameter name="Material model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
+				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
 				<!-- For Explicit Coupling and SCI_NH -->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
 				<Parameter name="E" type="double" value="0.38"/>
@@ -144,7 +144,7 @@
             	<ParameterList name="3">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="14"/>
-				<Parameter name="Material model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
+				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
 				<!-- For Explicit Coupling and SCI_NH -->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
 				<Parameter name="E" type="double" value="0.38"/>

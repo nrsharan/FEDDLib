@@ -631,16 +631,16 @@ void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &r
 
     if(type == "Stress"){
         for (UN T=0; T<assemblyFEElements_.size(); T++) {
-                vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
-                assemblyFEElements_[T]->postProcessing();
-                SmallMatrixPtr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
-                
-                // We only do sigma_11 now
-                for(int i=0; i< 10; i++){
-                    arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0]; // this column of the postprocessing data contains some sort of scaling.
-                    arrayRep[nodeList[i]] +=  (*postProcessingData)[i][1];///*(*postProcessingData)[i][0];
-                    //arrayMultiRep[nodeList[i]] += 1;
-                }
+            vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
+            assemblyFEElements_[T]->postProcessing();
+            SmallMatrixPtr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
+            
+            // We only do sigma_11 now
+            for(int i=0; i< 10; i++){
+                arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0]; // this column of the postprocessing data contains some sort of scaling.
+                arrayRep[nodeList[i]] +=  (*postProcessingData)[i][1];///*(*postProcessingData)[i][0];
+                //arrayMultiRep[nodeList[i]] += 1;
+            }
         }
     }
     MultiVectorPtr_Type multiUni = Teuchos::rcp( new MultiVector_Type(mapUni, 1 ) );
@@ -657,7 +657,10 @@ void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &r
     //res->getBlock(0)->print();
 
     for(int i= 0; i< arrayUni.size() ; i++)
-       arrayUni[i]  = arrayUni[i]/ fabs(arrayMultiUni[i]); 
+        if(fabs(arrayMultiUni[i]) > 0)
+            arrayUni[i]  = arrayUni[i]/ fabs(arrayMultiUni[i]); 
+        else
+            arrayUni[i]  =0.;    
 }
 
 
