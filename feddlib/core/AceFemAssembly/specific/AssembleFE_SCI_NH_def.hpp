@@ -48,6 +48,7 @@ namespace FEDD
 		solution_n_.resize(60, 0.);
 		solution_n1_.resize(60, 0.);
 
+		this->postProcessingData_ = Teuchos::rcp( new SmallMatrix_Type(dofsElement_,0.));
 
 		//cout << " Parameters:: E=" << E0_ << " E1=" << E1_ << " poissionRation=" << poissonRatio_ << endl; 
 		/*timeParametersVec_.resize(0, vec_dbl_Type(2));

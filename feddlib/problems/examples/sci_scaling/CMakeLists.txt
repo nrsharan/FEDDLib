@@ -22,8 +22,8 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(data_sciscaling
 # cube_h_0_05.mesh cube_h_0_1.mesh artery_h_025.mesh artery_h_0_1.mesh structure_realistic_artery.mesh
 TRIBITS_COPY_FILES_TO_BINARY_DIR(meshes_sciscaling
 	SOURCE_DIR ${CMAKE_SOURCE_DIR}/meshes
-    SOURCE_FILES  cube_h_1.mesh artery_h_025_L_025.mesh artery_h_0_8_L_0_25.mesh artery_h_015_L_075.mesh Artery_Small.mesh Artery_Long.mesh plaque_4k.mesh arterie_with_plaque_initma_media_adventitia.mesh
+    SOURCE_FILES  cube_h_1.mesh artery_h_025_L_025.mesh artery_h_0_8_L_0_25.mesh artery_h_015_L_075.mesh Artery_Small.mesh Artery_Long.mesh plaque_4k.mesh arterie_with_plaque_initma_media_adventitia.mesh arterie_with_plaque_thin_initma_media_adventitia.mesh
 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	DEST_FILES cube_h_1.mesh  artery_h_025_L_025.mesh artery_h_0_8_L_0_25.mesh artery_h_015_L_075.mesh Artery_Small.mesh Artery_Long.mesh plaque_4k.mesh arterie_with_plaque_initma_media_adventitia.mesh
+	DEST_FILES cube_h_1.mesh  artery_h_025_L_025.mesh artery_h_0_8_L_0_25.mesh artery_h_015_L_075.mesh Artery_Small.mesh Artery_Long.mesh plaque_4k.mesh arterie_with_plaque_initma_media_adventitia.mesh arterie_with_plaque_thin_initma_media_adventitia.mesh
 	EXEDEPS sci_scaling 
 )
