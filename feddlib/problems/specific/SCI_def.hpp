@@ -417,6 +417,7 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             A->scale(1.0);
             A->fillComplete( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getMapVecFieldUnique());
             
+            C->writeMM("C");
             if(nonlinearExternalForce_)
                 computeSolidRHSInTime();
 

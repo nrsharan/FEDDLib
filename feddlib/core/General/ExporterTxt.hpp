@@ -30,6 +30,10 @@ public:
     void exportData(double data);
 
     void writeTxt(double data);
+
+    void exportData(double data1, double data2);
+
+    void writeTxt(double data1, double data2);
     
     void closeExporter();
     

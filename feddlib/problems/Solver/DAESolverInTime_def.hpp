@@ -2018,10 +2018,10 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             fe.assemblyFlowRate(problemTime_->getDomain(0)->getDimension(), flowRateInlet, problemTime_->getDomain(0)->getFEType() , problemTime_->getDomain(0)->getDimension(), flagInlet , u_rep);
             fe.assemblyFlowRate(problemTime_->getDomain(0)->getDimension(), flowRateOutlet, problemTime_->getDomain(0)->getFEType() , problemTime_->getDomain(0)->getDimension(), flagOutlet , u_rep);
 
-            exporterFlowRateInlet->exportData( flowRateInlet );
-            exporterFlowRateOutlet->exportData( flowRateOutlet );
+            exporterFlowRateInlet->exportData( timeSteppingTool_->currentTime() , flowRateInlet );
+            exporterFlowRateOutlet->exportData(  timeSteppingTool_->currentTime() , flowRateOutlet );
 
-            exporterPressureOutlet->exportData( fsci->getPressureOutlet() );
+            exporterPressureOutlet->exportData(  timeSteppingTool_->currentTime() ,fsci->getPressureOutlet() );
 
             double areaInlet=0.;
             fe.assemblyArea(problemTime_->getDomain(0)->getDimension(), areaInlet, flagInlet);
@@ -2029,8 +2029,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             double areaOutlet=0.;
             fe.assemblyArea(problemTime_->getDomain(0)->getDimension(), areaOutlet, flagOutlet);
 
-            exporterAreaInlet->exportData( areaInlet);
-            exporterAreaOutlet->exportData( areaOutlet );
+            exporterAreaInlet->exportData(  timeSteppingTool_->currentTime() ,areaInlet);
+            exporterAreaOutlet->exportData(  timeSteppingTool_->currentTime() ,areaOutlet );
 
         }
         if (printExtraData) {
@@ -2666,10 +2666,10 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
             fe.assemblyFlowRate(problemTime_->getDomain(0)->getDimension(), flowRateInlet, problemTime_->getDomain(0)->getFEType() , problemTime_->getDomain(0)->getDimension(), flagInlet , u_rep);
             fe.assemblyFlowRate(problemTime_->getDomain(0)->getDimension(), flowRateOutlet, problemTime_->getDomain(0)->getFEType() , problemTime_->getDomain(0)->getDimension(), flagOutlet , u_rep);
 
-            exporterFlowRateInlet->exportData( flowRateInlet );
-            exporterFlowRateOutlet->exportData( flowRateOutlet );
+            exporterFlowRateInlet->exportData(  timeSteppingTool_->currentTime() , flowRateInlet );
+            exporterFlowRateOutlet->exportData(  timeSteppingTool_->currentTime() ,flowRateOutlet );
 
-            exporterPressureOutlet->exportData( fsi->getPressureOutlet() );
+            exporterPressureOutlet->exportData(  timeSteppingTool_->currentTime() , fsi->getPressureOutlet() );
 
             double areaInlet=0.;
             fe.assemblyArea(problemTime_->getDomain(0)->getDimension(), areaInlet, flagInlet);
@@ -2677,8 +2677,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
             double areaOutlet=0.;
             fe.assemblyArea(problemTime_->getDomain(0)->getDimension(), areaOutlet, flagOutlet);
 
-            exporterAreaInlet->exportData( areaInlet);
-            exporterAreaOutlet->exportData( areaOutlet );
+            exporterAreaInlet->exportData( timeSteppingTool_->currentTime() , areaInlet);
+            exporterAreaOutlet->exportData(  timeSteppingTool_->currentTime() ,areaOutlet );
 
         }
         if (printExtraData) {

@@ -12,8 +12,8 @@
  
         <Parameter name="FSCI" type="bool" value="true"/>
         <Parameter name="Geometry Explicit" type="bool" value="true"/>
-        <Parameter name="Inflow Start Time" type="double" value="800.0"/><!-- Start of diffusion process -->
-        <Parameter name="Heart Beat Start" type="double" value="1500.0"/><!-- Start of diffusion process -->
+        <Parameter name="Inflow Start Time" type="double" value="10.0"/><!-- Start of diffusion process -->
+        <Parameter name="Heart Beat Start" type="double" value="0.2"/><!-- Start of diffusion process -->
         <Parameter name="Coupling Type" type="string" value="implicit"/>
         <Parameter name="Structure Model" type="string" value="SCI_NH"/> <!-- SCI_Linear, SCI_NH , SCI_SMC_MLCK , SCI_SMC_Active_Growth_Reorientation -->
 
@@ -42,13 +42,14 @@ e -->
         <Parameter name="Ramp type" type="string" value="cos"/><!--cos, linear -->
         <Parameter name="Set Outflow Pressure to Zero" type="bool" value="false"/>
 
-        <Parameter name="Pressure Boundary Condition" type="string" value="Absorbing"/>         <!-- Resistance , Absorbing -->
+        <Parameter name="Pressure Boundary Condition" type="string" value="Absorbing Resistance"/>         <!-- Resistance , Absorbing , Absorbing Resistance-->
         <Parameter name="Average Flowrate" type="bool" value="true"/>
         <Parameter name="Implicit BC" type="bool" value="true"/>
         <Parameter name="BC Ramp" type="double" value="0.1"/>
+        <Parameter name="Resistance Ramp" type="double" value="0.1"/>
        	<!-- Resistance boundary condition -->
         <Parameter name="Resistance" type="double" value="3666.0e6"/> <!-- N/m² s/m³ (eigentliche Einheit mPa*s/m³ , 1mPa = 10e6 N/m² -->
-        <Parameter name="Normal Scale" type="double" value="-1.0"/>
+        <Parameter name="Normal Scale" type="double" value="1.0"/>
         <Parameter name="Poisson Ratio" type="double" value="3.0e-06"/>
      	<!-- Absorbing boundary condition -->
         <Parameter name="E" type="double" value="120000"/>
@@ -110,8 +111,8 @@ e -->
         <Parameter name="ParaViewExport" type="bool" value="true"/>
         <Parameter name="ParaViewCoarse" type="bool" value="false"/>
         <Parameter name="ParaView export subdomains" type="bool" value="true"/>
-        <Parameter name="Flag Inlet Fluid" type="int" value="4"/>
-        <Parameter name="Flag Outlet Fluid" type="int" value="5"/>
+        <Parameter name="Flag Inlet Fluid" type="int" value="2"/>
+        <Parameter name="Flag Outlet Fluid" type="int" value="3"/>
         <Parameter name="Export Flow Rate" type="bool" value="true"/>
         <Parameter name="Export Suffix" type="string" value=""/>
         <Parameter name="Export Data" type="bool" value="true"/>
@@ -142,20 +143,12 @@ e -->
         <ParameterList name="Timestepping Intervalls">
             <Parameter name="Number of Segments" type="int" value="2"/>
             <ParameterList name="1">
-                <Parameter name="Start Time" type="double" value="0."/>
-                <Parameter name="dt" type="double" value="0.005"/>
+                <Parameter name="Start Time" type="double" value="0.0"/>
+                <Parameter name="dt" type="double" value="0.0005"/>
             </ParameterList>
              <ParameterList name="2">
-                <Parameter name="Start Time" type="double" value="0.005"/>
-                <Parameter name="dt" type="double" value="0.0075"/>
-            </ParameterList>
-             <ParameterList name="3">
-                <Parameter name="Start Time" type="double" value="2."/>
-                <Parameter name="dt" type="double" value="0.015"/>
-            </ParameterList>
-             <ParameterList name="4">
-                <Parameter name="Start Time" type="double" value="500."/>
-                <Parameter name="dt" type="double" value="0.02"/>
+                <Parameter name="Start Time" type="double" value="0.1"/>
+                <Parameter name="dt" type="double" value="0.001"/>
             </ParameterList>
          </ParameterList> 
     </ParameterList>

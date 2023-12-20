@@ -3,7 +3,7 @@
     	<Parameter name="Number of Materials" type="int" value="1"/>
           	<ParameterList name="1">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
-	         	<Parameter name="Volume Flag" type="int" value="15"/>
+	         	<Parameter name="Volume Flag" type="int" value="10"/>
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
 				<!-- For Explicit Coupling and SCI_NH , SCI_SMC_Active_Growth_Reorientation-->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
@@ -51,13 +51,13 @@
                 <Parameter name="C50" type="double" value="0.5e0"/>
                 <Parameter name="D0" type="double" value="6.e-02"/>
                 <Parameter name="m" type="double" value="0.e0"/>
-                <Parameter name="ActiveStartTime" type="double" value="1.0001"/>
+                <Parameter name="ActiveStartTime" type="double" value="2.000"/>
                 <Parameter name="KEtaPlus" type="double" value="0.0001"/>
                 <Parameter name="MEtaPlus" type="double" value="5.0"/>
-                <Parameter name="GrowthStartTime" type="double" value="0.0"/>
-                <Parameter name="ReorientationStartTime" type="double" value="0.0"/>
-                <Parameter name="GrowthEndTime" type="double" value="0.0"/>
-                <Parameter name="ReorientationEndTime" type="double" value="0.0"/>
+                <Parameter name="GrowthStartTime" type="double" value="10000.0"/>
+                <Parameter name="ReorientationStartTime" type="double" value="10000.0"/>
+                <Parameter name="GrowthEndTime" type="double" value="10000.0"/>
+                <Parameter name="ReorientationEndTime" type="double" value="10000.0"/>
                 <Parameter name="KThetaPlus" type="double" value="0.0001"/>
                 <Parameter name="KThetaMinus" type="double" value="0.0001"/>
                 <Parameter name="MThetaPlus" type="double" value="3.0e0"/>

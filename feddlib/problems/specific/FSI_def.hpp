@@ -1538,7 +1538,7 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
 
     
     }
-    if (pressureRB == "Absorbing")
+    if (pressureRB == "Absorbing" || pressureRB == "Absorbing Resistance")
     {
         if(verbose_)
             cout << " Computing absorbing boundary condition .. " << endl;
@@ -1580,8 +1580,11 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
         flowRateOutlet_timesteps[0] = flowRateOutlet_n_1_;
         flowRateOutlet_timesteps[1] = flowRateOutlet_n_;
 
-        pressureOutlet_ = this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaInlet_init_,this->parameterList_,0);
-                  
+        if(pressureRB == "Absorbing")
+            pressureOutlet_ = this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaInlet_init_,this->parameterList_,0);
+        else
+            pressureOutlet_ = this->feFactory_->assemblyAbsorbingResistanceBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaInlet_init_,this->parameterList_,0);
+       
         this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
 
         flowRateOutlet_n_1_ = flowRateOutlet_n_;
