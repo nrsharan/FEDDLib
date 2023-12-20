@@ -50,7 +50,7 @@ void ExporterTxt::writeTxt(double data){
 
 void ExporterTxt::writeTxt(double data1, double data2){
     if (verbose_) {
-        txt_out_ << data2 << " " << data2 << "\n";
+        txt_out_ << data1 << " " << data2 << "\n";
         txt_out_.flush();
     }
 
