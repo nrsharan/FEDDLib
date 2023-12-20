@@ -7080,7 +7080,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingResistanceBoundary(int dim,
         paramsFunc[ 1 ]  = p_ref_input;
         func( &x_tmp[0], &valueFunc[0], paramsFunc);
         //p_ref = valueFunc[0];
-        p_ref = p_ref_input;
+        p_ref = valueFunc[0];
 
     }
 
