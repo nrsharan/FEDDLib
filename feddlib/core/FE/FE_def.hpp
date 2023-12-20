@@ -7032,6 +7032,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingResistanceBoundary(int dim,
     double density = params->sublist("Parameter Fluid").get("Density",1.0); 
     double p_ref_input = params->sublist("Parameter Fluid").get("Reference fluid pressure",8000.); 
     double resistanceRamp = params->sublist("Parameter Fluid").get("Resistance Ramp",2.); // Ramp time of fluid
+    double resistance = params->sublist("Parameter Fluid").get("Resistance",1.0); 
 
     SC elScaling;
     SmallMatrix<SC> B(dim);
@@ -7072,8 +7073,8 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingResistanceBoundary(int dim,
 
     double p_ref = 0.;
     if(paramsFunc[0] < resistanceRamp){
-        func( &x_tmp[0], &valueFunc[0], paramsFunc);
-        p_ref = flowRateUse*valueFunc[0];
+        //func( &x_tmp[0], &valueFunc[0], paramsFunc);
+        p_ref = flowRateUse*resistance;
 
     }
     else{         
