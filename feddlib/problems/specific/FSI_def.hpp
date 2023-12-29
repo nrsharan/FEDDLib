@@ -1263,7 +1263,7 @@ void FSI<SC,LO,GO,NO>::setSolidMassmatrix( MatrixPtr_Type& massmatrix ) const
     //######################
     // Massematrix
     //######################
-    double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Density",1.e-0);
+    double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Density",1.3e3);
     int size = this->problemTimeStructure_->getSystem()->size();
 
     if(timeSteppingTool_->currentTime() == 0.0)

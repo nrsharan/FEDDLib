@@ -78,7 +78,6 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	*/
 	int numMaterials =  this->params_->sublist("Parameter Solid").get("Number of Materials", 1);
 	int materialID = 0;
-
 	for(int i=1; i<= numMaterials; i++)
 		if( this->params_->sublist("Parameter Solid").sublist(std::to_string(i)).get("Volume Flag", 15) == this->flag_)
 			materialID = i;
@@ -147,6 +146,8 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	rho_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Rho",1.e0);
 	subiterationTolerance_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Subiteration Tolerance",1.e-7);
 	typeOfInterpol_ = 1;
+
+	//cout << " a_1=" << alpha1_ << " a_2= " << alpha2_ << " a_3 " << alpha3_ << " alpha4_ =" << alpha4_ << " a_5="<< alpha5_ << endl;
 
 	//cout << "--- Init AssembleFE_SCI_SCM_Active_Growth_Reorientation Element --- D0=" << d0_ << endl;
 
