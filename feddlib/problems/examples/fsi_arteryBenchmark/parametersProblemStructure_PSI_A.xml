@@ -67,7 +67,7 @@
                 <Parameter name="ThetaMinus2" type="double" value="0.98e0"/>
                 <Parameter name="ThetaMinus3" type="double" value="0.98e0"/>
                 <Parameter name="KMin" type="double" value="0.15"/>
-                <Parameter name="Rho" type="double" value="1.e0"/>
+                <Parameter name="Rho" type="double" value="1000.e0"/>
             </ParameterList>
            
         </ParameterList>    
