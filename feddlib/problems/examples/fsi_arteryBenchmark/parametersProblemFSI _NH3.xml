@@ -24,7 +24,7 @@
         <Parameter name="Use update tol" type="bool" value="true"/>
         <Parameter name="Use WRMS" type="bool" value="false"/>
 
-        <Parameter name="MaxNonLinIts" type="int" value="15"/>
+        <Parameter name="MaxNonLinIts" type="int" value="1"/>
 
         <Parameter name="Criterion" type="string" value="Update"/><!-- Criterion for nonlinear solve, Residual or Update: Residual is the norm of the nonlinear residual; Update is the norm of the updat\
 e -->
@@ -42,19 +42,19 @@ e -->
         <Parameter name="Ramp type" type="string" value="cos"/><!--cos, linear -->
         <Parameter name="Set Outflow Pressure to Zero" type="bool" value="false"/>
 
-         <Parameter name="Pressure Boundary Condition" type="string" value="Absorbing"/>         <!-- Resistance , Absorbing , Absorbing Resistance-->
-        <Parameter name="Average Flowrate" type="bool" value="false"/>
+        <Parameter name="Pressure Boundary Condition" type="string" value="Absorbing"/>         <!-- Resistance , Absorbing , Absorbing Resistance-->
+        <Parameter name="Average Flowrate" type="bool" value="true"/>
         <Parameter name="Implicit BC" type="bool" value="false"/>
-        <Parameter name="BC Ramp" type="double" value="0.00"/>
+        <Parameter name="BC Ramp" type="double" value="0.05"/>
         <Parameter name="Resistance Ramp" type="double" value="0.1"/>
        	<!-- Resistance boundary condition -->
         <Parameter name="Resistance" type="double" value="3666.0e6"/> <!-- N/m² s/m³ (eigentliche Einheit mPa*s/m³ , 1mPa = 10e6 N/m² -->
         <Parameter name="Normal Scale" type="double" value="1.0"/>
-        <Parameter name="Poisson Ratio" type="double" value="0.49"/>
+        <Parameter name="Poisson Ratio" type="double" value="3.0e-06"/>
      	<!-- Absorbing boundary condition -->
         <Parameter name="E" type="double" value="120000.0"/>
         <Parameter name="Wall thickness" type="double" value="0.0006"/>
-        <Parameter name="Reference fluid pressure" type="double" value="10666.0"/><!-- N/m² -->
+        <Parameter name="Reference fluid pressure" type="double" value="8000.0"/><!-- N/m² -->
 
     </ParameterList>
     

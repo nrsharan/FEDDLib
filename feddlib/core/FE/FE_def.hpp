@@ -6611,7 +6611,7 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
     getQuadratureValues(dim-1, deg, quadPoints, w, FEType);
     w.reset();
 
-    double poissonRatio=params->sublist("Parameter Fluid").get("Poisson Ratio",0.49); 
+    double viscosity=params->sublist("Parameter").get("Viscosity",0.49); 
     int flagInlet = params->sublist("General").get("Flag Inlet Fluid", 4);
     int flagOutlet = params->sublist("General").get("Flag Outlet Fluid", 5);
 
@@ -6798,7 +6798,7 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
                         }   
                        // cout << " Value Second component " << value[0] << " " << value[1] << " " << value[2]  << endl;
                         for (int j=0; j<value.size(); j++)
-                            valuesF[ dim * nodeList[ t ] + j ] -= normalScale*value[j] *elScaling*poissonRatio;
+                            valuesF[ dim * nodeList[ t ] + j ] -= normalScale*value[j] *elScaling*viscosity;
                                  
                     }
 
@@ -6849,9 +6849,13 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
 
     double normalScale = params->sublist("Parameter Fluid").get("Normal Scale",1.0); 
     double E = params->sublist("Parameter Fluid").get("E",12.0); 
-    double wallThickness = params->sublist("Parameter Fluid").get("Wall thickness",0.001); 
+    double wallThickness = params->sublist("Parameter Fluid").get("Wall thickness",0.0006); 
     double density = params->sublist("Parameter Fluid").get("Density",1.0); 
-    double p_ref = params->sublist("Parameter Fluid").get("Reference fluid pressure",8000.); 
+    double p_ref_input = params->sublist("Parameter Fluid").get("Reference fluid pressure",10666.); 
+
+    double rampTime = params->sublist("Parameter").get("Max Ramp Time",0.1); 
+    double unsteadyStart = params->sublist("Parameter").get("Heart Beat Start",0.2); 
+    double flowRateInput = params->sublist("Parameter").get("Flowrate",3.0e-06); 
 
 
     SC elScaling;
@@ -6879,22 +6883,33 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     double areaInlet =0.;
     this->assemblyArea(dim, areaInlet, flagInlet);
 
-    double beta = (((wallThickness* E)/(1-pow(poissonRatio,2))) * M_PI/areaOutlet_init ) *sqrt(areaOutlet_init);
+    double beta=0.;
+    if(funcParameter[0] < rampTime)
+        beta = ((wallThickness* E)/(1.-pow(poissonRatio,2))) * (M_PI/areaOutlet_init ) ;
+    else
+        beta = ((wallThickness* E)/(1.-pow(poissonRatio,2))) * (M_PI/areaOutlet ) ;
+
     // We determine p_ref via a ramp
     SC* paramsFunc = &(funcParameter[0]);
     vec_dbl_Type x_tmp(dim,0.); //dummy
     paramsFunc[ funcParameter.size() - 1 ] =flagOutlet;          
-    paramsFunc[ 1 ]  = p_ref;
+    paramsFunc[ 1 ]  = p_ref_input;
     func( &x_tmp[0], &valueFunc[0], paramsFunc);
-    p_ref = valueFunc[0];
+    double p_ref = valueFunc[0];
     // Value of h_x for this timestep
     double flowRateUse = flowRateOutlet;
     if(params->sublist("Parameter Fluid").get("Average Flowrate",false) )
         flowRateUse = flowRateOutletAveraged;
 
-    double h_x =  pow( (sqrt(density)/(2*sqrt(2)) * flowRateUse/areaOutlet + sqrt(beta)),2) - beta + p_ref;
 
-    
+    double A_bar = 1./((sqrt(beta*sqrt(areaOutlet_init)+p_ref_input)-sqrt(beta*sqrt(areaOutlet_init)))*2.*sqrt(2.)*(1./sqrt(density))*(1./flowRateInput));
+    double h_x = 0.;
+
+    if(funcParameter[0] < unsteadyStart)
+        h_x=  pow( (sqrt(density)/(2*sqrt(2)) * flowRateUse/A_bar + sqrt(beta*sqrt(areaOutlet_init))),2) - beta*sqrt(areaOutlet_init);
+    else 
+        h_x=  pow( (sqrt(density)/(2*sqrt(2)) * flowRateUse/areaOutlet + sqrt(beta*sqrt(areaOutlet_init))),2) - beta*sqrt(areaOutlet_init) + p_ref;
+
     if(domainVec_.at(0)->getComm()->getRank()==0){
         cout << " ---------------------------------------------------------- " << endl;
         cout << " ---------------------------------------------------------- " << endl;
@@ -6903,10 +6918,11 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
         cout << " Volmetric flow Inlet: " << flowRateInlet << endl;
         cout << " Volmetric flow Outlet: " << flowRateOutlet << endl;
         cout << " Averaged volmetric flow Outlet: " << flowRateOutletAveraged << endl;
-        cout << " beta*sqrt(A_0) per Input: " << beta << endl;
+        cout << " beta*sqrt(A_0) per Input: " << beta*sqrt(areaOutlet_init) << endl;
         cout << " Area_init outlet: " << areaOutlet_init << endl;
         cout << " Area inlet: " << areaInlet << endl;
         cout << " Area outlet: " << areaOutlet << endl;
+        cout << " A_bar: " << A_bar << endl;
         cout << " Value h_x at outlet: " << h_x << endl;
         cout << " --------------------------------------------------------- " << endl;
         cout << " --------------------------------------------------------- " << endl;
@@ -7023,6 +7039,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingResistanceBoundary(int dim,
     w.reset();
 
     double poissonRatio=params->sublist("Parameter Fluid").get("Poisson Ratio",0.49); 
+    double viscosity=params->sublist("Parameter Fluid").get("Viscosity",1.0e-06); 
     int flagInlet = params->sublist("General").get("Flag Inlet Fluid", 4);
     int flagOutlet = params->sublist("General").get("Flag Outlet Fluid", 5);
 
