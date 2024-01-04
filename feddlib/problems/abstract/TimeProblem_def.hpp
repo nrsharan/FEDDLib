@@ -124,13 +124,13 @@ void TimeProblem<SC,LO,GO,NO>::combineSystems() const{
     }
     SmallMatrix<SC> ones( size , Teuchos::ScalarTraits<SC>::one());
     SmallMatrix<SC> zeros( size , Teuchos::ScalarTraits<SC>::zero());
-    cout << "massparameters " << endl;
+    /*cout << "massparameters " << endl;
     for (int i=0; i<size; i++) {
         for (int j=0; j<size; j++) {
             cout<< massParameters_[i][j] << " " ;
         }
         cout << endl;
-    }
+    }*/
 
     systemMass_->addMatrix( massParameters_, systemCombined_, zeros );
     tmpSystem->addMatrix( timeParameters_, systemCombined_, ones );
@@ -264,7 +264,8 @@ void TimeProblem<SC,LO,GO,NO>::updateNewmarkRhs(double dt, double beta, double g
 
         }
     }
-    cout << " ### TMP mass parameter " << coeff.at(0) << endl;
+    //cout << " ### TMP mass parameter " << coeff.at(0) << endl;
+    //systemMass_->getBlock(0,0)->writeMM("MassMatrix_Structure_Newmark_Rhs");
     // tempVector2 = tmpMassParameter.*M*tempVector1
     systemMass_->apply(*(tempVector1.at(0)), *(tempVector2.at(0)), tmpMassParameter);
 
@@ -356,7 +357,7 @@ void TimeProblem<SC,LO,GO,NO>::assembleMassSystem( ) const {
     double density = parameterList_->sublist("Parameter").get("Density",1.);
 
 
-    cout << " TimeProblem:: assembleMassSystem() with prescribed density " << density << endl;
+    //cout << " TimeProblem:: assembleMassSystem() with prescribed density " << density << endl;
 
     int size = problem_->getSystem()->size();
     systemMass_->resize( size );
