@@ -1095,6 +1095,7 @@ void FSI<SC,LO,GO,NO>::setFluidMassmatrix( MatrixPtr_Type& massmatrix ) const
         massmatrix = Teuchos::rcp(new Matrix_Type( this->problemTimeFluid_->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getApproxEntriesPerRow() ) );
         // 0 = Fluid
         this->feFactory_->assemblyMass( this->dim_, this->problemTimeFluid_->getFEType(0), "Vector",  massmatrix, 0, true );
+
         massmatrix->resumeFill();
         massmatrix->scale(density);
         massmatrix->fillComplete( this->problemTimeFluid_->getDomain(0)->getMapVecFieldUnique(), this->problemTimeFluid_->getDomain(0)->getMapVecFieldUnique() );
@@ -1246,6 +1247,10 @@ void FSI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
     {
         this->problemTimeStructure_->assembleSourceTerm( time );
         
+        //double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Density",1.3e3);
+        //this->problemTimeStructure_->getSourceTerm()->scale(density);
+
+        //this->problemTimeStructure_->getSourceTerm()->print();
         // Fuege die rechte Seite der DGL (f bzw. f_{n+1}) der rechten Seite hinzu (skaliert mit coeffSourceTerm)
         // Die Skalierung mit der Dichte erfolgt schon in der Assemblierungsfunktion!
         
@@ -1277,7 +1282,7 @@ void FSI<SC,LO,GO,NO>::setSolidMassmatrix( MatrixPtr_Type& massmatrix ) const
             massmatrix->resumeFill();
             massmatrix->scale(density);
             massmatrix->fillComplete( this->problemTimeStructure_->getDomain(0)->getMapVecFieldUnique(), this->problemTimeStructure_->getDomain(0)->getMapVecFieldUnique());
-
+            
             this->problemTimeStructure_->systemMass_->addBlock( massmatrix, 0, 0 );
         }
     }

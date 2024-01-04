@@ -71,11 +71,8 @@ void NonLinElasAssFE<SC,LO,GO,NO>::assemble(std::string type) const{
         u_rep_ = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ));
         MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
         u_rep_->importFromVector(u, true);              
-       // this->assembleSourceTerm( 0. );
-        /*if(loadStepping_==true)
-            assembleSourceTermLoadstepping(0.);
-        else*/
-            this->assembleSourceTerm(0.);
+
+        this->assembleSourceTerm(0.);
 
         if(sourceType == "volume")
             this->sourceTerm_->scale(density);
@@ -143,7 +140,6 @@ void NonLinElasAssFE<SC,LO,GO,NO>::reAssemble(std::string type) const {
             this->feFactory_->assemblyAceDeformDiffuBlock(this->dim_, this->getDomain(0)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,concentration_,u_rep_,this->system_,0,0,this->residualVec_,0, this->parameterList_, "Jacobian", true/*call fillComplete*/);
        	else{
  			this->feFactory_->assemblyNonLinearElasticity(this->dim_, this->getDomain(0)->getFEType(),2, this->dim_, u_rep_, this->system_, this->residualVec_, this->parameterList_,true);
-           
         }
         MultiVectorPtr_Type fUnique = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldUnique(), 1 ) );
         fUnique->putScalar(0.);
@@ -320,9 +316,11 @@ void NonLinElasAssFE<SC,LO,GO,NO>::assembleSourceTermLoadstepping(double time) c
 
             this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
         }
-        else
+        else{
             this->assembleSourceTerm( timeSteppingTool_->t_ );
-        //this->problemTimeStructure_->getSourceTerm()->scale(density);
+        
+        }
+       
         // Fuege die rechte Seite der DGL (f bzw. f_{n+1}) der rechten Seite hinzu (skaliert mit coeffSourceTerm)
         // Die Skalierung mit der Dichte erfolgt schon in der Assemblierungsfunktion!
         

@@ -24,6 +24,10 @@ template <class SC , class LO , class GO , class NO >
 class LinElasAssFE; //LinElas;
 template <class SC , class LO , class GO , class NO >
 class NonLinElasAssFE; //NonLinElasticity;
+template <class SC , class LO , class GO , class NO >
+class LinElas;
+template <class SC , class LO , class GO , class NO >
+class NonLinElasticity;
 template <class SC = default_sc, class LO = default_lo, class GO = default_go, class NO = default_no>
 class FSI : public NonLinearProblem<SC,LO,GO,NO>  {
 
@@ -58,10 +62,10 @@ public:
     typedef Teuchos::RCP<TimeProblem_Type> TimeProblemPtr_Type;
 
     typedef NavierStokes<SC,LO,GO,NO> FluidProblem_Type;
-    //typedef LinElas<SC,LO,GO,NO> StructureProblem_Type;
-    typedef LinElasAssFE<SC,LO,GO,NO> StructureProblem_Type;
-   // typedef NonLinElasticity<SC,LO,GO,NO> StructureNonLinProblem_Type;
-    typedef NonLinElasAssFE<SC,LO,GO,NO> StructureNonLinProblem_Type;
+    typedef LinElas<SC,LO,GO,NO> StructureProblem_Type;
+    //typedef LinElasAssFE<SC,LO,GO,NO> StructureProblem_Type;
+    typedef NonLinElasticity<SC,LO,GO,NO> StructureNonLinProblem_Type;
+    //typedef NonLinElasAssFE<SC,LO,GO,NO> StructureNonLinProblem_Type;
     typedef Geometry<SC,LO,GO,NO> GeometryProblem_Type;
     
     typedef Teuchos::RCP<FluidProblem_Type> FluidProblemPtr_Type;

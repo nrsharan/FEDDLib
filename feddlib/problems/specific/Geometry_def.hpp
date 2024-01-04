@@ -94,6 +94,7 @@ void Geometry<SC,LO,GO,NO>::assemble( std::string type ) const
     
     this->assembleSourceTerm( 0./*time*/ );
 
+
     this->addToRhs( this->sourceTerm_ );
     
     if (this->verbose_)
