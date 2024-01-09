@@ -251,6 +251,7 @@ private:
     mutable ExporterPtr_Type exporterGeo_;
     mutable double areaInlet_init_=0.;
     mutable double areaOutlet_init_ =0.;
+    mutable double areaOutlet_T_ =0.;
     mutable double flowRateOutlet_n_ =0.; // Current flowrate
     mutable double flowRateOutlet_n_1_ =0.; // flowrate from previous timestep
     mutable double pressureOutlet_ =0.;

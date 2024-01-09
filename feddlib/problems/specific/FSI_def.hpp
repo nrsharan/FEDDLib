@@ -1282,7 +1282,7 @@ void FSI<SC,LO,GO,NO>::setSolidMassmatrix( MatrixPtr_Type& massmatrix ) const
             massmatrix->resumeFill();
             massmatrix->scale(density);
             massmatrix->fillComplete( this->problemTimeStructure_->getDomain(0)->getMapVecFieldUnique(), this->problemTimeStructure_->getDomain(0)->getMapVecFieldUnique());
-            
+
             this->problemTimeStructure_->systemMass_->addBlock( massmatrix, 0, 0 );
         }
     }
@@ -1576,7 +1576,17 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
             double flowRateInlet_n_1 = 0.;
             this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n_1, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
             flowRateOutlet_n_1_ = flowRateInlet_n_1; 
-        }  
+        } 
+        
+        double unsteadyStart = this->parameterList_->sublist("Parameter").get("Heart Beat Start",0.2); 
+        if( unsteadyStart +1e-10 > timeSteppingTool_->currentTime() &&  unsteadyStart -1e-10 < timeSteppingTool_->currentTime() )
+        {
+            double areaOutlet_T = 0.;
+            this->feFactory_->assemblyArea(this->dim_, areaOutlet_T, flagOutlet);
+            areaOutlet_T_ = areaOutlet_T;
+            if(verbose_)
+                cout << " ---- Absorbing boundary condition: Start of unsteady Phase with areaOutlet_T=" <<areaOutlet_T_<< " ---- " << endl;
+        }
         double flowRateInlet_n = 0.;
         this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
         flowRateOutlet_n_ = flowRateInlet_n; 
@@ -1586,9 +1596,9 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
         flowRateOutlet_timesteps[1] = flowRateOutlet_n_;
 
         if(pressureRB == "Absorbing")
-            pressureOutlet_ = this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaInlet_init_,this->parameterList_,0);
+            pressureOutlet_ = this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaOutlet_init_, areaOutlet_T_,this->parameterList_,0);
         else
-            pressureOutlet_ = this->feFactory_->assemblyAbsorbingResistanceBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaInlet_init_,this->parameterList_,0);
+            pressureOutlet_ = this->feFactory_->assemblyAbsorbingResistanceBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaOutlet_init_,this->parameterList_,0);
        
         this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
 

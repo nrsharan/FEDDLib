@@ -138,6 +138,7 @@ class FE {
                                 std::vector<SC>& funcParameter, 
                                 RhsFunc_Type func, 
                                 double areaOutlet_init, 
+                                double areaOutlet_T, 
                                 ParameterListPtr_Type params, 
                                 int FEloc=0);
     double assemblyAbsorbingResistanceBoundary(int dim, 

@@ -6821,6 +6821,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
                                               std::vector<SC>& funcParameter, 
                                               RhsFunc_Type func, 
                                               double areaOutlet_init,
+                                              double areaOutlet_T,
                                               ParameterListPtr_Type params,
                                               int FEloc) {
 
@@ -6884,10 +6885,10 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     this->assemblyArea(dim, areaInlet, flagInlet);
 
     double beta=0.;
-    if(funcParameter[0] < rampTime)
+    if(funcParameter[0] < unsteadyStart)
         beta = ((wallThickness* E)/(1.-pow(poissonRatio,2))) * (M_PI/areaOutlet_init ) ;
     else
-        beta = ((wallThickness* E)/(1.-pow(poissonRatio,2))) * (M_PI/areaOutlet ) ;
+        beta = ((wallThickness* E)/(1.-pow(poissonRatio,2))) * (M_PI/areaOutlet_T ) ;
 
     // We determine p_ref via a ramp
     SC* paramsFunc = &(funcParameter[0]);
@@ -6896,6 +6897,17 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     paramsFunc[ 1 ]  = p_ref_input;
     func( &x_tmp[0], &valueFunc[0], paramsFunc);
     double p_ref = valueFunc[0];
+    if(funcParameter[0]+1e-12 >= unsteadyStart){
+        double value = 
+        p_ref = p_ref - pow( (sqrt(density)/(2*sqrt(2)) * flowRateInput/areaOutlet_T + sqrt(beta*sqrt(areaOutlet_T))),2) + beta*sqrt(areaOutlet_T);
+
+        if(domainVec_.at(0)->getComm()->getRank()==0){
+            cout << " ---------------------------------------------------------- " << endl;
+            cout << " ----------------  Start of unsteady phase ---------------- " << endl;
+            cout << " Reference pressure adjusted from " << p_ref_input << " to " << p_ref << endl;
+        }
+
+    }
     // Value of h_x for this timestep
     double flowRateUse = flowRateOutlet;
     if(params->sublist("Parameter Fluid").get("Average Flowrate",false) )
@@ -6907,19 +6919,24 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
 
     if(funcParameter[0] < unsteadyStart)
         h_x=  pow( (sqrt(density)/(2*sqrt(2)) * flowRateUse/A_bar + sqrt(beta*sqrt(areaOutlet_init))),2) - beta*sqrt(areaOutlet_init);
-    else 
-        h_x=  pow( (sqrt(density)/(2*sqrt(2)) * flowRateUse/areaOutlet + sqrt(beta*sqrt(areaOutlet_init))),2) - beta*sqrt(areaOutlet_init) + p_ref;
+    else
+        h_x=  pow( (sqrt(density)/(2*sqrt(2)) * flowRateUse/areaOutlet + sqrt(beta*sqrt(areaOutlet_T))),2) - beta*sqrt(areaOutlet_T) + p_ref;
+
+    //         h_x=  pow( (sqrt(density)/(2*sqrt(2)) * flowRateUse/areaOutlet + sqrt(beta*sqrt(areaOutlet_init))),2) - beta*sqrt(areaOutlet_init) + p_ref;
 
     if(domainVec_.at(0)->getComm()->getRank()==0){
         cout << " ---------------------------------------------------------- " << endl;
         cout << " ---------------------------------------------------------- " << endl;
         cout << " Absorbing Boundary Condition " << endl;
-        cout << " p_ref: " << p_ref << endl;
+        cout << " Input p_ref: " << p_ref << endl;
+        cout << " Adjusted p_ref: " << p_ref << endl;
+        cout << " Unsteady start time_ " << unsteadyStart <<endl;
         cout << " Volmetric flow Inlet: " << flowRateInlet << endl;
         cout << " Volmetric flow Outlet: " << flowRateOutlet << endl;
         cout << " Averaged volmetric flow Outlet: " << flowRateOutletAveraged << endl;
-        cout << " beta*sqrt(A_0) per Input: " << beta*sqrt(areaOutlet_init) << endl;
+        cout << " beta per Input: " << beta << endl;
         cout << " Area_init outlet: " << areaOutlet_init << endl;
+        cout << " Area_init outlet: " << areaOutlet_T << endl;
         cout << " Area inlet: " << areaInlet << endl;
         cout << " Area outlet: " << areaOutlet << endl;
         cout << " A_bar: " << A_bar << endl;
