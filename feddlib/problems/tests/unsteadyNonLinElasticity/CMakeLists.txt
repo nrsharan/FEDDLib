@@ -20,7 +20,7 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(data_unsteadyNonLinElasticityAssFE
 )
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(mesh_unsteadyNonLinElasticityAssFE
-    SOURCE_DIR ${CMAKE_SOURCE_DIR}/meshes
+    SOURCE_DIR ${CMAKE_SOURCE_DIR}/meshes/SPP2311
     SOURCE_FILES artery_h_0_8_L_0_25.mesh cube_h_1.mesh
     DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
     DEST_FILES artery_h_0_8_L_0_25.mesh cube_h_1.mesh

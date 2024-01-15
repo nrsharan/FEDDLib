@@ -581,6 +581,7 @@ int main(int argc, char *argv[])
     
     string xmlPrecFileStructure = "parametersPrecStructure.xml";
     myCLP.setOption("precfileStructure",&xmlPrecFileStructure,".xml file with Inputparameters.");
+    
     string xmlPrecFileChem = "parametersPrecChem.xml";
     myCLP.setOption("precfileChem",&xmlPrecFileChem,".xml file with Inputparameters.");
     
@@ -729,13 +730,15 @@ int main(int argc, char *argv[])
 		    
 		    
             if (!discType.compare("P2")){
-				//domainP2chem->buildP2ofP1Domain( domainP1struct );
+				domainP2chem->buildP2ofP1Domain( domainP1struct );
 				domainP2struct->buildP2ofP1Domain( domainP1struct );
 
-				domainChem = domainP2struct;   //domainP2chem;
+				domainChem = domainP2chem;   //domainP2chem;
 				domainStructure = domainP2struct;   
 			}        
 			else{
+                TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "Only P2 discretization allowed");                               
+
 				domainStructure = domainP1struct;
 				domainChem = domainP1struct;
 			}

@@ -184,8 +184,6 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
     Teuchos::RCP<Thyra::LinearOpWithSolveBase<SC> > solver = lowsFactory->createOp();
     //    solver = linearOpWithSolve(*lowsFactory, problem->getSystem()->getThyraLinOp());
 
-     cout << " Solve Monolithic time problem " << endl;
-
     ThyraLinOpConstPtr_Type thyraMatrix = timeProblem->getSystemCombined()->getThyraLinOp();
 
     // Printing the stiffness matrix for the first newton iteration

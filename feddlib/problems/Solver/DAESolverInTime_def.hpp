@@ -1144,6 +1144,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         problemTime_->updateTime ( time );
         
         NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
+
+        cout << " ----- Nonlinear System Info|| Number of rows:" << problemTime_->getSystem()->size() << " || number of rhs:" << problemTime_->getRhs()->size() << " || solution: " << problemTime_->getSolution()->size() << endl; 
         //massCoeffSCI.print();
         //problemCoeffSCI.print();
         if("SCI_Linear" != parameterList_->sublist("Parameter").get("Structure Model","SCI_Linear"))
@@ -1171,8 +1173,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         timeSteppingTool_->advanceTime(false);//output info);
 
         // Should be some place else
-        if(couplingType=="explicit" )
-            this->problemTime_->assemble("UpdateCoupling");
+        //if(couplingType=="explicit" )
+        //    this->problemTime_->assemble("UpdateCoupling");
 
         if (printData) {
             exporterTimeTxt->exportData( timeSteppingTool_->currentTime() );

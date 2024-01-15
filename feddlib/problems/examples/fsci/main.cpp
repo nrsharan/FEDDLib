@@ -551,6 +551,7 @@ int main(int argc, char *argv[])
         if (!discType.compare("P2")){
             domainP2fluid->buildP2ofP1Domain( domainP1fluid );
             domainP2struct->buildP2ofP1Domain( domainP1struct );
+            domainP2chem->buildP2ofP1Domain( domainP1struct );
         }
         
         // Calculate distances is done in: identifyInterfaceParallelAndDistance
@@ -600,7 +601,7 @@ int main(int argc, char *argv[])
         {
             domainFluidVelocity = domainP2fluid;
             domainFluidPressure = domainP1fluid;
-            domainChem = domainP2struct;
+            domainChem = domainP2chem;
             domainStructure = domainP2struct;
             domainGeometry = domainP2fluid;
         }
@@ -611,7 +612,7 @@ int main(int argc, char *argv[])
             domainStructure = domainP1struct;
             domainChem = domainP1struct;
             domainGeometry = domainP1fluid;
-            //                TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,"P1/P1 for FSI not implemented!");
+            TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,"P1/P1/P1 for FSCI not implemented!");
         }
 
         if (verbose){

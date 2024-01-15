@@ -91,6 +91,14 @@ template<class SC,class LO,class GO,class NO>
 void SCI<SC,LO,GO,NO>::info()
 {
     this->infoProblem();
+    if (this->verbose_)
+    {
+        std::cout << "SCI:: loadStepping_ " << loadStepping_  << " ... " << std::endl;
+        std::cout << "SCI:: chemistryExplicit_ " << chemistryExplicit_  << " ... " << std::endl;
+        std::cout << "SCI:: externalForce_ " << externalForce_  << " ... " << std::endl;
+        std::cout << "SCI:: nonlinearExternalForce_ " << nonlinearExternalForce_  << " ... " << std::endl;
+    }
+    
     //this->infoNonlinProblem();
 }
 
@@ -170,14 +178,14 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
         //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Jacobian",true);
 
         if(chemistryExplicit_){
-            this->system_->addBlock(A,0,0);
-            this->systemC_->addBlock(C,0,0);
+            this->system_->addBlock(systemTmp->getBlock(0,0),0,0);
+            this->systemC_->addBlock(systemTmp->getBlock(1,1),0,0);
         }
         else{
-            this->system_->addBlock(A,0,0);
-            this->system_->addBlock(BT,0,1);
-            this->system_->addBlock(B,1,0);
-            this->system_->addBlock(C,1,1);
+            this->system_->addBlock(systemTmp->getBlock(0,0),0,0);
+            this->system_->addBlock(systemTmp->getBlock(0,1),0,1);
+            this->system_->addBlock(systemTmp->getBlock(1,0),1,0);
+            this->system_->addBlock(systemTmp->getBlock(1,1),1,1);
         }
   
         if ( chemistryExplicit_ && this->parameterList_->sublist("General").get("ParaViewExport",false)){
@@ -353,20 +361,13 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
         if(this->verbose_)
             std::cout << "-- reassemble Newton " << '\n';
 
-        
-
-        if(this->verbose_)
-     // Maybe nothing should happen here as there are no constant matrices
+        // Maybe nothing should happen here as there are no constant matrices
         this->system_.reset(new BlockMatrix_Type(2));
         if ( chemistryExplicit_)
             this->system_.reset(new BlockMatrix_Type(1));
 
 
-        MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
-        
-        if (this->residualVec_.is_null())
-            this->residualVec_.reset(new BlockMultiVector_Type(2));
-        
+        MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );       
         MatrixPtr_Type B(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
         MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ) );
         MatrixPtr_Type C(new Matrix_Type( this->getDomain(1)->getMapUnique(),this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ));
@@ -379,11 +380,7 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
         systemTmp->addBlock(BT,0,1);
         systemTmp->addBlock(B,1,0);
         systemTmp->addBlock(C,1,1);
-
-        //cout << "###### Back in assemble ######## " << endl;
-
-        this->setFromPartialVectorsInit();
-
+        
         MultiVectorConstPtr_Type c; 
         if(chemistryExplicit_)
             c= this->problemTimeChem_->getSolution()->getBlock(0);
@@ -395,9 +392,9 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
         MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
         d_rep_->importFromVector(d, true); 
     
-        BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
-        blockSol->addBlock(d_rep_,0);
-        blockSol->addBlock(c_rep_,1);
+        //BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
+        //blockSol->addBlock(d_rep_,0);
+        //blockSol->addBlock(c_rep_,1);
         this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,systemTmp,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
         //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Jacobian",true);
 
@@ -421,7 +418,7 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
     }
       // ########################
         // Prec def -- experimental -- if explicit system we use 'diffusion matrix' as pressure matrix
-        string precType = this->parameterList_->sublist("General").get("Preconditioner Method","Monolithic");
+       /* string precType = this->parameterList_->sublist("General").get("Preconditioner Method","Monolithic");
         if ( precType == "Diagonal" || precType == "Triangular" ) {
             //MatrixPtr_Type Mpressure(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(1)->getApproxEntriesPerRow() ) );
             
@@ -431,7 +428,7 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             //Mpressure->fillComplete( pressureMap, pressureMap );
             this->problemChem_->assemble();
             this->getPreconditionerConst()->setPressureMassMatrix( this->problemChem_->system_->getBlock(0,0) );
-        }
+        }*/
 
         //this->system_->getBlock(0,0)->print();
 }
@@ -458,6 +455,8 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,resTmp, this->parameterList_, "Rhs", true/*call fillComplete*/);
     
     this->residualVec_->addBlock(resTmp->getBlock(0),0);
+
+    this->residualVec_->getBlock(0)->writeMM("calculateRes_res_d");
 
     if(!chemistryExplicit_){
         this->residualVec_->addBlock(resTmp->getBlock(1),1);
@@ -507,6 +506,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
         //     this->residualVec_->getBlockNonConst(0)->update(1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);
         
     }
+
     // this->residualVec_->getBlockNonConst(1)->print();
     //this->residualVec_->getBlockNonConst(1)->writeMM("residualVec");
 
@@ -532,7 +532,9 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
         //this->residualVec_->scale(-1.);
         this->bcFactory_->setVectorMinusBC( this->residualVec_, this->solution_, time );
     }
-  
+
+    this->residualVec_->getBlock(0)->writeMM("calculateRes_res_d_final");
+
 
 }
 
@@ -947,8 +949,13 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
         else
             tmpPtr = this->problemTimeStructure_->getSourceTerm();
         
+
+
         this->problemTimeStructure_->getRhs()->update(coeffSourceTermStructure, *tmpPtr, 1.);
         this->rhs_->addBlock( this->problemTimeStructure_->getRhs()->getBlockNonConst(0), 0 );
+
+        this->rhs_->getBlock(0)->writeMM("computeSolidRhs_rhs_d");
+
     }
 
 }
@@ -1013,6 +1020,7 @@ void SCI<SC,LO,GO,NO>::updateTime() const
     else
         c = this->solution_->getBlock(1);
 
+    this->solution_->getBlock(0)->writeMM("updateTime_sol_d");
     MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
     d_rep_->importFromVector(d, true); 
     this->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_->dt_, d_rep_, c_rep_ );    
@@ -1055,8 +1063,8 @@ void SCI<SC,LO,GO,NO>::moveMesh() const
     // ACHTUNG: Klappt nur, weil die P2-Knoten hinter den P1-Knoten kommen.
     // Sonst muessen fuer den Druck die P1-Knoten extrahiert werden.
     // TODO: Wahrscheinlich reicht nur FSI-Domain, da selbes Objekt bei problemChem_ und problemTimeChem_.
-    ( Teuchos::rcp_const_cast<Domain_Type>(this->getDomain(1)) )->moveMesh(displacementUnique, displacementRepeated);
-    ( Teuchos::rcp_const_cast<Domain_Type>(this->problemChem_->getDomain(0)) )->moveMesh(displacementUnique, displacementRepeated);
+   // ( Teuchos::rcp_const_cast<Domain_Type>(this->getDomain(1)) )->moveMesh(displacementUnique, displacementRepeated);
+   // ( Teuchos::rcp_const_cast<Domain_Type>(this->problemChem_->getDomain(0)) )->moveMesh(displacementUnique, displacementRepeated);
     ( Teuchos::rcp_const_cast<Domain_Type>(this->problemTimeChem_->getDomain(0)) )->moveMesh(displacementUnique, displacementRepeated);
 
    // ( Teuchos::rcp_const_cast<Domain_Type>(this->getDomain(0)) )->moveMesh(displacementUnique, displacementRepeated);
