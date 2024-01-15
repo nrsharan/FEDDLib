@@ -456,7 +456,6 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     
     this->residualVec_->addBlock(resTmp->getBlock(0),0);
 
-    this->residualVec_->getBlock(0)->writeMM("calculateRes_res_d");
 
     if(!chemistryExplicit_){
         this->residualVec_->addBlock(resTmp->getBlock(1),1);
@@ -508,7 +507,6 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     }
 
     // this->residualVec_->getBlockNonConst(1)->print();
-    //this->residualVec_->getBlockNonConst(1)->writeMM("residualVec");
 
 
     /*this->problemChem_->assemble();
@@ -533,7 +531,6 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
         this->bcFactory_->setVectorMinusBC( this->residualVec_, this->solution_, time );
     }
 
-    this->residualVec_->getBlock(0)->writeMM("calculateRes_res_d_final");
 
 
 }
@@ -954,7 +951,6 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
         this->problemTimeStructure_->getRhs()->update(coeffSourceTermStructure, *tmpPtr, 1.);
         this->rhs_->addBlock( this->problemTimeStructure_->getRhs()->getBlockNonConst(0), 0 );
 
-        this->rhs_->getBlock(0)->writeMM("computeSolidRhs_rhs_d");
 
     }
 
