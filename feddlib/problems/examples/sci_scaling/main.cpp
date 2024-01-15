@@ -569,11 +569,13 @@ int main(int argc, char *argv[])
     Teuchos::CommandLineProcessor myCLP;
     string ulib_str = "Tpetra";
     myCLP.setOption("ulib",&ulib_str,"Underlying lib");
+   
     string xmlProblemFile = "parametersProblemSCI.xml";
     myCLP.setOption("problemfile",&xmlProblemFile,".xml file with Inputparameters.");    
     
     string xmlProblemStructureFile = "parametersProblemStructure.xml";  
-     
+    myCLP.setOption("problemfileStructure",&xmlProblemStructureFile,".xml file with Inputparameters.");    
+ 
     string xmlSolverFileSCI = "parametersSolverSCI.xml"; 
     myCLP.setOption("solverfileSCI",&xmlSolverFileSCI,".xml file with Inputparameters.");
     
@@ -638,6 +640,7 @@ int main(int argc, char *argv[])
         ParameterListPtr_Type parameterListChemAll(new Teuchos::ParameterList(*parameterListPrecChem)) ;
         sublist(parameterListChemAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Chem") );
         sublist(parameterListChemAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter") );
+        parameterListChemAll->setParameters(*parameterListSolverSCI);
         parameterListChemAll->setParameters(*parameterListPrecChem);
 
         
@@ -850,12 +853,22 @@ int main(int argc, char *argv[])
         
         Teuchos::RCP<SmallMatrix<int>> defTS;
 
-        defTS.reset( new SmallMatrix<int> (2) );
+        bool chemistryExplicit_ =    parameterListAll->sublist("Parameter").get("Chemistry Explicit",false);
 
-        // Stucture
-        (*defTS)[0][0] = 1;
-        // Chem
-        (*defTS)[1][1] = 1;
+        if(chemistryExplicit_){
+            defTS.reset( new SmallMatrix<int> (1) );
+            // Stucture
+            (*defTS)[0][0] = 1;
+        }
+        else {
+            defTS.reset( new SmallMatrix<int> (2) );
+            // Stucture
+            (*defTS)[0][0] = 1;
+            // Chem
+            (*defTS)[1][1] = 1;
+        }
+
+       
 			
 
         SCI<SC,LO,GO,NO> sci(domainStructure, discType,
@@ -1241,6 +1254,8 @@ int main(int argc, char *argv[])
         sci.addBoundaries(bcFactory); // Dem Problem RW hinzufuegen
 
         sci.initializeProblem();
+
+        sci.initializeCE();
         // Matrizen assemblieren
         sci.assemble();
                     

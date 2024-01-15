@@ -853,7 +853,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     }
     
     // Notwendige Parameter
-    int sizeSCI = 2; //timeStepDef_.size();
+    int sizeSCI = timeStepDef_.size();
 
     // ACHTUNG
     int sizeChem = 1; //  c
@@ -946,6 +946,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     problemCoeffStructure[0][0] =  1.0;
     coeffSourceTermStructure = 1.0; // ACHTUNG FUER SOURCE TERM, DER NICHT IN DER ZEIT DISKRETISIERT WIRD!
 
+    bool chemistryExplicit_ =    parameterList_->sublist("Parameter").get("Chemistry Explicit",false);
 
     // ######################
     // SCI: Mass-, Problem-Koeffizienten
@@ -961,12 +962,14 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         }
     }
 
-    for (int i = 0; i < sizeChem; i++)
-    {
-        for (int j = 0; j < sizeChem; j++)
+    if(!chemistryExplicit_){
+        for (int i = 0; i < sizeChem; i++)
         {
-            massCoeffSCI[i + sizeStructure][j + sizeStructure] = massCoeffChem[i][j];
-            problemCoeffSCI[i + sizeStructure][j + sizeStructure] = problemCoeffChem[i][j];
+            for (int j = 0; j < sizeChem; j++)
+            {
+                massCoeffSCI[i + sizeStructure][j + sizeStructure] = massCoeffChem[i][j];
+                problemCoeffSCI[i + sizeStructure][j + sizeStructure] = problemCoeffChem[i][j];
+            }
         }
     }
    
@@ -1012,8 +1015,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         }
 
         
-       
-
 
         timeSteppingTool_->printInfo();
 
@@ -1021,17 +1022,18 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         problemCoeffChem[0][0] = timeSteppingTool_->getInformationBDF(1); // 1
         coeffSourceTermChem = timeSteppingTool_->getInformationBDF(1); // 1
 
-        if(timeSteppingTool_->currentTime() > 0. + 1.e-12) 
-        {
-            for (int i = 0; i < sizeChem; i++)
+        if(!chemistryExplicit_){
+            if(timeSteppingTool_->currentTime() > 0. + 1.e-12) 
             {
-                for (int j = 0; j < sizeChem; j++){
-                    massCoeffSCI[i+sizeStructure][j+sizeStructure] = massCoeffChem[i][j];
+                for (int i = 0; i < sizeChem; i++)
+                {
+                    for (int j = 0; j < sizeChem; j++){
+                        massCoeffSCI[i+sizeStructure][j+sizeStructure] = massCoeffChem[i][j];
+                    }
                 }
+                this->problemTime_->setTimeParameters(massCoeffSCI, problemCoeffSCI);
             }
-            this->problemTime_->setTimeParameters(massCoeffSCI, problemCoeffSCI);
         }
-
         problemTime_->updateTime ( timeSteppingTool_->currentTime() );
 
         //string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
@@ -1061,7 +1063,17 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         // -- we can keep this as expicit update for the reaction-diffusion displacement
         this->problemTime_->assemble("UpdateMeshDisplacement");   
        
-        
+        if(chemistryExplicit_)
+        {
+            this->problemTime_->assemble("UpdateChemInTime");
+
+            this->problemTime_->assemble("MoveMesh");
+
+            this->problemTime_->assemble("SolveChemistryProblem");
+            
+
+        }
+
         // ######################
         // Struktur Zeitsystem
         // ######################
@@ -1113,16 +1125,20 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         // ######################
         // Use BDF1 Parameters for first system
         if (timeSteppingTool_->currentTime() == 0.) {
-            for (int i = 0; i < sizeChem; i++)
-            {
-                for (int j = 0; j < sizeChem; j++){
-                    if (massCoeffSCI[i+sizeStructure][j+sizeStructure] != 0.){
-                        massCoeffSCI[i+sizeStructure][j+sizeStructure] = 1./dt ;
+            if(!chemistryExplicit_){
+                for (int i = 0; i < sizeChem; i++)
+                {
+                    for (int j = 0; j < sizeChem; j++){
+                        if (massCoeffSCI[i+sizeStructure][j+sizeStructure] != 0.){
+                            massCoeffSCI[i+sizeStructure][j+sizeStructure] = 1./dt ;
+                        }
                     }
                 }
-            }
+            
             this->problemTime_->setTimeParameters(massCoeffSCI, problemCoeffSCI);
+            }
         }
+
         
         double time = timeSteppingTool_->currentTime() +  timeSteppingTool_->dt_;
         problemTime_->updateTime ( time );
@@ -1139,6 +1155,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             }
 
         if (timeSteppingTool_->currentTime() <= dt+1.e-10) 
+        if(!chemistryExplicit_)
         {
             for (int i = 0; i < sizeChem; i++)
             {
@@ -1591,6 +1608,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 
     // Notwendige Parameter
     bool geometryExplicit = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
+    bool chemistryExplicit_ =    parameterList_->sublist("Parameter").get("Chemistry Explicit",false);
+
     std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
 
     int sizeFSI = timeStepDef_.size();
@@ -1874,6 +1893,18 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             TimeMonitor_Type reassmbleTM(*reassmbleMoveMeshTimer_);
 #endif
             this->problemTime_->assemble("MoveMesh");
+        }
+
+        if(chemistryExplicit_)
+        {
+            if(!geometryExplicit){
+                this->problemTime_->assemble("MoveMesh");
+            }
+            
+
+            this->problemTime_->assemble("SolveChemistryProblem");
+        
+
         }
 
 

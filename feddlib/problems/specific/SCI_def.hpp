@@ -29,7 +29,6 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
     //this->nonLinearTolerance_ = this->parameterList_->sublist("Parameter").get("relNonLinTol",1.0e-6);
 
     this->initNOXParameters();
-    counterP = 0;
     
     //std::string linearization = parameterListSCI->sublist("General").get("Linearization","FixedPoint");
     
@@ -61,12 +60,16 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
     exportedEMod_ = false;
     setUpTimeStep_=false;
     eModVec_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getElementMap() ) );
-
-    couplingType_ =    parameterListSCI->sublist("Parameter").get("Coupling Type","explicit");
+    chemistryExplicit_ =    parameterListSCI->sublist("Parameter").get("Chemistry Explicit",false);
     loadStepping_ =    parameterListSCI->sublist("Parameter").get("Load Stepping",false);
     externalForce_ =   parameterListSCI->sublist("Parameter").get("External Force",false);
     nonlinearExternalForce_ = parameterListSCI->sublist("Parameter").get("Nonlinear External Force",false);
     this->info();
+
+    if ( chemistryExplicit_){
+        exporterIterationsChem_ = Teuchos::rcp(new ExporterTxt());
+        exporterIterationsChem_->setup( "linearIterations_chem", this->comm_ );
+    }
 }
 
 
@@ -76,7 +79,13 @@ SCI<SC,LO,GO,NO>::~SCI()
     if (!exporterEMod_.is_null()) {
        exporterEMod_->closeExporter();
     }
-}
+    if (!exporterChem_.is_null()) {
+       exporterChem_->closeExporter();
+    }
+    if ( chemistryExplicit_){
+        exporterIterationsChem_->closeExporter();
+    }
+}   
 
 template<class SC,class LO,class GO,class NO>
 void SCI<SC,LO,GO,NO>::info()
@@ -105,166 +114,91 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
     if (type == "") {
         if (this->verbose_)
         {
-            std::cout << "-- Assembly SCI " << couplingType_  << " ... " << std::endl;
+            std::cout << "SCI_def: assemble() with " << materialModel_  << " ... " << std::endl;
         }
-        if(couplingType_ == "explicit"){
+    
+        // Maybe nothing should happen here as there are no constant matrices
+        this->system_.reset(new BlockMatrix_Type(2));
+        if ( chemistryExplicit_){
+            this->system_.reset(new BlockMatrix_Type(1));
+            this->systemC_.reset(new BlockMatrix_Type(1));
+        }
 
-            // First Assumption: Almost incompressible Material
-            this->problemChem_->assemble();
-            //this->problemChem_->system_->getBlock(0,0)->print();
-            // Elementwise determined E Module
-            MultiVectorPtr_Type solChemRep = Teuchos::rcp( new MultiVector_Type( this->getDomain(1)->getMapRepeated() ) );
-            solChemRep->importFromVector(this->problemChem_->getSolution()->getBlock(0));
 
-            int dim = this->getDomain(0)->getDimension();
-
-            this->feFactory_->determineEMod(this->getDomain(0)->getFEType(),solChemRep,eModVec_,this->getDomain(0),this->parameterList_);
-                    
-            ParameterListPtr_Type plStructure;
-            if (materialModel_=="SCI_Linear")
-                plStructure = this->problemStructure_->getParameterList();
-            else
-                plStructure = this->problemStructureNonLin_->getParameterList();        
-            double nu = plStructure->sublist("Parameter Solid").get("PoissonRatio",0.49);
-
-            MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) ); // Structure-Matrix
-
-            // steady rhs wird hier assembliert.
-            // rhsFunc auf 0 (=x) und 0 (=y) abaendern bei LinElas!
-            if (materialModel_=="SCI_Linear"){
-                this->feFactory_->assemblyLinElasXDimE(this->dim_, this->getDomain(0)->getFEType(), A, eModVec_, nu, true);
-                this->problemStructure_->system_->addBlock(A,0,0);// assemble(); //
-
-                //double density = this->problemStructure_->getParameterList()->sublist("Parameter Solid").get("Density",1.e-0);
-
-               //this->problemStructure_->assemble();
-            }
-            else{  
-                MultiVectorConstPtr_Type c = this->solution_->getBlock(1);
-                c_rep_->importFromVector(c, true);
-       
-                this->problemStructureNonLin_->updateConcentration(c_rep_);        
-                this->problemStructureNonLin_->assemble(); //system_->addBlock(A,0,0);// assemble(); //      
-            }
-
-       
-            // ###########################
-            // Korrekte Skalierung der entsprechenden Bloecke
-            // ###########################
-            double dt = this->parameterList_->sublist("Timestepping Parameter").get("dt",0.02);
-            
-            // ###########################
-            // Bloecke hinzufuegen
-            // ###########################
-            
-            this->system_.reset(new BlockMatrix_Type(2));
-
-            
-            // Struktur
-            if (materialModel_=="SCI_Linear"){
-                this->system_->addBlock( this->problemStructure_->system_->getBlock(0,0), 0,0);
-            }
-            else{       
-                this->system_->addBlock( this->problemStructureNonLin_->system_->getBlock(0,0), 0, 0);
-            }    
-
-            // Chemistry
-            this->system_->addBlock( this->problemChem_->system_->getBlock(0,0), 1, 1 );
+        MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
         
-            // Dummy blocks
-            MatrixPtr_Type B(new Matrix_Type( this->getDomain(1)->getMapVecFieldUnique(), 0) );
-            B->fillComplete(this->getDomain(1)->getMapUnique(),this->getDomain(0)->getMapVecFieldUnique());
+        if (this->residualVec_.is_null())
+            this->residualVec_.reset(new BlockMultiVector_Type(2));
+        
+        MatrixPtr_Type B(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
+        MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ) );
+        MatrixPtr_Type C(new Matrix_Type( this->getDomain(1)->getMapUnique(),this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ));
 
-            MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapUnique(), 0 ) );
-            BT->fillComplete(this->getDomain(0)->getMapVecFieldUnique(),this->getDomain(1)->getMapUnique());
+        // For implicit the system is ordered differently with solid block in 0,0 and diffusion in 1,1
+        
+        // As the implementation is based on a 2x2 System we use a tmp system for the actual assembly routine.
+        BlockMatrixPtr_Type systemTmp(new BlockMatrix_Type(2)); 
+        systemTmp->addBlock(A,0,0);
+        systemTmp->addBlock(BT,0,1);
+        systemTmp->addBlock(B,1,0);
+        systemTmp->addBlock(C,1,1);
 
-            this->system_->addBlock( B, 0, 1 );
-            this->system_->addBlock( BT, 1, 0 );
+        timeSteppingTool_ = Teuchos::rcp(new TimeSteppingTools(sublist(this->parameterList_,"Timestepping Parameter") , this->comm_));
 
+        this->setupSubTimeProblems(this->problemChem_->getParameterList(), this->problemStructureNonLin_->getParameterList());
 
-            // Fuer die Zeitprobleme
-            timeSteppingTool_ = Teuchos::rcp(new TimeSteppingTools(sublist(this->parameterList_,"Timestepping Parameter") , this->comm_));
-           
+        this->problemTimeStructure_->assembleSourceTerm( 0. );
+        this->problemTimeStructure_->addToRhs( this->problemTimeStructure_->getSourceTerm() );       
+        this->problemTimeStructure_->setBoundariesRHS();
+        //cout << "###### Back in assemble ######## " << endl;
 
-            this->setupSubTimeProblems(this->problemChem_->getParameterList(), plStructure);
-            // We set the vector from the partial problems
-            this->setFromPartialVectorsInit();
-            
-            
-            this->problemTimeStructure_->assembleSourceTerm( 0. );
-            this->problemTimeStructure_->addToRhs( this->problemTimeStructure_->getSourceTerm() );       
-            this->problemTimeStructure_->setBoundariesRHS();
+        this->setFromPartialVectorsInit();
 
-            /*if ( this->parameterList_->sublist("Exporter").get("Export EMod", true)){
-                if(exportedEMod_ == false){
-                    exporterEMod_ = Teuchos::rcp(new Exporter_Type());
-                    
-                    DomainConstPtr_Type dom = this->getDomain(0);
-                    MultiVectorConstPtr_Type exportVector = eModVec_;
+        MultiVectorConstPtr_Type c; 
+        if(chemistryExplicit_)
+            c= this->problemTimeChem_->getSolution()->getBlock(0);
+        else
+            c = this->solution_->getBlock(1);
 
-                    MeshPtr_Type meshNonConst = Teuchos::rcp_const_cast<Mesh_Type>( dom->getMesh() );
-                    exporterEMod_->setup("EModuleValues", meshNonConst, "P0",  this->parameterList_);
-                    
-                    
-                    exporterEMod_->addVariable( exportVector, "EModule", "Scalar", 1, dom->getElementMap() );
-                    exporterEMod_->save( 0.0);
-                    exportedEMod_ = true;
-                }
-                else {
-                    exporterEMod_->save( timeSteppingTool_->t_);
-                }
-            }*/
+        MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
+        d_rep_->importFromVector(d, true); 
+    
+        BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
+        blockSol->addBlock(d_rep_,0);
+        blockSol->addBlock(c_rep_,1);
+        this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,systemTmp,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
+        //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Jacobian",true);
+
+        if(chemistryExplicit_){
+            this->system_->addBlock(A,0,0);
+            this->systemC_->addBlock(C,0,0);
         }
-        else if(couplingType_ == "implicit" )
-        {
-
-            // Maybe nothing should happen here as there are no constant matrices
-            this->system_.reset(new BlockMatrix_Type(2));
-
-            MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
-            
-            if (this->residualVec_.is_null())
-                this->residualVec_.reset(new BlockMultiVector_Type(2));
-            
-            MatrixPtr_Type B(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
-            MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ) );
-            MatrixPtr_Type C(new Matrix_Type( this->getDomain(1)->getMapUnique(),this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ));
-
-            // For implicit the system is ordered differently with solid block in 0,0 and diffusion in 1,1
+        else{
             this->system_->addBlock(A,0,0);
             this->system_->addBlock(BT,0,1);
             this->system_->addBlock(B,1,0);
             this->system_->addBlock(C,1,1);
-
-            timeSteppingTool_ = Teuchos::rcp(new TimeSteppingTools(sublist(this->parameterList_,"Timestepping Parameter") , this->comm_));
-
-            this->setupSubTimeProblems(this->problemChem_->getParameterList(), this->problemStructureNonLin_->getParameterList());
-
-            this->problemTimeStructure_->assembleSourceTerm( 0. );
-            this->problemTimeStructure_->addToRhs( this->problemTimeStructure_->getSourceTerm() );       
-            this->problemTimeStructure_->setBoundariesRHS();
-            //cout << "###### Back in assemble ######## " << endl;
-
-            this->setFromPartialVectorsInit();
-
-            MultiVectorConstPtr_Type c = this->solution_->getBlock(1);
-            c_rep_->importFromVector(c, true);
-
-            MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
-            d_rep_->importFromVector(d, true); 
-        
- 	        BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
-            blockSol->addBlock(d_rep_,0);
-            blockSol->addBlock(c_rep_,1);
-            this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
-            //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Jacobian",true);
-
-            
         }
-        else 
-            TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "Coupling Type unknown. Please choose either implicit or explicit coupling.");
-       
-      
+  
+        if ( chemistryExplicit_ && this->parameterList_->sublist("General").get("ParaViewExport",false)){
+            exporterChem_ = Teuchos::rcp(new Exporter_Type());
+            
+            DomainConstPtr_Type dom = this->getDomain(1);
+
+            int exportEveryXTimesteps = this->parameterList_->sublist("Exporter").get( "Export every X timesteps", 1 );
+            std::string varName = "c";
+            
+            MeshPtr_Type meshNonConst = Teuchos::rcp_const_cast<Mesh_Type>( dom->getMesh() );
+            exporterChem_->setup(varName, meshNonConst, dom->getFEType(), exportEveryXTimesteps, this->parameterList_);
+            
+            MultiVectorConstPtr_Type exportVector = this->problemTimeChem_->getSolution()->getBlock(0);
+            
+            exporterChem_->addVariable( exportVector, varName, "Scalar", 1, dom->getMapUnique() );
+        }
+        
+
+    
+
         if (this->verbose_)
         {
             std::cout << "done -- " << std::endl;
@@ -272,6 +206,44 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
     }
     else
         reAssemble(type);
+
+}
+template<class SC,class LO,class GO,class NO>
+void SCI<SC,LO,GO,NO>::solveChemistryProblem() const
+{
+    // Move Mesh operation was already called for chemistry domain
+    SmallMatrix<double> massCoeffChem(1);
+    SmallMatrix<double> problemCoeffChem(1);
+    SmallMatrix<int> defChem(1);
+    double dt = timeSteppingTool_->get_dt();
+
+    defChem[0][0] = 1;
+    massCoeffChem[0][0] = timeSteppingTool_->getInformationBDF(0) / dt;
+    problemCoeffChem[0][0] = timeSteppingTool_->getInformationBDF(1);
+    double  coeffSourceTermChem = timeSteppingTool_->getInformationBDF(1);
+
+    this->problemTimeChem_->setTimeDef(defChem);
+    this->problemTimeChem_->setTimeParameters(massCoeffChem,problemCoeffChem);
+    // 1. Assemble Mass System
+    MatrixPtr_Type massmatrix;
+    this->setChemMassmatrix(massmatrix);
+    // 1. Assemble Chemisty Problem
+    this->problemTimeChem_->assemble();
+    // 2. Rhs
+    this->computeChemRHSInTime();
+
+    this->problemTimeChem_->combineSystems();
+
+    this->problemTimeChem_->setBoundaries(timeSteppingTool_->currentTime()); 
+
+    double iter= 0.;
+
+    iter = this->problemTimeChem_->solve();
+
+    exporterIterationsChem_->exportData(  timeSteppingTool_->currentTime() , iter);
+
+    if (!exporterChem_.is_null())
+            this->exporterChem_->save( this->timeSteppingTool_->currentTime() );
 
 }
 template<class SC,class LO,class GO,class NO>
@@ -316,6 +288,14 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             std::cout << "-- Reassembly (UpdateTime)" << '\n';
 
         updateTime();
+        return;
+    }
+     else if(type == "SolveChemistryProblem")
+    {
+        if(this->verbose_)
+            std::cout << "-- SolveChemistryProblem" << '\n';
+
+        solveChemistryProblem();
         return;
     }
     else if(type == "SetBoundaries")
@@ -370,58 +350,71 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
     else if(type == "Newton")
     {
 
-         if(this->verbose_)
+        if(this->verbose_)
             std::cout << "-- reassemble Newton " << '\n';
 
-        if(couplingType_ == "explicit"){
-            if (materialModel_ != "SCI_Linear"){
-                this->problemStructureNonLin_->reAssemble("Newton");
-             
+        
 
-                this->system_->addBlock( this->problemStructureNonLin_->getSystem()->getBlock(0,0), 0, 0 );
-            }
-            if(nonlinearExternalForce_)
-                computeSolidRHSInTime();   
+        if(this->verbose_)
+     // Maybe nothing should happen here as there are no constant matrices
+        this->system_.reset(new BlockMatrix_Type(2));
+        if ( chemistryExplicit_)
+            this->system_.reset(new BlockMatrix_Type(1));
+
+
+        MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
+        
+        if (this->residualVec_.is_null())
+            this->residualVec_.reset(new BlockMultiVector_Type(2));
+        
+        MatrixPtr_Type B(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
+        MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ) );
+        MatrixPtr_Type C(new Matrix_Type( this->getDomain(1)->getMapUnique(),this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ));
+
+        // For implicit the system is ordered differently with solid block in 0,0 and diffusion in 1,1
+        
+        // As the implementation is based on a 2x2 System we use a tmp system for the actual assembly routine.
+        BlockMatrixPtr_Type systemTmp(new BlockMatrix_Type(2)); 
+        systemTmp->addBlock(A,0,0);
+        systemTmp->addBlock(BT,0,1);
+        systemTmp->addBlock(B,1,0);
+        systemTmp->addBlock(C,1,1);
+
+        //cout << "###### Back in assemble ######## " << endl;
+
+        this->setFromPartialVectorsInit();
+
+        MultiVectorConstPtr_Type c; 
+        if(chemistryExplicit_)
+            c= this->problemTimeChem_->getSolution()->getBlock(0);
+        else
+            c = this->solution_->getBlock(1);
+
+        c_rep_->importFromVector(c, true);
+
+        MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
+        d_rep_->importFromVector(d, true); 
+    
+        BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
+        blockSol->addBlock(d_rep_,0);
+        blockSol->addBlock(c_rep_,1);
+        this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,systemTmp,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
+        //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Jacobian",true);
+
+        if(chemistryExplicit_){
+            this->system_->addBlock(systemTmp->getBlock(0,0),0,0);
+            this->systemC_->addBlock(systemTmp->getBlock(1,1),0,0);
         }
-        else if( couplingType_ == "implicit" || couplingType_ == "explicitAceGEN"){
+        else{
+            this->system_->addBlock(systemTmp->getBlock(0,0),0,0);
+            this->system_->addBlock(systemTmp->getBlock(0,1),0,1);
+            this->system_->addBlock(systemTmp->getBlock(1,0),1,0);
+            this->system_->addBlock(systemTmp->getBlock(1,1),1,1);
+        }
 
-            if(this->verbose_)
-                cout << " Assemble Newton for implicit SCI Coupling " << endl;
-            // Maybe nothing should happen here as there are no constant matrices
-            this->system_.reset(new BlockMatrix_Type(2));
+        if(nonlinearExternalForce_)
+            computeSolidRHSInTime();
 
-            MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );          
-            MatrixPtr_Type B(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
-            MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ) );
-            MatrixPtr_Type C(new Matrix_Type( this->getDomain(1)->getMapUnique(),this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ));
-
-            this->system_->addBlock(A,0,0);
-          
-            this->system_->addBlock(BT,0,1);
-            this->system_->addBlock(B,1,0);
-            this->system_->addBlock(C,1,1);
-
-            MultiVectorConstPtr_Type c = this->solution_->getBlock(1);
-            c_rep_->importFromVector(c, true);
- 
-            MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
-            d_rep_->importFromVector(d, true); 
-
-	        //this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2,1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
-            BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
-            blockSol->addBlock(d_rep_,0);
-            blockSol->addBlock(c_rep_,1);
-            this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
-            //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Jacobian",true);
-            A->resumeFill();
-            A->scale(1.0);
-            A->fillComplete( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getMapVecFieldUnique());
-            
-            C->writeMM("C");
-            if(nonlinearExternalForce_)
-                computeSolidRHSInTime();
-
-        }                    
         if(this->verbose_)
             std::cout << " done -- " << '\n';                       
         
@@ -446,125 +439,92 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
 template<class SC,class LO,class GO,class NO>
 void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time) const
 {
-      
-    //this->problemChem_->calculateNonLinResidualVec( "reverse", time );
-    //this->residualVec_->addBlock( this->problemChem_->getResidualVector()->getBlockNonConst(0) , 0);
-    // we need to account for the coupling in the residuals
-    if(this->verbose_)
-        cout << " Calculate Nonlinear Residual Vec in SCI_def with " << couplingType_  << " coupling "<< endl;
+    
+    MultiVectorConstPtr_Type c; 
+    if(chemistryExplicit_)
+        c= this->problemTimeChem_->getSolution()->getBlock(0);
+    else
+        c = this->solution_->getBlock(1);
 
-    if(couplingType_ == "explicit"){
+    MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
+    d_rep_->importFromVector(d, true); 
 
-        if (materialModel_!="SCI_Linear"){
-            this->problemStructureNonLin_->calculateNonLinResidualVec( "external", time );
-            this->residualVec_->addBlock( this->problemStructureNonLin_->getResidualVector()->getBlockNonConst(0) , 0);
-            // we need to add a possible source term
+    BlockMultiVectorPtr_Type resTmp(new BlockMultiVector_Type(2));
+    MultiVectorPtr_Type res_d = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
+    MultiVectorPtr_Type res_c = Teuchos::rcp( new MultiVector_Type( this->getDomain(1)->getMapRepeated() ) );
+    resTmp->addBlock(res_d,0);
+    resTmp->addBlock(res_c,1);
 
-            if(nonlinearExternalForce_)
-                computeSolidRHSInTime();
+    this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,resTmp, this->parameterList_, "Rhs", true/*call fillComplete*/);
+    
+    this->residualVec_->addBlock(resTmp->getBlock(0),0);
 
-            if (!type.compare("standard")){
-               // this->problemChem_->getRhs()->getBlockNonConst(0)->scale(-1.0);
-                if(this->verbose_)
-                    cout << " Residual Type : " << type  << endl;
-                this->residualVec_->getBlockNonConst(0)->update(-1.,*this->rhs_->getBlockNonConst(0),1.);
-                //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
-                //   this->residualVec_->getBlockNonConst(0)->update(-1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);    
-            }
-            else if(!type.compare("reverse")){
-                //this->residualVec_->getBlockNonConst(1)->scale(-1.0); 
-
-                if(this->verbose_)
-                    cout << " Residual Type : " << type  << endl;
-
-                this->residualVec_->getBlockNonConst(0)->update(1.,*this->rhs_->getBlockNonConst(0),-1.);
-                //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
-                //     this->residualVec_->getBlockNonConst(0)->update(1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);
-            }
-
-        }
-        else{
-            MultiVectorPtr_Type residualSolidSCI =  Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(0) );
-            this->problemStructure_->getSystem()->getBlock(0,0)->apply( *this->problemStructure_->getSolution()->getBlock(0), *residualSolidSCI, Teuchos::NO_TRANS, -1. ); // y= -Ax + 0*y
-            MultiVectorPtr_Type resSolidNonConst = Teuchos::rcp_const_cast<MultiVector_Type> ( this->residualVec_->getBlock(0) );
-            resSolidNonConst->update(1., *this->problemStructure_->getRhs()->getBlock(0), 1.);
-            // we need to add a possible source term          
-        }
-        
-        MultiVectorPtr_Type residualChemSCI =  Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(1) );
-        this->problemChem_->getSystem()->getBlock(0,0)->apply( *this->problemChem_->getSolution()->getBlock(0), *residualChemSCI, Teuchos::NO_TRANS, -1. ); // y= -Ax + 0*y
-       // MultiVectorPtr_Type resChemNonConst = Teuchos::rcp_const_cast<MultiVector_Type> ( this->residualVec_->getBlock(1) );
-        residualChemSCI->update(1., *this->problemChem_->getRhs()->getBlock(0), 1.);
-        if (!type.compare("standard")){
-            residualChemSCI->scale(-1.);
-        }
+    if(!chemistryExplicit_){
+        this->residualVec_->addBlock(resTmp->getBlock(1),1);
     }
-    else if(couplingType_ == "implicit"){
-        MultiVectorConstPtr_Type c = this->solution_->getBlock(1);
-        c_rep_->importFromVector(c, true);
 
-        MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
-        d_rep_->importFromVector(d, true); 
-       
-        this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Rhs", true/*call fillComplete*/);
-        //BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
-        //blockSol->addBlock(d_rep_,0);
-        //blockSol->addBlock(c_rep_,1);
-        //this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
-        //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Rhs",true);
-
-        if(nonlinearExternalForce_)
-            computeSolidRHSInTime();
-
-        if (!type.compare("standard")){
-            //this->rhs_->getBlockNonConst(0)->scale(-1.0);
-            if(this->verbose_)
-                cout << " Residual Type : " << type  << endl;
-            this->residualVec_->getBlockNonConst(0)->update(-1.,*this->rhs_->getBlockNonConst(0),1.);
-            //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
-            //   this->residualVec_->getBlockNonConst(0)->update(-1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);    
-       
-        }
-        else if(!type.compare("reverse")){
-            this->residualVec_->getBlockNonConst(1)->scale(-1.0); 
-
-            if(this->verbose_)
-                cout << " Residual Type : " << type  << endl;
-
-            this->residualVec_->getBlockNonConst(0)->update(1.,*this->rhs_->getBlockNonConst(0),-1.);
-            //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
-            //     this->residualVec_->getBlockNonConst(0)->update(1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);
-           
-        }
-       // this->residualVec_->getBlockNonConst(1)->print();
-        //this->residualVec_->getBlockNonConst(1)->writeMM("residualVec");
-
-
-        /*this->problemChem_->assemble();
-
-        MultiVectorPtr_Type residualChemSCI =  Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(1) );
-        this->problemChem_->getSystem()->getBlock(0,0)->apply( *this->problemChem_->getSolution()->getBlock(0), *residualChemSCI, Teuchos::NO_TRANS, -1. ); // y= -Ax + 0*y
-        MultiVectorPtr_Type resChemNonConst = Teuchos::rcp_const_cast<MultiVector_Type> ( this->residualVec_->getBlock(1) );
-        resChemNonConst->update(1., *this->problemChem_->getRhs()->getBlock(0), 1.);        
-        */
-
-       MultiVectorPtr_Type resChemNonConst = Teuchos::rcp_const_cast<MultiVector_Type> ( this->residualVec_->getBlock(1) );
-       resChemNonConst->update(1., *this->problemChem_->getRhs()->getBlock(0), 1.);
-      
-
-    }
+    //this->residualVec_->getBlock(0)->print();
 
 
     //this->residualVec_->print();
     //this->residualVec_->getBlockNonConst(1)->scale(0.0);
     Teuchos::Array<SC> norm_d(1); 
-    Teuchos::Array<SC> norm_c(1); 
-
     this->residualVec_->getBlock(0)->norm2(norm_d);
-    this->residualVec_->getBlock(1)->norm2(norm_c);
+    
     if(this->verbose_)
-        cout << "###### Residual 2-Norm displacement: " << norm_d[0] << " and concentration: " << norm_c[0] << " ######## " << endl;
+        cout << "2-Norm of residual of displacement: " << norm_d[0] << endl;
 
+    if(!chemistryExplicit_){
+        Teuchos::Array<SC> norm_c(1); 
+        this->residualVec_->getBlock(1)->norm2(norm_c);
+        
+        if(this->verbose_)
+            cout << "2-Norm of residual of concentration: " << norm_c[0] << endl;
+
+    }
+
+    if(nonlinearExternalForce_)
+        computeSolidRHSInTime();
+
+    if (!type.compare("standard")){
+        //this->rhs_->getBlockNonConst(0)->scale(-1.0);
+        if(this->verbose_)
+            cout << " Residual Type : " << type  << endl;
+        this->residualVec_->getBlockNonConst(0)->update(-1.,*this->rhs_->getBlockNonConst(0),1.);
+        //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
+        //   this->residualVec_->getBlockNonConst(0)->update(-1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);    
+    
+    }
+    else if(!type.compare("reverse")){
+        if(!chemistryExplicit_)
+            this->residualVec_->getBlockNonConst(1)->scale(-1.0); 
+
+        if(this->verbose_)
+            cout << " Residual Type : " << type  << endl;
+
+        this->residualVec_->getBlockNonConst(0)->update(1.,*this->rhs_->getBlockNonConst(0),-1.);
+        //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
+        //     this->residualVec_->getBlockNonConst(0)->update(1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);
+        
+    }
+    // this->residualVec_->getBlockNonConst(1)->print();
+    //this->residualVec_->getBlockNonConst(1)->writeMM("residualVec");
+
+
+    /*this->problemChem_->assemble();
+
+    MultiVectorPtr_Type residualChemSCI =  Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(1) );
+    this->problemChem_->getSystem()->getBlock(0,0)->apply( *this->problemChem_->getSolution()->getBlock(0), *residualChemSCI, Teuchos::NO_TRANS, -1. ); // y= -Ax + 0*y
+    MultiVectorPtr_Type resChemNonConst = Teuchos::rcp_const_cast<MultiVector_Type> ( this->residualVec_->getBlock(1) );
+    resChemNonConst->update(1., *this->problemChem_->getRhs()->getBlock(0), 1.);        
+    */
+    if(!chemistryExplicit_){
+        MultiVectorPtr_Type resChemNonConst = Teuchos::rcp_const_cast<MultiVector_Type> ( this->residualVec_->getBlock(1) );
+        resChemNonConst->update(1., *this->problemChem_->getRhs()->getBlock(0), 1.);
+    }
+        
+
+   
    // might also be called in the sub calculateNonLinResidualVec() methods which were used above
    if (type == "standard")
         this->bcFactory_->setBCMinusVector( this->residualVec_, this->solution_, time );
@@ -597,11 +557,13 @@ void SCI<SC,LO,GO,NO>::setFromPartialVectorsInit() const
 {
     
     //Chem 
-    this->solution_->addBlock( this->problemChem_->getSolution()->getBlockNonConst(0), 1);
-    //this->residualVec_->addBlock( this->problemChem_->getResidualVector()->getBlockNonConst(0), 1 );
-    this->rhs_->addBlock( this->problemChem_->getRhs()->getBlockNonConst(0), 1 );
-    this->sourceTerm_->addBlock( this->problemChem_->getSourceTerm()->getBlockNonConst(0), 1 );
-   
+    if(!chemistryExplicit_){
+        this->solution_->addBlock( this->problemChem_->getSolution()->getBlockNonConst(0), 1);
+        //this->residualVec_->addBlock( this->problemChem_->getResidualVector()->getBlockNonConst(0), 1 );
+        this->rhs_->addBlock( this->problemChem_->getRhs()->getBlockNonConst(0), 1 );
+        this->sourceTerm_->addBlock( this->problemChem_->getSourceTerm()->getBlockNonConst(0), 1 );
+    }
+
     if (materialModel_=="SCI_Linear"){
         this->solution_->addBlock( this->problemStructure_->getSolution()->getBlockNonConst(0), 0);
         // we dont have a residual vector for linear problems
@@ -663,8 +625,9 @@ void SCI<SC,LO,GO,NO>::setupSubTimeProblems(ParameterListPtr_Type parameterListC
     SmallMatrix<int> defChem(sizeChem);
 
     double coeffSourceTermChem = 0.0;
+    
     if ( this->getParameterList()->sublist("Timestepping Parameter").get("Class","Multistep") == "Multistep" ) {
-        for (int i=0; i<sizeChem; i++) {
+       /* for (int i=0; i<sizeChem; i++) {
             for (int j=0; j<sizeChem; j++) {
                 if ((*defTS_)[i+sizeStructure][j+sizeStructure]==1 && i==j) {
                     defChem[i][j] = 1;
@@ -685,7 +648,12 @@ void SCI<SC,LO,GO,NO>::setupSubTimeProblems(ParameterListPtr_Type parameterListC
                     problemCoeffChem[i][j] = 1.;
                 }
             }
-        }
+        }*/
+        defChem[0][0] = 1;
+        massCoeffChem[0][0] = timeSteppingTool_->getInformationBDF(0) / dt;
+        problemCoeffChem[0][0] = timeSteppingTool_->getInformationBDF(1);
+        coeffSourceTermChem = timeSteppingTool_->getInformationBDF(1);
+
         this->problemTimeChem_->setTimeDef(defChem);
         this->problemTimeChem_->setTimeParameters(massCoeffChem,problemCoeffChem);
     }
@@ -787,11 +755,7 @@ void SCI<SC,LO,GO,NO>::computeChemRHSInTime( ) const
     // RHS nach BDF2
     //######################
     int sizeChem = this->problemChem_->getSystem()->size();
-    int sizeStructure;
-    if (materialModel_=="SCI_Linear")
-        sizeStructure = this->problemStructure_->getSystem()->size();
-    else
-        sizeStructure = this->problemStructureNonLin_->getSystem()->size();
+    int sizeStructure =1; 
     
     double dt = timeSteppingTool_->get_dt();
     double dt_prev = timeSteppingTool_->get_dt_prev();
@@ -806,7 +770,10 @@ void SCI<SC,LO,GO,NO>::computeChemRHSInTime( ) const
     if (timeSteppingTool_->currentTime()==0.) {
         SmallMatrix<double> tmpmassCoeff(sizeChem);
         SmallMatrix<double> tmpproblemCoeff(sizeChem);
-        for (int i=0; i<sizeChem; i++) {
+        tmpmassCoeff[0][0] = 1. / dt;
+        tmpproblemCoeff[0][0] =  1.; // ist das richtig? Vermutlich schon, da BDF so geschrieben ist, dass zu berechnende Lsg den Koeffizienten 1 hat
+
+        /*for (int i=0; i<sizeChem; i++) {
             for (int j=0; j<sizeChem; j++) {
                 if ((*defTS_)[i+sizeStructure][j+sizeStructure]==1 && i==j) {
                     tmpmassCoeff[i][j] = 1. / dt;
@@ -825,7 +792,7 @@ void SCI<SC,LO,GO,NO>::computeChemRHSInTime( ) const
                     tmpproblemCoeff[i][j] = 1.;
                 }
             }
-        }
+        }*/
         this->problemTimeChem_->setTimeParameters(tmpmassCoeff, tmpproblemCoeff);
     }
     if (timeSteppingTool_->currentTime()==0.) {
@@ -846,8 +813,10 @@ void SCI<SC,LO,GO,NO>::computeChemRHSInTime( ) const
     if (timeSteppingTool_->currentTime()==0.) {
         SmallMatrix<double> massCoeffChem(sizeChem);
         SmallMatrix<double> problemCoeffChem(sizeChem);
+        massCoeffChem[0][0] = timeSteppingTool_->getInformationBDF(0) / dt;
+        problemCoeffChem[0][0] = timeSteppingTool_->getInformationBDF(1);
 
-        for (int i=0; i<sizeChem; i++) {
+        /*for (int i=0; i<sizeChem; i++) {
             for (int j=0; j<sizeChem; j++) {
                 if ((*defTS_)[i+sizeStructure][j+sizeStructure]==1 && i==j) {
                     massCoeffChem[i][j] = timeSteppingTool_->getInformationBDF(0) / dt;
@@ -866,7 +835,7 @@ void SCI<SC,LO,GO,NO>::computeChemRHSInTime( ) const
                     problemCoeffChem[i][j] = 1.;
                 }
             }
-        }
+        }*/
 
         this->problemTimeChem_->setTimeParameters(massCoeffChem, problemCoeffChem);
     }
@@ -966,7 +935,7 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
         //this->problemTimeStructure_->getSourceTerm()->scale(density);
         // Fuege die rechte Seite der DGL (f bzw. f_{n+1}) der rechten Seite hinzu (skaliert mit coeffSourceTerm)
         // Die Skalierung mit der Dichte erfolgt schon in der Assemblierungsfunktion!
-        
+
         // addSourceTermToRHS() aus DAESolverInTime
         double coeffSourceTermStructure = 1.0;
         BlockMultiVectorPtr_Type tmpSourceterm = Teuchos::rcp(new BlockMultiVector_Type(1)) ;
@@ -1038,15 +1007,18 @@ void SCI<SC,LO,GO,NO>::updateTime() const
 
    // cout << " ###### Timestep in SCI dt_prev" << timeSteppingTool_->dt_prev_ << " dt= " << timeSteppingTool_->dt_ <<" time= " << timeSteppingTool_->t_ << " ####### " << endl;
 
-    MultiVectorConstPtr_Type c = this->solution_->getBlock(1);
-    c_rep_->importFromVector(c, true);
+    MultiVectorConstPtr_Type c; 
+    if(chemistryExplicit_)
+        c= this->problemTimeChem_->getSolution()->getBlock(0);
+    else
+        c = this->solution_->getBlock(1);
 
     MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
     d_rep_->importFromVector(d, true); 
     this->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_->dt_, d_rep_, c_rep_ );    
 
-    if(couplingType_ == "explicit")
-        this->problemTimeStructure_->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_->dt_, d_rep_, c_rep_ );   
+   // if(couplingType_ == "explicit")
+   //     this->problemTimeStructure_->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_->dt_, d_rep_, c_rep_ );   
 }
 
 
@@ -1092,6 +1064,22 @@ void SCI<SC,LO,GO,NO>::moveMesh() const
     
 }
 
+template<class SC,class LO,class GO,class NO>
+void SCI<SC,LO,GO,NO>::initializeCE(){
+/*All vectors (solution, rhs, previousSolution,...) should be initialized at this point (initializeProblem() was called)
+ Therefore, all these BlockMVectors should have a length of 5 since the geometry problem is included in the general setup. We need to resize these BlockMVs here if the Geometry Explicit (GE) system is used.
+*/
+    if (chemistryExplicit_) {
+        this->solution_->resize( 1 );
+        this->rhs_->resize( 1 );
+        this->sourceTerm_->resize( 1 );
+        this->rhsFuncVec_.resize( 1 );
+        this->previousSolution_->resize( 1 );
+        this->residualVec_->resize( 1 );
+        this->initVectorSpaces();  //reinitialize NOX vector spaces
+    }
+}
+
 
 // Am Anfang der Zeititeration erst updateSolutionMultiPreviousStep() aufrufen und dann erst updateMultistepRhs(),
 // damit die previousSolution_ initialisiert sind. Genauso fuer SystemMass
@@ -1130,3 +1118,209 @@ SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostProcessingDa
 }
 }
 #endif
+
+/*if(couplingType_ == "explicit"){
+
+    // First Assumption: Almost incompressible Material
+    this->problemChem_->assemble();
+    //this->problemChem_->system_->getBlock(0,0)->print();
+    // Elementwise determined E Module
+    MultiVectorPtr_Type solChemRep = Teuchos::rcp( new MultiVector_Type( this->getDomain(1)->getMapRepeated() ) );
+    solChemRep->importFromVector(this->problemChem_->getSolution()->getBlock(0));
+
+    int dim = this->getDomain(0)->getDimension();
+
+    this->feFactory_->determineEMod(this->getDomain(0)->getFEType(),solChemRep,eModVec_,this->getDomain(0),this->parameterList_);
+            
+    ParameterListPtr_Type plStructure;
+    if (materialModel_=="SCI_Linear")
+        plStructure = this->problemStructure_->getParameterList();
+    else
+        plStructure = this->problemStructureNonLin_->getParameterList();        
+    double nu = plStructure->sublist("Parameter Solid").get("PoissonRatio",0.49);
+
+    MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) ); // Structure-Matrix
+
+    // steady rhs wird hier assembliert.
+    // rhsFunc auf 0 (=x) und 0 (=y) abaendern bei LinElas!
+    if (materialModel_=="SCI_Linear"){
+        this->feFactory_->assemblyLinElasXDimE(this->dim_, this->getDomain(0)->getFEType(), A, eModVec_, nu, true);
+        this->problemStructure_->system_->addBlock(A,0,0);// assemble(); //
+
+        //double density = this->problemStructure_->getParameterList()->sublist("Parameter Solid").get("Density",1.e-0);
+
+        //this->problemStructure_->assemble();
+    }
+    else{  
+        MultiVectorConstPtr_Type c = this->solution_->getBlock(1);
+        c_rep_->importFromVector(c, true);
+
+        this->problemStructureNonLin_->updateConcentration(c_rep_);        
+        this->problemStructureNonLin_->assemble(); //system_->addBlock(A,0,0);// assemble(); //      
+    }
+
+
+    // ###########################
+    // Korrekte Skalierung der entsprechenden Bloecke
+    // ###########################
+    double dt = this->parameterList_->sublist("Timestepping Parameter").get("dt",0.02);
+    
+    // ###########################
+    // Bloecke hinzufuegen
+    // ###########################
+    
+    this->system_.reset(new BlockMatrix_Type(2));
+
+    
+    // Struktur
+    if (materialModel_=="SCI_Linear"){
+        this->system_->addBlock( this->problemStructure_->system_->getBlock(0,0), 0,0);
+    }
+    else{       
+        this->system_->addBlock( this->problemStructureNonLin_->system_->getBlock(0,0), 0, 0);
+    }    
+
+    // Chemistry
+    this->system_->addBlock( this->problemChem_->system_->getBlock(0,0), 1, 1 );
+
+    // Dummy blocks
+    MatrixPtr_Type B(new Matrix_Type( this->getDomain(1)->getMapVecFieldUnique(), 0) );
+    B->fillComplete(this->getDomain(1)->getMapUnique(),this->getDomain(0)->getMapVecFieldUnique());
+
+    MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapUnique(), 0 ) );
+    BT->fillComplete(this->getDomain(0)->getMapVecFieldUnique(),this->getDomain(1)->getMapUnique());
+
+    this->system_->addBlock( B, 0, 1 );
+    this->system_->addBlock( BT, 1, 0 );
+
+
+    // Fuer die Zeitprobleme
+    timeSteppingTool_ = Teuchos::rcp(new TimeSteppingTools(sublist(this->parameterList_,"Timestepping Parameter") , this->comm_));
+    
+
+    this->setupSubTimeProblems(this->problemChem_->getParameterList(), plStructure);
+    // We set the vector from the partial problems
+    this->setFromPartialVectorsInit();
+    
+    
+    this->problemTimeStructure_->assembleSourceTerm( 0. );
+    this->problemTimeStructure_->addToRhs( this->problemTimeStructure_->getSourceTerm() );       
+    this->problemTimeStructure_->setBoundariesRHS();
+
+    /*if ( this->parameterList_->sublist("Exporter").get("Export EMod", true)){
+        if(exportedEMod_ == false){
+            exporterEMod_ = Teuchos::rcp(new Exporter_Type());
+            
+            DomainConstPtr_Type dom = this->getDomain(0);
+            MultiVectorConstPtr_Type exportVector = eModVec_;
+
+            MeshPtr_Type meshNonConst = Teuchos::rcp_const_cast<Mesh_Type>( dom->getMesh() );
+            exporterEMod_->setup("EModuleValues", meshNonConst, "P0",  this->parameterList_);
+            
+            
+            exporterEMod_->addVariable( exportVector, "EModule", "Scalar", 1, dom->getElementMap() );
+            exporterEMod_->save( 0.0);
+            exportedEMod_ = true;
+        }
+        else {
+            exporterEMod_->save( timeSteppingTool_->t_);
+        }
+    }
+        }
+        else if(couplingType_ == "implicit" )
+        {
+
+            // Maybe nothing should happen here as there are no constant matrices
+            this->system_.reset(new BlockMatrix_Type(2));
+
+            MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
+            
+            if (this->residualVec_.is_null())
+                this->residualVec_.reset(new BlockMultiVector_Type(2));
+            
+            MatrixPtr_Type B(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
+            MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ) );
+            MatrixPtr_Type C(new Matrix_Type( this->getDomain(1)->getMapUnique(),this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ));
+
+            // For implicit the system is ordered differently with solid block in 0,0 and diffusion in 1,1
+            this->system_->addBlock(A,0,0);
+            this->system_->addBlock(BT,0,1);
+            this->system_->addBlock(B,1,0);
+            this->system_->addBlock(C,1,1);
+
+            timeSteppingTool_ = Teuchos::rcp(new TimeSteppingTools(sublist(this->parameterList_,"Timestepping Parameter") , this->comm_));
+
+            this->setupSubTimeProblems(this->problemChem_->getParameterList(), this->problemStructureNonLin_->getParameterList());
+
+            this->problemTimeStructure_->assembleSourceTerm( 0. );
+            this->problemTimeStructure_->addToRhs( this->problemTimeStructure_->getSourceTerm() );       
+            this->problemTimeStructure_->setBoundariesRHS();
+            //cout << "###### Back in assemble ######## " << endl;
+
+            this->setFromPartialVectorsInit();
+
+            MultiVectorConstPtr_Type c = this->solution_->getBlock(1);
+            c_rep_->importFromVector(c, true);
+
+            MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
+            d_rep_->importFromVector(d, true); 
+        
+ 	        BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
+            blockSol->addBlock(d_rep_,0);
+            blockSol->addBlock(c_rep_,1);
+            this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,this->residualVec_, this->parameterList_, "Jacobian", true);
+            //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Jacobian",true);
+
+            
+        }
+        else 
+            TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "Coupling Type unknown. Please choose either implicit or explicit coupling.");
+      
+      
+       if(couplingType_ == "explicit"){
+
+        if (materialModel_!="SCI_Linear"){
+            this->problemStructureNonLin_->calculateNonLinResidualVec( "external", time );
+            this->residualVec_->addBlock( this->problemStructureNonLin_->getResidualVector()->getBlockNonConst(0) , 0);
+            // we need to add a possible source term
+
+            if(nonlinearExternalForce_)
+                computeSolidRHSInTime();
+
+            if (!type.compare("standard")){
+               // this->problemChem_->getRhs()->getBlockNonConst(0)->scale(-1.0);
+                if(this->verbose_)
+                    cout << " Residual Type : " << type  << endl;
+                this->residualVec_->getBlockNonConst(0)->update(-1.,*this->rhs_->getBlockNonConst(0),1.);
+                //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
+                //   this->residualVec_->getBlockNonConst(0)->update(-1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);    
+            }
+            else if(!type.compare("reverse")){
+                //this->residualVec_->getBlockNonConst(1)->scale(-1.0); 
+
+                if(this->verbose_)
+                    cout << " Residual Type : " << type  << endl;
+
+                this->residualVec_->getBlockNonConst(0)->update(1.,*this->rhs_->getBlockNonConst(0),-1.);
+                //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
+                //     this->residualVec_->getBlockNonConst(0)->update(1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);
+            }
+
+        }
+        else{
+            MultiVectorPtr_Type residualSolidSCI =  Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(0) );
+            this->problemStructure_->getSystem()->getBlock(0,0)->apply( *this->problemStructure_->getSolution()->getBlock(0), *residualSolidSCI, Teuchos::NO_TRANS, -1. ); // y= -Ax + 0*y
+            MultiVectorPtr_Type resSolidNonConst = Teuchos::rcp_const_cast<MultiVector_Type> ( this->residualVec_->getBlock(0) );
+            resSolidNonConst->update(1., *this->problemStructure_->getRhs()->getBlock(0), 1.);
+            // we need to add a possible source term          
+        }
+        
+        MultiVectorPtr_Type residualChemSCI =  Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(1) );
+        this->problemChem_->getSystem()->getBlock(0,0)->apply( *this->problemChem_->getSolution()->getBlock(0), *residualChemSCI, Teuchos::NO_TRANS, -1. ); // y= -Ax + 0*y
+       // MultiVectorPtr_Type resChemNonConst = Teuchos::rcp_const_cast<MultiVector_Type> ( this->residualVec_->getBlock(1) );
+        residualChemSCI->update(1., *this->problemChem_->getRhs()->getBlock(0), 1.);
+        if (!type.compare("standard")){
+            residualChemSCI->scale(-1.);
+        }
+    }
+       */

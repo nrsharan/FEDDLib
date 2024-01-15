@@ -2,7 +2,7 @@
     <ParameterList name="Parameter">
         <Parameter name="Dimension" type="int" value="3"/>
         <Parameter name="Discretization" type="string" value="P2"/><!--P2-->
-        <Parameter name="BC Type" type="string" value="Artery"/><!--Artery, Cube-->
+        <Parameter name="BC Type" type="string" value="Artery Plaque"/><!--Artery, Cube-->
         <Parameter name="RHS Type" type="string" value="Heart Beat"/><!--Constant, Paper, Heart Beat-->
         
 		<Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  unstructured -->
@@ -11,15 +11,16 @@
         
         <Parameter name="MeanVelocity" type="double" value="2.0"/><!--2d:2.0, Richter 3d: 1.0-->
         <Parameter name="Inflow Ramp" type="double" value="0.0"/><!--2d:2.0, Richter 3d: 1.0-->
-        <Parameter name="Volume force" type="double" value="0.016"/>
+        <Parameter name="Volume force" type="double" value="-0.02116"/>
         <Parameter name="Source Type" type="string"   value="surface"/>
         <Parameter name="Model Geometry" type="string" value="Laplace"/>
         
         <Parameter name="SCI" type="bool" value="true"/>
+        <Parameter name="Chemistry Explicit" type="bool" value="true"/>
         <Parameter name="Load Stepping" type="bool" value="true"/>
         <Parameter name="Inflow Start Time" type="double" value="50.0"/><!-- Start of diffusion process -->
         <Parameter name="Heart Beat Start" type="double" value="70.0"/><!-- Start of diffusion process -->
-        <Parameter name="Load Step Size" type="double" value="0.05"/><!-- Length/size of Loadsteps -->
+        <Parameter name="Load Step Size" type="double" value="0.005"/><!-- Length/size of Loadsteps -->
         <Parameter name="Load Ramp End" type="double" value="1.0"/><!-- End of Load Stepping -->
         <Parameter name="External Force" type="bool" value="true"/>
         <Parameter name="Nonlinear External Force" type="bool" value="true"/>
@@ -42,7 +43,7 @@
 
     <ParameterList name="Parameter Diffusion">
         <Parameter name="Viscosity" type="double" value="1.0"/>
-        <Parameter name="Density" type="double" value="1000.0"/>
+        <Parameter name="Density" type="double" value="1.0"/>
         <Parameter name="m" type="double" value="0."/>
         <Parameter name="D0" type="double" value="6.e-02"/>
         <Parameter name="Symmetric gradient" type="bool" value="true"/>
@@ -51,7 +52,7 @@
     <ParameterList name="Mesh Partitioner">
         <Parameter name="Contiguous" type="bool" value="true"/>
         
-        <Parameter name="Mesh 1 Name" type="string" value="artery_h_0_8_L_0_25.mesh"/> <!-- partialArtery -->
+        <Parameter name="Mesh 1 Name" type="string" value="plaque_short_6_k.mesh"/> <!-- partialArtery -->
         <Parameter name="Mesh 2 Name" type="string" value="cube_h_1.mesh"/>
         
         <Parameter name="Automatic partition" type="bool" value="false"/> <!-- find ratio for ranks based on the number of elements of each mesh -->
@@ -81,7 +82,7 @@
         <Parameter name="ExportID" type="int" value="7"/>
         <Parameter name="ParaView export subdomains" type="bool" value="true"/>
         
-        <Parameter name="Export Suffix" type="string" value="_test"/>
+        <Parameter name="Export Suffix" type="string" value="_plaque_full"/>
         <Parameter name="Export Data" type="bool" value="true"/>
         <Parameter name="Export Extra Data" type="bool" value="false"/>
         <Parameter name="Export drag and lift" type="bool" value="true"/>
@@ -109,7 +110,7 @@
             <Parameter name="Number of Segments" type="int" value="4"/>
             <ParameterList name="1">
                 <Parameter name="Start Time" type="double" value="0."/>
-                <Parameter name="dt" type="double" value="0.05"/>
+                <Parameter name="dt" type="double" value="0.005"/>
             </ParameterList>
              <ParameterList name="2">
                 <Parameter name="Start Time" type="double" value="1."/>

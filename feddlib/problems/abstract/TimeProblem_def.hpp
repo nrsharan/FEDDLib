@@ -124,7 +124,7 @@ void TimeProblem<SC,LO,GO,NO>::combineSystems() const{
     }
     SmallMatrix<SC> ones( size , Teuchos::ScalarTraits<SC>::one());
     SmallMatrix<SC> zeros( size , Teuchos::ScalarTraits<SC>::zero());
-    /*cout << "massparameters " << endl;
+   /* cout << "massparameters " << endl;
     for (int i=0; i<size; i++) {
         for (int j=0; j<size; j++) {
             cout<< massParameters_[i][j] << " " ;

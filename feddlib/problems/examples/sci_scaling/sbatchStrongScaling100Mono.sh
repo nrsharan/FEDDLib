@@ -10,5 +10,5 @@
 
 unset SLURM_EXPORT_ENV
 
-srun ./problems_sci_scaling.exe
+srun ./problems_sci_scaling.exe --problemfileStructure=parametersProblemStructure_plaque_full.xml --precfileStructure=parametersPrecStructure_RGDSW.xml 
 

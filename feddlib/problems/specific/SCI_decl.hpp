@@ -3,6 +3,7 @@
 #include "feddlib/problems/abstract/TimeProblem.hpp"
 #include "feddlib/problems/specific/DiffusionReaction.hpp"
 #include "feddlib/problems/specific/LinElas.hpp"
+#include "feddlib/core/General/ExporterTxt.hpp"
 #include "feddlib/problems/specific/NonLinElasAssFE.hpp"
 #include "feddlib/problems/specific/Geometry.hpp"
 #include "feddlib/problems/Solver/TimeSteppingTools.hpp"
@@ -118,9 +119,13 @@ public:
     // Hier wird im Prinzip updateSolution() fuer problemTimeChem_ aufgerufen
     void updateChemInTime() const;
 
+    // Solving chemistry component of problem in case of explicit chemistry
+    void solveChemistryProblem() const;
+
     // Verschiebt die notwendigen Gitter
     void moveMesh() const;
 
+    void initializeCE();
     // Macht setupTimeStepping() auf problemTimeFluid_ und problemTimeStructure_
     void setupSubTimeProblems(ParameterListPtr_Type parameterListFluid, ParameterListPtr_Type parameterListStructure) const;
 
@@ -174,11 +179,6 @@ public:
     MultiVectorPtr_Type c_rep_;
     MultiVectorPtr_Type d_rep_;
 
-
-    mutable MatrixPtr_Type C2_;
-
-    mutable MatrixPtr_Type 	P_;
-    mutable int counterP;
     // stationaere Systeme
     ChemProblemPtr_Type problemChem_;
     StructureProblemPtr_Type problemStructure_;
@@ -195,14 +195,15 @@ private:
     std::string materialModel_;
     vec_dbl_Type valuesForExport_;
     bool geometryExplicit_;
-    ExporterTxtPtr_Type exporterTxtDrag_;
-    ExporterTxtPtr_Type exporterTxtLift_;
+    mutable BlockMatrixPtr_Type systemC_;
+    ExporterTxtPtr_Type exporterIterationsChem_;
     mutable ExporterPtr_Type exporterEMod_;
+    mutable ExporterPtr_Type exporterChem_;
     mutable bool exportedEMod_ ;
     mutable bool setUpTimeStep_;
     mutable MultiVectorPtr_Type eModVec_;
     bool loadStepping_;
-    string couplingType_;
+    bool chemistryExplicit_;
     bool externalForce_;
     bool nonlinearExternalForce_;
 
