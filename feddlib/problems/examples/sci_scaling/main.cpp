@@ -585,17 +585,17 @@ int main(int argc, char *argv[])
     string xmlPrecFileChem = "parametersPrecChem.xml";
     myCLP.setOption("precfileChem",&xmlPrecFileChem,".xml file with Inputparameters.");
     
- 	string xmlBlockPrecFile = "parametersPrecBlock.xml";
-    myCLP.setOption("blockprecfile",&xmlBlockPrecFile,".xml file with Inputparameters.");
+ 	//string xmlBlockPrecFile = "parametersPrecBlock.xml";
+    //myCLP.setOption("blockprecfile",&xmlBlockPrecFile,".xml file with Inputparameters.");
    
     string xmlPrecFile = "parametersPrec.xml";
     myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
 
-    string xmlTekoPrecFile = "parametersPrecTeko.xml";
-    myCLP.setOption("tekoprecfile",&xmlTekoPrecFile,".xml file with Inputparameters.");
+    //string xmlTekoPrecFile = "parametersPrecTeko.xml";
+    //myCLP.setOption("tekoprecfile",&xmlTekoPrecFile,".xml file with Inputparameters.");
 
-    ParameterListPtr_Type parameterListPrecTeko = Teuchos::getParametersFromXmlFile(xmlTekoPrecFile);
-    ParameterListPtr_Type parameterListPrecBlock = Teuchos::getParametersFromXmlFile(xmlBlockPrecFile);
+    //ParameterListPtr_Type parameterListPrecTeko = Teuchos::getParametersFromXmlFile(xmlTekoPrecFile);
+    //ParameterListPtr_Type parameterListPrecBlock = Teuchos::getParametersFromXmlFile(xmlBlockPrecFile);
     
     myCLP.recogniseAllOptions(true);
     myCLP.throwExceptions(false);
@@ -632,10 +632,10 @@ int main(int argc, char *argv[])
         parameterListAll->setParameters(*parameterListSolverSCI);
         if (!precMethod.compare("Monolithic"))
             parameterListAll->setParameters(*parameterListPrec);
-        else if(!precMethod.compare("Teko"))
+        /*else if(!precMethod.compare("Teko"))
             parameterListAll->setParameters(*parameterListPrecTeko);
         else if(precMethod == "Diagonal" || precMethod == "Triangular")
-            parameterListAll->setParameters(*parameterListPrecBlock);
+            parameterListAll->setParameters(*parameterListPrecBlock);*/
 		parameterListAll->setParameters(*parameterListProblemStructure);
         
         ParameterListPtr_Type parameterListChemAll(new Teuchos::ParameterList(*parameterListPrecChem)) ;

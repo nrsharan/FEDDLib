@@ -188,7 +188,6 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 	solutionC_n_.resize(10,0.);
 	solutionC_n1_.resize(10,0.);
 
-
 	this->postProcessingData_ = Teuchos::rcp( new SmallMatrix_Type(dofsElement_,0.));
 	this->solution_.reset( new vec_dbl_Type ( dofsElement_,0.) );
 
@@ -242,14 +241,23 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::advanceInTime(
 	}*/
 
 	this->timeStep_ = this->timeStep_ + this->timeIncrement_;
-	
+
 	this->timeIncrement_ = dt;
 
+	if(this->globalElementID_==0){
+		cout << " ---------------------------------------------- " << endl;
+		cout << " AssembleFE_SCI_SMC: Advancing time in elements" << endl;
+		cout << " Timestep: " << this->timeStep_ << " \t timeincrement: "<< this->timeIncrement_ << endl;
+		cout << " ---------------------------------------------- " << endl;
+
+	}
+	//cout << " Update:: History " ;
 	for(int i=0; i< this->historyLength_; i++){
 		//if(this->timeStep_  > activeStartTime_ +dt )
 			this->history_[i] = this->historyUpdated_[i];
+		//cout << " | " << this->history_[i] ;
 	}
-
+	//cout << endl;
 	for(int i=0; i< 10 ; i++)
 		this->solutionC_n_[i]=(*this->solution_)[i+30]; // this is the LAST solution of newton iterations
 
@@ -268,14 +276,14 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assembleRHS(){
 
 	double positions[30];
 	int count = 0;
-	//cout << "Positions " << endl;
+//	cout << "Positions " << endl;
 	for(int i=0;i<10;i++){
 		for(int j=0;j<3;j++){
 			positions[count] = this->getNodesRefConfig()[i][j];
 			count++;
-	//		cout << " | " <<  positions[count-1] ;
+//			cout << " | " <<  positions[count-1] ;
 		}
-	//	cout << endl;
+//		cout << endl;
 
 	}
 	//cout << " --- " << endl;
@@ -288,24 +296,32 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assembleRHS(){
 
 
 	double displacements[30];
+	//cout << "Displacement ";
 	for(int i = 0; i < 30; i++)
 	{
-		displacements[i]=(*this->solution_)[i];	
+		displacements[i]=(*this->solution_)[i];
+	//	cout << displacements[i] << ", ";
 	}
-
+	//cout << endl;
 
 	std::vector<double> history(this->historyLength_, 0.0);
+   // cout << "Residual:: History_ " ; 
     for(int i = 0; i < this->historyLength_; i++){
 	    history[i] = this->history_[i];
+	//	cout << history[i] << ", ";
 	}
+	//cout << endl;
    
     double concentrations[10];
+	//cout << "Concentration ";
     for(int i = 0; i < 10; i++)
 	{
 		concentrations[i]= (*this->solution_)[i+30];	
+		//cout << " | " <<  concentrations[i] ;
 		this->solutionC_n1_[i] = (*this->solution_)[i+30];		// in each newtonstep solution for n+1 is updated.
 	}	
-	
+	//cout << endl;
+
     double accelerations[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
    	
 	std::vector<double> domainData = {this->fA_, this->lambdaC50_, this->gamma3_, this->lambdaBarCDotMax_, this->lambdaBarCDotMin_, this->gamma2_, this->gamma1_, this->eta_, this->ca50_, this->k2_, this->k5_,
@@ -353,9 +369,12 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assembleRHS(){
 
 	double *residuumRDyn = elem.getResiduumVectorRdyn();
 	
+	//cout << " Residuum " ;
 	for(int i=0; i< 30 ; i++){
 		(*this->rhsVec_)[i] = -residuumRint[i]; //+residuumRDyn[i];
+	//	cout << " | " <<  residuumRint[i] ;
 	}
+	//cout<< endl;
 
 	double *residuumRc = elem.getResiduumVectorRc();
 
@@ -412,7 +431,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assemble_SCI_S
 		
 	}
   	std::vector<double> history(this->historyLength_,0.0);// = {1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0}; // 48 values, 12 variables, 4 gausspoints
-  	//cout << "History_ " ; 
+  	//cout << "Tangent:: History_ " ; 
     for(int i = 0; i < this->historyLength_; i++){
 	    history[i] = this->history_[i];
 		//cout << history[i] << ", ";
@@ -455,10 +474,17 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::assemble_SCI_S
 	AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(positions, displacements, concentrations, accelerations, rates, &domainData[0], &history[0], subIterationTolerance, deltaT, time, this->iCode_,this->getGlobalElementID());
 	int errorCode = elem.compute();
 	//TEUCHOS_TEST_FOR_EXCEPTION(errorCode == 2, std::runtime_error, "Subiteration Fail in Element " << this->getGlobalElementID() );
-	if(errorCode == 2)
-		cout << "Subiteration Fail in Element " << this->getGlobalElementID()  << endl;
+	//if(errorCode == 2)
+	//	cout << "Subiteration Fail in Element " << this->getGlobalElementID()  << endl;
 
 	double *historyUpdated = elem.getHistoryUpdated();
+	//cout << " Update:: HistoryUpdated " ;
+	for(int i=0; i< this->historyLength_; i++){
+		//if(this->timeStep_  > activeStartTime_ +dt )
+		this->historyUpdated_[i] = (historyUpdated)[i];
+		//cout << " | " << this->historyUpdated_[i] ;
+	}
+
 
 	double** stiffnessMatrixKuu = elem.getStiffnessMatrixKuu();
 	double** stiffnessMatrixKuc = elem.getStiffnessMatrixKuc();
