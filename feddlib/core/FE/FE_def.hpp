@@ -76,7 +76,7 @@ void FE<SC,LO,GO,NO>::addFE(DomainConstPtr_Type domain){
         DomainPtr_Type domainNC = Teuchos::rcp_const_cast<Domain_Type>( domain );
         domainNC->initializeFEData();
     }
-    domainVec_.push_back(domain);
+    domainVec_.push_back(Teuchos::rcp_const_cast<Domain_Type>(domain));
 
 }
 
