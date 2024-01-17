@@ -2,36 +2,33 @@
     <ParameterList name="Parameter">
         <Parameter name="Dimension" type="int" value="3"/>
         <Parameter name="Discretization" type="string" value="P2"/><!--P2-->
-        <Parameter name="BC Type" type="string" value="Cube"/><!--Artery, Cube-->
-        <Parameter name="RHS Type" type="string" value="Heart Beat"/><!--Constant, Paper, Heart Beat-->
+        <Parameter name="BC Type" type="string" value="Artery"/><!--Artery, Artery Full, Plaque Cube-->
+        <Parameter name="RHS Type" type="string" value="Constant"/><!--Constant, Paper, Heart Beat-->
         
-		<Parameter name="Mesh Type" type="string" value="structured"/> <!--  unstructured -->
-        <Parameter name="H/h" type="int" value="5"/> <!-- only relevant for structured meshes -->
+		<Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  structured, unstructured -->
+        <Parameter name="H/h" type="int" value="1"/> <!-- only relevant for structured meshes -->
     
-        
-        <Parameter name="MeanVelocity" type="double" value="2.0"/><!--2d:2.0, Richter 3d: 1.0-->
-        <Parameter name="Inflow Ramp" type="double" value="0.0"/><!--2d:2.0, Richter 3d: 1.0-->
-        <Parameter name="Volume force" type="double" value="-0.016"/>
+        <Parameter name="Volume force" type="double" value="0.016"/> <!-- Load applied on interior wall -->
         <Parameter name="Source Type" type="string"   value="surface"/>
         <Parameter name="Model Geometry" type="string" value="Laplace"/>
         
         <Parameter name="SCI" type="bool" value="true"/>
+        <Parameter name="Chemistry Explicit" type="bool" value="false"/>
         <Parameter name="Load Stepping" type="bool" value="true"/>
-        <Parameter name="Inflow Start Time" type="double" value="0.0"/><!-- Start of diffusion process -->
+        <Parameter name="Inflow Start Time" type="double" value="10.0"/><!-- Start of diffusion process -->
+        <Parameter name="Heart Beat Start" type="double" value="70.0"/><!-- Start of heart beat -->
         <Parameter name="Load Step Size" type="double" value="0.05"/><!-- Length/size of Loadsteps -->
         <Parameter name="Load Ramp End" type="double" value="1.0"/><!-- End of Load Stepping -->
         <Parameter name="External Force" type="bool" value="true"/>
         <Parameter name="Nonlinear External Force" type="bool" value="true"/>
         <Parameter name="Coupling Type" type="string" value="implicit"/>
-        <Parameter name="Structure Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> <!-- SCI_NH , SCI_SMC_MLCK , SCI_SMC_Active_Growth_Reorientation -->
 
-        <Parameter name="Refinement Level" type="int" value="0"/>
        
-        <Parameter name="relNonLinTol" type="double" value="1.0e-6"/>
-        <Parameter name="absNonLinTol" type="double" value="1.0e-2"/>
-        <Parameter name="updateTol" type="double" value="1.0e-4"/>
+        <Parameter name="relNonLinTol" type="double" value="1.0e-8"/>
+        <Parameter name="absNonLinTol" type="double" value="1.0e-8"/>
+        <Parameter name="updateTol" type="double" value="1.0e-8"/>
         <Parameter name="Combo" type="string" value="OR"/>
-        <Parameter name="Use update tol" type="bool" value="false"/>
+        <Parameter name="Use update tol" type="bool" value="true"/>
         <Parameter name="Use WRMS" type="bool" value="false"/>
         
         <Parameter name="MaxNonLinIts" type="int" value="10"/>
@@ -39,27 +36,16 @@
         <Parameter name="Criterion" type="string" value="Update"/><!-- Criterion for nonlinear solve, Residual or Update: Residual is the norm of the nonlinear residual; Update is the norm of the update -->
     </ParameterList>
 
-    <ParameterList name="Parameter Diffusion">
-        <Parameter name="Viscosity" type="double" value="1.0"/>
-        <Parameter name="Density" type="double" value="1000.0"/>
-        <Parameter name="m" type="double" value="0."/>
-        <Parameter name="D0" type="double" value="6.e-04"/>
-        <Parameter name="Symmetric gradient" type="bool" value="true"/>
-    </ParameterList>
-    
     <ParameterList name="Mesh Partitioner">
         <Parameter name="Contiguous" type="bool" value="true"/>
         
-        <Parameter name="Mesh 1 Name" type="string" value="artery_h_0_1.mesh"/> <!-- partialArtery -->
-        <Parameter name="Mesh 2 Name" type="string" value="cube_h_1.mesh"/>
+        <Parameter name="Mesh 1 Name" type="string" value="artery_h_0_8_L_0_25.mesh"/> <!-- plaque_short_6_k.mesh -->
         
         <Parameter name="Automatic partition" type="bool" value="false"/> <!-- find ratio for ranks based on the number of elements of each mesh -->
         
         <Parameter name="Mesh 1 fraction ranks" type="int" value="-1"/> <!-- percentage of ranks for mesh 1; if Automatic partition=true this will be ignored; if set below 0 number of ranks will be used -->
         <Parameter name="Mesh 1 number ranks" type="int" value="-1"/><!-- number of ranks for this mesh; if Automatic partition=true this will be ignored; if fraction ranks>=0 this will be ignored -->
-        
-        <Parameter name="Mesh 2 fraction ranks" type="int" value="-1"/>
-        <Parameter name="Mesh 2 number ranks" type="int" value="-1"/>    
+         
     </ParameterList>
 
     <ParameterList name="Exporter">
@@ -92,7 +78,7 @@
         <Parameter name="Scale mass matrix" type="bool" value="true"/>
         <Parameter name="Set Zeros" type="bool" value="true"/>
         
-        <Parameter name="Linearization" type="string" value="Newton"/> <!-- FixedPoint, Newton, Extrapolation-->
+        <Parameter name="Linearization" type="string" value="NOX"/> <!-- FixedPoint, Newton, Extrapolation-->
     </ParameterList>
     <ParameterList name="Timestepping Parameter">
         
@@ -100,7 +86,7 @@
         <Parameter name="Class" type="string" value="Multistep"/> <!-- External, Multistep-->
         <Parameter name="Timestepping type" type="string" value="non-adaptive"/><!--non-adaptive,adaptive:not working for BDF2-->
     
-        <Parameter name="Final time" type="double" value="10."/>
+        <Parameter name="Final time" type="double" value="0.1"/>
         <Parameter name="dt" type="double" value=".05"/>
         <Parameter name="beta" type="double" value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma" type="double" value="0.5"/> <!-- newmark method parameter-->
@@ -112,14 +98,14 @@
             </ParameterList>
              <ParameterList name="2">
                 <Parameter name="Start Time" type="double" value="1."/>
-                <Parameter name="dt" type="double" value="0.01"/>
+                <Parameter name="dt" type="double" value="0.2"/>
             </ParameterList>
              <ParameterList name="3">
-                <Parameter name="Start Time" type="double" value="1.2"/>
-                <Parameter name="dt" type="double" value="0.01"/>
+                <Parameter name="Start Time" type="double" value="70."/>
+                <Parameter name="dt" type="double" value="0.02."/>
             </ParameterList>
              <ParameterList name="4">
-                <Parameter name="Start Time" type="double" value="2001."/>
+                <Parameter name="Start Time" type="double" value="500."/>
                 <Parameter name="dt" type="double" value="0.02"/>
             </ParameterList>
          </ParameterList> 

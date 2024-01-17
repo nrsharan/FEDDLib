@@ -81,8 +81,10 @@ e -->
  <ParameterList name="Mesh Partitioner">
         <Parameter name="Contiguous" type="bool" value="true"/>
 
-        <Parameter name="Mesh 1 Name" type="string" value="plaque_short_fluid.mesh"/> <!--fluidBenchmark2.mesh , fsi_tube_fluid_1_5_cm.mesh plaque_short_fluid.mesh  -->
-        <Parameter name="Mesh 2 Name" type="string" value="plaque_short_solid.mesh"/> <!--structureBenchmark2.mesh , fsi_tube_solid_1_5_cm.mesh plaque_short_solid.mesh -->
+        <Parameter name="Mesh 1 Name" type="string" value="arterie_with_plaque_initma_media_adventitia_fluid.mesh"/> 
+        <!--arterie_with_plaque_initma_media_adventitia_fluid, fluidBenchmark2.mesh , fsi_tube_fluid_1_5_cm.mesh plaque_short_fluid.mesh  -->
+        <Parameter name="Mesh 2 Name" type="string" value="arterie_with_plaque_initma_media_adventitia_solid.mesh"/> 
+        <!--arterie_with_plaque_initma_media_adventitia_solid structureBenchmark2.mesh , fsi_tube_solid_1_5_cm.mesh plaque_short_solid.mesh -->
 
         <Parameter name="Automatic partition" type="bool" value="false"/> <!-- find ratio for ranks based on the number of elements of each mesh -->
 

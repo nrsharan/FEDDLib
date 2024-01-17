@@ -24,7 +24,7 @@ c_rep_(),
 defTS_(defTS),
 timeSteppingTool_(),
 exporterEMod_(),
-materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SCI_Linear") )
+materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SCI_NH") )
 {
     //this->nonLinearTolerance_ = this->parameterList_->sublist("Parameter").get("relNonLinTol",1.0e-6);
 
@@ -93,10 +93,11 @@ void SCI<SC,LO,GO,NO>::info()
     this->infoProblem();
     if (this->verbose_)
     {
-        std::cout << "SCI:: loadStepping_ " << loadStepping_  << " ... " << std::endl;
-        std::cout << "SCI:: chemistryExplicit_ " << chemistryExplicit_  << " ... " << std::endl;
-        std::cout << "SCI:: externalForce_ " << externalForce_  << " ... " << std::endl;
-        std::cout << "SCI:: nonlinearExternalForce_ " << nonlinearExternalForce_  << " ... " << std::endl;
+        std::cout << "\t SCI:: info() ... " << std::endl;
+        std::cout << "\t SCI:: loadStepping_ " << loadStepping_  << " ... " << std::endl;
+        std::cout << "\t SCI:: chemistryExplicit_ " << chemistryExplicit_  << " ... " << std::endl;
+        std::cout << "\t SCI:: externalForce_ " << externalForce_  << " ... " << std::endl;
+        std::cout << "\t SCI:: nonlinearExternalForce_ " << nonlinearExternalForce_  << " ... " << std::endl;
     }
     
     //this->infoNonlinProblem();
@@ -122,7 +123,7 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
     if (type == "") {
         if (this->verbose_)
         {
-            std::cout << "SCI_def: assemble() with " << materialModel_  << " ... " << std::endl;
+            std::cout << "SCI_def: assemble() ... " << std::endl;
         }
     
         // Maybe nothing should happen here as there are no constant matrices
