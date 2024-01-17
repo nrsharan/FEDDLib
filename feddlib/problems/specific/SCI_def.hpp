@@ -454,11 +454,11 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
 
     this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,this->system_,resTmp, this->parameterList_, "Rhs", true/*call fillComplete*/);
     
-    this->residualVec_->addBlock(resTmp->getBlock(0),0);
+    this->residualVec_->addBlock(Teuchos::rcp_const_cast<MultiVector_Type>(resTmp->getBlock(0)),0);
 
 
     if(!chemistryExplicit_){
-        this->residualVec_->addBlock(resTmp->getBlock(1),1);
+        this->residualVec_->addBlock(Teuchos::rcp_const_cast<MultiVector_Type>(resTmp->getBlock(1)),1);
     }
 
     //this->residualVec_->getBlock(0)->print();

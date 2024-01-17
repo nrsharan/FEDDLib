@@ -531,7 +531,7 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
     
      
     if((this->parameterList_->sublist("Parameter Fluid").get("Implicit BC",false) == true) && (this->timeSteppingTool_->t_ > this->parameterList_->sublist("Parameter Fluid").get("Implicit Start",1.0)))
-        computePressureRHSInTime();
+        this->computePressureRHSInTime();
 
     this->meshDisplacementNew_rep_->importFromVector(geometrySolution, true);
     

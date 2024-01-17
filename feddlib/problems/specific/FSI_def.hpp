@@ -1486,7 +1486,7 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
 
     if (pressureRB == "Resistance")
     {
-        if(verbose_)
+        if(this->verbose_)
             cout << " Computing resistance boundary condition .. " << endl;
 
         MultiVectorPtr_Type FERhs = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ));
@@ -1538,14 +1538,14 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
         this->problemTimeFluid_->getRhs()->getBlockNonConst(0)->update(coeffSourceTermStructure, *this->sourceTerm_->getBlockNonConst(0), 1.);
         this->rhs_->addBlock( this->problemTimeFluid_->getRhs()->getBlockNonConst(0), 0 );
 
-        if(verbose_)
+        if(this->verbose_)
             cout << "  .. done " << endl;
 
     
     }
     if (pressureRB == "Absorbing" || pressureRB == "Absorbing Resistance")
     {
-        if(verbose_)
+        if(this->verbose_)
             cout << " Computing absorbing boundary condition .. " << endl;
 
         MultiVectorPtr_Type FERhs = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ));
@@ -1584,7 +1584,7 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
             double areaOutlet_T = 0.;
             this->feFactory_->assemblyArea(this->dim_, areaOutlet_T, flagOutlet);
             areaOutlet_T_ = areaOutlet_T;
-            if(verbose_)
+            if(this->verbose_)
                 cout << " ---- Absorbing boundary condition: Start of unsteady Phase with areaOutlet_T=" <<areaOutlet_T_<< " ---- " << endl;
         }
         double flowRateInlet_n = 0.;
@@ -1610,7 +1610,7 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
         this->problemTimeFluid_->getRhs()->getBlockNonConst(0)->update(coeffSourceTermStructure, *this->sourceTerm_->getBlockNonConst(0), 1.);
         this->rhs_->addBlock( this->problemTimeFluid_->getRhs()->getBlockNonConst(0), 0 );
 
-        if(verbose_)
+        if(this->verbose_)
             cout << "  .. done " << endl;
 
     
