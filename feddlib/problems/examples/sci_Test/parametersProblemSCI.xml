@@ -2,7 +2,7 @@
     <ParameterList name="Parameter">
         <Parameter name="Dimension" type="int" value="3"/>
         <Parameter name="Discretization" type="string" value="P2"/><!--P2-->
-        <Parameter name="BC Type" type="string" value="Artery"/><!--Artery, Artery Full, Plaque Cube-->
+        <Parameter name="BC Type" type="string" value="Artery"/><!--Artery, Artery Full, Plaque, Cube-->
         <Parameter name="RHS Type" type="string" value="Constant"/><!--Constant, Paper, Heart Beat-->
         
 		<Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  structured, unstructured -->
