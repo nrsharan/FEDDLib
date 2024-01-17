@@ -239,6 +239,8 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>::advanceInTime(
 		if(this->timeStep_+1.0e-12 > timeParametersVec_[i][0])
 			this->timeIncrement_=timeParametersVec_[i][1];
 	}*/
+	if(this->timeStep_ -1.e-13 < 0) // only in this one instance T=0 we set the dt beforehand, as the initial dt is set through the paramterlist and this is error prone
+		this->timeIncrement_=dt;
 
 	this->timeStep_ = this->timeStep_ + this->timeIncrement_;
 

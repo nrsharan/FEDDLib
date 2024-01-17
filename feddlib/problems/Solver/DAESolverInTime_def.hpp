@@ -1145,7 +1145,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         
         NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
 
-        cout << " ----- Nonlinear System Info|| Number of rows:" << problemTime_->getSystem()->size() << " || number of rhs:" << problemTime_->getRhs()->size() << " || solution: " << problemTime_->getSolution()->size() << endl; 
+        if(this->comm_->getRank()==0)
+            cout << " ----- Nonlinear System Info|| Number of rows:" << problemTime_->getSystem()->size() << " || number of rhs:" << problemTime_->getRhs()->size() << " || solution: " << problemTime_->getSolution()->size() << endl; 
         //massCoeffSCI.print();
         //problemCoeffSCI.print();
         if("SCI_Linear" != parameterList_->sublist("Parameter").get("Structure Model","SCI_Linear"))
@@ -1899,11 +1900,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 
         if(chemistryExplicit_)
         {
-            if(!geometryExplicit){
-                this->problemTime_->assemble("MoveMesh");
-            }
+            fsci->problemSCI_->assemble("MoveMesh");
             
-
             this->problemTime_->assemble("SolveChemistryProblem");
         
 

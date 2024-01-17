@@ -542,11 +542,12 @@ int main(int argc, char *argv[])
         MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
         
         bool convertMesh = parameterListAll->sublist("Parameter").get("Convert Mesh",true);
+        string unit = parameterListAll->sublist("Parameter").get("Mesh Unit","cm");
 
         if(convertMesh)
-            partitionerP1.readAndPartition(15,"cm" , true ); // Convert it from cm to m
+            partitionerP1.readAndPartition(15,unit , true ); // Convert it from cm to m
         else
-            partitionerP1.readAndPartition(15); // Convert it from cm to m
+            partitionerP1.readAndPartition(15); 
 
         if (!discType.compare("P2")){
             domainP2fluid->buildP2ofP1Domain( domainP1fluid );
@@ -862,13 +863,7 @@ int main(int argc, char *argv[])
             }
 
            
-            if (zeroPressure) {
-                //bcFactory->addBC(zeroBC, 5, 1, domainFluidPressure, "Dirichlet", 1); // outflow ring
-                bcFactory->addBC(zeroBC, 3, 1, domainFluidPressure, "Dirichlet", 1); // outflow
-                
-                //bcFactoryFluid->addBC(zeroBC, 5, 1, domainFluidPressure, "Dirichlet", 1); // outflow ring
-                bcFactoryFluid->addBC(zeroBC, 3, 1, domainFluidPressure, "Dirichlet", 1); // outflow
-            }
+          
             
             // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
             // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()

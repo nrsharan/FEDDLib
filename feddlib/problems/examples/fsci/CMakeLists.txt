@@ -13,8 +13,8 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(data_fsci
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(meshes_fsci
 	SOURCE_DIR ${CMAKE_SOURCE_DIR}/meshes
-    SOURCE_FILES fluid_safe.mesh solid_safe.mesh fsi_tube_fluid_1_5_cm.mesh fsi_tube_solid_1_5_cm.mesh fluidBenchmark2.mesh structureBenchmark2.mesh 
+    SOURCE_FILES fluid_safe.mesh solid_safe.mesh fsi_tube_fluid_1_5_cm.mesh fsi_tube_solid_1_5_cm.mesh fluidBenchmark2.mesh structureBenchmark2.mesh plaque_short_fluid.mesh plaque_short_solid.mesh
 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	DEST_FILES fluid_safe.mesh solid_safe.mesh  fsi_tube_fluid_1_5_cm.mesh fsi_tube_solid_1_5_cm.mesh fluidBenchmark2.mesh structureBenchmark2.mesh 
+	DEST_FILES fluid_safe.mesh solid_safe.mesh  fsi_tube_fluid_1_5_cm.mesh fsi_tube_solid_1_5_cm.mesh fluidBenchmark2.mesh structureBenchmark2.mesh plaque_short_fluid.mesh plaque_short_solid.mesh
 	EXEDEPS fsci
 )
