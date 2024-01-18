@@ -591,12 +591,9 @@ int main(int argc, char *argv[])
     string xmlPrecFile = "parametersPrec.xml";
     myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
 
-    //string xmlTekoPrecFile = "parametersPrecTeko.xml";
-    //myCLP.setOption("tekoprecfile",&xmlTekoPrecFile,".xml file with Inputparameters.");
+    string xmlPrecCEFile = "parametersPrecCE.xml";
+    myCLP.setOption("precCEfile",&xmlPrecCEFile,".xml file with Inputparameters.");
 
-    //ParameterListPtr_Type parameterListPrecTeko = Teuchos::getParametersFromXmlFile(xmlTekoPrecFile);
-    //ParameterListPtr_Type parameterListPrecBlock = Teuchos::getParametersFromXmlFile(xmlBlockPrecFile);
-    
     myCLP.recogniseAllOptions(true);
     myCLP.throwExceptions(false);
     Teuchos::CommandLineProcessor::EParseCommandLineReturn parseReturn = myCLP.parse(argc,argv);
@@ -618,7 +615,8 @@ int main(int argc, char *argv[])
         ParameterListPtr_Type parameterListPrecStructure = Teuchos::getParametersFromXmlFile(xmlPrecFileStructure);
         ParameterListPtr_Type parameterListPrecChem = Teuchos::getParametersFromXmlFile(xmlPrecFileChem);
   
-        ParameterListPtr_Type parameterListPrec = Teuchos::getParametersFromXmlFile(xmlPrecFile);
+        ParameterListPtr_Type parameterListPrec;
+
 
  		int 		dim				= parameterListProblem->sublist("Parameter").get("Dimension",2);
         string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
@@ -626,12 +624,20 @@ int main(int argc, char *argv[])
         string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
         string precMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
         int         n;
-       
+
         ParameterListPtr_Type parameterListAll(new Teuchos::ParameterList(*parameterListProblem)) ;     
-        
+
+        bool chemistryExplicit_ =    parameterListAll->sublist("Parameter").get("Chemistry Explicit",false);
+
+        if(chemistryExplicit_)
+            parameterListPrec = Teuchos::getParametersFromXmlFile(xmlPrecCEFile);
+        else
+            parameterListPrec = Teuchos::getParametersFromXmlFile(xmlPrecFile);
+       
+
         parameterListAll->setParameters(*parameterListSolverSCI);
-        if (!precMethod.compare("Monolithic"))
-            parameterListAll->setParameters(*parameterListPrec);
+        parameterListAll->setParameters(*parameterListPrec);
+                    
         /*else if(!precMethod.compare("Teko"))
             parameterListAll->setParameters(*parameterListPrecTeko);
         else if(precMethod == "Diagonal" || precMethod == "Triangular")
@@ -645,9 +651,9 @@ int main(int argc, char *argv[])
         parameterListChemAll->setParameters(*parameterListPrecChem);
 
         
-        ParameterListPtr_Type parameterListStructureAll(new Teuchos::ParameterList(*parameterListPrecStructure));
+        ParameterListPtr_Type parameterListStructureAll(new Teuchos::ParameterList(*parameterListPrec));
         sublist(parameterListStructureAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Solid") );
-        parameterListStructureAll->setParameters(*parameterListPrecStructure);
+        parameterListStructureAll->setParameters(*parameterListPrec);
         parameterListStructureAll->setParameters(*parameterListProblem);
         parameterListStructureAll->setParameters(*parameterListProblemStructure);
 		
@@ -855,8 +861,6 @@ int main(int argc, char *argv[])
  
         
         Teuchos::RCP<SmallMatrix<int>> defTS;
-
-        bool chemistryExplicit_ =    parameterListAll->sublist("Parameter").get("Chemistry Explicit",false);
 
         if(chemistryExplicit_){
             defTS.reset( new SmallMatrix<int> (1) );
