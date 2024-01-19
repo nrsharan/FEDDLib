@@ -1017,7 +1017,6 @@ void SCI<SC,LO,GO,NO>::updateTime() const
     else
         c = this->solution_->getBlock(1);
 
-    this->solution_->getBlock(0)->writeMM("updateTime_sol_d");
     MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
     d_rep_->importFromVector(d, true); 
     this->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_->dt_, d_rep_, c_rep_ );    

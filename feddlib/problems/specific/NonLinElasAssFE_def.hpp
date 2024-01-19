@@ -121,10 +121,10 @@ void NonLinElasAssFE<SC,LO,GO,NO>::updateTime() const
 template<class SC,class LO,class GO,class NO>
 void NonLinElasAssFE<SC,LO,GO,NO>::reAssemble(std::string type) const {
 
-    std::string material_model = this->parameterList_->sublist("Parameter").get("Structure Model","SCI_NH");
+   // std::string material_model = this->parameterList_->sublist("Parameter").get("Structure Model","SCI_NH");
 
     if (this->verbose_)
-        std::cout << "-- Reassembly nonlinear elasticity with structure material model " << material_model <<" ("<<type <<") ... " << std::flush;
+        std::cout << "-- Reassembly nonlinear elasticity type=" << type << "... " << std::flush;
     
     if (type=="Newton-Residual") {
         MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
@@ -150,9 +150,8 @@ void NonLinElasAssFE<SC,LO,GO,NO>::reAssemble(std::string type) const {
 
         this->residualVec_->addBlock( fUnique, 0 );
 
-
-            
-
+        if(nonlinearExternalForce_)
+            this->assembleSourceTermLoadstepping();
 
     }
     else if(type=="Newton"){ //we already assemble the new tangent when we calculate the stresses above
@@ -296,7 +295,8 @@ void NonLinElasAssFE<SC,LO,GO,NO>::assembleSourceTermLoadstepping(double time) c
             if(nonlinearExternalForce_){
 
                 MatrixPtr_Type A( new Matrix_Type (this->system_->getBlock(0,0)));
-                //A->print();
+                MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
+                u_rep_->importFromVector(u, true);   
                 MatrixPtr_Type AKext(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );          
                 MatrixPtr_Type Kext(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow()*2 ) );          
                 MultiVectorPtr_Type Kext_vec;

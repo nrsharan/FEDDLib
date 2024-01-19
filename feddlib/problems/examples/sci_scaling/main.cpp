@@ -632,7 +632,7 @@ int main(int argc, char *argv[])
         if(chemistryExplicit_)
             parameterListPrec = Teuchos::getParametersFromXmlFile(xmlPrecCEFile);
         else
-            parameterListPrec = Teuchos::getParametersFromXmlFile(xmlPrecFile);
+            parameterListPrec = Teuchos::getParametersFromXmlFile(xmlPrecFileStructure);
        
 
         parameterListAll->setParameters(*parameterListSolverSCI);
