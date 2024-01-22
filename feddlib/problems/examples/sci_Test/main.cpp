@@ -565,7 +565,7 @@ int main(int argc, char *argv[])
 
     Teuchos::RCP<const Teuchos::Comm<int> > comm = Xpetra::DefaultPlatform::getDefaultPlatform().getComm();
 
-    // Command Line Parameters
+       // Command Line Parameters
     Teuchos::CommandLineProcessor myCLP;
     string ulib_str = "Tpetra";
     myCLP.setOption("ulib",&ulib_str,"Underlying lib");
@@ -584,9 +584,15 @@ int main(int argc, char *argv[])
     
     string xmlPrecFileChem = "parametersPrecChem.xml";
     myCLP.setOption("precfileChem",&xmlPrecFileChem,".xml file with Inputparameters.");
- 	  
-    string xmlPrecFile = "parametersPrec.xml";
-    myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
+    
+ 	//string xmlBlockPrecFile = "parametersPrecBlock.xml";
+    //myCLP.setOption("blockprecfile",&xmlBlockPrecFile,".xml file with Inputparameters.");
+   
+    //string xmlPrecFile = "parametersPrec.xml";
+    //myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
+
+    string xmlPrecCEFile = "parametersPrecCE.xml";
+    myCLP.setOption("precCEfile",&xmlPrecCEFile,".xml file with Inputparameters.");
 
    
     myCLP.recogniseAllOptions(true);
@@ -610,7 +616,7 @@ int main(int argc, char *argv[])
         ParameterListPtr_Type parameterListPrecStructure = Teuchos::getParametersFromXmlFile(xmlPrecFileStructure);
         ParameterListPtr_Type parameterListPrecChem = Teuchos::getParametersFromXmlFile(xmlPrecFileChem);
   
-        ParameterListPtr_Type parameterListPrec = Teuchos::getParametersFromXmlFile(xmlPrecFile);
+
 
  		int 		dim				= parameterListProblem->sublist("Parameter").get("Dimension",2);
         string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
@@ -618,14 +624,26 @@ int main(int argc, char *argv[])
         string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
         string precMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
         int         n;
-       
+
         ParameterListPtr_Type parameterListAll(new Teuchos::ParameterList(*parameterListProblem)) ;     
-        
+       
+        ParameterListPtr_Type parameterListPrec;
+        bool chemistryExplicit_ =    parameterListAll->sublist("Parameter").get("Chemistry Explicit",false);
+
+        if(chemistryExplicit_)
+            parameterListPrec = Teuchos::getParametersFromXmlFile(xmlPrecCEFile);
+        else
+            parameterListPrec = Teuchos::getParametersFromXmlFile(xmlPrecFileStructure);
+       
+
         parameterListAll->setParameters(*parameterListSolverSCI);
-        if (!precMethod.compare("Monolithic"))
-            parameterListAll->setParameters(*parameterListPrec);
-    
-    	parameterListAll->setParameters(*parameterListProblemStructure);
+        parameterListAll->setParameters(*parameterListPrec);
+                    
+        /*else if(!precMethod.compare("Teko"))
+            parameterListAll->setParameters(*parameterListPrecTeko);
+        else if(precMethod == "Diagonal" || precMethod == "Triangular")
+            parameterListAll->setParameters(*parameterListPrecBlock);*/
+		parameterListAll->setParameters(*parameterListProblemStructure);
         
         ParameterListPtr_Type parameterListChemAll(new Teuchos::ParameterList(*parameterListPrecChem)) ;
         sublist(parameterListChemAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Chem") );
@@ -634,9 +652,9 @@ int main(int argc, char *argv[])
         parameterListChemAll->setParameters(*parameterListPrecChem);
 
         
-        ParameterListPtr_Type parameterListStructureAll(new Teuchos::ParameterList(*parameterListPrecStructure));
+        ParameterListPtr_Type parameterListStructureAll(new Teuchos::ParameterList(*parameterListPrec));
         sublist(parameterListStructureAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Solid") );
-        parameterListStructureAll->setParameters(*parameterListPrecStructure);
+        parameterListStructureAll->setParameters(*parameterListPrec);
         parameterListStructureAll->setParameters(*parameterListProblem);
         parameterListStructureAll->setParameters(*parameterListProblemStructure);
 		
@@ -668,6 +686,7 @@ int main(int argc, char *argv[])
         DomainPtr_Type domainStructure;
         
         std::string bcType = parameterListAll->sublist("Parameter").get("BC Type","Cube");
+        
         std::string rhsType = parameterListAll->sublist("Parameter").get("RHS Type","Constant");
     
         int minNumberSubdomains=1;
@@ -745,8 +764,6 @@ int main(int argc, char *argv[])
         domainStructure->setReferenceConfiguration();
 
         MultiVectorPtr_Type nodes(domainStructure->getNodeListMV());
-
-        bool chemistryExplicit_ =    parameterListAll->sublist("Parameter").get("Chemistry Explicit",false);
 
         // Defining diffusion tensor. Only used for explicit approach
         vec2D_dbl_Type diffusionTensor(dim,vec_dbl_Type(3));
@@ -960,9 +977,9 @@ int main(int argc, char *argv[])
         
         double force = parameterListAll->sublist("Parameter").get("Volume force",1.);
         if(bcType == "Artery Full")
-            force = force * -1.;
-        if(bcType == "Plaque")
-            force = force * -1.;
+            force = force * -1.; // different normal direction on inner wall
+        if(bcType == "Plaque") 
+            force = force * -1.; // Different normal direction on inner wall than usual
         sci.problemStructureNonLin_->addParemeterRhs( force );
         double loadStep = parameterListAll->sublist("Parameter").get("Load Step Size",1.);
         double loadRampEnd= parameterListAll->sublist("Parameter").get("Load Ramp End",1.);

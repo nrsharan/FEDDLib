@@ -23,9 +23,7 @@
                         <Parameter name="Verbosity Level" type="string" value="high"/>
                 </ParameterList>
             </ParameterList>
-            <ParameterList name="Amesos2">
-                <Parameter name="Solver Type" type="string"   value="klu2"/>
-            </ParameterList>
+            
         </ParameterList>
     </ParameterList>
 

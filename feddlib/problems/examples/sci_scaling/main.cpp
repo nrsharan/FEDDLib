@@ -588,8 +588,8 @@ int main(int argc, char *argv[])
  	//string xmlBlockPrecFile = "parametersPrecBlock.xml";
     //myCLP.setOption("blockprecfile",&xmlBlockPrecFile,".xml file with Inputparameters.");
    
-    string xmlPrecFile = "parametersPrec.xml";
-    myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
+    //string xmlPrecFile = "parametersPrec.xml";
+    //myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
 
     string xmlPrecCEFile = "parametersPrecCE.xml";
     myCLP.setOption("precCEfile",&xmlPrecCEFile,".xml file with Inputparameters.");

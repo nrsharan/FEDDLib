@@ -70,7 +70,7 @@ u_minus_w_rep_(),
 p_rep_(),
 defTS_(defTS),
 timeSteppingTool_(),
-materialModel_( parameterListStructure->sublist("Parameter").get("Material model","linear") ),
+materialModel_( parameterListStructure->sublist("Parameter").get("Material model","Neo-Hooke") ),
 valuesForExport_(0),
 exporterTxtDrag_(),
 exporterGeo_()
@@ -80,7 +80,7 @@ exporterGeo_()
 
     this->initNOXParameters();
     counterP = 0;
-    cout << " INIT MATERIAL MODEL " << materialModel_ << endl ; 
+
     std::string linearization = parameterListFSI->sublist("General").get("Linearization","FixedPoint");
     
     TEUCHOS_TEST_FOR_EXCEPTION( !(linearization == "Newton" || linearization == "NOX")  && materialModel_ != "linear", std::runtime_error, "Nonlinear material models can only be used with Newton's method or FixedPoint (nonlinear material Jacobian will still be used).");
