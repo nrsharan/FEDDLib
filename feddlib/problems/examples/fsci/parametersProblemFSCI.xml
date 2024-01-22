@@ -2,7 +2,7 @@
     <ParameterList name="Parameter">                                                                                                                           
        <Parameter name="Dimension" type="int" value="3"/>
         <Parameter name="Discretization" type="string" value="P2"/><!--P2-->
-        <Parameter name="BC Type" type="string" value="Plaque Artery"/><!--Tube, Benchmark, Plaque Artery-->
+        <Parameter name="BC Type" type="string" value="Tube"/><!--Tube, Benchmark, Plaque Artery-->
         <Parameter name="Geometry Type" type ="string" value="Artery"/><!--partialCFD,Richter3DFull-->
 
         <Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  unstructured -->
@@ -14,6 +14,7 @@
  
         <Parameter name="FSCI" type="bool" value="true"/>
         <Parameter name="Geometry Explicit" type="bool" value="true"/>
+        <Parameter name="Chemistry Explicit" type="bool" value="true"/>
         <Parameter name="Inflow Start Time" type="double" value="10.0"/><!-- Start of diffusion process -->
         <Parameter name="Heart Beat Start" type="double" value="0.2"/><!-- Start of diffusion process -->
         <Parameter name="Coupling Type" type="string" value="implicit"/>
@@ -53,7 +54,7 @@ e -->
        	<!-- Resistance boundary condition -->
         <Parameter name="Resistance" type="double" value="3666.0e6"/> <!-- N/m² s/m³ (eigentliche Einheit mPa*s/m³ , 1mPa = 10e6 N/m² -->
         <Parameter name="Normal Scale" type="double" value="-1.0"/>
-        <Parameter name="Poisson Ratio" type="double" value="3.0e-06"/>
+        <Parameter name="Poisson Ratio" type="double" value="0.49"/>
      	<!-- Absorbing boundary condition -->
         <Parameter name="E" type="double" value="120000"/>
         <Parameter name="Wall thickness" type="double" value="0.00015"/>
@@ -81,9 +82,9 @@ e -->
  <ParameterList name="Mesh Partitioner">
         <Parameter name="Contiguous" type="bool" value="true"/>
 
-        <Parameter name="Mesh 1 Name" type="string" value="arterie_with_plaque_initma_media_adventitia_fluid.mesh"/> 
-        <!--arterie_with_plaque_initma_media_adventitia_fluid, fluidBenchmark2.mesh , fsi_tube_fluid_1_5_cm.mesh plaque_short_fluid.mesh  -->
-        <Parameter name="Mesh 2 Name" type="string" value="arterie_with_plaque_initma_media_adventitia_solid.mesh"/> 
+        <Parameter name="Mesh 1 Name" type="string" value="plaque_short_fluid.mesh"/> 
+        <!--arterie_with_plaque_initma_media_adventitia_fluid, fluidBenchmark2.mesh , fsi_tube_fluid_1_5_cm.mesh, plaque_short_fluid.mesh  -->
+        <Parameter name="Mesh 2 Name" type="string" value="plaque_short_solid.mesh"/> 
         <!--arterie_with_plaque_initma_media_adventitia_solid structureBenchmark2.mesh , fsi_tube_solid_1_5_cm.mesh plaque_short_solid.mesh -->
 
         <Parameter name="Automatic partition" type="bool" value="false"/> <!-- find ratio for ranks based on the number of elements of each mesh -->

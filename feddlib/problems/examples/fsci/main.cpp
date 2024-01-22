@@ -370,8 +370,12 @@ int main(int argc, char *argv[])
     myCLP.setOption("problemFileFluid",&xmlProblemFileFluid,".xml file with Inputparameters.");
     string xmlProblemFileStructure = "parametersProblemStructure.xml";
     myCLP.setOption("problemFileStructure",&xmlProblemFileStructure,".xml file with Inputparameters.");
+
     string xmlPrecFileStructure = "parametersPrecStructure.xml";
     myCLP.setOption("precfileStructure",&xmlPrecFileStructure,".xml file with Inputparameters.");
+    string xmlPrecFileStructureCE = "parametersPrecStructureCE.xml";
+    myCLP.setOption("precfileStructureCE",&xmlPrecFileStructureCE,".xml file with Inputparameters.");
+
     string xmlPrecFileGeometry = "parametersPrecGeometry.xml";
     myCLP.setOption("precfileGeometry",&xmlPrecFileGeometry,".xml file with Inputparameters.");
     string xmlProbL = "plistProblemLaplace.xml";
@@ -406,8 +410,6 @@ int main(int argc, char *argv[])
         ParameterListPtr_Type parameterListPrecGI = Teuchos::getParametersFromXmlFile(xmlPrecFileGI);
         ParameterListPtr_Type parameterListPrecFluidMono = Teuchos::getParametersFromXmlFile(xmlPrecFileFluidMono);
         ParameterListPtr_Type parameterListPrecFluidTeko = Teuchos::getParametersFromXmlFile(xmlPrecFileFluidTeko);
-
-        ParameterListPtr_Type parameterListPrecStructure = Teuchos::getParametersFromXmlFile(xmlPrecFileStructure);
         
         ParameterListPtr_Type parameterListPrecChem = Teuchos::getParametersFromXmlFile(xmlPrecFileChem);
         
@@ -421,6 +423,14 @@ int main(int argc, char *argv[])
         
         parameterListAll->setParameters(*parameterListSolverFSI);
 
+        bool chemistryExplicit =    parameterListAll->sublist("Parameter").get("Chemistry Explicit",false);
+        ParameterListPtr_Type parameterListPrecStructure; // = Teuchos::getParametersFromXmlFile(xmlPrecFileStructure);
+
+        if(chemistryExplicit)
+            parameterListPrecStructure = Teuchos::getParametersFromXmlFile(xmlPrecFileStructureCE);
+        else
+            parameterListPrecStructure = Teuchos::getParametersFromXmlFile(xmlPrecFileStructure);
+       
         
         ParameterListPtr_Type parameterListFluidAll(new Teuchos::ParameterList(*parameterListPrecFluidMono)) ;
         sublist(parameterListFluidAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Fluid") );
@@ -437,6 +447,9 @@ int main(int argc, char *argv[])
         ParameterListPtr_Type parameterListChemAll(new Teuchos::ParameterList(*parameterListPrecChem));
         sublist(parameterListChemAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Chem") );
         sublist(parameterListChemAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter") );
+        parameterListChemAll->setParameters(*parameterListSolverFSI);
+        parameterListChemAll->setParameters(*parameterListPrecChem);
+
 
         ParameterListPtr_Type parameterListSCIAll(new Teuchos::ParameterList(*parameterListPrecStructure));
         parameterListSCIAll->setParameters(*parameterListProblem);
@@ -635,7 +648,8 @@ int main(int argc, char *argv[])
 
         domainFluidVelocity->setReferenceConfiguration();
         domainFluidPressure->setReferenceConfiguration();
-        
+        domainStructure->setReferenceConfiguration();
+        domainChem->setReferenceConfiguration();
 
         
         /*if (parameterListAll->sublist("General").get("ParaView export subdomains",false) ){
@@ -683,11 +697,17 @@ int main(int argc, char *argv[])
         // Problem definieren
         // #####################
         Teuchos::RCP<SmallMatrix<int>> defTS;
+
         if(geometryExplicit)
         {
             // SmallMatrix<int> defTS(4);
-            defTS.reset( new SmallMatrix<int> (5) );
 
+            defTS.reset( new SmallMatrix<int> (4) );
+            if(!chemistryExplicit){
+                defTS.reset( new SmallMatrix<int> (5) );
+                //Chem
+                (*defTS)[4][4] = 1;
+            }
             // Fluid
             (*defTS)[0][0] = 1;
             (*defTS)[0][1] = 1;
@@ -695,14 +715,17 @@ int main(int argc, char *argv[])
             // Struktur
             (*defTS)[2][2] = 1;
             
-            //Chem
-            (*defTS)[4][4] = 1;
+
         }
         else
         {
             // SmallMatrix<int> defTS(5);
-            defTS.reset( new SmallMatrix<int> (6) );
-
+            defTS.reset( new SmallMatrix<int> (5) );
+            if(!chemistryExplicit){
+                defTS.reset( new SmallMatrix<int> (6) );
+                //Chem
+                (*defTS)[5][5] = 1;
+            }
             // Fluid
             (*defTS)[0][0] = 1;
             (*defTS)[0][1] = 1;
@@ -715,9 +738,7 @@ int main(int argc, char *argv[])
             
             // Struktur
             (*defTS)[2][2] = 1;
-            
-            (*defTS)[6][6] = 1;
-            
+                        
         }
 
         vec2D_dbl_Type diffusionTensor(dim,vec_dbl_Type(3));
@@ -1020,47 +1041,8 @@ int main(int argc, char *argv[])
         fsci.initializeProblem();
         
         fsci.initializeGE();
-        // Matrizen assemblieren
-        /*if(parameterListAll->sublist("General").get("Use steady fluid solution",true)){
-            cout << " Solve Steady State Navier-Stokes " << endl;
-            // Defining steady state Navier Stokes problem.
-            //this->problemSteadyFluid_->addBoundaries(this->bcFactory_);
-            fsci.problemSteadyFluid_->initializeProblem();
+        fsci.problemSCI_->initializeCE();
 
-            fsci.problemSteadyFluid_->assemble();
-            fsci.problemSteadyFluid_->setBoundariesRHS();
-
-            // Solving the problem
-            std::string nlSolverType = "NOX";
-            NonLinearSolver<SC,LO,GO,NO> nlSolver( nlSolverType );
-            nlSolver.solve( *(fsci.problemSteadyFluid_) );
-
-            // Using velocity and pressure as start solution
-            fsci.problemFluid_->getSolution()->getBlockNonConst(0)->update(1.0, *fsci.problemSteadyFluid_->getSolution()->getBlockNonConst(0), 1.);
-            fsci.problemFluid_->getSolution()->getBlockNonConst(1)->update(1.0, *fsci.problemSteadyFluid_->getSolution()->getBlockNonConst(1), 1.);
-
-            ExporterPVPtr_Type exporterSteadyFluid = Teuchos::rcp(new ExporterPV_Type());
-            ExporterPVPtr_Type exporterSteadyPressure = Teuchos::rcp(new ExporterPV_Type());
-            
-            MeshPtr_Type meshNonConstF = Teuchos::rcp_const_cast<Mesh_Type>( domainFluidVelocity->getMesh() );
-            MeshPtr_Type meshNonConstP = Teuchos::rcp_const_cast<Mesh_Type>( domainFluidPressure->getMesh() );
-
-            exporterSteadyFluid->setup("u_f_steady", meshNonConstF, domainFluidVelocity->getFEType(), parameterListAll);
-            exporterSteadyPressure->setup("p_steady", meshNonConstP, domainFluidPressure->getFEType(), parameterListAll);
-
-            MultiVectorConstPtr_Type u_f_steady = fsci.problemSteadyFluid_->getSolution()->getBlock(0);            
-            MultiVectorConstPtr_Type p_steady = fsci.problemSteadyFluid_->getSolution()->getBlock(1);
-
-            exporterSteadyFluid->addVariable( u_f_steady, "u", "Vector", 3, domainFluidVelocity->getMapUnique() );
-            exporterSteadyPressure->addVariable( p_steady, "p", "Scalar", 1, domainFluidPressure->getMapUnique() );
-
-            exporterSteadyFluid->save( 0. );
-            exporterSteadyPressure->save(0. );
-
-            exporterSteadyFluid->closeExporter();
-            exporterSteadyPressure->closeExporter();
-
-        }*/
         fsci.assemble();
     
         DAESolverInTime<SC,LO,GO,NO> daeTimeSolver(parameterListAll, comm);

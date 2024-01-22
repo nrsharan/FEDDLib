@@ -141,6 +141,18 @@ class FE {
                                 double areaOutlet_T, 
                                 ParameterListPtr_Type params, 
                                 int FEloc=0);
+
+    double assemblyAbsorbingBoundaryPaper(int dim, 
+                                std::string FEType, 
+                                MultiVectorPtr_Type f, 
+                                MultiVectorPtr_Type u_rep, 
+                                vec_dbl_Type flowRate_vec, 
+                                std::vector<SC>& funcParameter, 
+                                RhsFunc_Type func, 
+                                double areaOutlet_init, 
+                                double areaOutlet_T, 
+                                ParameterListPtr_Type params, 
+                                int FEloc=0);
     double assemblyAbsorbingResistanceBoundary(int dim, 
                                 std::string FEType, 
                                 MultiVectorPtr_Type f, 

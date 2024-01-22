@@ -364,7 +364,7 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
 
         // Maybe nothing should happen here as there are no constant matrices
         this->system_.reset(new BlockMatrix_Type(2));
-        if ( chemistryExplicit_)
+        if (chemistryExplicit_)
             this->system_.reset(new BlockMatrix_Type(1));
 
 
@@ -444,6 +444,8 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     else
         c = this->solution_->getBlock(1);
 
+    c_rep_->importFromVector(c, true);
+
     MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
     d_rep_->importFromVector(d, true); 
 
@@ -457,16 +459,11 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     
     this->residualVec_->addBlock(Teuchos::rcp_const_cast<MultiVector_Type>(resTmp->getBlock(0)),0);
 
-
     if(!chemistryExplicit_){
         this->residualVec_->addBlock(Teuchos::rcp_const_cast<MultiVector_Type>(resTmp->getBlock(1)),1);
     }
 
-    //this->residualVec_->getBlock(0)->print();
-
-
-    //this->residualVec_->print();
-    //this->residualVec_->getBlockNonConst(1)->scale(0.0);
+   
     Teuchos::Array<SC> norm_d(1); 
     this->residualVec_->getBlock(0)->norm2(norm_d);
     

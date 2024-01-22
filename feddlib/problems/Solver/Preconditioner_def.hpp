@@ -1017,6 +1017,7 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSCI( std::string type )
 
     CommConstPtr_Type comm = timeProblem_->getComm();
     bool useFluidPreconditioner = parameterList->sublist("General").get("Use Fluid Preconditioner", true);
+    bool chemistryExplicit = parameterList->sublist("General").get("Chemistry Explicit", true);
     bool useSolidPreconditioner = parameterList->sublist("General").get("Use Solid Preconditioner", true);
     bool onlyDiagonal = parameterList->sublist("General").get("Only Diagonal", false);
     Teuchos::RCP< PrecOpFaCSCI<SC,LO,GO,NO> > facsci
@@ -1076,13 +1077,14 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSCI( std::string type )
         probSCI_->initializeDomains( sciDomains );
         probSCI_->initializeLinSolverBuilder( timeProblem_->getLinearSolverBuilder() );
     }
-    BlockMatrixPtr_Type sciSystem = Teuchos::rcp( new BlockMatrix_Type(2) );
-
+    BlockMatrixPtr_Type sciSystem = Teuchos::rcp( new BlockMatrix_Type(1) );
+    if(!chemistryExplicit){
+        sciSystem.reset( new BlockMatrix_Type(2) );
+        sciSystem->addBlock( fsiSystem->getBlock(4,4), 1, 1 );
+        sciSystem->addBlock( fsiSystem->getBlock(2,4), 0, 1 );
+        sciSystem->addBlock( fsiSystem->getBlock(4,2), 1, 0 );
+    }
     sciSystem->addBlock( fsiSystem->getBlock(2,2), 0, 0 );
-
-    sciSystem->addBlock( fsiSystem->getBlock(4,4), 1, 1 );
-    sciSystem->addBlock( fsiSystem->getBlock(2,4), 0, 1 );
-    sciSystem->addBlock( fsiSystem->getBlock(4,2), 1, 0 );
 
     //faCSIBCFactory_->setSystem( sciSystem );
 
@@ -1114,16 +1116,29 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSCI( std::string type )
 
         precGeo_ = probGeo_->getPreconditioner()->getThyraPrec()->getNonconstUnspecifiedPrecOp();
     }*/
-    facsci->setGE(   fsiSystem->getBlock(3,0)->getThyraLinOpNonConst()/*C1*/,
-                    fsiSystem->getBlock(0,3)->getThyraLinOpNonConst()/*C1T*/,
-                    fsiSystem->getBlock(3,2)->getThyraLinOpNonConst()/*C2*/,
-                    precSCI_,
-                    fsiSystem->getBlock(2,2)->getThyraLinOpNonConst(), /*S*/
-                    fsiSystem->getBlock(4,4)->getThyraLinOpNonConst(), /*C_chem*/                   
-                    precFluid_,
-                    fsiSystem->getBlock(0,0)->getThyraLinOpNonConst()/*fF*/,
-                    fsiSystem->getBlock(0,1)->getThyraLinOpNonConst()/*fBT*/ );
+    if(chemistryExplicit){
+        facsci->setCE(   fsiSystem->getBlock(3,0)->getThyraLinOpNonConst()/*C1*/,
+            fsiSystem->getBlock(0,3)->getThyraLinOpNonConst()/*C1T*/,
+            fsiSystem->getBlock(3,2)->getThyraLinOpNonConst()/*C2*/,
+            precSCI_,
+            fsiSystem->getBlock(2,2)->getThyraLinOpNonConst(), /*S*/
+            precFluid_,
+            fsiSystem->getBlock(0,0)->getThyraLinOpNonConst()/*fF*/,
+            fsiSystem->getBlock(0,1)->getThyraLinOpNonConst()/*fBT*/ );
 
+
+    }
+    else{
+        facsci->setGE(   fsiSystem->getBlock(3,0)->getThyraLinOpNonConst()/*C1*/,
+            fsiSystem->getBlock(0,3)->getThyraLinOpNonConst()/*C1T*/,
+            fsiSystem->getBlock(3,2)->getThyraLinOpNonConst()/*C2*/,
+            precSCI_,
+            fsiSystem->getBlock(2,2)->getThyraLinOpNonConst(), /*S*/
+            fsiSystem->getBlock(4,4)->getThyraLinOpNonConst(), /*C_chem*/                   
+            precFluid_,
+            fsiSystem->getBlock(0,0)->getThyraLinOpNonConst()/*fF*/,
+            fsiSystem->getBlock(0,1)->getThyraLinOpNonConst()/*fBT*/ );
+    }
 
     LinSolverBuilderPtr_Type solverBuilder = timeProblem_->getUnderlyingProblem()->getLinearSolverBuilder();
 

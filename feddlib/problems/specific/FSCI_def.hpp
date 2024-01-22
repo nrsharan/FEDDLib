@@ -28,12 +28,18 @@ problemSCI_()
 {
     this->addVariable( domainChem, FETypeChem, "c", 1 ); // Chem last added component!
     this->initNOXParameters();
+    
+    chemistryExplicit_ =    parameterListSCI->sublist("Parameter").get("Chemistry Explicit",false);
 
     
     Teuchos::RCP<SmallMatrix<int>> defTSSCI; // Seperate Timestepping Matrix for SCI
-    defTSSCI.reset( new SmallMatrix<int> (2) );
+    defTSSCI.reset( new SmallMatrix<int> (1) );
+    if(!chemistryExplicit_){
+        defTSSCI.reset( new SmallMatrix<int> (2) );
+        (*defTSSCI)[1][1] = (*defTS)[4][4];
+
+    }
     (*defTSSCI)[0][0] = (*defTS)[2][2];
-    (*defTSSCI)[1][1] = (*defTS)[4][4];
 
     this->problemSCI_ = Teuchos::rcp( new SCIProblem_Type( domainStructure, FETypeStructure, domainChem, FETypeChem, diffusionTensor,reactionFunc, parameterListStructure, parameterListChem, parameterListSCI, defTSSCI ) );
     this->problemSCI_->initializeProblem();
@@ -76,7 +82,7 @@ void FSCI<SC,LO,GO,NO>::assemble( std::string type ) const
         
         this->problemGeometry_->assemble();
         if ( this->geometryExplicit_ && this->parameterList_->sublist("Exporter").get("Export GE geometry solution",false)){
-            exporterGeo_ = Teuchos::rcp(new Exporter_Type());
+            this->exporterGeo_ = Teuchos::rcp(new Exporter_Type());
             
             DomainConstPtr_Type dom = this->getDomain(4);
 
@@ -179,10 +185,16 @@ void FSCI<SC,LO,GO,NO>::assemble( std::string type ) const
         // ###########################
         // Bloecke hinzufuegen
         // ###########################
-        if(this->geometryExplicit_)
+        if(this->geometryExplicit_){
             this->system_.reset(new BlockMatrix_Type(5));
-        else
+            if(chemistryExplicit_)
+                this->system_.reset(new BlockMatrix_Type(4));
+        }
+        else{
             this->system_.reset(new BlockMatrix_Type(6));
+            if(chemistryExplicit_)
+                this->system_.reset(new BlockMatrix_Type(5));
+        }
         
         // Fluid
         this->system_->addBlock( this->problemFluid_->system_->getBlock(0,0), 0, 0 );
@@ -199,10 +211,11 @@ void FSCI<SC,LO,GO,NO>::assemble( std::string type ) const
 
         // Chemistry goes to the last block
         this->system_->addBlock( this->problemSCI_->system_->getBlock(0,0), 2, 2 ); // Structure
-        this->system_->addBlock( this->problemSCI_->system_->getBlock(1,1), 4, 4); // Chem
-        this->system_->addBlock( this->problemSCI_->system_->getBlock(0,1), 2, 4 ); // Coupling of chem
-        this->system_->addBlock( this->problemSCI_->system_->getBlock(1,0), 4, 2 ); // Coupling of structure
-
+        if(!chemistryExplicit_){
+            this->system_->addBlock( this->problemSCI_->system_->getBlock(1,1), 4, 4); // Chem
+            this->system_->addBlock( this->problemSCI_->system_->getBlock(0,1), 2, 4 ); // Coupling of chem
+            this->system_->addBlock( this->problemSCI_->system_->getBlock(1,0), 4, 2 ); // Coupling of structure
+        }
 
         // Kopplung
         this->system_->addBlock( C1_T, 0, 3 );
@@ -271,6 +284,7 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
         // Da dieser Abschnitt zu Beginn der neuen Zeititeration aufgerufen wird, muss
         // auch die alte Gitterverschiebung durch die neue Loesung aktualisiert werden.
         this->updateMeshDisplacement();
+        this->problemSCI_->reAssemble("UpdateMeshDisplacement");
         return;
     }
 
@@ -280,6 +294,15 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             std::cout << "-- Reassembly (SolveGeometryProblem)" << '\n';
 
         this->solveGeometryProblem();
+        return;
+    }
+
+    if(type == "SolveChemistryProblem")
+    {
+        if(this->verbose_)
+            std::cout << "-- Reassembly (SolveChemistryProblem)" << '\n';
+
+        this->problemSCI_->solveChemistryProblem();
         return;
     }
 
@@ -511,10 +534,11 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
     this->system_->addBlock( this->problemFluid_->getSystem()->getBlock( 0, 0 ), 0, 0 );
     
     this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(0,0), 2, 2 );
-    this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(1,1), 4, 4 );
-    this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(0,1), 2, 4 );
-    this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(1,0), 4, 2 );
-
+    if(!chemistryExplicit_){
+        this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(1,1), 4, 4 );
+        this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(0,1), 2, 4 );
+        this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(1,0), 4, 2 );
+    }
 }
 template<class SC,class LO,class GO,class NO>
 void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time) const
@@ -574,14 +598,16 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
 
     //this->problemSCI_->getResidualVector()->getBlockNonConst(0)->scale(-1.0);
     this->residualVec_->addBlock(  this->problemSCI_->getResidualVector()->getBlockNonConst(0) , 2);
-    this->residualVec_->addBlock(  this->problemSCI_->getResidualVector()->getBlockNonConst(1) , 4);
+    if(!chemistryExplicit_)
+        this->residualVec_->addBlock(  this->problemSCI_->getResidualVector()->getBlockNonConst(1) , 4);
 
     MultiVectorPtr_Type residualFluidVelocityFSCI =
         Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(0) );
     MultiVectorPtr_Type residualSolidFSCI =
         Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(2) );
-    MultiVectorPtr_Type residualChemFSCI =
-        Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(4) );
+    
+    if(!chemistryExplicit_)
+        MultiVectorPtr_Type residualChemFSCI = Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(4) );
 
 
     MultiVectorPtr_Type residualCouplingFSCI =
@@ -666,12 +692,13 @@ void FSCI<SC,LO,GO,NO>::setFromPartialVectorsInit() const
     this->sourceTerm_->addBlock( this->problemSCI_->getSourceTerm()->getBlockNonConst(0), 2 );
 
     // Diffusion 
-    this->solution_->addBlock( this->problemSCI_->getSolution()->getBlockNonConst(1), 4 );
-    this->residualVec_->addBlock( this->problemSCI_->getResidualVector()->getBlockNonConst(1), 4 );
-    this->rhs_->addBlock( this->problemSCI_->getRhs()->getBlockNonConst(1), 4 );
-    this->previousSolution_->addBlock( this->problemSCI_->getPreviousSolution()->getBlockNonConst(1), 4 );
-    this->sourceTerm_->addBlock( this->problemSCI_->getSourceTerm()->getBlockNonConst(1), 4 );
-
+    if(!chemistryExplicit_){
+        this->solution_->addBlock( this->problemSCI_->getSolution()->getBlockNonConst(1), 4 );
+        this->residualVec_->addBlock( this->problemSCI_->getResidualVector()->getBlockNonConst(1), 4 );
+        this->rhs_->addBlock( this->problemSCI_->getRhs()->getBlockNonConst(1), 4 );
+        this->previousSolution_->addBlock( this->problemSCI_->getPreviousSolution()->getBlockNonConst(1), 4 );
+        this->sourceTerm_->addBlock( this->problemSCI_->getSourceTerm()->getBlockNonConst(1), 4 );
+    }
    /* if(!this->geometryExplicit_){
         this->solution_->addBlock( this->problemGeometry_->getSolution()->getBlockNonConst(0), 5 );
         // we dont have a previous solution for linear problems
@@ -891,19 +918,30 @@ void FSCI<SC,LO,GO,NO>::initializeGE(){
 
 */
     if (this->geometryExplicit_) {
-        this->solution_->resize( 4 );
-        this->rhs_->resize( 4 );
-        this->sourceTerm_->resize( 4 );
-        this->rhsFuncVec_.resize( 4 );
-        this->previousSolution_->resize( 4 );
-        this->residualVec_->resize( 4 );
-        // Add Diffusion again 
-        this->solution_->addBlock( this->problemSCI_->getSolution()->getBlockNonConst(1), 4 );
-        this->residualVec_->addBlock( this->problemSCI_->getResidualVector()->getBlockNonConst(1), 4 );
-        this->rhs_->addBlock( this->problemSCI_->getRhs()->getBlockNonConst(1), 4 );
-        this->previousSolution_->addBlock( this->problemSCI_->getPreviousSolution()->getBlockNonConst(1), 4 );
-        this->sourceTerm_->addBlock( this->problemSCI_->getSourceTerm()->getBlockNonConst(1), 4 );
-
+        if(chemistryExplicit_){
+            this->solution_->resize( 4 );
+            this->rhs_->resize( 4 );
+            this->sourceTerm_->resize( 4 );
+            this->rhsFuncVec_.resize( 4 );
+            this->previousSolution_->resize( 4 );
+            this->residualVec_->resize( 4 );
+            // Add Diffusion again 
+        
+        }
+        else{
+            this->solution_->resize( 5 );
+            this->rhs_->resize( 5 );
+            this->sourceTerm_->resize( 5 );
+            this->rhsFuncVec_.resize( 5 );
+            this->previousSolution_->resize( 5 );
+            this->residualVec_->resize( 5 );
+            // Add Diffusion again 
+            this->solution_->addBlock( this->problemSCI_->getSolution()->getBlockNonConst(1), 4 );
+            this->residualVec_->addBlock( this->problemSCI_->getResidualVector()->getBlockNonConst(1), 4 );
+            this->rhs_->addBlock( this->problemSCI_->getRhs()->getBlockNonConst(1), 4 );
+            this->previousSolution_->addBlock( this->problemSCI_->getPreviousSolution()->getBlockNonConst(1), 4 );
+            this->sourceTerm_->addBlock( this->problemSCI_->getSourceTerm()->getBlockNonConst(1), 4 );
+        }
         this->initVectorSpaces();  //reinitialize NOX vector spaces
     }
 }

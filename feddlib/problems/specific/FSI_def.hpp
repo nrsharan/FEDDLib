@@ -949,7 +949,7 @@ void FSI<SC,LO,GO,NO>::solveGeometryProblem() const
 
         this->problemGeometry_->solve();
         
-        if (!exporterGeo_.is_null())
+        if (!this->exporterGeo_.is_null())
             this->exporterGeo_->save( this->timeSteppingTool_->currentTime() );
         
 
@@ -1543,7 +1543,7 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
 
     
     }
-    if (pressureRB == "Absorbing" || pressureRB == "Absorbing Resistance")
+    if (pressureRB == "Absorbing" || pressureRB == "Absorbing Paper")
     {
         if(this->verbose_)
             cout << " Computing absorbing boundary condition .. " << endl;
@@ -1578,15 +1578,6 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
             flowRateOutlet_n_1_ = flowRateInlet_n_1; 
         } 
         
-        double unsteadyStart = this->parameterList_->sublist("Parameter").get("Heart Beat Start",0.2); 
-        if( unsteadyStart +1e-10 > timeSteppingTool_->currentTime() &&  unsteadyStart -1e-10 < timeSteppingTool_->currentTime() )
-        {
-            double areaOutlet_T = 0.;
-            this->feFactory_->assemblyArea(this->dim_, areaOutlet_T, flagOutlet);
-            areaOutlet_T_ = areaOutlet_T;
-            if(this->verbose_)
-                cout << " ---- Absorbing boundary condition: Start of unsteady Phase with areaOutlet_T=" <<areaOutlet_T_<< " ---- " << endl;
-        }
         double flowRateInlet_n = 0.;
         this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
         flowRateOutlet_n_ = flowRateInlet_n; 
@@ -1595,11 +1586,34 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
         flowRateOutlet_timesteps[0] = flowRateOutlet_n_1_;
         flowRateOutlet_timesteps[1] = flowRateOutlet_n_;
 
-        if(pressureRB == "Absorbing")
-            pressureOutlet_ = this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaOutlet_init_, areaOutlet_T_,this->parameterList_,0);
-        else
-            pressureOutlet_ = this->feFactory_->assemblyAbsorbingResistanceBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaOutlet_init_,this->parameterList_,0);
+        if(pressureRB == "Absorbing Paper"){
+
+            double unsteadyStart = this->parameterList_->sublist("Parameter").get("Heart Beat Start",0.2); 
+            if( unsteadyStart +1e-10 > timeSteppingTool_->currentTime() &&  unsteadyStart -1e-10 < timeSteppingTool_->currentTime() )
+            {
+            double areaOutlet_T = 0.;
+            this->feFactory_->assemblyArea(this->dim_, areaOutlet_T, flagOutlet);
+            areaOutlet_T_ = areaOutlet_T;
+            if(this->verbose_)
+                cout << " ---- Absorbing boundary condition: Start of unsteady Phase with areaOutlet_T=" << areaOutlet_T_<< " ---- " << endl;
+            }
+
+            pressureOutlet_ = this->feFactory_->assemblyAbsorbingBoundaryPaper(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaOutlet_init_, areaOutlet_T_,this->parameterList_,0);
+
+        }
+        else{
+            double rampTime = this->parameterList_->sublist("Parameter").get("Max Ramp Time",0.1); 
+            if( rampTime < timeSteppingTool_->currentTime() &&  rampTime + 0.05 > timeSteppingTool_->currentTime() )
+            {
+                double areaOutlet_T = 0.;
+                this->feFactory_->assemblyArea(this->dim_, areaOutlet_T, flagOutlet);
+                areaOutlet_T_ = areaOutlet_T;
+                if(this->verbose_)
+                    cout << " ---- Absorbing boundary condition: Start of unsteady Phase with areaOutlet_T=" << areaOutlet_T_<< " ---- " << endl;
+            }
+            pressureOutlet_ = this->feFactory_->assemblyAbsorbingBoundary(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaOutlet_init_,areaOutlet_T_,this->parameterList_,0);
        
+        }
         this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
 
         flowRateOutlet_n_1_ = flowRateOutlet_n_;

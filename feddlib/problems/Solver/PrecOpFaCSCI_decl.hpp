@@ -60,6 +60,15 @@ public:
                     ThyraLinOpPtr_Type fInv,
                     ThyraLinOpPtr_Type fF,
                     ThyraLinOpPtr_Type fBT);
+                    
+    void setCE(ThyraLinOpPtr_Type C1,
+                    ThyraLinOpPtr_Type C1T,
+                    ThyraLinOpPtr_Type C2,
+                    ThyraLinOpPtr_Type sciInv,
+                    ThyraLinOpPtr_Type sciS,
+                    ThyraLinOpPtr_Type fInv,
+                    ThyraLinOpPtr_Type fF,
+                    ThyraLinOpPtr_Type fBT);
   
     void setC1(ThyraLinOpPtr_Type C1);
     void setC1T(ThyraLinOpPtr_Type C1T);

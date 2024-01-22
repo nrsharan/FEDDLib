@@ -62,6 +62,27 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::setGE(ThyraLinOpPtr_Type C1,
     initialize();
 }
 
+template<class SC, class LO, class GO, class NO>
+void PrecOpFaCSCI<SC,LO,GO,NO>::setCE(ThyraLinOpPtr_Type C1,
+                                     ThyraLinOpPtr_Type C1T,
+                                     ThyraLinOpPtr_Type C2,
+                                     ThyraLinOpPtr_Type sciInv,
+                                     ThyraLinOpPtr_Type sciS,
+                                     ThyraLinOpPtr_Type fInv,
+                                     ThyraLinOpPtr_Type fF,
+                                     ThyraLinOpPtr_Type fBT){
+
+    setC1(C1);
+    setC1T(C1T);
+    setC2(C2);
+    setSCIS(sciS);
+    setSCIInv(sciInv);
+    setFluidInv(fInv);
+    setFluidF(fF);
+    setFluidBT(fBT);
+
+    initialize();
+}
     
     
 template<class SC, class LO, class GO, class NO>
@@ -122,23 +143,25 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::initialize(){
     TEUCHOS_TEST_FOR_EXCEPTION(fInv_.is_null(), std::runtime_error,"Can not initialize FaCSCI preconditioner: Fluid preconditioner not set.");
     TEUCHOS_TEST_FOR_EXCEPTION(sciInv_.is_null(), std::runtime_error,"Can not initialize FaCSCI preconditioner: Structure preconditioner not set.");
     TEUCHOS_TEST_FOR_EXCEPTION(C1_.is_null(), std::runtime_error,"Can not initialize FaCSCI preconditioner: C1 not set.");
-    Teuchos::Array< Teuchos::RCP< const Thyra::VectorSpaceBase< SC > > > vectorSpacesRange( 5 );
-    Teuchos::Array< Teuchos::RCP< const Thyra::VectorSpaceBase< SC > > > vectorSpacesDomain( 5 );
+    Teuchos::Array< Teuchos::RCP< const Thyra::VectorSpaceBase< SC > > > vectorSpacesRange( 4 );
+    Teuchos::Array< Teuchos::RCP< const Thyra::VectorSpaceBase< SC > > > vectorSpacesDomain( 4 );
     vectorSpacesRange[0] = fF_->range();
     vectorSpacesRange[1] = fBT_->domain();
     vectorSpacesRange[2] = sciS_->range();
     vectorSpacesRange[3] = C1_->range();
-    vectorSpacesRange[4] = sciC_->range();
     
     vectorSpacesDomain[0] = fF_->domain();
     vectorSpacesDomain[1] = fBT_->domain();
     vectorSpacesDomain[2] = sciS_->domain();
     vectorSpacesDomain[3] = C1T_->domain();
-    vectorSpacesDomain[4] = sciC_->domain();
 
     if ( !gInv_.is_null() ) {
         vectorSpacesRange.push_back( gInv_->range() );
         vectorSpacesDomain.push_back( gInv_->domain() );
+    }
+    if(!sciC_.is_null()){
+        vectorSpacesRange.push_back( sciC_->range() );
+        vectorSpacesDomain.push_back( sciC_->domain() );     
     }
     //     defaultProductRange_;
     //    Teuchos::RCP<const Thyra::DefaultProductVectorSpace<SC> > defaultProductDomain_;
@@ -206,57 +229,59 @@ void PrecOpFaCSCI<SC,LO,GO,NO>::applyImpl(
 
     Y_inout->assign(0.); // set to zero
 
-
+    // ##############################################################################
+    // SCI PART 
+    // ##############################################################################
 
     // SOLID : Solid at block component 2 
     Teuchos::RCP< const MultiVectorBase< SC > > X_s = X->getMultiVectorBlock(2);
     Teuchos::RCP< MultiVectorBase< SC > > Y_s = Y->getNonconstMultiVectorBlock(2);
-    assign(Y_s.ptr(), *X_s); 
+    assign(Y_s.ptr(), *X_s);  
 
-    /*std::cout << "Y_s " << std::endl;
-    Y_s->describe(*out,Teuchos::VERB_EXTREME);
-    comm_->barrier();    comm_->barrier();    comm_->barrier();*/
    
-
-    // Chemistry: Chemistry at block component 5
-    Teuchos::RCP< const MultiVectorBase< SC > > X_chem = X->getMultiVectorBlock(4);
-    Teuchos::RCP< MultiVectorBase< SC > > Y_chem = Y->getNonconstMultiVectorBlock(4);
-    assign(Y_chem.ptr(), *X_chem);
-
-   // Teuchos::RCP< const Thyra::TpetraMultiVector< SC, LO, GO, NO > > XsTpetra =
-   // Teuchos::rcp_dynamic_cast< const Thyra::TpetraMultiVector< SC, LO, GO, NO > > ( X_s );
-
-    Teuchos::Array< Teuchos::RCP< Thyra::MultiVectorBase< SC > > > X_sci( 2 );
-    Teuchos::Array< Teuchos::RCP< Thyra::MultiVectorBase< SC > > > Y_sci( 2 );
-
-    X_sci[0] = Y_s;
-    X_sci[1] = Y_chem;
-
-    Y_sci[0] = Y_s;
-    Y_sci[1] = Y_chem;
-    
-    
     //std::cout << "  ########## Apply PrecOpFaCSCI: SCI  " << std::endl;
     if (useSolidPreconditioner_){
-    
-        Teuchos::RCP< const Thyra::VectorSpaceBase< SC > > sciMonoVS = sciInv_->domain();
-        // std::cout << " Initi X_scimono_ " << std::endl;
-        if ( X_scimono_.is_null() ){
-            X_scimono_ = createMembers( sciMonoVS, X_sci[0]->domain()->dim() );
-            Y_scimono_ = createMembers( sciMonoVS, Y_sci[0]->domain()->dim() );
+
+         // Chemistry: Chemistry at block component 5
+   
+        if(!sciC_.is_null()){
+            Teuchos::RCP< const MultiVectorBase< SC > > X_chem = X->getMultiVectorBlock(4);
+            Teuchos::RCP< MultiVectorBase< SC > > Y_chem = Y->getNonconstMultiVectorBlock(4);
+            assign(Y_chem.ptr(), *X_chem);
+            Teuchos::Array< Teuchos::RCP< Thyra::MultiVectorBase< SC > > > X_sci( 2 );
+            Teuchos::Array< Teuchos::RCP< Thyra::MultiVectorBase< SC > > > Y_sci( 2 );
+
+            X_sci[0] = Y_s;
+            X_sci[1] = Y_chem;
+
+            Y_sci[0] = Y_s;
+            Y_sci[1] = Y_chem;
+            Teuchos::RCP< const Thyra::VectorSpaceBase< SC > > sciMonoVS = sciInv_->domain();
+            // std::cout << " Initi X_scimono_ " << std::endl;
+            if ( X_scimono_.is_null() ){
+                X_scimono_ = createMembers( sciMonoVS, X_sci[0]->domain()->dim() );
+                Y_scimono_ = createMembers( sciMonoVS, Y_sci[0]->domain()->dim() );
+            }
+            //We can/should speedup this process
+        // std::cout << " Copy to mono " << std::endl;
+
+            copyToMonoSCI(X_sci);
+            //std::cout << " Apply " << std::endl;
+
+            sciInv_->apply(NOTRANS, *X_scimono_, Y_scimono_.ptr(), 1., 0.);
+            copyFromMonoSCI(Y_sci); 
         }
-        //We can/should speedup this process
-       // std::cout << " Copy to mono " << std::endl;
-
-        copyToMonoSCI(X_sci);
-        //std::cout << " Apply " << std::endl;
-
-        sciInv_->apply(NOTRANS, *X_scimono_, Y_scimono_.ptr(), 1., 0.);
-        copyFromMonoSCI(Y_sci); 
+        else if(sciC_.is_null()){
+            sciInv_->apply(NOTRANS, *X_s, Y_s.ptr(), 1., 0.);        
+        }
     }
     else{
         assign(Y_s.ptr(), *X_s);
-        assign(Y_chem.ptr(), *X_chem);
+        if(!sciC_.is_null()){
+            Teuchos::RCP< const MultiVectorBase< SC > > X_chem = X->getMultiVectorBlock(4);
+            Teuchos::RCP< MultiVectorBase< SC > > Y_chem = Y->getNonconstMultiVectorBlock(4);
+            assign(Y_chem.ptr(), *X_chem);
+        }
     }
     
   

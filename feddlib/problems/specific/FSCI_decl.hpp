@@ -241,10 +241,10 @@ public:
 private:
     std::string materialModel_;
     vec_dbl_Type valuesForExport_;
+    bool chemistryExplicit_;
     //bool geometryExplicit_;
     ExporterTxtPtr_Type exporterTxtDrag_;
     ExporterTxtPtr_Type exporterTxtLift_;
-    mutable ExporterPtr_Type exporterGeo_;
     /*####################*/
 
 public:

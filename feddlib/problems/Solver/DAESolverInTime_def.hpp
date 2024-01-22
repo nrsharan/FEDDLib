@@ -1071,7 +1071,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
             this->problemTime_->assemble("SolveChemistryProblem");
             
-
         }
 
         // ######################
@@ -1817,20 +1816,11 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             }
         }
 
-        /*for (int i = 0; i < sizeChem; i++)
-        {
-            for (int j = 0; j < sizeChem; j++)
-            {
-                massCoeffFSI[i + sizeFluid+ sizeStructure][j + sizeFluid + sizeStructure] = massCoeffChem[i][j];
-                problemCoeffFSI[i + sizeFluid + sizeStructure][j + sizeFluid + sizeStructure] = problemCoeffChem[i][j];
-            }
-        }*/
-    // massCoeffFSI[4][4] = massCoeffChem[0][0];
-        problemCoeffFSI[4][4] = problemCoeffChem[0][0];
-        
-        problemCoeffFSI[2][4] = 1.; // SCI Coupling 1
-        problemCoeffFSI[4][2] = 1.; // SCI Coupling 2
-
+        if(!chemistryExplicit_){
+            problemCoeffFSI[4][4] = problemCoeffChem[0][0];
+            problemCoeffFSI[2][4] = 1.; // SCI Coupling 1
+            problemCoeffFSI[4][2] = 1.; // SCI Coupling 2
+        }
         // Setze noch Einsen an die Stellen, wo Eintraege (Kopplungsbloecke) vorhanden sind.
         problemCoeffFSI[0][3] = 1.0; // C1_T
         problemCoeffFSI[2][3] = 1.0; // C3_T
@@ -1900,11 +1890,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 
         if(chemistryExplicit_)
         {
+
+            fsci->problemSCI_->assemble("UpdateChemInTime");
+
             fsci->problemSCI_->assemble("MoveMesh");
             
             this->problemTime_->assemble("SolveChemistryProblem");
         
-
         }
 
 
@@ -3187,12 +3179,14 @@ void DAESolverInTime<SC,LO,GO,NO>::setupExporter(){
     for (int i=0; i<timeStepDef_.size(); i++) {
         // \lambda in FSI, koennen wir nicht exportieren, weil keine Elementliste dafuer vorhanden
         bool exportThisBlock  = true;
+        //bool chemistryExplicit = this->parameterList_->sublist("Parameter").get("Chemistry Explicit",false);
         if(this->parameterList_->sublist("Parameter").get("FSI",false) == true  )
             exportThisBlock = (i != 3);
        else if(this->parameterList_->sublist("Parameter").get("FSCI",false) == true){
             exportThisBlock = (i != 3);
             //exportThisBlock = (i != 4);
-           
+        //if(chemistryExplicit)   
+        //   exportThisBlock = false;
        }
 
         if(exportThisBlock)

@@ -242,13 +242,13 @@ public:
     mutable Teuchos::RCP<TimeSteppingTools>	timeSteppingTool_;
 
     bool geometryExplicit_;
+    mutable ExporterPtr_Type exporterGeo_;
 
 private:
     std::string materialModel_;
     vec_dbl_Type valuesForExport_;
     ExporterTxtPtr_Type exporterTxtDrag_;
     ExporterTxtPtr_Type exporterTxtLift_;
-    mutable ExporterPtr_Type exporterGeo_;
     mutable double areaInlet_init_=0.;
     mutable double areaOutlet_init_ =0.;
     mutable double areaOutlet_T_ =0.;
