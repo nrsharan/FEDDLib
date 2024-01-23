@@ -658,7 +658,7 @@ void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &r
 
     for(int i= 0; i< arrayUni.size() ; i++)
         if(fabs(arrayMultiUni[i]) > 0)
-            arrayUni[i]  = arrayUni[i]/ fabs(arrayMultiUni[i]); 
+            arrayUni[i]  = arrayUni[i]/ arrayMultiUni[i]; 
         else
             arrayUni[i]  =0.;    
 }
@@ -726,7 +726,7 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
 		numSolid=4;
         if(FETypeSolid == "P2")
             numSolid=10;
-	}
+    }
 	tuple_disk_vec_ptr_Type problemDisk = Teuchos::rcp(new tuple_disk_vec_Type(0));
 	tuple_ssii_Type chem ("Chemistry",FETypeChem,dofsChem,numChem);
 	tuple_ssii_Type solid ("Solid",FETypeSolid,dofsSolid,numSolid);
@@ -776,8 +776,9 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
         // ------------------------
         buildTransformation(elementsSolid->getElement(T).getVectorNodeList(), pointsRep, B, FETypeSolid);
         detB = B.computeInverse(Binv);
-        absDetB = std::fabs(detB);
-       
+        //absDetB = std::fabs(detB);
+        if(detB <=0.)
+           cout << " Determinante Element: " << detB << endl;
         // ------------------------
 
 		if(assembleMode == "Jacobian"){
@@ -1346,7 +1347,9 @@ void FE<SC,LO,GO,NO>::initAssembleFEElements(string elementType,tuple_disk_vec_p
     int materialID=1;
 	for (UN T=0; T<elements->numberElements(); T++) {
 		
-		nodes = getCoordinates(elements->getElement(T).getVectorNodeList(), pointsRep);
+        vec_int_Type nodeListElement = elements->getElement(T).getVectorNodeList();
+       // vec_int_Type nodeList = {nodeListElement[0], nodeListElement[3], nodeListElement[2], nodeListElement[1], nodeListElement[7], nodeListElement[9], nodeListElement[6], nodeListElement[4], nodeListElement[8], nodeListElement[5]};
+		nodes = getCoordinates(nodeListElement, pointsRep);
 
 		AssembleFEFactory<SC,LO,GO,NO> assembleFEFactory;
 
