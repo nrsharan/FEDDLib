@@ -658,7 +658,7 @@ void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &r
 
     for(int i= 0; i< arrayUni.size() ; i++)
         if(fabs(arrayMultiUni[i]) > 0)
-            arrayUni[i]  = arrayUni[i]/ arrayMultiUni[i]; 
+            arrayUni[i]  = arrayUni[i]/ fabs(arrayMultiUni[i]); 
         else
             arrayUni[i]  =0.;    
 }
