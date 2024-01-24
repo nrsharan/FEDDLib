@@ -364,7 +364,7 @@ void FSI<SC,LO,GO,NO>::reAssemble(std::string type) const
     double dt = this->parameterList_->sublist("Timestepping Parameter").get("dt",0.02);
 
     // Fluid-Dichte
-    double density = this->problemFluid_->getParameterList()->sublist("Parameter").get("Density",1.);
+    double density = this->problemFluid_->getParameterList()->sublist("Parameter").get("Density",1000.);
     double viscosity = this->problemFluid_->getParameterList()->sublist("Parameter").get("Viscosity",1.);
 
     if(type == "UpdateMeshDisplacement")
@@ -393,6 +393,9 @@ void FSI<SC,LO,GO,NO>::reAssemble(std::string type) const
             std::cout << "-- Reassembly (UpdateTime)" << '\n';
 
         updateTime();
+        if (materialModel_!="linear")
+            this->problemStructureNonLin_->reAssemble("UpdateTime");
+            
         return;
     }
 
@@ -603,7 +606,7 @@ void FSI<SC,LO,GO,NO>::reAssembleExtrapolation(BlockMultiVectorPtrArray_Type pre
 {
     double dt = this->parameterList_->sublist("Timestepping Parameter").get("dt",0.02);
     // Fluid-Dichte
-    double density = this->problemFluid_->getParameterList()->sublist("Parameter").get("Density",1.);
+    double density = this->problemFluid_->getParameterList()->sublist("Parameter").get("Density",1000.);
 
     // ###############
     // w bestimmen
@@ -717,7 +720,7 @@ void FSI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     if (!geometryExplicit_) {
         
         P_.reset(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
-        double density = this->problemTimeFluid_->getParameterList()->sublist("Parameter").get("Density",1.e-0);
+        double density = this->problemTimeFluid_->getParameterList()->sublist("Parameter").get("Density",1000.e-0);
         
         this->feFactory_->assemblyAdditionalConvection( this->dim_, this->domain_FEType_vec_.at(0), P_, w_rep_, true );
         P_->resumeFill();
@@ -1087,7 +1090,7 @@ void FSI<SC,LO,GO,NO>::setFluidMassmatrix( MatrixPtr_Type& massmatrix ) const
     //######################
     // Massematrix fuer FSI combineSystems(), ggf nichtlinear.
     //######################
-    double density = this->problemTimeFluid_->getParameterList()->sublist("Parameter").get("Density",1.e-0);
+    double density = this->problemTimeFluid_->getParameterList()->sublist("Parameter").get("Density",1000.e-0);
     int size = this->problemTimeFluid_->getSystem()->size();
 
     this->problemTimeFluid_->systemMass_.reset(new BlockMatrix_Type(size));
@@ -1294,6 +1297,7 @@ template<class SC,class LO,class GO,class NO>
 void FSI<SC,LO,GO,NO>::updateTime() const
 {
     timeSteppingTool_->t_ = timeSteppingTool_->t_ + timeSteppingTool_->dt_prev_;
+    
 
 }
 

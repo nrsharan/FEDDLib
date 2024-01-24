@@ -1456,13 +1456,13 @@ void MeshUnstructured<SC,LO,GO,NO>::readNodes(){
     double scale=1.0;
     if(convertToSI_){
         if(meshUnitRead_ == "mm")
-            scale = pow(10,-3);
-        else if(meshUnitRead_ == "cm")
-            scale = pow(10,-2);
-        else if(meshUnitRead_ == "dm")
             scale = pow(10,-1);
-        else if(meshUnitRead_ == "m")
+        else if(meshUnitRead_ == "cm")
             scale = pow(10,0);
+        else if(meshUnitRead_ == "dm")
+            scale = pow(10,1);
+        else if(meshUnitRead_ == "m")
+            scale = pow(10,2);
         else
             TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "Meshunstr: Read Nodes() - convertToSI_ = true, but read unit unknown, please check.");
 

@@ -6854,7 +6854,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundaryPaper(int dim,
     double normalScale = params->sublist("Parameter Fluid").get("Normal Scale",1.0); 
     double E = params->sublist("Parameter Fluid").get("E",12.0); 
     double wallThickness = params->sublist("Parameter Fluid").get("Wall thickness",0.0006); 
-    double density = params->sublist("Parameter Fluid").get("Density",1.0); 
+    double density = params->sublist("Parameter Fluid").get("Density",1000.0); 
     double p_ref_input = params->sublist("Parameter Fluid").get("Reference fluid pressure",10666.); 
 
     double rampTime = params->sublist("Parameter").get("Max Ramp Time",0.1); 
@@ -7474,7 +7474,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingResistanceBoundary(int dim,
     double normalScale = params->sublist("Parameter Fluid").get("Normal Scale",1.0); 
     double E = params->sublist("Parameter Fluid").get("E",12.0); 
     double wallThickness = params->sublist("Parameter Fluid").get("Wall thickness",0.001); 
-    double density = params->sublist("Parameter Fluid").get("Density",1.0); 
+    double density = params->sublist("Parameter Fluid").get("Density",1000.0); 
     double p_ref_input = params->sublist("Parameter Fluid").get("Reference fluid pressure",8000.); 
     double resistanceRamp = params->sublist("Parameter Fluid").get("Resistance Ramp",2.); // Ramp time of fluid
     double resistance = params->sublist("Parameter Fluid").get("Resistance",1.0); 

@@ -7,8 +7,8 @@
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
 				<!-- For Explicit Coupling and SCI_NH , SCI_SMC_Active_Growth_Reorientation-->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
-				<Parameter name="E" type="double" value="380158.5"/> <!-- N/m²-->
-				<Parameter name="E1" type="double" value="300158.5"/><!-- N/m²-->
+				<Parameter name="E" type="double" value="380.1585e4"/> <!-- N/cm²-->
+				<Parameter name="E1" type="double" value="300.1585e4"/><!-- N/cm²-->
 				<Parameter name="c1" type="double" value="0.25"/>
 				<Parameter name="Poisson Ratio" type="double" value="0.49"/>
 				<!-- ######################################## -->
@@ -26,15 +26,15 @@
                 <Parameter name="K3" type="double" value="0.134e0"/>
                 <Parameter name="K4" type="double" value="0.166e-2"/>
                 <Parameter name="K7" type="double" value="0.66e-4"/>
-                <Parameter name="Kappa" type="double" value="0.148262e6"/>
+                <Parameter name="Kappa" type="double" value="148.262e4"/>
                 <Parameter name="Beta1" type="double" value="0.001006"/>
-                <Parameter name="MuA" type="double" value="0.011857e6"/>
+                <Parameter name="MuA" type="double" value="11.857e4"/>
                 <Parameter name="Beta2" type="double" value="0.02668"/>
-                <Parameter name="Alpha2" type="double" value="0.15173775e6"/>
+                <Parameter name="Alpha2" type="double" value="151.73775e4"/>
                 <Parameter name="Alpha3" type="double" value="2.75662"/>
-                <Parameter name="Alpha1" type="double" value="11.52507e3"/>
-                <Parameter name="Alpha4" type="double" value="1.27631e3"/>
-                <Parameter name="Alpha5" type="double" value="0.308798e1"/>
+                <Parameter name="Alpha1" type="double" value="11.52507e4"/>
+                <Parameter name="Alpha4" type="double" value="1.27631e4"/>
+                <Parameter name="Alpha5" type="double" value="3.08798"/>
                 <Parameter name="Gamma6" type="double" value="0.15e1"/>
                 <Parameter name="LambdaP50" type="double" value="1.0e0"/>
                 <Parameter name="KDotMin" type="double" value="-0.0010694"/>
@@ -51,7 +51,7 @@
                 <Parameter name="C50" type="double" value="0.5e0"/>
                 <Parameter name="D0" type="double" value="6.e-02"/>
                 <Parameter name="m" type="double" value="0.e0"/>
-                <Parameter name="ActiveStartTime" type="double" value="2.000"/>
+                <Parameter name="ActiveStartTime" type="double" value="0.2001"/>
                 <Parameter name="KEtaPlus" type="double" value="0.0001"/>
                 <Parameter name="MEtaPlus" type="double" value="5.0"/>
                 <Parameter name="GrowthStartTime" type="double" value="10000.0"/>
@@ -69,16 +69,17 @@
                 <Parameter name="ThetaMinus2" type="double" value="0.98e0"/>
                 <Parameter name="ThetaMinus3" type="double" value="0.98e0"/>
                 <Parameter name="KMin" type="double" value="0.15"/>
-                <Parameter name="Rho" type="double" value="1000.e0"/>
+                <Parameter name="Rho" type="double" value="1.e0"/>
             </ParameterList>
-            	<ParameterList name="2">
+            	
+          	<ParameterList name="2">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="16"/>
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
 				<!-- For Explicit Coupling and SCI_NH , SCI_SMC_Active_Growth_Reorientation-->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
-				<Parameter name="E" type="double" value="380158.5"/> <!-- N/m²-->
-				<Parameter name="E1" type="double" value="300158.5"/><!-- N/m²-->
+				<Parameter name="E" type="double" value="380.1585e4"/> <!-- N/cm²-->
+				<Parameter name="E1" type="double" value="300.1585e4"/><!-- N/cm²-->
 				<Parameter name="c1" type="double" value="0.25"/>
 				<Parameter name="Poisson Ratio" type="double" value="0.49"/>
 				<!-- ######################################## -->
@@ -96,15 +97,15 @@
                 <Parameter name="K3" type="double" value="0.134e0"/>
                 <Parameter name="K4" type="double" value="0.166e-2"/>
                 <Parameter name="K7" type="double" value="0.66e-4"/>
-                <Parameter name="Kappa" type="double" value="0.148262e6"/>
+                <Parameter name="Kappa" type="double" value="148.262e4"/>
                 <Parameter name="Beta1" type="double" value="0.001006"/>
-                <Parameter name="MuA" type="double" value="0.011857e6"/>
+                <Parameter name="MuA" type="double" value="11.857e4"/>
                 <Parameter name="Beta2" type="double" value="0.02668"/>
-                <Parameter name="Alpha2" type="double" value="0.15173775e6"/>
+                <Parameter name="Alpha2" type="double" value="151.73775e4"/>
                 <Parameter name="Alpha3" type="double" value="2.75662"/>
-                <Parameter name="Alpha1" type="double" value="11.52507e3"/>
-                <Parameter name="Alpha4" type="double" value="1.27631e3"/>
-                <Parameter name="Alpha5" type="double" value="0.308798e1"/>
+                <Parameter name="Alpha1" type="double" value="11.52507e4"/>
+                <Parameter name="Alpha4" type="double" value="1.27631e4"/>
+                <Parameter name="Alpha5" type="double" value="3.08798"/>
                 <Parameter name="Gamma6" type="double" value="0.15e1"/>
                 <Parameter name="LambdaP50" type="double" value="1.0e0"/>
                 <Parameter name="KDotMin" type="double" value="-0.0010694"/>
@@ -121,7 +122,7 @@
                 <Parameter name="C50" type="double" value="0.5e0"/>
                 <Parameter name="D0" type="double" value="6.e-02"/>
                 <Parameter name="m" type="double" value="0.e0"/>
-                <Parameter name="ActiveStartTime" type="double" value="2.000"/>
+                <Parameter name="ActiveStartTime" type="double" value="0.2001"/>
                 <Parameter name="KEtaPlus" type="double" value="0.0001"/>
                 <Parameter name="MEtaPlus" type="double" value="5.0"/>
                 <Parameter name="GrowthStartTime" type="double" value="10000.0"/>
@@ -139,16 +140,16 @@
                 <Parameter name="ThetaMinus2" type="double" value="0.98e0"/>
                 <Parameter name="ThetaMinus3" type="double" value="0.98e0"/>
                 <Parameter name="KMin" type="double" value="0.15"/>
-                <Parameter name="Rho" type="double" value="1000.e0"/>
+                <Parameter name="Rho" type="double" value="1.e0"/>
             </ParameterList>
-            	<ParameterList name="3">
+        	<ParameterList name="3">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="17"/>
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
 				<!-- For Explicit Coupling and SCI_NH , SCI_SMC_Active_Growth_Reorientation-->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
-				<Parameter name="E" type="double" value="380158.5"/> <!-- N/m²-->
-				<Parameter name="E1" type="double" value="300158.5"/><!-- N/m²-->
+				<Parameter name="E" type="double" value="380.1585e4"/> <!-- N/cm²-->
+				<Parameter name="E1" type="double" value="300.1585e4"/><!-- N/cm²-->
 				<Parameter name="c1" type="double" value="0.25"/>
 				<Parameter name="Poisson Ratio" type="double" value="0.49"/>
 				<!-- ######################################## -->
@@ -166,15 +167,15 @@
                 <Parameter name="K3" type="double" value="0.134e0"/>
                 <Parameter name="K4" type="double" value="0.166e-2"/>
                 <Parameter name="K7" type="double" value="0.66e-4"/>
-                <Parameter name="Kappa" type="double" value="0.148262e6"/>
+                <Parameter name="Kappa" type="double" value="148.262e4"/>
                 <Parameter name="Beta1" type="double" value="0.001006"/>
-                <Parameter name="MuA" type="double" value="0.011857e6"/>
+                <Parameter name="MuA" type="double" value="11.857e4"/>
                 <Parameter name="Beta2" type="double" value="0.02668"/>
-                <Parameter name="Alpha2" type="double" value="0.15173775e6"/>
+                <Parameter name="Alpha2" type="double" value="151.73775e4"/>
                 <Parameter name="Alpha3" type="double" value="2.75662"/>
-                <Parameter name="Alpha1" type="double" value="11.52507e3"/>
-                <Parameter name="Alpha4" type="double" value="1.27631e3"/>
-                <Parameter name="Alpha5" type="double" value="0.308798e1"/>
+                <Parameter name="Alpha1" type="double" value="11.52507e4"/>
+                <Parameter name="Alpha4" type="double" value="1.27631e4"/>
+                <Parameter name="Alpha5" type="double" value="3.08798"/>
                 <Parameter name="Gamma6" type="double" value="0.15e1"/>
                 <Parameter name="LambdaP50" type="double" value="1.0e0"/>
                 <Parameter name="KDotMin" type="double" value="-0.0010694"/>
@@ -191,7 +192,7 @@
                 <Parameter name="C50" type="double" value="0.5e0"/>
                 <Parameter name="D0" type="double" value="6.e-02"/>
                 <Parameter name="m" type="double" value="0.e0"/>
-                <Parameter name="ActiveStartTime" type="double" value="2.000"/>
+                <Parameter name="ActiveStartTime" type="double" value="0.2001"/>
                 <Parameter name="KEtaPlus" type="double" value="0.0001"/>
                 <Parameter name="MEtaPlus" type="double" value="5.0"/>
                 <Parameter name="GrowthStartTime" type="double" value="10000.0"/>
@@ -209,16 +210,16 @@
                 <Parameter name="ThetaMinus2" type="double" value="0.98e0"/>
                 <Parameter name="ThetaMinus3" type="double" value="0.98e0"/>
                 <Parameter name="KMin" type="double" value="0.15"/>
-                <Parameter name="Rho" type="double" value="1000.e0"/>
+                <Parameter name="Rho" type="double" value="1.e0"/>
             </ParameterList>
-            	<ParameterList name="4">
+        	<ParameterList name="4">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="18"/>
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
 				<!-- For Explicit Coupling and SCI_NH , SCI_SMC_Active_Growth_Reorientation-->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
-				<Parameter name="E" type="double" value="380158.5"/> <!-- N/m²-->
-				<Parameter name="E1" type="double" value="300158.5"/><!-- N/m²-->
+				<Parameter name="E" type="double" value="380.1585e4"/> <!-- N/cm²-->
+				<Parameter name="E1" type="double" value="300.1585e4"/><!-- N/cm²-->
 				<Parameter name="c1" type="double" value="0.25"/>
 				<Parameter name="Poisson Ratio" type="double" value="0.49"/>
 				<!-- ######################################## -->
@@ -236,15 +237,15 @@
                 <Parameter name="K3" type="double" value="0.134e0"/>
                 <Parameter name="K4" type="double" value="0.166e-2"/>
                 <Parameter name="K7" type="double" value="0.66e-4"/>
-                <Parameter name="Kappa" type="double" value="0.148262e6"/>
+                <Parameter name="Kappa" type="double" value="148.262e4"/>
                 <Parameter name="Beta1" type="double" value="0.001006"/>
-                <Parameter name="MuA" type="double" value="0.011857e6"/>
+                <Parameter name="MuA" type="double" value="11.857e4"/>
                 <Parameter name="Beta2" type="double" value="0.02668"/>
-                <Parameter name="Alpha2" type="double" value="0.15173775e6"/>
+                <Parameter name="Alpha2" type="double" value="151.73775e4"/>
                 <Parameter name="Alpha3" type="double" value="2.75662"/>
-                <Parameter name="Alpha1" type="double" value="11.52507e3"/>
-                <Parameter name="Alpha4" type="double" value="1.27631e3"/>
-                <Parameter name="Alpha5" type="double" value="0.308798e1"/>
+                <Parameter name="Alpha1" type="double" value="11.52507e4"/>
+                <Parameter name="Alpha4" type="double" value="1.27631e4"/>
+                <Parameter name="Alpha5" type="double" value="3.08798"/>
                 <Parameter name="Gamma6" type="double" value="0.15e1"/>
                 <Parameter name="LambdaP50" type="double" value="1.0e0"/>
                 <Parameter name="KDotMin" type="double" value="-0.0010694"/>
@@ -261,7 +262,7 @@
                 <Parameter name="C50" type="double" value="0.5e0"/>
                 <Parameter name="D0" type="double" value="6.e-02"/>
                 <Parameter name="m" type="double" value="0.e0"/>
-                <Parameter name="ActiveStartTime" type="double" value="2.000"/>
+                <Parameter name="ActiveStartTime" type="double" value="0.2001"/>
                 <Parameter name="KEtaPlus" type="double" value="0.0001"/>
                 <Parameter name="MEtaPlus" type="double" value="5.0"/>
                 <Parameter name="GrowthStartTime" type="double" value="10000.0"/>
@@ -279,16 +280,16 @@
                 <Parameter name="ThetaMinus2" type="double" value="0.98e0"/>
                 <Parameter name="ThetaMinus3" type="double" value="0.98e0"/>
                 <Parameter name="KMin" type="double" value="0.15"/>
-                <Parameter name="Rho" type="double" value="1000.e0"/>
+                <Parameter name="Rho" type="double" value="1.e0"/>
             </ParameterList>
-            	<ParameterList name="5">
+        	<ParameterList name="5">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="19"/>
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
 				<!-- For Explicit Coupling and SCI_NH , SCI_SMC_Active_Growth_Reorientation-->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
-				<Parameter name="E" type="double" value="380158.5"/> <!-- N/m²-->
-				<Parameter name="E1" type="double" value="300158.5"/><!-- N/m²-->
+				<Parameter name="E" type="double" value="380.1585e4"/> <!-- N/cm²-->
+				<Parameter name="E1" type="double" value="300.1585e4"/><!-- N/cm²-->
 				<Parameter name="c1" type="double" value="0.25"/>
 				<Parameter name="Poisson Ratio" type="double" value="0.49"/>
 				<!-- ######################################## -->
@@ -306,15 +307,15 @@
                 <Parameter name="K3" type="double" value="0.134e0"/>
                 <Parameter name="K4" type="double" value="0.166e-2"/>
                 <Parameter name="K7" type="double" value="0.66e-4"/>
-                <Parameter name="Kappa" type="double" value="0.148262e6"/>
+                <Parameter name="Kappa" type="double" value="148.262e4"/>
                 <Parameter name="Beta1" type="double" value="0.001006"/>
-                <Parameter name="MuA" type="double" value="0.011857e6"/>
+                <Parameter name="MuA" type="double" value="11.857e4"/>
                 <Parameter name="Beta2" type="double" value="0.02668"/>
-                <Parameter name="Alpha2" type="double" value="0.15173775e6"/>
+                <Parameter name="Alpha2" type="double" value="151.73775e4"/>
                 <Parameter name="Alpha3" type="double" value="2.75662"/>
-                <Parameter name="Alpha1" type="double" value="11.52507e3"/>
-                <Parameter name="Alpha4" type="double" value="1.27631e3"/>
-                <Parameter name="Alpha5" type="double" value="0.308798e1"/>
+                <Parameter name="Alpha1" type="double" value="11.52507e4"/>
+                <Parameter name="Alpha4" type="double" value="1.27631e4"/>
+                <Parameter name="Alpha5" type="double" value="3.08798"/>
                 <Parameter name="Gamma6" type="double" value="0.15e1"/>
                 <Parameter name="LambdaP50" type="double" value="1.0e0"/>
                 <Parameter name="KDotMin" type="double" value="-0.0010694"/>
@@ -331,7 +332,7 @@
                 <Parameter name="C50" type="double" value="0.5e0"/>
                 <Parameter name="D0" type="double" value="6.e-02"/>
                 <Parameter name="m" type="double" value="0.e0"/>
-                <Parameter name="ActiveStartTime" type="double" value="2.000"/>
+                <Parameter name="ActiveStartTime" type="double" value="0.2001"/>
                 <Parameter name="KEtaPlus" type="double" value="0.0001"/>
                 <Parameter name="MEtaPlus" type="double" value="5.0"/>
                 <Parameter name="GrowthStartTime" type="double" value="10000.0"/>
@@ -349,16 +350,16 @@
                 <Parameter name="ThetaMinus2" type="double" value="0.98e0"/>
                 <Parameter name="ThetaMinus3" type="double" value="0.98e0"/>
                 <Parameter name="KMin" type="double" value="0.15"/>
-                <Parameter name="Rho" type="double" value="1000.e0"/>
+                <Parameter name="Rho" type="double" value="1.e0"/>
             </ParameterList>
-            	<ParameterList name="6">
+        	<ParameterList name="6">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="20"/>
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
 				<!-- For Explicit Coupling and SCI_NH , SCI_SMC_Active_Growth_Reorientation-->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
-				<Parameter name="E" type="double" value="380158.5"/> <!-- N/m²-->
-				<Parameter name="E1" type="double" value="300158.5"/><!-- N/m²-->
+				<Parameter name="E" type="double" value="380.1585e4"/> <!-- N/cm²-->
+				<Parameter name="E1" type="double" value="300.1585e4"/><!-- N/cm²-->
 				<Parameter name="c1" type="double" value="0.25"/>
 				<Parameter name="Poisson Ratio" type="double" value="0.49"/>
 				<!-- ######################################## -->
@@ -376,15 +377,15 @@
                 <Parameter name="K3" type="double" value="0.134e0"/>
                 <Parameter name="K4" type="double" value="0.166e-2"/>
                 <Parameter name="K7" type="double" value="0.66e-4"/>
-                <Parameter name="Kappa" type="double" value="0.148262e6"/>
+                <Parameter name="Kappa" type="double" value="148.262e4"/>
                 <Parameter name="Beta1" type="double" value="0.001006"/>
-                <Parameter name="MuA" type="double" value="0.011857e6"/>
+                <Parameter name="MuA" type="double" value="11.857e4"/>
                 <Parameter name="Beta2" type="double" value="0.02668"/>
-                <Parameter name="Alpha2" type="double" value="0.15173775e6"/>
+                <Parameter name="Alpha2" type="double" value="151.73775e4"/>
                 <Parameter name="Alpha3" type="double" value="2.75662"/>
-                <Parameter name="Alpha1" type="double" value="11.52507e3"/>
-                <Parameter name="Alpha4" type="double" value="1.27631e3"/>
-                <Parameter name="Alpha5" type="double" value="0.308798e1"/>
+                <Parameter name="Alpha1" type="double" value="11.52507e4"/>
+                <Parameter name="Alpha4" type="double" value="1.27631e4"/>
+                <Parameter name="Alpha5" type="double" value="3.08798"/>
                 <Parameter name="Gamma6" type="double" value="0.15e1"/>
                 <Parameter name="LambdaP50" type="double" value="1.0e0"/>
                 <Parameter name="KDotMin" type="double" value="-0.0010694"/>
@@ -401,7 +402,7 @@
                 <Parameter name="C50" type="double" value="0.5e0"/>
                 <Parameter name="D0" type="double" value="6.e-02"/>
                 <Parameter name="m" type="double" value="0.e0"/>
-                <Parameter name="ActiveStartTime" type="double" value="2.000"/>
+                <Parameter name="ActiveStartTime" type="double" value="0.2001"/>
                 <Parameter name="KEtaPlus" type="double" value="0.0001"/>
                 <Parameter name="MEtaPlus" type="double" value="5.0"/>
                 <Parameter name="GrowthStartTime" type="double" value="10000.0"/>
@@ -419,16 +420,16 @@
                 <Parameter name="ThetaMinus2" type="double" value="0.98e0"/>
                 <Parameter name="ThetaMinus3" type="double" value="0.98e0"/>
                 <Parameter name="KMin" type="double" value="0.15"/>
-                <Parameter name="Rho" type="double" value="1000.e0"/>
+                <Parameter name="Rho" type="double" value="1.e0"/>
             </ParameterList>
-            	<ParameterList name="7">
+        	<ParameterList name="7">
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="21"/>
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
 				<!-- For Explicit Coupling and SCI_NH , SCI_SMC_Active_Growth_Reorientation-->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
-				<Parameter name="E" type="double" value="380158.5"/> <!-- N/m²-->
-				<Parameter name="E1" type="double" value="300158.5"/><!-- N/m²-->
+				<Parameter name="E" type="double" value="380.1585e4"/> <!-- N/cm²-->
+				<Parameter name="E1" type="double" value="300.1585e4"/><!-- N/cm²-->
 				<Parameter name="c1" type="double" value="0.25"/>
 				<Parameter name="Poisson Ratio" type="double" value="0.49"/>
 				<!-- ######################################## -->
@@ -446,15 +447,15 @@
                 <Parameter name="K3" type="double" value="0.134e0"/>
                 <Parameter name="K4" type="double" value="0.166e-2"/>
                 <Parameter name="K7" type="double" value="0.66e-4"/>
-                <Parameter name="Kappa" type="double" value="0.148262e6"/>
+                <Parameter name="Kappa" type="double" value="148.262e4"/>
                 <Parameter name="Beta1" type="double" value="0.001006"/>
-                <Parameter name="MuA" type="double" value="0.011857e6"/>
+                <Parameter name="MuA" type="double" value="11.857e4"/>
                 <Parameter name="Beta2" type="double" value="0.02668"/>
-                <Parameter name="Alpha2" type="double" value="0.15173775e6"/>
+                <Parameter name="Alpha2" type="double" value="151.73775e4"/>
                 <Parameter name="Alpha3" type="double" value="2.75662"/>
-                <Parameter name="Alpha1" type="double" value="11.52507e3"/>
-                <Parameter name="Alpha4" type="double" value="1.27631e3"/>
-                <Parameter name="Alpha5" type="double" value="0.308798e1"/>
+                <Parameter name="Alpha1" type="double" value="11.52507e4"/>
+                <Parameter name="Alpha4" type="double" value="1.27631e4"/>
+                <Parameter name="Alpha5" type="double" value="3.08798"/>
                 <Parameter name="Gamma6" type="double" value="0.15e1"/>
                 <Parameter name="LambdaP50" type="double" value="1.0e0"/>
                 <Parameter name="KDotMin" type="double" value="-0.0010694"/>
@@ -471,7 +472,7 @@
                 <Parameter name="C50" type="double" value="0.5e0"/>
                 <Parameter name="D0" type="double" value="6.e-02"/>
                 <Parameter name="m" type="double" value="0.e0"/>
-                <Parameter name="ActiveStartTime" type="double" value="2.000"/>
+                <Parameter name="ActiveStartTime" type="double" value="0.2001"/>
                 <Parameter name="KEtaPlus" type="double" value="0.0001"/>
                 <Parameter name="MEtaPlus" type="double" value="5.0"/>
                 <Parameter name="GrowthStartTime" type="double" value="10000.0"/>
@@ -489,8 +490,7 @@
                 <Parameter name="ThetaMinus2" type="double" value="0.98e0"/>
                 <Parameter name="ThetaMinus3" type="double" value="0.98e0"/>
                 <Parameter name="KMin" type="double" value="0.15"/>
-                <Parameter name="Rho" type="double" value="1000.e0"/>
-            </ParameterList>
-            	
+                <Parameter name="Rho" type="double" value="1.e0"/>
+            </ParameterList>  	
         </ParameterList>    
 </ParameterList>    
