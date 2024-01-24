@@ -536,8 +536,10 @@ int main(int argc, char *argv[])
         
         //                    
 
-        vec_int_Type idsInterface(1,6);
-                                
+        vec_int_Type idsInterface(3,0);
+        idsInterface[0] = 6;
+        idsInterface[1] = 9;
+        idsInterface[2] = 10;                        
                         
         MeshPartitioner_Type::DomainPtrArray_Type domainP1Array(2);
         domainP1Array[0] = domainP1fluid;
@@ -788,8 +790,8 @@ int main(int argc, char *argv[])
        {
             Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryLaplace(new BCBuilder<SC,LO,GO,NO>( ));
             
-            bcFactoryLaplace->addBC(zeroBC, 2, 0, domainFluidVelocity, "Dirichlet", 1); //inflow ring
-            bcFactoryLaplace->addBC(zeroBC, 3, 0, domainFluidVelocity, "Dirichlet", 1); //outflow ring
+            bcFactoryLaplace->addBC(zeroBC, 10, 0, domainFluidVelocity, "Dirichlet", 1); //inflow ring
+            bcFactoryLaplace->addBC(zeroBC, 9, 0, domainFluidVelocity, "Dirichlet", 1); //outflow ring
             bcFactoryLaplace->addBC(zeroBC, 6, 0, domainFluidVelocity, "Dirichlet", 1); //surface
             
             ParameterListPtr_Type parameterListProblemL = Teuchos::getParametersFromXmlFile(xmlProbL);
@@ -875,19 +877,19 @@ int main(int argc, char *argv[])
             if(bcType=="Tube"){
                 bcFactory->addBC(flowRate3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
                 bcFactoryFluid->addBC(flowRate3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true,parabolicInflowDirection3D); // inflow 
-                bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet_Z", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
-                bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet_Z", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
-                bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet_Z", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
-                bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet_Z", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                //bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet_Z", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                //bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet_Z", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                //bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet_Z", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                //bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet_Z", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
 
             }
             if(bcType=="Plaque Artery"){
                 bcFactory->addBC(flowRate3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true , parabolicInflowDirection3DNeg); // inflow 
                 bcFactoryFluid->addBC(flowRate3DArteryHeartBeat, 4, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec, solutionLaplaceConst, true,parabolicInflowDirection3DNeg); // inflow 
-                bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
-                bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
-                bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
-                bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                //bcFactory->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                //bcFactoryFluid->addBC(zeroDirichlet3D, 2, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                //bcFactory->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
+                //bcFactoryFluid->addBC(zeroDirichlet3D, 3, 0, domainFluidVelocity, "Dirichlet", dim, parameter_vec);// solutionLaplaceConst, true , parabolicInflowDirection3D); // inflow 
    
             }
             if(bcType=="Benchmark"){
@@ -993,8 +995,8 @@ int main(int argc, char *argv[])
             bcFactoryGeometry->addBC(zeroDirichlet3D, 4, 0, domainGeometry, "Dirichlet", dim); // Inlet
             bcFactoryGeometry->addBC(zeroDirichlet3D, 5, 0, domainGeometry, "Dirichlet", dim); // Outlet
             bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // Interface
-            //bcFactoryGeometry->addBC(zeroDirichlet3D, 2, 0, domainGeometry, "Dirichlet", dim); // Interface
-            //bcFactoryGeometry->addBC(zeroDirichlet3D, 3, 0, domainGeometry, "Dirichlet", dim); // Interface
+            bcFactoryGeometry->addBC(zeroDirichlet3D, 9, 0, domainGeometry, "Dirichlet", dim); // Interface
+            bcFactoryGeometry->addBC(zeroDirichlet3D, 10, 0, domainGeometry, "Dirichlet", dim); // Interface
 
         }
         if(bcType=="Benchmark"){
