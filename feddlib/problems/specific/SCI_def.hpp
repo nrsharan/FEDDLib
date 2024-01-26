@@ -850,7 +850,7 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
     double beta = timeSteppingTool_->get_beta();
     double gamma = timeSteppingTool_->get_gamma();
     
-    //double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter Solid").get("Density",1000.e-0);
+    //double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter Solid").get("Density",1.e-0);
 
     // Temporaerer Koeffizienten fuer die Skalierung der Massematrix in der rechten Seite des Systems in UpdateNewmarkRhs()
     vec_dbl_Type coeffTemp(1);
@@ -961,7 +961,7 @@ void SCI<SC,LO,GO,NO>::setSolidMassmatrix( MatrixPtr_Type& massmatrix ) const
     //######################
     // Massematrix
     //######################
-    double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Density",1.3e3);
+    double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Density",1.0);
 
     int size = this->problemTimeStructure_->getSystem()->size();
 

@@ -6858,7 +6858,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundaryPaper(int dim,
     double p_ref_input = params->sublist("Parameter Fluid").get("Reference fluid pressure",10666.); 
 
     double rampTime = params->sublist("Parameter").get("Max Ramp Time",0.1); 
-    double unsteadyStart = params->sublist("Parameter").get("Heart Beat Start",0.2); 
+    double unsteadyStart = params->sublist("Parameter Fluid").get("Unsteady Start",0.2); 
     double flowRateInput = params->sublist("Parameter").get("Flowrate",3.0e-06); 
 
 

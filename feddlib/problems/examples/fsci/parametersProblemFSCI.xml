@@ -16,7 +16,7 @@
         <Parameter name="Geometry Explicit" type="bool" value="true"/>
         <Parameter name="Chemistry Explicit" type="bool" value="true"/>
         <Parameter name="Inflow Start Time" type="double" value="10.0"/><!-- Start of diffusion process -->
-        <Parameter name="Heart Beat Start" type="double" value="0.2"/><!-- Start of diffusion process -->
+        <Parameter name="Heart Beat Start" type="double" value="0.2"/><!-- Start of heartbeats -->
         <Parameter name="Coupling Type" type="string" value="implicit"/>
 
         <Parameter name="relNonLinTol" type="double" value="1.0e-8"/>
@@ -44,6 +44,7 @@
         <Parameter name="Set Outflow Pressure to Zero" type="bool" value="false"/>
 
         <Parameter name="Pressure Boundary Condition" type="string" value="Absorbing"/>         <!-- Resistance , Absorbing , Absorbing Resistance-->
+        <Parameter name="Unsteady Start" type="double" value="0.01"/><!-- Start of 'unsteady' phase -->
         <Parameter name="Average Flowrate" type="bool" value="true"/>
         <Parameter name="BC Ramp" type="double" value="0.1"/>
         <Parameter name="Resistance Ramp" type="double" value="0.0"/>

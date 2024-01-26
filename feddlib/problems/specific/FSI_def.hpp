@@ -364,7 +364,7 @@ void FSI<SC,LO,GO,NO>::reAssemble(std::string type) const
     double dt = this->parameterList_->sublist("Timestepping Parameter").get("dt",0.02);
 
     // Fluid-Dichte
-    double density = this->problemFluid_->getParameterList()->sublist("Parameter").get("Density",1000.);
+    double density = this->problemFluid_->getParameterList()->sublist("Parameter").get("Density",1.);
     double viscosity = this->problemFluid_->getParameterList()->sublist("Parameter").get("Viscosity",1.);
 
     if(type == "UpdateMeshDisplacement")
@@ -606,7 +606,7 @@ void FSI<SC,LO,GO,NO>::reAssembleExtrapolation(BlockMultiVectorPtrArray_Type pre
 {
     double dt = this->parameterList_->sublist("Timestepping Parameter").get("dt",0.02);
     // Fluid-Dichte
-    double density = this->problemFluid_->getParameterList()->sublist("Parameter").get("Density",1000.);
+    double density = this->problemFluid_->getParameterList()->sublist("Parameter").get("Density",1.);
 
     // ###############
     // w bestimmen
@@ -720,7 +720,7 @@ void FSI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     if (!geometryExplicit_) {
         
         P_.reset(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
-        double density = this->problemTimeFluid_->getParameterList()->sublist("Parameter").get("Density",1000.e-0);
+        double density = this->problemTimeFluid_->getParameterList()->sublist("Parameter").get("Density",1.e-0);
         
         this->feFactory_->assemblyAdditionalConvection( this->dim_, this->domain_FEType_vec_.at(0), P_, w_rep_, true );
         P_->resumeFill();
@@ -1090,7 +1090,7 @@ void FSI<SC,LO,GO,NO>::setFluidMassmatrix( MatrixPtr_Type& massmatrix ) const
     //######################
     // Massematrix fuer FSI combineSystems(), ggf nichtlinear.
     //######################
-    double density = this->problemTimeFluid_->getParameterList()->sublist("Parameter").get("Density",1000.e-0);
+    double density = this->problemTimeFluid_->getParameterList()->sublist("Parameter").get("Density",1.e-0);
     int size = this->problemTimeFluid_->getSystem()->size();
 
     this->problemTimeFluid_->systemMass_.reset(new BlockMatrix_Type(size));
@@ -1250,8 +1250,8 @@ void FSI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
     {
         this->problemTimeStructure_->assembleSourceTerm( time );
         
-        //double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Density",1.3e3);
-        //this->problemTimeStructure_->getSourceTerm()->scale(density);
+        double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Density",1.0);
+        this->problemTimeStructure_->getSourceTerm()->scale(density);
 
         //this->problemTimeStructure_->getSourceTerm()->print();
         // Fuege die rechte Seite der DGL (f bzw. f_{n+1}) der rechten Seite hinzu (skaliert mit coeffSourceTerm)
@@ -1271,7 +1271,7 @@ void FSI<SC,LO,GO,NO>::setSolidMassmatrix( MatrixPtr_Type& massmatrix ) const
     //######################
     // Massematrix
     //######################
-    double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Density",1.3e3);
+    double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Density",1.0);
     int size = this->problemTimeStructure_->getSystem()->size();
 
     if(timeSteppingTool_->currentTime() == 0.0)
@@ -1592,14 +1592,14 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
 
         if(pressureRB == "Absorbing Paper"){
 
-            double unsteadyStart = this->parameterList_->sublist("Parameter").get("Heart Beat Start",0.2); 
+            double unsteadyStart = this->parameterList_->sublist("Parameter Fluid").get("Unsteady Start",0.1); 
             if( unsteadyStart +1e-10 > timeSteppingTool_->currentTime() &&  unsteadyStart -1e-10 < timeSteppingTool_->currentTime() )
             {
-            double areaOutlet_T = 0.;
-            this->feFactory_->assemblyArea(this->dim_, areaOutlet_T, flagOutlet);
-            areaOutlet_T_ = areaOutlet_T;
-            if(this->verbose_)
-                cout << " ---- Absorbing boundary condition: Start of unsteady Phase with areaOutlet_T=" << areaOutlet_T_<< " ---- " << endl;
+                double areaOutlet_T = 0.;
+                this->feFactory_->assemblyArea(this->dim_, areaOutlet_T, flagOutlet);
+                areaOutlet_T_ = areaOutlet_T;
+                if(this->verbose_)
+                    cout << " ---- Absorbing boundary condition: Start of unsteady Phase with areaOutlet_T=" << areaOutlet_T_<< " ---- " << endl;
             }
 
             pressureOutlet_ = this->feFactory_->assemblyAbsorbingBoundaryPaper(this->dim_, this->getDomain(0)->getFEType(),FERhs, u_rep_,flowRateOutlet_timesteps, funcParameter, this->problemTimeFluid_->getUnderlyingProblem()->rhsFuncVec_[0],areaOutlet_init_, areaOutlet_T_,this->parameterList_,0);
