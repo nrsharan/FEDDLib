@@ -6636,7 +6636,7 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
     double flowRateInlet=0.;
     double flowRateOutlet=0.;
     this->assemblyFlowRate(dim, flowRateInlet, FEType , dim, flagInlet , u_rep);
-    this->assemblyFlowRate(dim, flowRateOutlet, FEType , dim, flagOutlet , u_rep);  
+    int isNeg = this->assemblyFlowRate(dim, flowRateOutlet, FEType , dim, flagOutlet , u_rep);  
     
     double resistanceRef = 10666/flowRateInlet;
 
@@ -6667,6 +6667,9 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
     if(params->sublist("Parameter Fluid").get("Average Flowrate",false) )
         flowRateUse = flowRateOutletAveraged;
 
+    if(isNeg==1)
+        flowRateUse = 0.;
+    
     double p_out = flowRateUse*valueFunc[0];
 
     // Second step: use flow rate to determine pressure with resistance
@@ -6877,7 +6880,8 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundaryPaper(int dim,
     double flowRateInlet=0.;
 
     this->assemblyFlowRate(dim, flowRateInlet, FEType , dim, flagInlet , u_rep);
-    this->assemblyFlowRate(dim, flowRateOutlet, FEType , dim, flagOutlet , u_rep);
+
+    int isNeg = this->assemblyFlowRate(dim, flowRateOutlet, FEType , dim, flagOutlet , u_rep);
     
     double flowRateOutletAveraged = (flowRate_vec[0] + flowRate_vec[1]) / 2.;
 
@@ -6915,6 +6919,8 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundaryPaper(int dim,
     if(params->sublist("Parameter Fluid").get("Average Flowrate",false) )
         flowRateUse = flowRateOutletAveraged;
 
+    if(isNeg==1)
+        flowRateUse = 0.;
 
     double A_bar = 1./((sqrt(beta*sqrt(areaOutlet_init)+p_ref_input)-sqrt(beta*sqrt(areaOutlet_init)))*2.*sqrt(2.)*(1./sqrt(density))*(1./flowRateInput));
     double h_x = 0.;
@@ -6942,6 +6948,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundaryPaper(int dim,
         cout << " Area inlet: " << areaInlet << endl;
         cout << " Area outlet: " << areaOutlet << endl;
         cout << " A_bar: " << A_bar << endl;
+        cout << " Flowrate was negative: " << isNeg << endl;
         cout << " Value h_x at outlet: " << h_x << endl;
         cout << " --------------------------------------------------------- " << endl;
         cout << " --------------------------------------------------------- " << endl;
@@ -7086,7 +7093,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     double flowRateInlet=0.;
 
     this->assemblyFlowRate(dim, flowRateInlet, FEType , dim, flagInlet , u_rep);
-    this->assemblyFlowRate(dim, flowRateOutlet, FEType , dim, flagOutlet , u_rep);
+    int isNeg = this->assemblyFlowRate(dim, flowRateOutlet, FEType , dim, flagOutlet , u_rep);
     
     double flowRateOutletAveraged = (flowRate_vec[0] + flowRate_vec[1]) / 2.;
 
@@ -7115,6 +7122,9 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
     double flowRateUse = flowRateOutlet;
     if(params->sublist("Parameter Fluid").get("Average Flowrate",false) )
         flowRateUse = flowRateOutletAveraged;
+
+    if(isNeg==1)
+        flowRateUse = 0.;
 
     if(domainVec_.at(0)->getComm()->getRank()==0){
         cout << " ---------------------------------------------------------- " << endl;
@@ -7698,7 +7708,7 @@ void FE<SC,LO,GO,NO>::assemblyArea(int dim,
 }
 
 template <class SC, class LO, class GO, class NO>
-void FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
+int FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
                                         double &flowRateParabolic,
                                         string FEType, 
                                         int dofs,
@@ -7809,7 +7819,12 @@ void FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
     reduceAll<int, double> (*domainVec_.at(0)->getComm(), REDUCE_SUM, flowRateInlet, outArg (flowRateInlet));
     if(flowRateInlet < 0  && domainVec_.at(0)->getComm()->getRank() == 0)
         cout << " ###### WARNING: the flow rate you computed is negative. Either the surface normal has the wrong orientation, or your solution is negative. Or both :D. Flowrate:"<< flowRateInlet << " ####### " << endl; 
+    int isNeg=0;
+    if(flowRateParabolic <0)
+        isNeg = 1;
     flowRateParabolic = fabs(flowRateInlet);
+
+    return isNeg;
 
 }
 

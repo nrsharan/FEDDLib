@@ -166,8 +166,9 @@ class FE {
     void assemblyArea(int dim,
                             double &area,
                             int inflowFlag,
-                            int FEloc=0);            
-    void assemblyFlowRate(int dim,
+                            int FEloc=0);       
+                                 
+    int assemblyFlowRate(int dim,
                             double &flowRateParabolic,
                             string FEType, 
                             int dofs,
