@@ -1048,11 +1048,17 @@ int main(int argc, char *argv[])
         // Hier erstmal Dirichlet Nullrand, wird spaeter von der Sturkturloesung vorgegeben
         // bcFactoryGeometry->addBC(zeroDirichlet3D, 6, 0, domainGeometry, "Dirichlet", dim); // interface
         if (preconditionerMethod == "FaCSCI" ) //|| preconditionerMethod == "FaCSI-Teko")
+        {
                 bcFactoryFluidInterface->addBC(zeroDirichlet3D, 6, 0, domainFluidVelocity, "Dirichlet", dim);
+                bcFactoryFluidInterface->addBC(zeroDirichlet3D, 9, 0, domainFluidVelocity, "Dirichlet", dim);
+                bcFactoryFluidInterface->addBC(zeroDirichlet3D, 10, 0, domainFluidVelocity, "Dirichlet", dim);
+        }
 
         fsci.problemGeometry_->addBoundaries(bcFactoryGeometry);
-        if ( preconditionerMethod == "FaCSCI")// || preconditionerMethod == "FaCSI-Teko")
+        if ( preconditionerMethod == "FaCSCI")// || preconditionerMethod == "FaCSI-Teko"){
             fsci.getPreconditioner()->setFaCSIBCFactory( bcFactoryFluidInterface );
+        
+    
 
         Teuchos::RCP<BCBuilder<SC,LO,GO,NO> > bcFactoryChem( new BCBuilder<SC,LO,GO,NO>( ) ); 
         if (dim==2)
