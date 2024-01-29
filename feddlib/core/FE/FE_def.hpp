@@ -7820,7 +7820,8 @@ int FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
     if(flowRateInlet < 0  && domainVec_.at(0)->getComm()->getRank() == 0)
         cout << " ###### WARNING: the flow rate you computed is negative. Either the surface normal has the wrong orientation, or your solution is negative. Or both :D. Flowrate:"<< flowRateInlet << " ####### " << endl; 
     int isNeg=0;
-    if(flowRateParabolic <0)
+
+    if(flowRateInlet <0)
         isNeg = 1;
     flowRateParabolic = fabs(flowRateInlet);
 

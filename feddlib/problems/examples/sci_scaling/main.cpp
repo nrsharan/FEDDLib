@@ -732,8 +732,9 @@ int main(int argc, char *argv[])
 		    else if(bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2")
 		    	volumeID = 21;
 		    	
-		    partitionerP1.readAndPartition(volumeID);
-		    
+		    //partitionerP1.readAndPartition(volumeID);
+		    partitionerP1.readAndPartition(15,"mm", true ); // Convert it from cm to m
+
 		    
             if (!discType.compare("P2")){
 				domainP2chem->buildP2ofP1Domain( domainP1struct );
