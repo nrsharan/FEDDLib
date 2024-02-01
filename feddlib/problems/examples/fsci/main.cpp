@@ -229,10 +229,16 @@ void parabolicInflow3DArteryHeartBeat(double* x, double* res, double t, const do
         // Remove initial offset due to FFT
         Q -= 0.026039341343493;
         Q = (Q - 2.85489)/(7.96908-2.85489);
+        double lambda = 1.;
+
+        if( parameters[0]+1.0e-10 < heartBeatStart + 0.5)
+		    lambda = 0.90 + 0.1*cos(2*M_PI*parameters[0]);
+        else 
+    	    lambda= 0.8 + 1.2*Q;
 
         res[0] = 0.;
         res[1] = 0.;
-        res[2] = (parameters[0] / parameters[2] * (x[0] + x[0] * Q)) ;
+        res[2] = (parameters[0] / parameters[2] * (x[0] * lambda)) ;
         
     }
     else

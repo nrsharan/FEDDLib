@@ -9,14 +9,14 @@
 		<Parameter name="Mesh Unit" type="string" value="mm"/> <!--  unstructured -->
 		<Parameter name="Convert Mesh" type="bool" value="true"/> <!--  unstructured -->
 		
-		<Parameter name="Flowrate" type="double" value="3.0"/>     <!-- cm³/s -->   
-        <Parameter name="Max Ramp Time" type="double" value="0.1"/>
+		<Parameter name="Flowrate" type="double" value="0.5"/>     <!-- cm³/s -->   
+        <Parameter name="Max Ramp Time" type="double" value="0.0"/>
  
         <Parameter name="FSCI" type="bool" value="true"/>
         <Parameter name="Geometry Explicit" type="bool" value="true"/>
         <Parameter name="Chemistry Explicit" type="bool" value="true"/>
         <Parameter name="Inflow Start Time" type="double" value="10.0"/><!-- Start of diffusion process -->
-        <Parameter name="Heart Beat Start" type="double" value="0.2"/><!-- Start of heartbeats -->
+        <Parameter name="Heart Beat Start" type="double" value="1.0"/><!-- Start of heartbea -->
         <Parameter name="Coupling Type" type="string" value="implicit"/>
 
         <Parameter name="relNonLinTol" type="double" value="1.0e-8"/>
@@ -147,10 +147,10 @@
             <Parameter name="Number of Segments" type="int" value="2"/>
             <ParameterList name="1">
                 <Parameter name="Start Time" type="double" value="0.0"/>
-                <Parameter name="dt" type="double" value="0.001"/>
+                <Parameter name="dt" type="double" value="0.1"/>
             </ParameterList>
              <ParameterList name="2">
-                <Parameter name="Start Time" type="double" value="0.1"/>
+                <Parameter name="Start Time" type="double" value="1.0"/>
                 <Parameter name="dt" type="double" value="0.001"/>
             </ParameterList>
          </ParameterList> 
