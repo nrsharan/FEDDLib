@@ -237,7 +237,33 @@ void SCI<SC,LO,GO,NO>::solveChemistryProblem() const
     MatrixPtr_Type massmatrix;
     this->setChemMassmatrix(massmatrix);
     // 1. Assemble Chemisty Problem
-    this->problemTimeChem_->assemble();
+    //this->problemTimeChem_->assemble();
+    MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );       
+    MatrixPtr_Type B(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
+    MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ) );
+    MatrixPtr_Type C(new Matrix_Type( this->getDomain(1)->getMapUnique(),this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ));
+    // For implicit the system is ordered differently with solid block in 0,0 and diffusion in 1,1
+    
+    // As the implementation is based on a 2x2 System we use a tmp system for the actual assembly routine.
+    BlockMatrixPtr_Type systemTmp(new BlockMatrix_Type(2)); 
+    systemTmp->addBlock(A,0,0);
+    systemTmp->addBlock(BT,0,1);
+    systemTmp->addBlock(B,1,0);
+    systemTmp->addBlock(C,1,1);
+    MultiVectorConstPtr_Type c; 
+    if(chemistryExplicit_)
+        c= this->problemTimeChem_->getSolution()->getBlock(0);
+    else
+        c = this->solution_->getBlock(1);
+
+    c_rep_->importFromVector(c, true);
+
+    MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
+    d_rep_->importFromVector(d, true); 
+    
+    this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,systemTmp,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
+    
+    this->problemTimeChem_->getSystem()->addBlock(systemTmp->getBlock(1,1),0,0);
     // 2. Rhs
     this->computeChemRHSInTime();
 
