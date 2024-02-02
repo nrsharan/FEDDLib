@@ -62,8 +62,8 @@ public:
     typedef Teuchos::RCP<TimeProblem_Type> TimeProblemPtr_Type;
 
     typedef NavierStokes<SC,LO,GO,NO> FluidProblem_Type;
-    //typedef LinElas<SC,LO,GO,NO> StructureProblem_Type;
-    typedef LinElasAssFE<SC,LO,GO,NO> StructureProblem_Type;
+    typedef LinElas<SC,LO,GO,NO> StructureProblem_Type;
+    //typedef LinElasAssFE<SC,LO,GO,NO> StructureProblem_Type;
     //typedef NonLinElasticity<SC,LO,GO,NO> StructureNonLinProblem_Type;
     typedef NonLinElasAssFE<SC,LO,GO,NO> StructureNonLinProblem_Type;
     typedef Geometry<SC,LO,GO,NO> GeometryProblem_Type;
