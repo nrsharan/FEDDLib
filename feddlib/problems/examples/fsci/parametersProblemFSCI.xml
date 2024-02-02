@@ -7,7 +7,7 @@
 
         <Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  unstructured -->
 		<Parameter name="Mesh Unit" type="string" value="mm"/> <!--  unstructured -->
-		<Parameter name="Convert Mesh" type="bool" value="true"/> <!--  unstructured -->
+		<Parameter name="Convert Mesh" type="bool" value="false"/> <!--  unstructured -->
 		
 		<Parameter name="Flowrate" type="double" value="0.5"/>     <!-- cm³/s -->   
         <Parameter name="Max Ramp Time" type="double" value="0.0"/>
