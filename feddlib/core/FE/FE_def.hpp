@@ -1709,6 +1709,7 @@ void FE<SC,LO,GO,NO>::assemblyLaplaceDiffusion(int dim,
                                         int degree,
                                         MatrixPtr_Type &A,
 										vec2D_dbl_Type diffusionTensor,
+                                        ParameterListPtr_Type params,
                                         bool callFillComplete,
                                         int FELocExternal){
     TEUCHOS_TEST_FOR_EXCEPTION(FEType == "P0",std::logic_error, "Not implemented for P0");
@@ -1747,14 +1748,27 @@ void FE<SC,LO,GO,NO>::assemblyLaplaceDiffusion(int dim,
 			diffusionTensor[i][i]=1.;
 		}
 	}
-
-	for(int i=0; i< dim; i++){
+    for(int i=0; i< dim; i++){
 		for(int j=0; j<dim; j++){
 			diffusionT[i][j]=diffusionTensor[i][j];
 		}
 	}
+
+  	int numMaterials = params->sublist("Parameter Solid").get("Number of Materials", 0);
+
+    vec_int_Type diffTensorID(numMaterials);
+    vec_dbl_Type diffTensord0(numMaterials);
+
+    for(int i=1; i<= numMaterials; i++){
+        int volumeID = params->sublist("Parameter Solid").sublist(std::to_string(i)).get("Volume Flag", 15);
+        double d0 = params->sublist("Parameter Solid").sublist(std::to_string(i)).get("D0", 1.0);
+        diffTensorID[i-1] = (double) volumeID;
+        diffTensord0[i-1] = d0;
+    }
+	
 	//Teuchos::ArrayRCP< SC >  linearDiff = diffusionTensor->getDataNonConst( 0 );
 	//cout << "Assembly Info " << "num Elements " <<  elements->numberElements() << " num Nodes " << pointsRep->size()  << endl;
+
     for (UN T=0; T<elements->numberElements(); T++) {
 
         buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
@@ -1763,6 +1777,19 @@ void FE<SC,LO,GO,NO>::assemblyLaplaceDiffusion(int dim,
 
         vec3D_dbl_Type dPhiTrans( dPhi->size(), vec2D_dbl_Type( dPhi->at(0).size(), vec_dbl_Type(dim,0.) ) );
         applyBTinv( dPhi, dPhiTrans, Binv );
+
+        if(numMaterials> 0.){
+            auto it1 = find( diffTensorID.begin(), diffTensorID.end(),elements->getElement(T).getFlag() );
+            int id = distance(diffTensorID.begin() , it1 );
+
+            //cout << "Found flag at " << id << " with volumeID " << diffTensorID[id]<< endl;
+
+            for(int i=0; i< dim; i++){
+                for(int j=0; j<dim; j++){
+                    diffusionT[i][j]=diffTensord0[id] * diffusionTensor[i][j];
+                }
+            }
+        }
 
         vec3D_dbl_Type dPhiTransDiff( dPhi->size(), vec2D_dbl_Type( dPhi->at(0).size(), vec_dbl_Type(dim,0.) ) );
         applyDiff( dPhiTrans, dPhiTransDiff, diffusionT );

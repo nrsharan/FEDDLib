@@ -235,10 +235,10 @@ void SCI<SC,LO,GO,NO>::solveChemistryProblem() const
     this->problemTimeChem_->setTimeParameters(massCoeffChem,problemCoeffChem);
     // 1. Assemble Mass System
     MatrixPtr_Type massmatrix;
-    //this->setChemMassmatrix(massmatrix);
+    this->setChemMassmatrix(massmatrix);
     // 1. Assemble Chemisty Problem
-    //this->problemTimeChem_->assemble();
-    MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );       
+    this->problemTimeChem_->assemble();
+    /*MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );       
     MatrixPtr_Type B(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
     MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ) );
     MatrixPtr_Type C(new Matrix_Type( this->getDomain(1)->getMapUnique(),this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ));
@@ -263,19 +263,20 @@ void SCI<SC,LO,GO,NO>::solveChemistryProblem() const
     
     this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,systemTmp,this->residualVec_, this->parameterList_, "Jacobian", true);
     
-    this->problemTimeChem_->getSystem()->addBlock(systemTmp->getBlock(1,1),0,0);
+    this->problemTimeChem_->getSystem()->addBlock(systemTmp->getBlock(1,1),0,0);*/
     // 2. Rhs
     this->computeChemRHSInTime();
-    
+
+    //this->residualVec_->getBlockNonConst(0)->update(1.,*this->rhs_->getBlockNonConst(0),-1.);
+
     //this->problemTimeChem_->getRhs()->getBlockNonConst(0)->scale(-1.0); 
-    
     this->problemTimeChem_->combineSystems();
 
     this->problemTimeChem_->setBoundaries(timeSteppingTool_->currentTime()); 
 
     double iter= 0.;
 
-    iter = this->problemTimeChem_->solve();
+    iter = this->problemTimeChem_->solve(this->problemTimeChem_->getRhs());
 
     exporterIterationsChem_->exportData(  timeSteppingTool_->currentTime() , iter);
 
@@ -1118,7 +1119,7 @@ void SCI<SC,LO,GO,NO>::initializeCE(){
 template<class SC,class LO,class GO,class NO>
 void SCI<SC,LO,GO,NO>::updateChemInTime() const
 {
-        int nmbBDF = timeSteppingTool_->getBDFNumber();
+    int nmbBDF = timeSteppingTool_->getBDFNumber();
 
     if(nmbBDF<2 && !this->parameterList_->sublist("General").get("Linearization","FixedPoint").compare("Extrapolation")) {
         if (timeSteppingTool_->currentTime()!=0.){

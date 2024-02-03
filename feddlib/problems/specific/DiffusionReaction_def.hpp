@@ -26,6 +26,8 @@ reactionFunc_()
 	
 	diffusionTensor_ = diffusionTensor;
 
+    this->parameterList_ = parameterList;
+
     funcParameter_.push_back(this->parameterList_->sublist("Parameter").get("E0",1.0));
     funcParameter_.push_back(this->parameterList_->sublist("Parameter").get("E1",0.5));
 
@@ -59,7 +61,7 @@ void DiffusionReaction<SC,LO,GO,NO>::assembleConstantMatrices( std::string type 
 
     A_.reset(new Matrix_Type( this->getDomain(0)->getMapUnique(), this->getDomain(0)->getApproxEntriesPerRow() ) );
 
-    this->feFactory_->assemblyLaplaceDiffusion(this->dim_, this->domain_FEType_vec_.at(0), 2, A_, this->diffusionTensor_ );
+    this->feFactory_->assemblyLaplaceDiffusion(this->dim_, this->domain_FEType_vec_.at(0), 2, A_, this->diffusionTensor_,this->parameterList_  );
 
     MatrixPtr_Type N = Teuchos::rcp(new Matrix_Type( this->getDomain(0)->getMapUnique(), this->getDomain(0)->getApproxEntriesPerRow() ) );
     // Here we insert the assembly of the reaction part.

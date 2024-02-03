@@ -311,6 +311,7 @@ class FE {
                         int degree,
                         MatrixPtr_Type &A,
 		            	vec2D_dbl_Type diffusionTensor,
+                        ParameterListPtr_Type params,
                         bool callFillComplete = true,
                         int FELocExternal = -1);
 
