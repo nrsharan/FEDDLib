@@ -730,11 +730,11 @@ int main(int argc, char *argv[])
 		    int volumeID=10;
 		    if(bcType=="Artery" || bcType == "Artery Full" || bcType == "Artery Plaque")
 		    	volumeID = 15;
-		    else if(bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2")
+		    else if(bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2" )
 		    	volumeID = 21;
 		    	
 		    //partitionerP1.readAndPartition(volumeID);
-		    partitionerP1.readAndPartition(15,"mm", true ); // Convert it from cm to m
+		    partitionerP1.readAndPartition(volumeID,"mm", true ); // Convert it from cm to m
 
 		    
             if (!discType.compare("P2")){
@@ -1244,10 +1244,18 @@ int main(int argc, char *argv[])
             bcFactory->addBC(inflowChem, 8, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactory->addBC(inflowChem, 9, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
 
-		   
+		    bcFactory->addBC(zeroDirichlet, 19, 1, domainChem, "Dirichlet", 1); // inflow of Chem
+            bcFactory->addBC(zeroDirichlet, 20, 1, domainChem, "Dirichlet", 1); // inflow of Chem
+
+
            bcFactoryChem->addBC(inflowChem, 5, 0, domainChem, "Dirichlet", 1,parameter_vec);
            bcFactoryChem->addBC(inflowChem, 8, 0, domainChem, "Dirichlet", 1,parameter_vec);
            bcFactoryChem->addBC(inflowChem, 9, 0, domainChem, "Dirichlet", 1,parameter_vec);
+
+            bcFactoryChem->addBC(zeroDirichlet, 19, 1, domainChem, "Dirichlet", 1); // inflow of Chem
+            bcFactoryChem->addBC(zeroDirichlet, 20, 1, domainChem, "Dirichlet", 1); // inflow of Chem
+
+
          
         }
 
