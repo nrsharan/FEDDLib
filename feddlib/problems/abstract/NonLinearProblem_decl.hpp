@@ -52,6 +52,13 @@ public:
     typedef Thyra::LinearOpBase<SC> ThyraOp_Type;
     typedef Tpetra::Operator<SC,LO,GO,NO> TpetraOp_Type;
 
+    typedef ExporterParaView<SC,LO,GO,NO> Exporter_Type;
+    typedef Teuchos::RCP<Exporter_Type> ExporterPtr_Type;
+    typedef std::vector<ExporterPtr_Type> ExporterPtrVec_Type;
+
+    typedef typename Problem_Type::Domain_Type::Mesh_Type Mesh_Type;
+    typedef typename Problem_Type::Domain_Type::MeshPtr_Type MeshPtr_Type;
+
     NonLinearProblem(CommConstPtr_Type comm);
 
     NonLinearProblem(ParameterListPtr_Type &parameterList, CommConstPtr_Type comm);
@@ -72,6 +79,12 @@ public:
 
     int solveUpdate( );
 
+        
+    /// @brief Plotting residual Vector of problem
+    /// @param problem Timeproblem
+    /// @param time current time
+    void plotResidualVec(double time =0.) const;
+
 //    virtual void reAssemble(std::string type="FixedPoint") const = 0;
 
     virtual void reAssemble( BlockMultiVectorPtr_Type previousSolution ) const = 0;
@@ -85,6 +98,8 @@ public:
     void initializeVectorsNonLinear(int nmbVectors=1);
 
     double calculateResidualNorm() const;
+
+    vec_dbl_Type calculateResidualNormVec() const;
 
     virtual void calculateNonLinResidualVec(std::string type="standard", double time=0.) const = 0; //type=standard or reverse
 
@@ -102,6 +117,8 @@ public:
     virtual Teuchos::RCP<const ::Thyra::VectorSpaceBase<SC> > get_f_space() const;
 
     virtual ::Thyra::ModelEvaluatorBase::InArgs<SC> createInArgs() const;
+
+    void initExporterResidual() const;
 
     void initNOXParameters( );
 
@@ -122,7 +139,11 @@ public:
     SmallMatrix<double> coeff_;// coefficients for a time-dependent problem
 
 private:
+    mutable ExporterPtrVec_Type exporterResidual_;
 
+    mutable double currentTimeExport_=0.;
+    mutable double timeStep_ =0;
+    mutable double newtonStep_=0;
     Thyra::ModelEvaluatorBase::InArgs<SC> nominalValues_;
 
     ::Thyra::ModelEvaluatorBase::InArgs<SC> prototypeInArgs_;

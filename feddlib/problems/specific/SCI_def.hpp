@@ -443,7 +443,8 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
             computeSolidRHSInTime();
 
         if(this->verbose_)
-            std::cout << " done -- " << '\n';                       
+            std::cout << " done -- " << '\n';   
+                    
         
     }
       // ########################
@@ -493,20 +494,6 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     }
 
    
-    Teuchos::Array<SC> norm_d(1); 
-    this->residualVec_->getBlock(0)->norm2(norm_d);
-    
-    if(this->verbose_)
-        cout << "2-Norm of residual of displacement: " << norm_d[0] << endl;
-
-    if(!chemistryExplicit_){
-        Teuchos::Array<SC> norm_c(1); 
-        this->residualVec_->getBlock(1)->norm2(norm_c);
-        
-        if(this->verbose_)
-            cout << "2-Norm of residual of concentration: " << norm_c[0] << endl;
-
-    }
 
     if(nonlinearExternalForce_)
         computeSolidRHSInTime();
@@ -533,9 +520,6 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
         
     }
 
-    // this->residualVec_->getBlockNonConst(1)->print();
-
-
     /*this->problemChem_->assemble();
 
     MultiVectorPtr_Type residualChemSCI =  Teuchos::rcp_const_cast<MultiVector_Type>( this->residualVec_->getBlock(1) );
@@ -557,6 +541,26 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
         //this->residualVec_->scale(-1.);
         this->bcFactory_->setVectorMinusBC( this->residualVec_, this->solution_, time );
     }
+
+
+    Teuchos::Array<SC> norm_d(1); 
+    this->residualVec_->getBlock(0)->norm2(norm_d);
+    
+    if(this->verbose_)
+        cout << "2-Norm of residual of displacement: " << norm_d[0] << endl;
+
+    if(!chemistryExplicit_){
+        Teuchos::Array<SC> norm_c(1); 
+        this->residualVec_->getBlock(1)->norm2(norm_c);
+        
+        if(this->verbose_)
+            cout << "2-Norm of residual of concentration: " << norm_c[0] << endl;
+
+    }
+
+    //this->residualVec_->getBlockNonConst(0)->print();
+
+    // this->plotResidualVec(timeSteppingTool_->currentTime());
 
 
 

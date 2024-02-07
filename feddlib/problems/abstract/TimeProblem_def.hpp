@@ -442,6 +442,23 @@ double TimeProblem<SC,LO,GO,NO>::calculateResidualNorm(){
     return res[0];
 }
 
+template <class SC, class LO, class GO, class NO>
+vec_dbl_Type TimeProblem<SC,LO,GO,NO>::calculateResidualNormVec() const
+{
+    NonLinProbPtr_Type nonLinProb = Teuchos::rcp_dynamic_cast<NonLinProb_Type>(problem_);
+
+    int sizeResidual = nonLinProb->getResidualVector()->size();
+    vec_dbl_Type residualNormVec(sizeResidual);
+    for(int i=0; i<sizeResidual ; i++){
+        Teuchos::Array<SC> residual(1);
+        nonLinProb->getResidualVector()->getBlock(i)->norm2(residual);
+        residualNormVec[i] = residual[0];
+        TEUCHOS_TEST_FOR_EXCEPTION(residual.size() != 1, std::logic_error, "We need to change the code for numVectors>1.");
+    }
+    return residualNormVec;
+}
+
+
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::calculateNonLinResidualVec( std::string type, double time ) const{
 

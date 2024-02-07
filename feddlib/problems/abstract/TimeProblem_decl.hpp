@@ -123,6 +123,8 @@ public:
     
     double calculateResidualNorm();
 
+    vec_dbl_Type calculateResidualNormVec() const;
+
     void calculateNonLinResidualVec(std::string type="standard", double time=0.) const;
 
     bool getVerbose();

@@ -20,7 +20,8 @@ namespace FEDD
                                                                                  previousSolution_(),
                                                                                  residualVec_(),
                                                                                  nonLinearTolerance_(1.e-6),
-                                                                                 coeff_(0)
+                                                                                 coeff_(0),
+                                                                                 exporterResidual_(0)
     {
     }
 
@@ -29,12 +30,21 @@ namespace FEDD
                                                                                                                        previousSolution_(),
                                                                                                                        residualVec_(),
                                                                                                                        nonLinearTolerance_(1.e-6),
-                                                                                                                       coeff_(0)
+                                                                                                                       coeff_(0),
+                                                                                                                       exporterResidual_(0)
     {
     }
     template <class SC, class LO, class GO, class NO>
     NonLinearProblem<SC, LO, GO, NO>::~NonLinearProblem()
     {
+        if(exporterResidual_.size()>0){
+            UN size= exporterResidual_.size();
+            for(int i=0; i< size; i++){ 
+                exporterResidual_[i]->closeExporter();
+            }
+
+        }
+        
     }
 
     template <class SC, class LO, class GO, class NO>
@@ -48,6 +58,54 @@ namespace FEDD
 
         // Init ThyraVectorSpcaes for NOX.
         this->initVectorSpaces();
+    }
+
+    template <class SC, class LO, class GO, class NO>
+    void NonLinearProblem<SC, LO, GO, NO>::plotResidualVec(double time) const {
+        if(exporterResidual_.size()<1)
+            initExporterResidual();
+
+        UN size= exporterResidual_.size();
+        if(currentTimeExport_ < time  ){
+            currentTimeExport_ = time;
+            newtonStep_ =0;
+            timeStep_++;
+        }
+
+        for(int i=0; i< size; i++){ 
+            newtonStep_++;
+            double exportTime = timeStep_ + (double) newtonStep_*0.01;
+            cout << " Export Timestep " << exportTime << endl;
+            exporterResidual_[i]->save(exportTime);
+        }
+
+            
+    }
+    template <class SC, class LO, class GO, class NO>
+    void NonLinearProblem<SC, LO, GO, NO>::initExporterResidual() const{
+        UN size = this->residualVec_->size();
+    
+        exporterResidual_.resize(size);
+
+        for (UN i = 0; i < size; i++)
+        {
+            cout << " Initialize Geometry " << endl;
+            ExporterPtr_Type exporter = Teuchos::rcp(new Exporter_Type());
+            
+            //DomainConstPtr_Type dom = this->domainPtr_vec_.at(i);
+
+            std::string suffix = this->parameterList_->sublist("Exporter").get("Geometry Suffix", "" );
+            std::string varName ="Component" + suffix;
+            
+            MeshPtr_Type meshNonConst = Teuchos::rcp_const_cast<Mesh_Type>( this->domainPtr_vec_.at(i)->getMesh() );
+            exporter->setup(varName, meshNonConst, this->domainPtr_vec_.at(i)->getFEType(), this->parameterList_);
+            
+            MultiVectorConstPtr_Type exportVector = this->residualVec_->getBlock(i);
+            
+            exporter->addVariable( exportVector, varName, "Vector", this->domainPtr_vec_.at(i)->getDimension(), this->domainPtr_vec_.at(i)->getMapUnique() );
+
+            exporterResidual_[i] = exporter;
+        }
     }
 
     template <class SC, class LO, class GO, class NO>
@@ -131,6 +189,20 @@ namespace FEDD
         residualVec_->norm2(residual());
         TEUCHOS_TEST_FOR_EXCEPTION(residual.size() != 1, std::logic_error, "We need to change the code for numVectors>1.");
         return residual[0];
+    }
+
+    template <class SC, class LO, class GO, class NO>
+    vec_dbl_Type NonLinearProblem<SC, LO, GO, NO>::calculateResidualNormVec() const
+    {
+        int sizeResidual = residualVec_->size();
+        vec_dbl_Type residualNormVec(sizeResidual);
+        for(int i=0; i<sizeResidual ; i++){
+            Teuchos::Array<SC> residual(1);
+            residualVec_->getBlock(i)->norm2(residual);
+            residualNormVec[i] = residual[0];
+            TEUCHOS_TEST_FOR_EXCEPTION(residual.size() != 1, std::logic_error, "We need to change the code for numVectors>1.");
+        }
+        return residualNormVec;
     }
 
     template <class SC, class LO, class GO, class NO>

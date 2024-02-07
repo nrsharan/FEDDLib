@@ -285,6 +285,8 @@ void NonLinearSolver<SC,LO,GO,NO>::solveFixedPoint(NonLinearProblem_Type &proble
     
     double tol = problem.getParameterList()->sublist("Parameter").get("relNonLinTol",1.0e-6);
     int maxNonLinIts = problem.getParameterList()->sublist("Parameter").get("MaxNonLinIts",10);
+    bool displayResiduals = problem.getParameterList()->sublist("Parameter").get("Display Residuals",true);
+
     int nlIts=0;
 
     double criterionValue = 1.;
@@ -319,6 +321,7 @@ void NonLinearSolver<SC,LO,GO,NO>::solveFixedPoint(NonLinearProblem_Type &proble
             if ( criterionValue < tol )
                 break;
         }
+
         // ####### end FPI #######
     }
 
@@ -471,6 +474,7 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
     // -------
     double	gmresIts = 0.;
     double residual0 = 1.;
+    double residualInit = 1.;
     double residual = 1.;
     double tol = problem.getParameterList()->sublist("Parameter").get("relNonLinTol",1.0e-6);
     int nlIts=0;
@@ -478,6 +482,7 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
     double criterionValue = 1.;
     std::string criterion = problem.getParameterList()->sublist("Parameter").get("Criterion","Residual");
     std::string timestepping = problem.getParameterList()->sublist("Timestepping Parameter").get("Class","Singlestep");
+    bool displayResiduals = problem.getParameterList()->sublist("Parameter").get("Display Residuals",true);
 
     while ( nlIts < maxNonLinIts ) {
         if (timestepping == "External")
@@ -487,9 +492,10 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
         if (criterion=="Residual")
             residual = problem.calculateResidualNorm();
         
-        if (nlIts==0)
+        if (nlIts==0){
             residual0 = residual;
-        
+            residualInit = problem.calculateResidualNorm();
+        }
         if (criterion=="Residual"){
             criterionValue = residual/residual0;
 //            exporterTxt->exportData( criterionValue );
@@ -512,8 +518,21 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
         }
         else
             gmresIts += problem.solveAndUpdate( criterion, criterionValue );
-        
+
         nlIts++;
+
+        if(displayResiduals){
+            vec_dbl_Type normVec = problem.calculateResidualNormVec();
+            int numNorms = normVec.size();
+            if (verbose){
+                cout << "################################## " << endl;
+                cout << "Initial residual r0 = " << residualInit << endl;
+                for(int i=0; i< numNorms; i++)
+                    cout << "###  Update residual of Component : " << i << ": " << normVec[i]  << " relative residual: " << normVec[i]/residualInit << endl;
+                cout << "################################## " << endl;
+
+            }
+        }
 
         //problem.getSolution()->getBlock(0)->print();
         if(criterion=="Update"){
