@@ -559,8 +559,9 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     }
 
     //this->residualVec_->getBlockNonConst(0)->print();
-
-    // this->plotResidualVec(timeSteppingTool_->currentTime());
+    bool plotResVector = this->getParameterList()->sublist("General").get("Plot Residual Vector",true);
+    if(plotResVector)
+        this->plotResidualVec(timeSteppingTool_->currentTime());
 
 
 

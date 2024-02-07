@@ -642,6 +642,11 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
         this->bcFactory_->setVectorMinusBC( this->residualVec_, this->solution_, time );
     }
 
+    bool plotResVector = this->getParameterList()->sublist("General").get("Plot Residual Vector",true);
+    if(plotResVector)
+        this->plotResidualVec(timeSteppingTool_->currentTime());
+
+
 
 }
 

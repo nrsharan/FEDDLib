@@ -76,6 +76,10 @@ namespace FEDD
             newtonStep_++;
             double exportTime = timeStep_ + (double) newtonStep_*0.01;
             cout << " Export Timestep " << exportTime << endl;
+            MultiVectorConstPtr_Type exportVector = this->residualVec_->getBlock(i);
+            std::string varName ="Component"+std::to_string(i);
+            exporterResidual_[i]->updateVariables(exportVector, varName);
+
             exporterResidual_[i]->save(exportTime);
         }
 
@@ -95,7 +99,7 @@ namespace FEDD
             //DomainConstPtr_Type dom = this->domainPtr_vec_.at(i);
 
             std::string suffix = this->parameterList_->sublist("Exporter").get("Geometry Suffix", "" );
-            std::string varName ="Component" + suffix;
+            std::string varName ="Component"+std::to_string(i);
             
             MeshPtr_Type meshNonConst = Teuchos::rcp_const_cast<Mesh_Type>( this->domainPtr_vec_.at(i)->getMesh() );
             exporter->setup(varName, meshNonConst, this->domainPtr_vec_.at(i)->getFEType(), this->parameterList_);
