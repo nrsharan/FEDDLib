@@ -641,6 +641,7 @@ int main(int argc, char *argv[])
             cout << "done! -- " << endl;
         }
             
+
                         
         // Baue die Interface-Maps in der Interface-Nummerierung
         domainFluidVelocity->buildInterfaceMaps();
@@ -763,7 +764,12 @@ int main(int argc, char *argv[])
             else
             diffusionTensor[i][i+1] = 0;				
         }
- 
+        
+        domainFluidVelocity->setDofs(dim);
+        domainFluidPressure->setDofs(1);
+        domainStructure->setDofs(dim);
+        domainInterface->setDofs(dim);
+
         FSCI<SC,LO,GO,NO> fsci(domainFluidVelocity, discType,
                                 domainFluidPressure, "P1",
                                 domainStructure, discType,

@@ -73,15 +73,23 @@ namespace FEDD
         }
 
         for(int i=0; i< size; i++){ 
-            newtonStep_++;
-            double exportTime = timeStep_ + (double) newtonStep_*0.01;
-            cout << " Export Timestep " << exportTime << endl;
-            MultiVectorConstPtr_Type exportVector = this->residualVec_->getBlock(i);
-            std::string varName ="Component"+std::to_string(i);
-            exporterResidual_[i]->updateVariables(exportVector, varName);
 
-            exporterResidual_[i]->save(exportTime);
+            bool exportBlock =  true;
+            if(this->parameterList_->sublist("Parameter").get("FSI",false) == true ||this->parameterList_->sublist("Parameter").get("FSCI",false))
+                exportBlock = (i != 3);
+
+            if(exportBlock){
+                double exportTime = timeStep_ + (double) newtonStep_*0.01;
+                //cout << " Export Timestep for component " << i << ": " << exportTime << endl;
+                MultiVectorConstPtr_Type exportVector = this->residualVec_->getBlock(i);
+                std::string varName ="Component"+std::to_string(i);
+                exporterResidual_[i]->updateVariables(exportVector, varName);
+
+                exporterResidual_[i]->save(exportTime);
+            }
         }
+        newtonStep_++;
+
 
             
     }
@@ -93,22 +101,34 @@ namespace FEDD
 
         for (UN i = 0; i < size; i++)
         {
-            cout << " Initialize Geometry " << endl;
-            ExporterPtr_Type exporter = Teuchos::rcp(new Exporter_Type());
-            
-            //DomainConstPtr_Type dom = this->domainPtr_vec_.at(i);
 
-            std::string suffix = this->parameterList_->sublist("Exporter").get("Geometry Suffix", "" );
-            std::string varName ="Component"+std::to_string(i);
-            
-            MeshPtr_Type meshNonConst = Teuchos::rcp_const_cast<Mesh_Type>( this->domainPtr_vec_.at(i)->getMesh() );
-            exporter->setup(varName, meshNonConst, this->domainPtr_vec_.at(i)->getFEType(), this->parameterList_);
-            
-            MultiVectorConstPtr_Type exportVector = this->residualVec_->getBlock(i);
-            
-            exporter->addVariable( exportVector, varName, "Vector", this->domainPtr_vec_.at(i)->getDimension(), this->domainPtr_vec_.at(i)->getMapUnique() );
+            bool exportBlock =  true;
+            if(this->parameterList_->sublist("Parameter").get("FSI",false) == true ||this->parameterList_->sublist("Parameter").get("FSCI",false))
+                exportBlock = (i != 3);
 
-            exporterResidual_[i] = exporter;
+            if(exportBlock){
+
+                ExporterPtr_Type exporter = Teuchos::rcp(new Exporter_Type());
+                
+                //DomainConstPtr_Type dom = this->domainPtr_vec_.at(i);
+
+                std::string suffix = this->parameterList_->sublist("Exporter").get("Geometry Suffix", "" );
+                std::string varName ="Component"+std::to_string(i);
+                
+                MeshPtr_Type meshNonConst = Teuchos::rcp_const_cast<Mesh_Type>( this->domainPtr_vec_.at(i)->getMesh() );
+                exporter->setup(varName, meshNonConst, this->domainPtr_vec_.at(i)->getFEType(), this->parameterList_);
+                
+                MultiVectorConstPtr_Type exportVector = this->residualVec_->getBlock(i);
+                
+                if(this->domainPtr_vec_.at(i)->getDofs()>1)
+                    exporter->addVariable( exportVector, varName, "Vector", this->domainPtr_vec_.at(i)->getDofs(), this->domainPtr_vec_.at(i)->getMapUnique() );
+                else     
+                    exporter->addVariable( exportVector, varName, "Scalar", this->domainPtr_vec_.at(i)->getDofs(), this->domainPtr_vec_.at(i)->getMapUnique() );
+
+                //cout << " Initialize resdual plot for variable " << i << " dofs= " << this->domainPtr_vec_.at(i)->getDofs()<< " and FEType " << this->domainPtr_vec_.at(i)->getFEType() << endl;
+
+                exporterResidual_[i] = exporter;
+            }
         }
     }
 
