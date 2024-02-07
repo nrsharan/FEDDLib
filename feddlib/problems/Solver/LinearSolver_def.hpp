@@ -464,8 +464,6 @@ int LinearSolver<SC,LO,GO,NO>::solveBlock(TimeProblem_Type* timeProblem, BlockMu
         problem->getSolution()->putScalar(0.);
     }
 
-    problem->getSolution()->getBlock(0)->print();
-
     Teuchos::RCP< Thyra::ProductMultiVectorBase<SC> > thyraX = problem->getSolution()->getProdThyraMultiVector();
     
     Teuchos::RCP< Thyra::ProductMultiVectorBase<SC> > thyraRHS;
