@@ -583,17 +583,14 @@ int TimeProblem<SC,LO,GO,NO>::solveAndUpdate( const std::string& criterion, doub
         Teuchos::Array<SC> updateNorm(1);
         nonLinProb->getSolution()->norm2(updateNorm());
         criterionValue = updateNorm[0];
-
-        int sizeResidual = nonLinProb->getSolution()->size();
-        //criterionValueVec.resize(sizeResidual);
-        for(int i=0; i<sizeResidual ; i++){
-            Teuchos::Array<SC> residual(1);
-            nonLinProb->getSolution()->getBlock(i)->norm2(residual);
-            criterionValueVec[i] = residual[0];
-        }
-
     }
-
+    int sizeResidual = nonLinProb->getSolution()->size();
+    //criterionValueVec.resize(sizeResidual);
+    for(int i=0; i<sizeResidual ; i++){
+        Teuchos::Array<SC> residual(1);
+        nonLinProb->getSolution()->getBlock(i)->norm2(residual);
+        criterionValueVec[i] = residual[0];
+    }
 
     if (criterion=="ResidualAceGen") {
         nonLinProb->getSolution()->update( 1., *nonLinProb->previousSolution_, -1. );
