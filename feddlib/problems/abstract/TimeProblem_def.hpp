@@ -571,6 +571,42 @@ int TimeProblem<SC,LO,GO,NO>::solveAndUpdate( const std::string& criterion, doub
 }
 
 template<class SC,class LO,class GO,class NO>
+int TimeProblem<SC,LO,GO,NO>::solveAndUpdate( const std::string& criterion, double& criterionValue, vec_dbl_Type& criterionValueVec ){
+
+    NonLinProbPtr_Type nonLinProb = Teuchos::rcp_dynamic_cast<NonLinProb_Type>(problem_);
+    TEUCHOS_TEST_FOR_EXCEPTION(nonLinProb.is_null(), std::runtime_error, "Nonlinear problem is null.");
+    
+
+    int its = solveUpdate(  );
+
+    if (criterion=="Update") {
+        Teuchos::Array<SC> updateNorm(1);
+        nonLinProb->getSolution()->norm2(updateNorm());
+        criterionValue = updateNorm[0];
+
+        int sizeResidual = nonLinProb->getSolution()->size();
+        //criterionValueVec.resize(sizeResidual);
+        for(int i=0; i<sizeResidual ; i++){
+            Teuchos::Array<SC> residual(1);
+            nonLinProb->getSolution()->getBlock(i)->norm2(residual);
+            criterionValueVec[i] = residual[0];
+        }
+
+    }
+
+
+    if (criterion=="ResidualAceGen") {
+        nonLinProb->getSolution()->update( 1., *nonLinProb->previousSolution_, -1. );
+        nonLinProb->assemble( "SetSolutionNewton" );
+        //nonLinProb->assembleExternal( "OnlyUpdate" ); // CH 04.06.2020: Ist das richtig?
+    }
+    else
+        nonLinProb->getSolution()->update( 1., *nonLinProb->previousSolution_, 1. );
+
+    return its;
+}
+
+template<class SC,class LO,class GO,class NO>
 int TimeProblem<SC,LO,GO,NO>::solve( BlockMultiVectorPtr_Type rhs ){
 
     int its;

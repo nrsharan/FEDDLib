@@ -115,6 +115,8 @@ public:
 
     int solveAndUpdate( const std::string& criterion, double& criterionValue );
 
+    int solveAndUpdate( const std::string& criterion, double& criterionValue, vec_dbl_Type& criterionValueVec );
+
     int solveUpdate();
 
     int update();

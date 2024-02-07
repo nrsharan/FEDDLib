@@ -480,6 +480,7 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
     int nlIts=0;
     int maxNonLinIts = problem.getParameterList()->sublist("Parameter").get("MaxNonLinIts",10);
     double criterionValue = 1.;
+    vec_dbl_Type criterionValueVec(problem.getSolution()->size());
     std::string criterion = problem.getParameterList()->sublist("Parameter").get("Criterion","Residual");
     std::string timestepping = problem.getParameterList()->sublist("Timestepping Parameter").get("Class","Singlestep");
     bool displayResiduals = problem.getParameterList()->sublist("Parameter").get("Display Residuals",true);
@@ -517,7 +518,7 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
             //problem.assembleExternal( "OnlyUpdate" );// update AceGEN internal variables
         }
         else
-            gmresIts += problem.solveAndUpdate( criterion, criterionValue );
+            gmresIts += problem.solveAndUpdate( criterion, criterionValue,criterionValueVec );
 
         nlIts++;
 
@@ -525,11 +526,16 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
             vec_dbl_Type normVec = problem.calculateResidualNormVec();
             int numNorms = normVec.size();
             if (verbose){
-                cout << "################################## " << endl;
-                cout << "Initial residual r0 = " << residualInit << endl;
-                for(int i=0; i< numNorms; i++)
-                    cout << "###  Update residual of Component : " << i << ": " << normVec[i]  << " relative residual: " << normVec[i]/residualInit << endl;
-                cout << "################################## " << endl;
+                cout << "############################################################ " << endl;
+                cout << "Initial relative residual (as sum over all partial res) r0 = " << residualInit << endl;
+                for(int i=0; i< numNorms; i++){
+                    cout << "### Residual of component: " << i << ": " << normVec[i]  << " relative residual: " << normVec[i]/residualInit << endl;
+                }
+                cout << "############################################################ " << endl;
+                for(int i=0; i< numNorms; i++){
+                    cout << "### Update of component: " << i << ": " << criterionValueVec[i] << endl;
+                }
+                cout << "############################################################ " << endl;
 
             }
         }
