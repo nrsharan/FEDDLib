@@ -162,7 +162,7 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
         else 
     	    lambda= 0.8 + 1.2*Q;
 
-        res[0] = (parameters[0] / parameters[2] * (x[0] * lambda)) ;
+        res[0] = (parameters[5] / parameters[2]) * (x[0] * lambda) ;
         
     }
     else
@@ -244,7 +244,7 @@ void parabolicInflow3DArteryHeartBeat(double* x, double* res, double t, const do
 
         res[0] = 0.;
         res[1] = 0.;
-        res[2] = (parameters[0] / parameters[2] * (x[0] * lambda)) ;
+        res[2] = (parameters[0] / parameters[2]) * (x[0] * lambda) ;
         
     }
     else
