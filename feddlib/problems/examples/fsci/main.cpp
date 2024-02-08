@@ -163,6 +163,7 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
     	    lambda= 0.8 + 1.2*Q;
 
         res[0] = (parameters[5] / parameters[2]) * (x[0] * lambda) ;
+        cout << "Prescribed Flowrate: " << res[0] << endl;
         
     }
     else
