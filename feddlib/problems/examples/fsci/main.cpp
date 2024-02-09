@@ -144,7 +144,7 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
         double Q = 0.5*a0;
         
 
-        double t_min = t - fmod(t,1.0)+heartBeatStart-std::floor(t); ; //FlowConditions::t_start_unsteady;
+        double t_min = t - fmod(t,1.0); //+heartBeatStart-std::floor(t); ; //FlowConditions::t_start_unsteady;
         double t_max = t_min + 1.0; // One heartbeat lasts 1.0 second    
         double y = M_PI * ( 2.0*( t-t_min ) / ( t_max - t_min ) -1.0)  ;
         
