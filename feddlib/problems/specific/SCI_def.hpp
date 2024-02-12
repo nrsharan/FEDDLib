@@ -1142,7 +1142,7 @@ void SCI<SC,LO,GO,NO>::updateChemInTime() const
     }
 }
 template<class SC,class LO,class GO,class NO>
-SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostProcessingData() const
+typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostProcessingData() const
 {
     BlockMultiVectorPtr_Type stressVec =Teuchos::rcp(new BlockMultiVector_Type(1)) ;
         
@@ -1153,6 +1153,7 @@ SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostProcessingDa
 
     return stressVec;
 }
+
 }
 #endif
 
