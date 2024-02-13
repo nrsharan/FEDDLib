@@ -163,7 +163,7 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
         if( t+1.0e-10 < heartBeatStart1 + 0.5)
 		    lambda = 0.90 + 0.1*cos(2*M_PI*t);
         else 
-    	    lambda= 0.8 + 1.2*Q;
+    	    lambda= 0.8 + 1.0*Q;
 
         res[0] = (parameters[5] / parameters[2]) * (x[0] * lambda) ;
         
@@ -171,9 +171,9 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
     else if(t>=heartBeatEnd1 && t<heartBeatStart2)
     {
         if(t < heartBeatEnd1 +  parameters[1])
-            res[0] =  (parameters[5] / parameters[2]) * (x[0] * 2.0) + 0.2* parameters[5] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
+            res[0] =  (parameters[5] / parameters[2]) * (x[0] * 0.8) + 1.2* parameters[5] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/parameters[1]) ));
         else
-            res[0] = (parameters[5] / parameters[2]) * (x[0] * 2.2) ;
+            res[0] = (parameters[5] / parameters[2]) * (x[0] * 2.0) ;
     }
     else if(t>=heartBeatStart2 )
     {
@@ -202,9 +202,9 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
         double lambda = 1.;
 
         if( t < heartBeatStart2 + 0.5)
-		    lambda = 2.1 + 0.1*cos(2*M_PI*t);
+		    lambda = 1.9 + 0.1*cos(2*M_PI*t);
         else 
-    	    lambda= 2.0 + 1.2*Q;
+    	    lambda= 1.8 + 1.2*Q;
 
         res[0] = (parameters[5] / parameters[2]) * (x[0] * lambda) ;
     }
