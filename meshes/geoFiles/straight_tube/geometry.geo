@@ -1,13 +1,13 @@
 //-*- C++ -*-
 
-lc = 0.15;
-h = 0.08;
-R= 0.40;
-L = 5.0;
+lc = 0.2;
+h = 0.14;
+R= 0.09;
+L = 0.05;
 
-nb_layers = 45;
-n_elem_quarter = 16;
-n_elem_solid = 5;
+nb_layers = 3;
+n_elem_quarter = 12;
+n_elem_solid = 6;
 
 // ############# POINTS ##############
 //Base
