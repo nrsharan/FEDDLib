@@ -171,6 +171,8 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
     else if(t>=heartBeatEnd1 && t<heartBeatStart2)
     {
         if(t < heartBeatEnd1 + 0.5)
+            res[0] =  (parameters[5] / parameters[2]) * (x[0] * 0.9);
+        else if(t < heartBeatEnd1 + 1.0)
             res[0] =  (parameters[5] / parameters[2]) * (x[0] * 0.9) + 1.3* parameters[5] / parameters[2] * x[0] * 0.5 * ( ( 1 - cos( M_PI*t/0.5) ));
         else
             res[0] = (parameters[5] / parameters[2]) * (x[0] * 2.2) ;
