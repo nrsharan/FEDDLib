@@ -23,11 +23,14 @@ type_("")
 template<class SC,class LO,class GO,class NO>
 NonLinearSolver<SC,LO,GO,NO>::NonLinearSolver(string type):
 type_(type)
-{}
+{
+
+}
 
 template<class SC,class LO,class GO,class NO>
 NonLinearSolver<SC,LO,GO,NO>::~NonLinearSolver(){
-
+    exporterRelRes_->closeExporter();
+    exporterAbsRes_->closeExporter();
 }
 
 template<class SC,class LO,class GO,class NO>
@@ -467,6 +470,8 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
     problem.setBoundariesRHS(time);
 
 
+ 
+
     TEUCHOS_TEST_FOR_EXCEPTION(problem.getRhs()->getNumVectors()!=1,std::logic_error,"We need to change the code for numVectors>1.")
     
     // -------
@@ -485,7 +490,26 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
     std::string timestepping = problem.getParameterList()->sublist("Timestepping Parameter").get("Class","Singlestep");
     bool displayResiduals = problem.getParameterList()->sublist("Parameter").get("Display Residuals",true);
 
+   // Adding exporter for Newton residual values
+    if(!initExport_ &&  displayResiduals){
+        exporterRelRes_ =Teuchos::rcp(new ExporterTxt());;
+        exporterRelRes_->setup( "relResidual", problem.getComm() );
+
+        exporterAbsRes_ =Teuchos::rcp(new ExporterTxt());;
+        exporterAbsRes_->setup( "absResidual", problem.getComm() );
+        initExport_=true;
+    }
+
+    // Export current Time Step
+    if(displayResiduals){
+        exporterRelRes_->exportData(  "Timestep:", time );
+        exporterAbsRes_->exportData(  "Timestep:", time);
+    }
     while ( nlIts < maxNonLinIts ) {
+        if(displayResiduals){
+            exporterRelRes_->exportData( "Newton iter.:", nlIts );
+            exporterAbsRes_->exportData( "Newton iter.:", nlIts );
+        }
         if (timestepping == "External")
             problem.calculateNonLinResidualVec("external", time);
         else
@@ -530,10 +554,14 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
                 cout << "Initial relative residual (as sum over all partial res) r0 = " << residualInit << endl;
                 for(int i=0; i< numNorms; i++){
                     cout << "### Residual of component: " << i << ": " << normVec[i]  << " relative residual: " << normVec[i]/residualInit << endl;
+                    exporterRelRes_->exportData(  i ,normVec[i]/residualInit );
+
                 }
                 cout << "############################################################ " << endl;
                 for(int i=0; i< numNorms; i++){
                     cout << "### Update of component: " << i << ": " << criterionValueVec[i] << endl;
+                    exporterAbsRes_->exportData(  i ,criterionValueVec[i]);
+
                 }
                 cout << "############################################################ " << endl;
 

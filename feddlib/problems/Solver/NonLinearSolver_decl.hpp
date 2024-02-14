@@ -3,6 +3,7 @@
 #include "feddlib/problems/problems_config.h"
 #include "feddlib/problems/abstract/NonLinearProblem.hpp"
 #include "feddlib/problems/abstract/TimeProblem.hpp"
+#include "feddlib/core/General/ExporterTxt.hpp"
 #ifdef FEDD_HAVE_NOX
 #include "NOX.H"
 #include "NOX_Thyra.H"
@@ -66,7 +67,9 @@ private:
 
 	int nonLinearIts_ =0;
 
-
+    ExporterTxtPtr_Type  exporterRelRes_;
+    ExporterTxtPtr_Type  exporterAbsRes_;
+    bool initExport_=false;
 };
 }
 #endif
