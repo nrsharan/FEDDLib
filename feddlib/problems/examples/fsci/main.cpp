@@ -204,9 +204,9 @@ void flowRate3DArteryHeartBeat(double* x, double* res, double t, const double* p
         double lambda = 1.;
 
         if( t < heartBeatStart2 + 0.5)
-		    lambda = 2.0 + 0.15*cos(2*M_PI*t);
+		    lambda = 1.85 + 0.15*cos(2*M_PI*t);
         else 
-    	    lambda= 1.85 + 1.2*Q;
+    	    lambda= 1.70+ 1.2*Q;
 
         res[0] = (parameters[5] / parameters[2]) * (x[0] * lambda) ;
     }
