@@ -1636,6 +1636,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         exporterDisplYTxt->exportData( v[1] );
     }
 
+    NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
+
+
 //    {
 //        // Initialize mass matrix for fluid problem
 //        MatrixPtr_Type massmatrix;
@@ -2000,7 +2003,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         
         double time = timeSteppingTool_->currentTime() +  timeSteppingTool_->dt_;
         problemTime_->updateTime ( time );      
-        NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
 
         nlSolver.solve(*this->problemTime_, time, its);
         

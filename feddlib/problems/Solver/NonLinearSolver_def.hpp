@@ -17,20 +17,26 @@ namespace FEDD {
 template<class SC,class LO,class GO,class NO>
 NonLinearSolver<SC,LO,GO,NO>::NonLinearSolver():
 type_("")
-{}
+{
+
+initExport_=false;
+
+}
 
 
 template<class SC,class LO,class GO,class NO>
 NonLinearSolver<SC,LO,GO,NO>::NonLinearSolver(string type):
 type_(type)
 {
-
+initExport_=false;
 }
 
 template<class SC,class LO,class GO,class NO>
 NonLinearSolver<SC,LO,GO,NO>::~NonLinearSolver(){
-    exporterRelRes_->closeExporter();
-    exporterAbsRes_->closeExporter();
+    if(initExport_){
+        exporterRelRes_->closeExporter();
+        exporterAbsRes_->closeExporter();
+    }
 }
 
 template<class SC,class LO,class GO,class NO>
@@ -526,8 +532,11 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
 //            exporterTxt->exportData( criterionValue );
             if (verbose)
                 cout << "### Newton iteration : " << nlIts << "  relative nonlinear residual : " << criterionValue << endl;
-            if ( criterionValue < tol )
+            if ( criterionValue < tol ){
+                exporterRelRes_->exportData(  "--Converged with value: " , criterionValue );
                 break;
+
+            }
         }
 
         // Systems are combined in timeProblem.assemble("Newton") and then combined
@@ -572,8 +581,10 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
         if(criterion=="Update"){
             if (verbose)
                 cout << "### Newton iteration : " << nlIts << "  residual of update : " << criterionValue << endl;
-            if ( criterionValue < tol )
+            if ( criterionValue < tol ){
+                exporterAbsRes_->exportData(  "--Converged with value: " , criterionValue );
                 break;
+            }
         }
 
         // ####### end FPI #######

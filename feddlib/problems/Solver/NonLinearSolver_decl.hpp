@@ -69,7 +69,7 @@ private:
 
     ExporterTxtPtr_Type  exporterRelRes_;
     ExporterTxtPtr_Type  exporterAbsRes_;
-    bool initExport_=false;
+    bool initExport_;
 };
 }
 #endif
