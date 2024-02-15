@@ -645,7 +645,7 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
     bool plotResVector = this->getParameterList()->sublist("General").get("Plot Residual Vector",true);
     double range1 = this->getParameterList()->sublist("General").get("Plot Residual Vector Start",0.5);
     double range2 = this->getParameterList()->sublist("General").get("Plot Residual Vector End",1.0;
-    if(plotResVector && this->timeSteppingTool_->currentTime() >= range 1 && this->timeSteppingTool_->currentTime() <= range2)
+    if(plotResVector && this->timeSteppingTool_->currentTime() >= range1 && this->timeSteppingTool_->currentTime() <= range2)
         this->plotResidualVec(this->timeSteppingTool_->currentTime());
 
 
