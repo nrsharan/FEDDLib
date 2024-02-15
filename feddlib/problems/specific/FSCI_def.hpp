@@ -554,8 +554,8 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
     }*/
     
      
-    if((this->parameterList_->sublist("Parameter Fluid").get("Implicit BC",false) == true) && (this->timeSteppingTool_->t_ > this->parameterList_->sublist("Parameter Fluid").get("Implicit Start",1.0)))
-        this->computePressureRHSInTime();
+   // if((this->parameterList_->sublist("Parameter Fluid").get("Implicit BC",false) == true) && (this->timeSteppingTool_->t_ > this->parameterList_->sublist("Parameter Fluid").get("Implicit Start",1.0)))
+    //    this->computePressureRHSInTime();
 
     this->meshDisplacementNew_rep_->importFromVector(geometrySolution, true);
     
@@ -642,15 +642,16 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
     else if (type == "standard"){
         this->residualVec_->scale(-1.);
         this->bcFactory_->setVectorMinusBC( this->residualVec_, this->solution_, time );
-    }
-    
-    bool plotResVector = this->getParameterList()->sublist("General").get("Plot Residual Vector",true);
+    } 
+
+    this->setBoundariesRHS(this->timeSteppingTool_->currentTime());
+
+    /*bool plotResVector = this->getParameterList()->sublist("General").get("Plot Residual Vector",true);
     double range1 = this->getParameterList()->sublist("General").get("Plot Residual Vector Start",0.0);
     double range2 = this->getParameterList()->sublist("General").get("Plot Residual Vector End",1.0);
     if(plotResVector && this->timeSteppingTool_->currentTime() >= range1 && this->timeSteppingTool_->currentTime() <= range2)
-        this->plotResidualVec(this->timeSteppingTool_->currentTime());
+        this->plotResidualVec(this->timeSteppingTool_->currentTime());*/
 
-   
 
 
 }

@@ -535,12 +535,14 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
 
    
    // might also be called in the sub calculateNonLinResidualVec() methods which were used above
-   if (type == "standard")
+    if (type == "standard")
         this->bcFactory_->setBCMinusVector( this->residualVec_, this->solution_, time );
     else if (type == "reverse"){
         //this->residualVec_->scale(-1.);
         this->bcFactory_->setVectorMinusBC( this->residualVec_, this->solution_, time );
     }
+
+    this->setBoundariesRHS(this->timeSteppingTool_->currentTime());
 
 
     Teuchos::Array<SC> norm_d(1); 

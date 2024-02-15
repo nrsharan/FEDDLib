@@ -496,6 +496,8 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
     std::string timestepping = problem.getParameterList()->sublist("Timestepping Parameter").get("Class","Singlestep");
     bool displayResiduals = problem.getParameterList()->sublist("Parameter").get("Display Residuals",true);
 
+    vec_dbl_Type residualInitV(4,1.);
+
    // Adding exporter for Newton residual values
     if(!initExport_ &&  displayResiduals){
         exporterRelRes_ =Teuchos::rcp(new ExporterTxt());;
@@ -551,19 +553,26 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
             //problem.assembleExternal( "OnlyUpdate" );// update AceGEN internal variables
         }
         else
-            gmresIts += problem.solveAndUpdate( criterion, criterionValue,criterionValueVec );
+            gmresIts += problem.solveAndUpdate( criterion,criterionValue,criterionValueVec );
 
-        nlIts++;
 
         if(displayResiduals){
             vec_dbl_Type normVec = problem.calculateResidualNormVec();
             int numNorms = normVec.size();
+            if (nlIts==0){
+                residualInitV[0] = normVec[0];
+                residualInitV[1] = normVec[1];
+                residualInitV[2] = normVec[2];
+                residualInitV[3] = normVec[3];
+
+            }
             if (verbose){
                 cout << "############################################################ " << endl;
                 cout << "Initial relative residual (as sum over all partial res) r0 = " << residualInit << endl;
                 for(int i=0; i< numNorms; i++){
-                    cout << "### Residual of component: " << i << ": " << normVec[i]  << " relative residual: " << normVec[i]/residualInit << endl;
-                    exporterRelRes_->exportData(  i ,normVec[i]/residualInit );
+
+                    cout << "### Residual of component: " << i << ": " << normVec[i]  << " relative residual: " << normVec[i]/residualInitV[i] << " \t with r_0_" << i << "= " << residualInitV[i] << endl;
+                    exporterRelRes_->exportData(  i ,normVec[i]/residualInitV[i] );
 
                 }
                 cout << "############################################################ " << endl;
@@ -576,6 +585,8 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
 
             }
         }
+        nlIts++;
+
 
         //problem.getSolution()->getBlock(0)->print();
         if(criterion=="Update"){

@@ -83,8 +83,7 @@ namespace FEDD
                 //cout << " Export Timestep for component " << i << ": " << exportTime << endl;
                 MultiVectorConstPtr_Type exportVector = this->residualVec_->getBlock(i);
                 std::string varName ="Component"+std::to_string(i);
-                if(i==2)
-                    exporterResidual_[i]->updateVariables(exportVector, varName);
+                exporterResidual_[i]->updateVariables(exportVector, varName);
 
                 exporterResidual_[i]->save(exportTime);
             }

@@ -455,6 +455,7 @@ vec_dbl_Type TimeProblem<SC,LO,GO,NO>::calculateResidualNormVec() const
         residualNormVec[i] = residual[0];
         TEUCHOS_TEST_FOR_EXCEPTION(residual.size() != 1, std::logic_error, "We need to change the code for numVectors>1.");
     }
+
     return residualNormVec;
 }
 
@@ -502,6 +503,13 @@ void TimeProblem<SC,LO,GO,NO>::calculateNonLinResidualVec( std::string type, dou
             this->bcFactory_->setBCMinusVector( nonLinProb->getResidualVector(), nonLinProb->getSolution(), time );
         else if(type=="standard")// we set the negative Dirichlet BC to the residual
             this->bcFactory_->setVectorMinusBC( nonLinProb->getResidualVector(), nonLinProb->getSolution(), time );
+
+
+        bool plotResVector = nonLinProb->getParameterList()->sublist("General").get("Plot Residual Vector",true);
+        double range1 = nonLinProb->getParameterList()->sublist("General").get("Plot Residual Vector Start",0.0);
+        double range2 = nonLinProb->getParameterList()->sublist("General").get("Plot Residual Vector End",1.0);
+        if(plotResVector && time >= range1 && time <= range2)
+            nonLinProb->plotResidualVec(time);
             
     }
 
