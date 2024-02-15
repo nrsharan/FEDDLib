@@ -222,19 +222,19 @@ void ExporterParaView<SC,LO,GO,NO>::updateVariables(MultiVecConstPtr_Type &u, st
 		if(this->varNames_[i] == varName){
 			this->variables_[i] = u;
 
-		    this->mapUniqueVariables_= u->getMap();
+		    //this->mapUniqueVariables_= u->getMap();
 
-			this->nmbExportValuesGlob_ = this->mapUniqueVariables_->getGlobalNumElements();
-			Teuchos::ArrayView< const GO > indices = this->mapUniqueVariables_->getNodeElementList();
+			/*this->nmbExportValuesGlob_ = this->uniqueMaps_[i]->getGlobalNumElements();
+			Teuchos::ArrayView< const GO > indices = this->uniqueMaps_[i]->getNodeElementList();
 			int* intGlobIDs = new int[indices.size()];
 			for (int j=0; j<indices.size(); j++) {
 				intGlobIDs[j] = (int) indices[j];
 			}
 
-			EpetraMapPtr_Type mapToStore = Teuchos::rcp(new Epetra_Map( (int) this->mapUniqueVariables_->getGlobalNumElements(), indices.size(), intGlobIDs,0, *this->commEpetra_ ) );
+			EpetraMapPtr_Type mapToStore = Teuchos::rcp(new Epetra_Map( (int) this->uniqueMaps_[i]->getGlobalNumElements(), indices.size(), intGlobIDs,0, *this->commEpetra_ ) );
 
 			this->uniqueMaps_[i] =mapToStore;
-			delete [] intGlobIDs;
+			delete [] intGlobIDs;*/
 		}
 	}
 
@@ -426,8 +426,6 @@ void ExporterParaView<SC,LO,GO,NO>::addVariable(MultiVecConstPtr_Type &u,
     varDofPerNode_.push_back(dofPerNode);
 
     nmbExportValuesGlob_ = mapUnique->getGlobalNumElements();
-
-
 
     Teuchos::ArrayView< const GO > indices = mapUnique->getNodeElementList();
     int* intGlobIDs = new int[indices.size()];

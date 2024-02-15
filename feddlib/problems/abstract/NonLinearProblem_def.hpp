@@ -83,7 +83,8 @@ namespace FEDD
                 //cout << " Export Timestep for component " << i << ": " << exportTime << endl;
                 MultiVectorConstPtr_Type exportVector = this->residualVec_->getBlock(i);
                 std::string varName ="Component"+std::to_string(i);
-                exporterResidual_[i]->updateVariables(exportVector, varName);
+                if(i==2)
+                    exporterResidual_[i]->updateVariables(exportVector, varName);
 
                 exporterResidual_[i]->save(exportTime);
             }
@@ -120,10 +121,10 @@ namespace FEDD
                 
                 MultiVectorConstPtr_Type exportVector = this->residualVec_->getBlock(i);
                 
-                if(this->domainPtr_vec_.at(i)->getDofs()>1)
-                    exporter->addVariable( exportVector, varName, "Vector", this->domainPtr_vec_.at(i)->getDofs(), this->domainPtr_vec_.at(i)->getMapUnique() );
+                if(this->dofsPerNode_vec_[i] >1)
+                    exporter->addVariable( exportVector, varName, "Vector", this->dofsPerNode_vec_[i], this->domainPtr_vec_.at(i)->getMapUnique() );
                 else     
-                    exporter->addVariable( exportVector, varName, "Scalar", this->domainPtr_vec_.at(i)->getDofs(), this->domainPtr_vec_.at(i)->getMapUnique() );
+                    exporter->addVariable( exportVector, varName, "Scalar", this->dofsPerNode_vec_[i], this->domainPtr_vec_.at(i)->getMapUnique() );
 
                 //cout << " Initialize resdual plot for variable " << i << " dofs= " << this->domainPtr_vec_.at(i)->getDofs()<< " and FEType " << this->domainPtr_vec_.at(i)->getFEType() << endl;
 

@@ -635,19 +635,22 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
         
     }*/
     // might also be called in the sub calculateNonLinResidualVec() methods which where used above
-    if (type == "reverse")
+    
+    if (type == "reverse"){
         this->bcFactory_->setBCMinusVector( this->residualVec_, this->solution_, time );
+    }
     else if (type == "standard"){
         this->residualVec_->scale(-1.);
         this->bcFactory_->setVectorMinusBC( this->residualVec_, this->solution_, time );
     }
-
+    
     bool plotResVector = this->getParameterList()->sublist("General").get("Plot Residual Vector",true);
-    double range1 = this->getParameterList()->sublist("General").get("Plot Residual Vector Start",0.5);
+    double range1 = this->getParameterList()->sublist("General").get("Plot Residual Vector Start",0.0);
     double range2 = this->getParameterList()->sublist("General").get("Plot Residual Vector End",1.0);
     if(plotResVector && this->timeSteppingTool_->currentTime() >= range1 && this->timeSteppingTool_->currentTime() <= range2)
         this->plotResidualVec(this->timeSteppingTool_->currentTime());
 
+   
 
 
 }
