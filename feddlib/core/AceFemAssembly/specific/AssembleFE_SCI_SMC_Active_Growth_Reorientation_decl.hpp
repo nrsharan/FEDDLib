@@ -11,10 +11,14 @@
 #include "stdlib.h"
 #include "string.h"
 
-//#ifdef FEDD_HAVE_ACEGENINTERFACE
-//#include "aceinterface.h"
-//#include "ace2.h"
-//#endif
+#ifdef FEDD_HAVE_ACEGENINTERFACE
+#include "aceinterface.hpp"
+#endif
+
+// #ifdef FEDD_HAVE_ACEGENINTERFACE
+// #include "aceinterface.h"
+// #include "ace2.h"
+// #endif
 
 /*!
 \class AssembleFE_SCI_SMC_Active_Growth_Reorientation
@@ -23,86 +27,102 @@
 	Active response with MLCK and MLCP
 */
 
+namespace FEDD
+{
 
-namespace FEDD {
+	template <class SC = default_sc, class LO = default_lo, class GO = default_go, class NO = default_no>
+	class AssembleFE_SCI_SMC_Active_Growth_Reorientation : public AssembleFE<SC, LO, GO, NO>
+	{
+	public:
+		typedef Matrix<SC, LO, GO, NO> Matrix_Type;
+		typedef Teuchos::RCP<Matrix_Type> MatrixPtr_Type;
 
-template <class SC = default_sc, class LO = default_lo, class GO = default_go, class NO = default_no>
-class AssembleFE_SCI_SMC_Active_Growth_Reorientation : public AssembleFE<SC,LO,GO,NO> {
-    public:
+		typedef SmallMatrix<SC> SmallMatrix_Type;
+		typedef Teuchos::RCP<SmallMatrix_Type> SmallMatrixPtr_Type;
 
-        typedef Matrix<SC,LO,GO,NO> Matrix_Type;
-        typedef Teuchos::RCP<Matrix_Type> MatrixPtr_Type;
+		typedef MultiVector<SC, LO, GO, NO> MultiVector_Type;
+		typedef Teuchos::RCP<MultiVector_Type> MultiVectorPtr_Type;
 
-	    typedef SmallMatrix<SC> SmallMatrix_Type;
-        typedef Teuchos::RCP<SmallMatrix_Type> SmallMatrixPtr_Type;
+		typedef AssembleFE<SC, LO, GO, NO> AssembleFE_Type;
 
-	    typedef MultiVector<SC,LO,GO,NO> MultiVector_Type;
-        typedef Teuchos::RCP<MultiVector_Type> MultiVectorPtr_Type;
+		/*!
+		\brief Assemble the element Jacobian matrix.
+		*/
+		virtual void assembleJacobian();
 
-	    typedef AssembleFE<SC,LO,GO,NO> AssembleFE_Type;
+		/*!
+		\brief Assemble the element right hand side vector.
+		*/
+		virtual void assembleRHS();
 
-        /*!
-	    \brief Assemble the element Jacobian matrix.
-	    */
-	    virtual void assembleJacobian();
-
-        /*!
-	    \brief Assemble the element right hand side vector.
-	    */
-	    virtual void assembleRHS();
-
- 		/*!
-	    \brief Assemble block parts of the element Jacobian matrix.
-	    \return the element Jacobian matrix of block i 
-	    */
+		/*!
+		\brief Assemble block parts of the element Jacobian matrix.
+		\return the element Jacobian matrix of block i
+		*/
 		virtual void assembleJacobianBlock(LO i){};
 
 		virtual void advanceInTime(double dt);
 
-        virtual void postProcessing();
+		virtual void postProcessing();
 
-        void getMassMatrix(SmallMatrixPtr_Type &massMatrix ){massMatrix=massMatrix_;};
+		void getMassMatrix(SmallMatrixPtr_Type &massMatrix) { massMatrix = massMatrix_; };
 
-    protected:
-        AssembleFE_SCI_SMC_Active_Growth_Reorientation(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params,tuple_disk_vec_ptr_Type tuple);
+		void initializeGrowth();
 
-    private:
+		void initializeActiveResponse();
 
-        void assemble_SCI_SMC_Active_Growth_Reorientation(SmallMatrixPtr_Type &elementMatrix);
+		void updateDomainData(std::string dataName, double dataValue);
 
+	protected:
+		AssembleFE_SCI_SMC_Active_Growth_Reorientation(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params, tuple_disk_vec_ptr_Type tuple);
 
-        friend class AssembleFEFactory<SC,LO,GO,NO>; // Must have for specfic classes
-	    
-		string FEType_ ; // FEType of Disk
+	private:
+		void assemble_SCI_SMC_Active_Growth_Reorientation();
+
+		friend class AssembleFEFactory<SC, LO, GO, NO>; // Must have for specfic classes
+
+		int findPosition(string subString, std::vector<std::string> &stringArray);
+
+		string FEType_; // FEType of Disk
 
 		SmallMatrixPtr_Type massMatrix_;
 
-	    int dofsSolid_ ; // Degrees of freedom per node
+		int dofsSolid_; // Degrees of freedom per node
 		int dofsChem_;
-	    int numNodesSolid_ ; // Number of nodes of element
-		int numNodesChem_ ; // Number of nodes of element
+		int numNodesSolid_; // Number of nodes of element
+		int numNodesChem_;	// Number of nodes of element
 
+		int dofsElement_; // "Dimension of return matrix"
 
-	    int dofsElement_; // "Dimension of return matrix"
-		
-		int dofOrdering_; // Order of DOFs: 
+		int dofOrdering_; // Order of DOFs:
 						  // dofOrdering = 1 -> 'u1 v1 w1 c1 u2 v2 w2 c2 ... un vn wn cn'
 						  // dofOrdering = 2 -> 'u1 v1 w1 u2 v2 w2 ... un vn wn c1 c2 c3 ... cn'
 
-		
-		
-		int iCode_; // Integration Code
-		int historyLength_; // Length of history vector
-		
+		int iCode_;						// Integration Code
+		int historyLength_;				// Length of history vector
+		int numberOfIntegrationPoints_; // Number of integration points
+		int postDataLength_;			// Number of post processing variables
+		int domainDataLength_;			// Number of domain data parameters
+
 		vec_dbl_Type historyUpdated_;
 		vec_dbl_Type history_;
 
 		vec_dbl_Type solutionC_n_;
-		vec_dbl_Type solutionC_n1_; 
+		vec_dbl_Type solutionC_n1_;
 
 		vec2D_dbl_Type timeParametersVec_;
-    	double numSegments_ ;
-	    /*
+		double numSegments_;
+
+		vec_dbl_Type domainData_;
+
+		std::vector<std::string> domainDataNames_;
+		std::vector<std::string> postDataNames_;
+
+#ifdef FEDD_HAVE_ACEGENINTERFACE
+		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element_;
+#endif
+
+		/*
 		fA -Fibre angle_1
 		$[Lambda]$C50 -LambdaC50_2
 		$[Gamma]$3 -Gamma3_3
@@ -159,7 +179,7 @@ class AssembleFE_SCI_SMC_Active_Growth_Reorientation : public AssembleFE<SC,LO,G
 		"$[Theta]$Minus1 -ThetaMinus1_54"
 		"$[Theta]$Minus2 -ThetaMinus2_55"
 		"$[Theta]$Minus3 -ThetaMinus3_56"
-		"$[Rho]$ -Density_57"	
+		"$[Rho]$ -Density_57"
 	*/
 
 		double fA_;
@@ -185,44 +205,44 @@ class AssembleFE_SCI_SMC_Active_Growth_Reorientation : public AssembleFE<SC,LO,G
 		double alpha1_;
 		double alpha4_;
 		double alpha5_;
-		double gamma6_ ;
+		double gamma6_;
 		double lambdaP50_;
-		double kDotMin_ ;
-	    double zeta1_ ;
-		double kDotMax_ ;
-		double gamma4_ ;
-		double lambdaBarDotPMin_ ;
-		double lambdaBarDotPMax_ ;
+		double kDotMin_;
+		double zeta1_;
+		double kDotMax_;
+		double gamma4_;
+		double lambdaBarDotPMin_;
+		double lambdaBarDotPMax_;
 		double gamma5_;
 		double zeta2_;
-		double DeltaLambdaBarPMin_ ;
+		double DeltaLambdaBarPMin_;
 		double p1_;
 		double p3_;
 		double c50_;
 		double d0_;
 		double m_;
 		double activeStartTime_;
-		double kEtaPlus_ ;
-		double mEtaPlus_ ;
-		double growthStartTime_ ;
-		double reorientationStartTime_ ;
-		double growthEndTime_ ;
-		double reorientationEndTime_ ;
-		double kThetaPlus_ ;
-		double kThetaMinus_ ;
-		double mThetaPlus_ ;
-		double mThetaMinus_ ;
-		double thetaPlus1_ ;
-		double thetaPlus2_ ;
-		double thetaPlus3_ ;
-		double thetaMinus1_ ;
-		double thetaMinus2_ ;
-		double thetaMinus3_ ;
+		double kEtaPlus_;
+		double mEtaPlus_;
+		double growthStartTime_;
+		double reorientationStartTime_;
+		double growthEndTime_;
+		double reorientationEndTime_;
+		double kThetaPlus_;
+		double kThetaMinus_;
+		double mThetaPlus_;
+		double mThetaMinus_;
+		double thetaPlus1_;
+		double thetaPlus2_;
+		double thetaPlus3_;
+		double thetaMinus1_;
+		double thetaMinus2_;
+		double thetaMinus3_;
 		double kMin_;
 		double rho_;
 		double typeOfInterpol_;
 		double subiterationTolerance_;
-};
+	};
 
 }
-#endif //AssembleFE_SCI_SMC_Active_Growth_Reorientation_DECL_hpp
+#endif // AssembleFE_SCI_SMC_Active_Growth_Reorientation_DECL_hpp

@@ -633,7 +633,7 @@ void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &r
         for (UN T=0; T<assemblyFEElements_.size(); T++) {
             vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
             assemblyFEElements_[T]->postProcessing();
-            SmallMatrixPtr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
+            vec2D_dbl_ptr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
             
             // We only do sigma_11 now
             for(int i=0; i< 10; i++){
