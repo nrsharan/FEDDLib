@@ -12,6 +12,7 @@ namespace FEDD
 	template <class SC, class LO, class GO, class NO>
 	AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::AssembleFE_SCI_SMC_Active_Growth_Reorientation(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params, tuple_disk_vec_ptr_Type tuple) : AssembleFE<SC, LO, GO, NO>(flag, nodesRefConfig, params, tuple)
 	{
+
 		int numMaterials = this->params_->sublist("Parameter Solid").get("Number of Materials", 1);
 		int materialID = 0;
 		for (int i = 1; i <= numMaterials; i++)
@@ -22,7 +23,10 @@ namespace FEDD
 
 		this->iCode_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Integration Code", 18); // Only works for 18 currently!! Why? and is it still true?
 
+
 #ifdef FEDD_HAVE_ACEGENINTERFACE
+
+
 		this->element_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->iCode_);
 		this->historyLength_ = this->element_.getHistoryLength();
 		this->numberOfIntegrationPoints_ = this->element_.getNumberOfGaussPoints();
@@ -30,18 +34,23 @@ namespace FEDD
 		this->domainDataLength_ = this->element_.getNumberOfDomainData();
 		char **domainDataNames = this->element_.getDomainDataNames();
 		char **postDataNames = this->element_.getPostDataNames();
-#endif
 
 		std::vector<std::string> subString(this->domainDataLength_);
+		cout << "++++ domain data names size sizeof(domainDataNames): " << sizeof(domainDataNames) << " sizeof(domainDataNames[0]) " <<  sizeof(domainDataNames[0]) << " domain data length per Input" << domainDataLength_ << endl;
 
 		for (int i = 0; i < this->domainDataLength_; i++)
 		{
-			domainDataNames_[i] = std::string(domainDataNames[i]);
+			cout << " domainDataNames[0][i] " << domainDataNames[0][i] << endl;
+			this->domainDataNames_[i] = std::string(domainDataNames[i]);
 			int pos1 = domainDataNames_[i].find("-");
 			int pos2 = domainDataNames_[i].find("_");
+
 			subString[i] = domainDataNames_[i].substr(pos1 + 1, pos2 - pos1 - 1);
+			cout << "SubString " << subString[i] << endl;
 			this->domainData_[i] = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get(subString[i], 0.0);
 		}
+
+#endif
 
 		this->subiterationTolerance_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Subiteration Tolerance", 1.e-7);
 		this->FEType_ = std::get<1>(this->diskTuple_->at(0));	 // FEType of Disk
@@ -75,6 +84,8 @@ namespace FEDD
 		this->postProcessingData_ = Teuchos::rcp(new vec2D_dbl_Type(this->numNodesSolid_, vec_dbl_Type(this->postDataLength_)));
 		this->solution_.reset(new vec_dbl_Type(this->dofsElement_, 0.));
 
+#ifdef FEDD_HAVE_ACEGENINTERFACE
+
 		// Element ID
 		this->element_.setElementID(this->getGlobalElementID());
 
@@ -100,6 +111,8 @@ namespace FEDD
 		this->element_.setSubIterationTolerance(this->subiterationTolerance_);
 
 		this->element_.setComputeCompleted(false);
+#endif
+
 	}
 
 	template <class SC, class LO, class GO, class NO>
@@ -107,6 +120,7 @@ namespace FEDD
 	{
 
 		SmallMatrixPtr_Type elementMatrix = Teuchos::rcp(new SmallMatrix_Type(this->dofsElement_, 0.));
+#ifdef FEDD_HAVE_ACEGENINTERFACE
 
 		// assemble_SCI_SMC_Active_Growth_Reorientation(); // Use this if nothing works!
 
@@ -132,7 +146,10 @@ namespace FEDD
 			for (int j = 0; j < 10; j++)
 				(*elementMatrix)[i + 30][j + 30] = stiffnessMatrixKcc[i][j] + (1. / this->getTimeIncrement()) * massMatrixMc[i][j];
 
+#endif
+
 		this->jacobian_ = elementMatrix;
+		
 	}
 	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::advanceInTime(double dt)
@@ -167,8 +184,11 @@ namespace FEDD
 		// cout << endl;
 		for (int i = 0; i < 10; i++)
 			this->solutionC_n_[i] = (*this->solution_)[i + 30]; // this is the LAST solution of newton iterations
-
+#ifdef FEDD_HAVE_ACEGENINTERFACE
 		this->element_.setComputeCompleted(false);
+#endif
+
+
 	}
 
 	template <class SC, class LO, class GO, class NO>
@@ -283,14 +303,20 @@ namespace FEDD
 	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::initializeGrowth()
 	{
+#ifdef FEDD_HAVE_ACEGENINTERFACE
+
 		std::vector<double> historyNew = this->element_.initializeGrowthOrientationVectors();
 		for (int i = 0; i < this->historyLength_; i++)
 			this->history_[i] = historyNew[i];
+#endif
+
 	}
 
 	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::initializeActiveResponse()
 	{
+#ifdef FEDD_HAVE_ACEGENINTERFACE
+
 		std::vector<double> stretches = this->element_.getGaussPointStretches();
 		int historyPerGP = (int)this->historyLength_ / this->numberOfIntegrationPoints_;
 		for (int i = 0; i < this->numberOfIntegrationPoints_; i++)
@@ -298,6 +324,8 @@ namespace FEDD
 			history_[i * historyPerGP + 10] = stretches[i * 2];
 			history_[i * historyPerGP + 11] = stretches[i * 2 + 1];
 		}
+#endif
+
 	}
 	
 	template <class SC, class LO, class GO, class NO>
@@ -305,7 +333,12 @@ namespace FEDD
 	{
 		int position = findPosition(dataName, this->domainDataNames_);
 		this->domainData_[position] = dataValue;
+		
+#ifdef FEDD_HAVE_ACEGENINTERFACE
+
 		this->element_.setDomainData(this->domainData_.data());
+#endif
+
 	}
 
 } // namespace FEDD
