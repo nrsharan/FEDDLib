@@ -32,23 +32,27 @@ namespace FEDD
 		this->numberOfIntegrationPoints_ = this->element_.getNumberOfGaussPoints();
 		this->postDataLength_ = this->element_.getNumberOfPostData();
 		this->domainDataLength_ = this->element_.getNumberOfDomainData();
-		char **domainDataNames = this->element_.getDomainDataNames();
-		char **postDataNames = this->element_.getPostDataNames();
+		char** domainDataNames = this->element_.getDomainDataNames();
+		char** postDataNames = this->element_.getPostDataNames();
 
 		std::vector<std::string> subString(this->domainDataLength_);
-		cout << "++++ domain data names size sizeof(domainDataNames): " << sizeof(domainDataNames) << " sizeof(domainDataNames[0]) " <<  sizeof(domainDataNames[0]) << " domain data length per Input" << domainDataLength_ << endl;
+
+		this->domainDataNames_.resize(this->domainDataLength_);
+		this->postDataNames_.resize(this->postDataLength_);
+		this->domainData_.resize(this->domainDataLength_, 0.0);
 
 		for (int i = 0; i < this->domainDataLength_; i++)
 		{
-			cout << " domainDataNames[0][i] " << domainDataNames[0][i] << endl;
 			this->domainDataNames_[i] = std::string(domainDataNames[i]);
 			int pos1 = domainDataNames_[i].find("-");
 			int pos2 = domainDataNames_[i].find("_");
 
 			subString[i] = domainDataNames_[i].substr(pos1 + 1, pos2 - pos1 - 1);
-			cout << "SubString " << subString[i] << endl;
 			this->domainData_[i] = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get(subString[i], 0.0);
 		}
+
+		for (int i = 0; i < this->postDataLength_; i++)
+			this->postDataNames_[i] = std::string(postDataNames[i]);
 
 #endif
 
