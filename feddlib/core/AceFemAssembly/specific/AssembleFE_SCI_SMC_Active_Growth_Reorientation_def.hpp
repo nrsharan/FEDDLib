@@ -23,7 +23,6 @@ namespace FEDD
 
 		this->iCode_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Integration Code", 18); // Only works for 18 currently!! Why? and is it still true?
 
-
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
 
@@ -126,7 +125,7 @@ namespace FEDD
 		SmallMatrixPtr_Type elementMatrix = Teuchos::rcp(new SmallMatrix_Type(this->dofsElement_, 0.));
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
-		// assemble_SCI_SMC_Active_Growth_Reorientation(); // Use this if nothing works!
+		assemble_SCI_SMC_Active_Growth_Reorientation(); // Use this if nothing works!
 
 		double **stiffnessMatrixKuu = this->element_.getStiffnessMatrixKuu();
 		double **stiffnessMatrixKuc = this->element_.getStiffnessMatrixKuc();
@@ -191,7 +190,6 @@ namespace FEDD
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 		this->element_.setComputeCompleted(false);
 #endif
-
 
 	}
 
@@ -267,6 +265,7 @@ namespace FEDD
 	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::postProcessing()
 	{
+
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
 		double displacements[30];
@@ -288,9 +287,14 @@ namespace FEDD
 
 		double **postProcessingResults = this->element_.postProcess(&displacements[0], &concentrations[0], this->historyUpdated_.data(), &rates[0], &accelerations[0]);
 
-		for (int i = 0; i < 10; i++)
-			for (int j = 0; j < this->postDataLength_; j++)
+		for (int i = 0; i < 10; i++){
+			cout << " Node " << i << " " ;
+			for (int j = 0; j < this->postDataLength_; j++){
 				(*this->postProcessingData_)[i][j] = postProcessingResults[i][j];
+				cout << postProcessingResults[i][j] << " " ;
+			}
+			cout << endl;
+		}
 #endif
 	}
 
