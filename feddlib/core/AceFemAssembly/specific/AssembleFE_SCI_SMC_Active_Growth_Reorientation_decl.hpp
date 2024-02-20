@@ -114,13 +114,32 @@ namespace FEDD
 		double numSegments_;
 
 		vec_dbl_Type domainData_;
+		vec_dbl_Type positions_;
+		vec_dbl_Type displacements_;
+		vec_dbl_Type accelerations_;
+		vec_dbl_Type concentrations_;
+		vec_dbl_Type rates_;
 
 		std::vector<std::string> domainDataNames_;
 		std::vector<std::string> postDataNames_;
 
-#ifdef FEDD_HAVE_ACEGENINTERFACE
-		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element_;
-#endif
+		vec_dbl_Type residuumRint_;
+		vec_dbl_Type residuumRdyn_;
+		vec_dbl_Type residuumRc_;
+
+		vec2D_dbl_Type stiffnessMatrixKuu_;
+		vec2D_dbl_Type stiffnessMatrixKuc_;
+		vec2D_dbl_Type stiffnessMatrixKcu_;
+		vec2D_dbl_Type stiffnessMatrixKcc_;
+		vec2D_dbl_Type massMatrixMc_;
+
+
+
+
+
+//#ifdef FEDD_HAVE_ACEGENINTERFACE
+//		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element_;
+//#endif
 
 		/*
 		fA -Fibre angle_1
