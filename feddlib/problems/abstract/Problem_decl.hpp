@@ -211,7 +211,6 @@ public:
 
 	double calculateL2Norm(MultiVectorConstPtr_Type mv, int domainInd=0); // Function that calculates L2 Error in the 'mv * M * mv' sense, with M beeing the Mass Matrix
 
-
     int dim_;
     mutable CommConstPtr_Type comm_;
     mutable BlockMatrixPtr_Type system_;

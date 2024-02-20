@@ -734,7 +734,14 @@ int main(int argc, char *argv[])
 		    	volumeID = 21;
 		    	
 		    //partitionerP1.readAndPartition(volumeID);
-		    partitionerP1.readAndPartition(volumeID,"mm", true ); // Convert it from cm to m
+            bool convertMesh = parameterListAll->sublist("Parameter").get("Convert Mesh",false);
+            string unit = parameterListAll->sublist("Parameter").get("Mesh Unit","cm");
+
+            if(convertMesh)
+                partitionerP1.readAndPartition(15,unit , true ); // Convert it from mm to sm
+            else
+                partitionerP1.readAndPartition(15); 
+
 
 		    
             if (!discType.compare("P2")){

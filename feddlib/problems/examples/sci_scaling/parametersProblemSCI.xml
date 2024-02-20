@@ -15,6 +15,10 @@
         <Parameter name="Source Type" type="string"   value="surface"/>
         <Parameter name="Model Geometry" type="string" value="Laplace"/>
         
+       	<Parameter name="Mesh Unit" type="string" value="mm"/> <!--  unstructured -->
+		<Parameter name="Convert Mesh" type="bool" value="false"/> <!--  unstructured -->
+	
+        
         <Parameter name="SCI" type="bool" value="true"/>
         <Parameter name="Chemistry Explicit" type="bool" value="true"/>
         <Parameter name="Load Stepping" type="bool" value="true"/>
@@ -94,7 +98,18 @@
         <Parameter name="Scale mass matrix" type="bool" value="true"/>
         <Parameter name="Set Zeros" type="bool" value="true"/>
         
-        <Parameter name="Linearization" type="string" value="NOX"/> <!-- FixedPoint, Newton, Extrapolation-->
+        <Parameter name="Linearization" type="string" value="Newton"/> <!-- FixedPoint, Newton, Extrapolation-->
+  
+    	 <Parameter name="Plot Residual Vector" type="bool" value="true"/>
+        <Parameter name="Plot Linear Residual Vector Start" type="double" value="0.005"/>
+        <Parameter name="Plot Linear Residual Vector End" type="double" value="0.0.05"/>
+        
+ 	 	<Parameter name="Plot Linear Residual Vector" type="bool" value="true"/>
+        <Parameter name="Plot Linear Residual Vector Start" type="double" value="0.005"/>
+        <Parameter name="Plot Linear Residual Vector End" type="double" value="0.0.05"/>
+
+
+  
     </ParameterList>
     <ParameterList name="Timestepping Parameter">
         
@@ -102,7 +117,7 @@
         <Parameter name="Class" type="string" value="Multistep"/> <!-- External, Multistep-->
         <Parameter name="Timestepping type" type="string" value="non-adaptive"/><!--non-adaptive,adaptive:not working for BDF2-->
     
-        <Parameter name="Final time" type="double" value="72."/>
+        <Parameter name="Final time" type="double" value="0.05"/>
         <Parameter name="dt" type="double" value=".05"/>
         <Parameter name="beta" type="double" value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma" type="double" value="0.5"/> <!-- newmark method parameter-->

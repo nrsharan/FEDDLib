@@ -53,6 +53,10 @@ public:
 
     typedef typename Problem_Type::MultiVector_Type MultiVector_Type;
     typedef typename Problem_Type::MultiVectorPtr_Type MultiVectorPtr_Type;
+    typedef typename Problem_Type::MultiVectorConstPtr_Type MultiVectorConstPtr_Type;
+
+    typedef typename Problem_Type::Domain_Type::Mesh_Type Mesh_Type;
+    typedef typename Problem_Type::Domain_Type::MeshPtr_Type MeshPtr_Type;
 
     typedef typename Problem_Type::BlockMultiVector_Type BlockMultiVector_Type;
     typedef typename Problem_Type::BlockMultiVectorPtr_Type BlockMultiVectorPtr_Type;
@@ -81,6 +85,10 @@ public:
     typedef typename NonLinProb_Type::ThyraVec_Type ThyraVec_Type;
     typedef typename NonLinProb_Type::ThyraOp_Type ThyraOp_Type;
     typedef Thyra::BlockedLinearOpBase<SC> ThyraBlockOp_Type;
+
+    typedef ExporterParaView<SC,LO,GO,NO> Exporter_Type;
+    typedef Teuchos::RCP<Exporter_Type> ExporterPtr_Type;
+    typedef std::vector<ExporterPtr_Type> ExporterPtrVec_Type;
     
     typedef typename NonLinProb_Type::TpetraOp_Type TpetraOp_Type;
         
@@ -206,6 +214,18 @@ public:
     void updateTime( double time ){ time_ = time;};
 
     void addToRhs(BlockMultiVectorPtr_Type x);
+    
+    /// @brief Plotting residual Vector of problem
+    /// @param problem Timeproblem
+    /// @param time current time
+    void plotLinResVec(double time =0.) const;
+
+    void initExporterResidual() const;
+
+    mutable ExporterPtrVec_Type exporterResidual_;
+    mutable double currentTimeExport_=0.;
+    mutable double timeStep_ =0;
+    mutable double newtonStep_=0;
     
     ProblemPtr_Type problem_;
     CommConstPtr_Type comm_;

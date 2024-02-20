@@ -93,6 +93,7 @@ namespace FEDD
 
             
     }
+    
     template <class SC, class LO, class GO, class NO>
     void NonLinearProblem<SC, LO, GO, NO>::initExporterResidual() const{
         UN size = this->residualVec_->size();

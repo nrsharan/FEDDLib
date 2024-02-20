@@ -510,11 +510,116 @@ void TimeProblem<SC,LO,GO,NO>::calculateNonLinResidualVec( std::string type, dou
         double range2 = nonLinProb->getParameterList()->sublist("General").get("Plot Residual Vector End",1.0);
         if(plotResVector && time >= range1 && time <= range2)
             nonLinProb->plotResidualVec(time);
+
+    
             
     }
 
     
 }
+
+template <class SC, class LO, class GO, class NO>
+void TimeProblem<SC, LO, GO, NO>::plotLinResVec(double time) const {
+
+
+    NonLinProbPtr_Type nonLinProb = Teuchos::rcp_dynamic_cast<NonLinProb_Type>(problem_);
+
+    if(exporterResidual_.size()<1)
+        initExporterResidual();
+
+    if(!nonLinProb.is_null()){
+
+        UN size= exporterResidual_.size();
+        if(currentTimeExport_ < time  ){
+            currentTimeExport_ = time;
+            newtonStep_ =0;
+            timeStep_++;
+        }
+        BlockMatrixPtr_Type system = this->getSystemCombined(); //->getBlock(0,0);
+        BlockMultiVectorPtr_Type solution = nonLinProb->getSolution(); //->getBlock(0);
+
+        BlockMultiVectorPtr_Type residual =  Teuchos::RCP( new BlockMultiVector_Type(size)); //problem->getSolution()->getBlock(0)->getMap() ));
+        for(int i=0; i< size; i++){
+            MultiVectorPtr_Type residualComp =  Teuchos::RCP( new MultiVector_Type(solution->getBlock(i)->getMap() ));
+            residual->addBlock(residualComp,i);
+        }
+        system->apply( *solution, *residual); // y= -Ax + 0*y
+
+        //this = alpha*A + beta*this
+        residual->update( 1, nonLinProb->residualVec_, -1 );
+
+        Teuchos::Array<SC> resNorm(1);
+        nonLinProb->residualVec_->norm2(resNorm());
+        double resVecNorm = resNorm[0];
+
+        residual->scale(1./resVecNorm);
+
+        for(int i=0; i< size; i++){ 
+            bool exportBlock =  true;
+            if(this->parameterList_->sublist("Parameter").get("FSI",false) == true ||this->parameterList_->sublist("Parameter").get("FSCI",false))
+                exportBlock = (i != 3);
+
+            if(exportBlock){
+                double exportTime = timeStep_ + (double) newtonStep_*0.01;
+                //cout << " Export Timestep for component " << i << ": " << exportTime << endl;
+                MultiVectorConstPtr_Type exportVector = residual->getBlock(i);
+                std::string varName ="LinearRes_"+std::to_string(i);
+                exporterResidual_[i]->updateVariables(exportVector, varName);
+
+                exporterResidual_[i]->save(exportTime);
+            }
+        }
+        newtonStep_++;
+    }
+    else   
+        cout << " !!! WARNING: For your linear subproblem the residual export is not working yet. " << endl;
+}
+
+template <class SC, class LO, class GO, class NO>
+void TimeProblem<SC, LO, GO, NO>::initExporterResidual() const{
+    UN size = this->systemCombined_->size();
+
+    NonLinProbPtr_Type nonLinProb = Teuchos::rcp_dynamic_cast<NonLinProb_Type>(problem_);
+
+    // Checking whether a nonlinear subproblem even exists. With linear segregated subproblems or in general linear problems this does not work yes.
+    if(!nonLinProb.is_null()){
+        exporterResidual_.resize(size);
+
+        for (UN i = 0; i < size; i++)
+        {
+            bool exportBlock =  true;
+            if(this->parameterList_->sublist("Parameter").get("FSI",false) == true ||this->parameterList_->sublist("Parameter").get("FSCI",false))
+                exportBlock = (i != 3);
+
+            if(exportBlock){
+
+                ExporterPtr_Type exporter = Teuchos::rcp(new Exporter_Type());
+                
+                //DomainConstPtr_Type dom = this->domainPtr_vec_.at(i);
+
+                std::string suffix = this->parameterList_->sublist("Exporter").get("Geometry Suffix", "" );
+                std::string varName ="LinearRes_"+std::to_string(i);
+                
+                MeshPtr_Type meshNonConst = Teuchos::rcp_const_cast<Mesh_Type>( nonLinProb->getDomainVector().at(i)->getMesh() );
+                exporter->setup(varName, meshNonConst, nonLinProb->getDomainVector().at(i)->getFEType(), this->parameterList_);
+                
+                MultiVectorConstPtr_Type exportVector = nonLinProb->getResidualVector()->getBlock(i);
+                
+                if(nonLinProb->getDofsPerNode(i) >1)
+                    exporter->addVariable( exportVector, varName, "Vector", nonLinProb->getDofsPerNode(i), nonLinProb->getDomainVector().at(i)->getMapUnique() );
+                else     
+                    exporter->addVariable( exportVector, varName, "Scalar", nonLinProb->getDofsPerNode(i), nonLinProb->getDomainVector().at(i)->getMapUnique() );
+
+                //cout << " Initialize resdual plot for variable " << i << " dofs= " << this->domainPtr_vec_.at(i)->getDofs()<< " and FEType " << this->domainPtr_vec_.at(i)->getFEType() << endl;
+
+                exporterResidual_[i] = exporter;
+            }
+        }
+    }
+    else   
+        cout << " !!! WARNING: For your linear subproblem the residual export is not working yet. " << endl;
+}
+
 
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::setBoundaries(double time){

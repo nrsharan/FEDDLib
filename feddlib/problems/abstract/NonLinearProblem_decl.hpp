@@ -79,7 +79,6 @@ public:
 
     int solveUpdate( );
 
-        
     /// @brief Plotting residual Vector of problem
     /// @param problem Timeproblem
     /// @param time current time

@@ -1154,18 +1154,21 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             problemTime_->combineSystems();
             problemTime_->setBoundaries(time); 
             (*its)[0]=problemTime_->solve();
-            }
+        }
 
-        if (timeSteppingTool_->currentTime() <= dt+1.e-10) 
+
         if(!chemistryExplicit_)
         {
-            for (int i = 0; i < sizeChem; i++)
+            if (timeSteppingTool_->currentTime() <= dt+1.e-10) 
             {
-                for (int j = 0; j < sizeChem; j++){
-                    massCoeffSCI[i+sizeStructure][j+sizeStructure] = massCoeffChem[i][j];
+                for (int i = 0; i < sizeChem; i++)
+                {
+                    for (int j = 0; j < sizeChem; j++){
+                        massCoeffSCI[i+sizeStructure][j+sizeStructure] = massCoeffChem[i][j];
+                    }
                 }
+                this->problemTime_->setTimeParameters(massCoeffSCI, problemCoeffSCI);
             }
-            this->problemTime_->setTimeParameters(massCoeffSCI, problemCoeffSCI);
         }
         
         //this->problemTime_->computeValuesOfInterestAndExport();
