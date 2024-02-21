@@ -115,7 +115,7 @@ AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 
 	this->solution_.reset( new vec_dbl_Type ( dofsElement_,0.) );
 	
-	this->postProcessingData_ = Teuchos::rcp( new SmallMatrix_Type(dofsElement_,0.));
+	//this->postProcessingData_ = Teuchos::rcp( new SmallMatrix_Type(dofsElement_,0.));
 
 	/*timeParametersVec_.resize(0, vec_dbl_Type(2));
     numSegments_ = this->params_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);

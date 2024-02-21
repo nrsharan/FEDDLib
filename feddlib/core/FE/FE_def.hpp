@@ -607,12 +607,64 @@ void FE<SC,LO,GO,NO>::addFeBlockMv(BlockMultiVectorPtr_Type &res, vec_dbl_ptr_Ty
         }
     }
 }
-
+/*
+    0 -- "Volume","
+    1 -- Sxx",
+    2 -- "Sxy"
+    3 -- "Sxz" 
+    4 -- "Syx"
+    5 -- "Syy"
+    6 -- "Syz" 
+    7 -- "Szx" 
+    8 -- "Szy" 
+    9 -- "Szz" 
+    10 -- "MisesStress" 
+    11 -- "SCirc"
+    12 -- "SAxial",
+    13 -- "SRadial"
+    14 -- "Exx"
+    15 -- "Exy"
+    16 -- "Exz" 
+    17 -- "Eyx"
+    18 -- "Eyy"
+    19 -- "Eyz" 
+    20 -- "Ezx"
+    21 -- "Ezy"
+    22 -- "Ezz"
+    23 -- "W"
+    24 -- "Growth1"
+    25 -- "Growth2" 
+    26 -- "Growth3"
+    27 -- "Stretch1"
+    28 -- "Stretch2"
+    29 -- "DetF",
+    30 - 38      "Ag1n1","Ag1n2","Ag1n3","Ag2n1","Ag2n2","Ag2n3",
+                       "Ag3n1","Ag3n2","Ag3n3"
+    39 -- "a11"
+    40 -- "a12"
+    41 -- "a13"
+    42 -- "a21"
+    43 -- "a22"
+    44 -- "a23"
+    45 -- "nC1"
+    46 -- "nC2"
+    47 -- "nD1"
+    48 -- "nD2"
+    49 -- "ScDir1"
+    50 -- "ScDir2" 
+    51 -- "ScDir3" 
+    52 -- "SaDir1"
+    53 -- "SaDir2"
+    54 -- "SaDir3"
+    55 -- "SrDir1"
+    56 -- "SrDir2"
+    57 -- "SrDir3"*/
 template <class SC, class LO, class GO, class NO>
-void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &res)
+void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &postProcessingVec)
 {
     MapConstPtr_Type mapRep = this->domainVec_[0]->getMapRepeated();
     MapConstPtr_Type mapUni = this->domainVec_[0]->getMapUnique();
+
 
     MultiVectorPtr_Type multiRep = Teuchos::rcp( new MultiVector_Type(mapRep, 1 ) );
     multiRep->putScalar(0.);
@@ -633,25 +685,41 @@ void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &r
         for (UN T=0; T<assemblyFEElements_.size(); T++) {
             vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
             assemblyFEElements_[T]->postProcessing();
-            SmallMatrixPtr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
+            vec2D_dbl_ptr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
             
             // We only do sigma_11 now
             for(int i=0; i< 10; i++){
                 arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0]; // this column of the postprocessing data contains some sort of scaling.
-                arrayRep[nodeList[i]] +=  (*postProcessingData)[i][1];///*(*postProcessingData)[i][0];
+                arrayRep[nodeList[i]] +=  (*postProcessingData)[i][10];///Von Mises Stress
                 //arrayMultiRep[nodeList[i]] += 1;
             }
         }
     }
+    if(type == "Postprocess"){
+        for (UN T=0; T<assemblyFEElements_.size(); T++) {
+
+            vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
+            assemblyFEElements_[T]->postProcessing();
+            cout << " Hier " << endl;
+            vec2D_dbl_ptr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
+            
+            for(int i=0; i< 10; i++){
+                arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0]; // this column of the postprocessing data contains some sort of scaling.
+                arrayRep[nodeList[i]] +=  (*postProcessingData)[i][10];///*(*postProcessingData)[i][0];
+                //arrayMultiRep[nodeList[i]] += 1;
+            }
+        }
+    }
+
     MultiVectorPtr_Type multiUni = Teuchos::rcp( new MultiVector_Type(mapUni, 1 ) );
     multiUni->putScalar(0.);
     multiUni->exportFromVector(multiRep,true, "Add");
 
-    res->getBlockNonConst(0)->putScalar(0.);
-    res->getBlockNonConst(0)->exportFromVector( resRep, true, "Add" );
+    postProcessingVec->getBlockNonConst(0)->putScalar(0.);
+    postProcessingVec->getBlockNonConst(0)->exportFromVector( resRep, true, "Add" );
 
     Teuchos::ArrayRCP<SC>  arrayMultiUni = multiUni->getDataNonConst(0);
-    Teuchos::ArrayRCP<SC>  arrayUni = res->getBlockNonConst(0)->getDataNonConst(0);
+    Teuchos::ArrayRCP<SC>  arrayUni = postProcessingVec->getBlockNonConst(0)->getDataNonConst(0);
 
     //multiUni->print();
     //res->getBlock(0)->print();
