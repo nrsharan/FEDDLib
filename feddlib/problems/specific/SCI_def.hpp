@@ -1187,10 +1187,10 @@ typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostPro
     42 -- "a21"
     43 -- "a22"
     44 -- "a23"
-    45 -- "nC1"
-    46 -- "nC2"
-    47 -- "nD1"
-    48 -- "nD2"
+    45 -- "nC1" <----- !!
+    46 -- "nC2" <----- !!
+    47 -- "nD1" <----- !! 
+    48 -- "nD2" <----- !!
     49 -- "ScDir1"
     50 -- "ScDir2" 
     51 -- "ScDir3" 

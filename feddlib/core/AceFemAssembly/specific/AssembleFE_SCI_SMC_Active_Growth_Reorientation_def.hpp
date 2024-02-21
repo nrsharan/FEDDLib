@@ -255,11 +255,11 @@ namespace FEDD
 
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
-		std::cout << "elem.compute starts" << std::endl;
+		//std::cout << "elem.compute starts" << std::endl;
 
 		int errorCode = elem.compute();
 
-		std::cout << "elem.compute ends" << std::endl;
+		//std::cout << "elem.compute ends" << std::endl;
 
 		// vec_dbl_Type residuumRint_;
 		// vec_dbl_Type residuumRdyn_;
