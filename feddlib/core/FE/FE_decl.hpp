@@ -664,7 +664,7 @@ class FE {
                         bool callFillComplete=true,
                         int FELocExternal=-1);
 
-    void postProcessing(string Type, BlockMultiVectorPtr_Type &res);
+    void postProcessing(int type, MultiVectorPtr_Type &postProcessingVec);
 /* ----------------------------------------------------------------------------------------*/
 private:
 

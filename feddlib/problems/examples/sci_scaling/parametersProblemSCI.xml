@@ -20,7 +20,7 @@
 	
         
         <Parameter name="SCI" type="bool" value="true"/>
-        <Parameter name="Chemistry Explicit" type="bool" value="true"/>
+        <Parameter name="Chemistry Explicit" type="bool" value="false"/>
         <Parameter name="Load Stepping" type="bool" value="true"/>
         <Parameter name="Inflow Start Time" type="double" value="50.0"/><!-- Start of diffusion process -->
         <Parameter name="Heart Beat Start" type="double" value="70.0"/><!-- Start of diffusion process -->

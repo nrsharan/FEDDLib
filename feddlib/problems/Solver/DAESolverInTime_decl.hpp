@@ -140,13 +140,13 @@ public:
     
     void setupExporter(BlockMultiVectorPtr_Type& solShort);
 
-    void exportStress(BlockMultiVectorPtr_Type stressVec,DomainConstPtr_Type domain);
+    void exportPostprocess(BlockMultiVectorPtr_Type postprocessVec,DomainConstPtr_Type domain,vec_string_Type exportNames);
 
-    void setupExporter(BlockMultiVectorPtr_Type stressVec, DomainConstPtr_Type domain);
+    void setupExporter(BlockMultiVectorPtr_Type postprocessVec, DomainConstPtr_Type domain, vec_string_Type exportNames);
 
     void closeExporter();
 
-    void closeExporterStress();
+    void closeExporterPostprocess();
 
     void addRhsDAE(SmallMatrix<double> coeff, BlockMatrixPtr_Type bMat, BlockMultiVectorPtr_Type vec);
 
@@ -182,9 +182,9 @@ public:
     MultiVectorConstPtrArray_Type export_solution_vector_;
     bool boolExporterSetup_;
 
-    std::vector<ExporterPtr_Type> exporter_vector_stress_;
-    MultiVectorConstPtrArray_Type export_stress_vector_;
-    bool boolExporterSetupStress_;
+    std::vector<ExporterPtr_Type> exporter_vector_postprocess_;
+    //MultiVectorConstPtrArray_Type export_stress_vector_;
+    bool boolExporterSetupPostprocess_;
 
 private:
 

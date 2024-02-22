@@ -660,73 +660,56 @@ void FE<SC,LO,GO,NO>::addFeBlockMv(BlockMultiVectorPtr_Type &res, vec_dbl_ptr_Ty
     56 -- "SrDir2"
     57 -- "SrDir3"*/
 template <class SC, class LO, class GO, class NO>
-void FE<SC, LO, GO, NO>::postProcessing(string type, BlockMultiVectorPtr_Type &postProcessingVec)
+void FE<SC, LO, GO, NO>::postProcessing(int type, MultiVectorPtr_Type &postProcessingVec)
 {
+    // Map for temporary vectors for import and export
     MapConstPtr_Type mapRep = this->domainVec_[0]->getMapRepeated();
     MapConstPtr_Type mapUni = this->domainVec_[0]->getMapUnique();
 
+    // Elements
+    ElementsPtr_Type elements = this->domainVec_[0]->getElementsC();
 
+    // Multiplicity of nodes (nodes being in more then one element) with weights from interpolation between gausspoints an node points
     MultiVectorPtr_Type multiRep = Teuchos::rcp( new MultiVector_Type(mapRep, 1 ) );
     multiRep->putScalar(0.);
     Teuchos::ArrayRCP<SC>  arrayMultiRep = multiRep->getDataNonConst(0);
 
+    // Resulting postProcess values
     MultiVectorPtr_Type resRep = Teuchos::rcp( new MultiVector_Type(mapRep, 1 ) );
     resRep->putScalar(0.);
     Teuchos::ArrayRCP<SC>  arrayRep = resRep->getDataNonConst(0);
 
-   // MultiVectorPtr_Type resRep = Teuchos::rcp( new MultiVector_Type( mapRep, 1 ) );
-   // Teuchos::ArrayRCP<SC>  arrayRes = resRep->getDataNonConst(0);
+    // Iterating over all elements
+    for (UN T=0; T<assemblyFEElements_.size(); T++) {
 
-    //BlockMultiVectorPtr_Type resVecRep = Teuchos::rcp( new BlockMultiVector_Type( 9) );
-
-	ElementsPtr_Type elements = this->domainVec_[0]->getElementsC();
-
-    if(type == "Stress"){
-        for (UN T=0; T<assemblyFEElements_.size(); T++) {
-            vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
-            assemblyFEElements_[T]->postProcessing();
-            vec2D_dbl_ptr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
-            
-            // We only do sigma_11 now
-            for(int i=0; i< 10; i++){
-                arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0]; // this column of the postprocessing data contains some sort of scaling.
-                arrayRep[nodeList[i]] +=  (*postProcessingData)[i][10];///Von Mises Stress
-                //arrayMultiRep[nodeList[i]] += 1;
-            }
+        vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
+        assemblyFEElements_[T]->postProcessing();
+        vec2D_dbl_ptr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
+        
+        for(int i=0; i< 10; i++){
+            arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0]; // this column of the postprocessing data contains some sort of scaling.
+            arrayRep[nodeList[i]] +=  (*postProcessingData)[i][type]*(*postProcessingData)[i][0]; // per node the index 'type' stands for a different post processing value
         }
     }
-    if(type == "Postprocess"){
-        for (UN T=0; T<assemblyFEElements_.size(); T++) {
-
-            vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
-            assemblyFEElements_[T]->postProcessing();
-            cout << " Hier " << endl;
-            vec2D_dbl_ptr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
-            
-            for(int i=0; i< 10; i++){
-                arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0]; // this column of the postprocessing data contains some sort of scaling.
-                arrayRep[nodeList[i]] +=  (*postProcessingData)[i][10];///*(*postProcessingData)[i][0];
-                //arrayMultiRep[nodeList[i]] += 1;
-            }
-        }
-    }
-
+    
+    // Unique distribution. We export it with add so we get the sum over all repeated values in unique distribution
     MultiVectorPtr_Type multiUni = Teuchos::rcp( new MultiVector_Type(mapUni, 1 ) );
     multiUni->putScalar(0.);
     multiUni->exportFromVector(multiRep,true, "Add");
 
-    postProcessingVec->getBlockNonConst(0)->putScalar(0.);
-    postProcessingVec->getBlockNonConst(0)->exportFromVector( resRep, true, "Add" );
+    // Same for postProcessingValues
+    postProcessingVec->putScalar(0.);
+    postProcessingVec->exportFromVector( resRep, true, "Add" );
 
     Teuchos::ArrayRCP<SC>  arrayMultiUni = multiUni->getDataNonConst(0);
-    Teuchos::ArrayRCP<SC>  arrayUni = postProcessingVec->getBlockNonConst(0)->getDataNonConst(0);
+    Teuchos::ArrayRCP<SC>  arrayUni = postProcessingVec->getDataNonConst(0);
 
     //multiUni->print();
     //res->getBlock(0)->print();
-
+    // Lastly the sum over all node post precessing values is devided by the sum ob weights.
     for(int i= 0; i< arrayUni.size() ; i++)
-        if(fabs(arrayMultiUni[i]) > 0)
-            arrayUni[i]  = arrayUni[i]/ fabs(arrayMultiUni[i]); 
+        if(fabs(arrayMultiUni[i]) > 0 && fabs(arrayUni[i]) > 0 )
+            arrayUni[i]  = arrayUni[i]/ (arrayMultiUni[i]); 
         else
             arrayUni[i]  =0.;    
 }

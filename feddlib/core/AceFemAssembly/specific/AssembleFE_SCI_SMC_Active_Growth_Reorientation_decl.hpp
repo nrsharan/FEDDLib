@@ -133,6 +133,18 @@ namespace FEDD
 		vec2D_dbl_Type stiffnessMatrixKcc_;
 		vec2D_dbl_Type massMatrixMc_;
 
+		// Timeintervalls for Growth and Active Response
+		vec2D_dbl_Type timeParametersVecActive_;
+  		vec2D_dbl_Type timeParametersVecGrowth_;
+ 		vec2D_dbl_Type timeParametersVecReorientation_;
+
+
+		int activeBool_ = 0;
+		int growthBool_ = 0;
+		int reorientationBool_=0;
+
+		bool activeInitialized_=false;
+		bool growthInitialized_=false;
 
 
 

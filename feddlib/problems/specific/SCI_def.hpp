@@ -70,6 +70,10 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
         exporterIterationsChem_ = Teuchos::rcp(new ExporterTxt());
         exporterIterationsChem_->setup( "linearIterations_chem", this->comm_ );
     }
+
+    postProcessingnames_.resize(14);
+    postProcessingnames_ = {"vonMisesStress", "SCirc","SAxial","SRadial","W","Growth1","Growth2","Growth3","Strech1","Strech2","nC1","nC2","nD1","nD2"};
+
 }
 
 
@@ -1196,25 +1200,70 @@ typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostPro
     57 -- "SrDir3"*/
 
     MultiVectorPtr_Type vonMisesStress = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(10, vonMisesStress);
+
     MultiVectorPtr_Type SCirc = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(11, SCirc);
+
+    MultiVectorPtr_Type SAxial = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(12, SAxial);
+
     MultiVectorPtr_Type SRadial = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(13, SRadial);
+
     MultiVectorPtr_Type W = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(23, W);
+
     MultiVectorPtr_Type Growth1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(24, Growth1);
+
     MultiVectorPtr_Type Growth2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(25, Growth2);
+
     MultiVectorPtr_Type Growth3 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(26, Growth3);
+
+    MultiVectorPtr_Type Strech1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(27, Strech1);
+
+    MultiVectorPtr_Type Strech2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(28, Strech2);
+
+    MultiVectorPtr_Type nC1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(45, nC1);
+
+    MultiVectorPtr_Type nC2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(46, nC2);
+
+    MultiVectorPtr_Type nD1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(47, nD1);
+
+    MultiVectorPtr_Type nD2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    this->feFactory_->postProcessing(48, nD2);
 
     postProcess->addBlock(vonMisesStress,0);
     postProcess->addBlock(SCirc,1);
-    postProcess->addBlock(SRadial,2);
-    postProcess->addBlock(W,3);
-    postProcess->addBlock(Growth1,4);
-    postProcess->addBlock(Growth2,5);
-    postProcess->addBlock(Growth3,6);
+    postProcess->addBlock(SAxial,2);
+    postProcess->addBlock(SRadial,3);
+    postProcess->addBlock(W,4);
+    postProcess->addBlock(Growth1,5);
+    postProcess->addBlock(Growth2,6);
+    postProcess->addBlock(Growth3,7);
+    postProcess->addBlock(Strech1,8);
+    postProcess->addBlock(Strech2,9);
+    postProcess->addBlock(nC1,10);
+    postProcess->addBlock(nC2,11);
+    postProcess->addBlock(nD1,12);
+    postProcess->addBlock(nD2,13);
 
-
-    this->feFactory_->postProcessing("Postprocess", postProcess);
-
+    
     return postProcess;
+}
+
+template<class SC,class LO,class GO,class NO>
+vec_string_Type SCI<SC,LO,GO,NO>::getPostprocessingNames()
+{
+    return postProcessingnames_;
 }
 
 }

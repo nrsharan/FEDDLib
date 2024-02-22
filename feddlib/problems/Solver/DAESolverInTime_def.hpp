@@ -29,7 +29,7 @@ timeSteppingTool_(),
 exporter_vector_(),
 export_solution_vector_(),
 boolExporterSetup_(false),
-boolExporterSetupStress_(false)
+boolExporterSetupPostprocess_(false)
 #ifdef FEDD_TIMER
 ,solveProblemTimer_ (Teuchos::TimeMonitor::getNewCounter("FEDD - DAETime - Solve Problem"))
 #endif
@@ -60,7 +60,7 @@ timeSteppingTool_(),
 exporter_vector_(),
 export_solution_vector_(),
 boolExporterSetup_(false),
-boolExporterSetupStress_(false)
+boolExporterSetupPostprocess_(false)
 #ifdef FEDD_TIMER
 ,solveProblemTimer_ (Teuchos::TimeMonitor::getNewCounter("FEDD - DAETime - Solve Problem"))
 #endif
@@ -91,7 +91,7 @@ timeSteppingTool_(),
 exporter_vector_(),
 export_solution_vector_(),
 boolExporterSetup_(false),
-boolExporterSetupStress_(false)
+boolExporterSetupPostprocess_(false)
 #ifdef FEDD_TIMER
 ,solveProblemTimer_ (Teuchos::TimeMonitor::getNewCounter("FEDD - DAETime - Solve Problem"))
 #endif
@@ -1226,7 +1226,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         if (printStress){
             BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
             stressVec = stressVecTmp;
-            exportStress(stressVec,problemTime_->getDomain(0));                 
+            this->exportPostprocess(stressVec,problemTime_->getDomain(0),sci->getPostprocessingNames());                 
 
         }
 
@@ -1245,7 +1245,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     if (print)
     {
         closeExporter();
-        closeExporterStress();
+        closeExporterPostprocess();
     }
 }
 
@@ -1494,7 +1494,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceWithLoadStepping()
     if (print)
     {
         closeExporter();
-        closeExporterStress();
+        closeExporterPostprocess();
     }
 }
 
@@ -2068,7 +2068,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         if (printStress){
             BlockMultiVectorPtr_Type stressVecTmp= fsci->problemSCI_->getPostProcessingData();
             stressVec = stressVecTmp;
-            exportStress(stressVec,fsci->problemSCI_->getDomain(0));                 
+            exportPostprocess (stressVec,fsci->problemSCI_->getDomain(0),fsci->problemSCI_->getPostprocessingNames());                 
 
         }
         if (print)
@@ -3083,19 +3083,21 @@ void DAESolverInTime<SC,LO,GO,NO>::exportTimestep(){
 }
 
 template<class SC,class LO,class GO,class NO>
-void DAESolverInTime<SC,LO,GO,NO>::exportStress(BlockMultiVectorPtr_Type stressVec, DomainConstPtr_Type domain){
+void DAESolverInTime<SC,LO,GO,NO>::exportPostprocess(BlockMultiVectorPtr_Type postProcessVec, DomainConstPtr_Type domain, vec_string_Type exportNames){
 
-    //if (!boolExporterSetupStress_) {
-        setupExporter(stressVec,domain);
-    //}
+    if (!boolExporterSetupPostprocess_) {
+        setupExporter(postProcessVec,domain,exportNames);
+    }
     if (verbose_) {
-        cout << "-- Exporting..."<< flush;
+        cout << "-- Exporting Postprocessing Data..."<< flush;
     }
-    for (int i=0; i<exporter_vector_stress_.size(); i++) {
-        
-        exporter_vector_stress_[i]->save( timeSteppingTool_->currentTime() );
+    for (int i=0; i<postProcessVec->size(); i++) {
 
-    }
+        MultiVectorConstPtr_Type exportMV= postProcessVec->getBlock(i);
+        exporter_vector_postprocess_[0]->updateVariables(exportMV, exportNames[i]);
+
+    }    
+    exporter_vector_postprocess_[0]->save( timeSteppingTool_->currentTime() );
 
     if (verbose_) {
         cout << "done! --"<< endl;
@@ -3104,21 +3106,20 @@ void DAESolverInTime<SC,LO,GO,NO>::exportStress(BlockMultiVectorPtr_Type stressV
 }
 
 template<class SC,class LO,class GO,class NO>
-void DAESolverInTime<SC,LO,GO,NO>::setupExporter(BlockMultiVectorPtr_Type stressVec, DomainConstPtr_Type domain){
+void DAESolverInTime<SC,LO,GO,NO>::setupExporter(BlockMultiVectorPtr_Type postProcessVec, DomainConstPtr_Type domain, vec_string_Type exportNames){
 
-    if(!boolExporterSetupStress_){
-        for(int i=0; i< stressVec->size(); i++){
-            ExporterPtr_Type exporterPtr(new Exporter_Type());
-            MultiVectorConstPtr_Type exportVector = stressVec->getBlock(i);
+    if(!boolExporterSetupPostprocess_){
 
-            std::string suffix = "Sigma_" + to_string(i+1) + "_" + to_string(i+1);
-            //std::string varName = problemTime_->getVariableName(i) + suffix;
-            MeshPtr_Type meshNonConst = Teuchos::rcp_const_cast<Mesh_Type>(domain->getMesh());
+        ExporterPtr_Type exporterPtr(new Exporter_Type());
+        MeshPtr_Type meshNonConst = Teuchos::rcp_const_cast<Mesh_Type>(domain->getMesh());
 
-            exporterPtr->setup("Sigma", meshNonConst, domain->getFEType(), parameterList_);
+        exporterPtr->setup("PostprocessingData", meshNonConst, domain->getFEType(), this->parameterList_);
+        for(int i=0; i< postProcessVec->size(); i++){
             
-        //            exporterPtr->setup(dom->getDimension(), dom->getNumElementsGlobal(), dom->getElements(), dom->getPointsUnique(), dom->getMapUnique(), dom->getMapRepeated(), dom->getFEType(), varName, exportEveryXTimesteps, comm_ , parameterList_);
+            MultiVectorConstPtr_Type exportVector = postProcessVec->getBlock(i);
 
+            std::string suffix = exportNames[i];
+            
             UN dofsPerNode = 1;
             
             if (dofsPerNode == 1)
@@ -3126,18 +3127,11 @@ void DAESolverInTime<SC,LO,GO,NO>::setupExporter(BlockMultiVectorPtr_Type stress
             else
                 exporterPtr->addVariable( exportVector, suffix, "Vector", dofsPerNode, domain->getMapUnique() );
 
-            exporter_vector_stress_.push_back(exporterPtr);
-            export_stress_vector_.push_back(exportVector);
-                
             
-            boolExporterSetupStress_ = true;
         }
-    }
-    else{
-        for(int i=0; i< stressVec->size(); i++){
-            MultiVectorConstPtr_Type exportMV= stressVec->getBlock(i);
-            exporter_vector_stress_[i]->updateVariables(exportMV, "Sigma_" + to_string(i+1) + "_" + to_string(i+1));
-        }
+        exporter_vector_postprocess_.push_back(exporterPtr);
+                
+        boolExporterSetupPostprocess_ = true;
     }
 }
 
@@ -3171,11 +3165,11 @@ void DAESolverInTime<SC,LO,GO,NO>::closeExporter(){
 }
 
 template<class SC,class LO,class GO,class NO>
-void DAESolverInTime<SC,LO,GO,NO>::closeExporterStress(){
+void DAESolverInTime<SC,LO,GO,NO>::closeExporterPostprocess(){
 
-    if (boolExporterSetupStress_) {
-        for (int i=0; i<exporter_vector_stress_.size(); i++)
-            exporter_vector_stress_[i]->closeExporter();
+    if (boolExporterSetupPostprocess_) {
+        for (int i=0; i<exporter_vector_postprocess_.size(); i++)
+            exporter_vector_postprocess_[i]->closeExporter();
     }
 }
 

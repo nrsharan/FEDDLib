@@ -170,6 +170,7 @@ public:
     
     BlockMultiVectorPtr_Type getPostProcessingData() const;
 
+    vec_string_Type getPostprocessingNames();
     /*####################*/
 
     // Alternativ wie in reAssembleExtrapolation() in NS?
@@ -194,6 +195,7 @@ public:
 private:
     std::string materialModel_;
     vec_dbl_Type valuesForExport_;
+    vec_string_Type postProcessingnames_;
     bool geometryExplicit_;
     mutable BlockMatrixPtr_Type systemC_;
     ExporterTxtPtr_Type exporterIterationsChem_;
