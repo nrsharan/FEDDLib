@@ -53,7 +53,7 @@ namespace FEDD
 			subString[i] = domainDataNames_[i].substr(pos1 + 1, pos2 - pos1 - 1);
 			this->domainDataNames_[i] = subString[i];
 			this->domainData_[i] = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get(subString[i], 111111110.0);
-			cout << " DomainDataNames_ " << this->domainDataNames_[i] << " with value " << this->domainData_[i] << endl;
+			cout << " DomainDataNames_ " << i << " "  << this->domainDataNames_[i] << " with value " << this->domainData_[i] << endl;
 
 		}
 
@@ -240,20 +240,20 @@ namespace FEDD
 		bool found=false;
 		for(int i=0; i<timeParametersVecActive_.size() ; i++){
 			if(this->timeStep_ +1.0e-12 > timeParametersVecActive_[i][0] &&  this->timeStep_ - 1.0e-12 < timeParametersVecActive_[i][1] ){
-				activeBool_=1;
-				if(!activeInitialized_)
+				this->activeBool_=1;
+				if(!this->activeInitialized_)
 					this->initializeActiveResponse();
 				found=true;
 			}
 			else if(!found)
-				activeBool_=0;
+				this->activeBool_=0;
 		}
 		
 		// Checking for growth
 		found = false;
 		for(int i=0; i<timeParametersVecGrowth_.size() ; i++){			
 			if(this->timeStep_ +1.0e-12 > timeParametersVecGrowth_[i][0] &&  this->timeStep_ - 1.0e-12 < timeParametersVecGrowth_[i][1] ){
-				growthBool_=1;
+				this->growthBool_=1;
 				if(!growthInitialized_)
 					this->initializeGrowth();
 				found=true;
@@ -266,11 +266,11 @@ namespace FEDD
 		found = false;
 		for(int i=0; i<timeParametersVecReorientation_.size() ; i++){			
 			if(this->timeStep_ +1.0e-12 > timeParametersVecReorientation_[i][0] &&  this->timeStep_ - 1.0e-12 < timeParametersVecReorientation_[i][1] ){
-				reorientationBool_=1;
+				this->reorientationBool_=1;
 				found = true;
 			}
 			else if(!found)
-				reorientationBool_=0;
+				this->reorientationBool_=0;
 		}
 
 		if(activeBool_ == 1 && growthBool_==1)
@@ -389,8 +389,12 @@ namespace FEDD
 		
 		double **stiffnessMatrixKuu = elem.getStiffnessMatrixKuu();
 		for (int i = 0; i < 30; i++)
-			for (int j = 0; j < 30; j++)
+			for (int j = 0; j < 30; j++){
 				this->stiffnessMatrixKuu_[i][j] = stiffnessMatrixKuu[i][j];
+				if(fabs(stiffnessMatrixKuu[i][j] > 1e10))
+				cout << " StiffnessMatrixEntry " << stiffnessMatrixKuu[i][j] << endl;
+			}
+		
 		
 		double **stiffnessMatrixKuc = elem.getStiffnessMatrixKuc();
 		for (int i = 0; i < 30; i++)
@@ -514,12 +518,17 @@ namespace FEDD
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::initializeActiveResponse()
 	{
 		double deltaT = this->getTimeIncrement();
-
+		cout << " Initialize active Response " << endl;
 		double time = this->getTimeStep() + deltaT;
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
 		std::vector<double> stretches = elem.getGaussPointStretches();
+		cout << " Streches: ";
+		for(int i=0; i< stretches.size() ; i++)
+			cout << stretches[i] << " " ;
+		cout << endl;
+
 		int historyPerGP = (int)this->historyLength_ / this->numberOfIntegrationPoints_;
 		for (int i = 0; i < this->numberOfIntegrationPoints_; i++)
 		{
@@ -534,6 +543,7 @@ namespace FEDD
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::updateDomainData(std::string dataName, double dataValue)
 	{
 		int position = findPosition(dataName, this->domainDataNames_);
+		//cout << " !!!! Position " << position << " of " << dataName << " found " << endl;
 		this->domainData_[position] = dataValue;
 	}
 
