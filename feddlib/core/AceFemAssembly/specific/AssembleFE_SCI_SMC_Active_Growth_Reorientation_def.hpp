@@ -52,14 +52,17 @@ namespace FEDD
 
 			subString[i] = domainDataNames_[i].substr(pos1 + 1, pos2 - pos1 - 1);
 			this->domainDataNames_[i] = subString[i];
-			this->domainData_[i] = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get(subString[i], 111111110.0);
-			cout << " DomainDataNames_ " << i << " "  << this->domainDataNames_[i] << " with value " << this->domainData_[i] << endl;
+			this->domainData_[i] = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get(subString[i], 1.e13);
+			//cout << " DomainDataNames_ " << i << " "  << this->domainDataNames_[i] << " with value " << this->domainData_[i] << endl;
+						
+			TEUCHOS_TEST_FOR_EXCEPTION(this->domainData_[i] > 1.e12, std::logic_error, " Parameter not set correctly. Parameter " << this->domainDataNames_[i] << " received default value!!");
+
 
 		}
 
 		for (int i = 0; i < this->postDataLength_; i++){
 			this->postDataNames_[i] = std::string(postDataNames[i]);
-			cout << " Post Data Names " << i << " " << this->postDataNames_[i] << endl;
+			//cout << " Post Data Names " << i << " " << this->postDataNames_[i] << endl;
 		}
 
 		this->residuumRint_.resize(30, 0.0);
@@ -161,7 +164,7 @@ namespace FEDD
 			vec_dbl_Type segment = {startTime,endTime};
 			timeParametersVecActive_.push_back(segment);
 
-			cout << " Active Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
+			//cout << " Active Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
 		}
 
 		for(int i=1; i <= numSegmentsGrowth; i++){
@@ -171,7 +174,7 @@ namespace FEDD
 
 			vec_dbl_Type segment = {startTime,endTime};
 			timeParametersVecGrowth_.push_back(segment);
-			cout << " Growth Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
+			//cout << " Growth Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
 
 		}
 
@@ -182,7 +185,7 @@ namespace FEDD
 
 			vec_dbl_Type segment = {startTime,endTime};
 			timeParametersVecReorientation_.push_back(segment);
-			cout << " Reorientation Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
+			//cout << " Reorientation Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
 
 		}
 
@@ -241,8 +244,10 @@ namespace FEDD
 		for(int i=0; i<timeParametersVecActive_.size() ; i++){
 			if(this->timeStep_ +1.0e-12 > timeParametersVecActive_[i][0] &&  this->timeStep_ - 1.0e-12 < timeParametersVecActive_[i][1] ){
 				this->activeBool_=1;
-				if(!this->activeInitialized_)
+				if(!this->activeInitialized_){
 					this->initializeActiveResponse();
+					this->initializeGrowth();
+				}
 				found=true;
 			}
 			else if(!found)
