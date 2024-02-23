@@ -52,12 +52,15 @@ namespace FEDD
 
 			subString[i] = domainDataNames_[i].substr(pos1 + 1, pos2 - pos1 - 1);
 			this->domainDataNames_[i] = subString[i];
-			//cout << " DomainDataNames_ " << this->domainDataNames_[i] << endl;
-			this->domainData_[i] = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get(subString[i], 0.0);
+			this->domainData_[i] = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get(subString[i], 111111110.0);
+			cout << " DomainDataNames_ " << this->domainDataNames_[i] << " with value " << this->domainData_[i] << endl;
+
 		}
 
-		for (int i = 0; i < this->postDataLength_; i++)
+		for (int i = 0; i < this->postDataLength_; i++){
 			this->postDataNames_[i] = std::string(postDataNames[i]);
+			cout << " Post Data Names " << i << " " << this->postDataNames_[i] << endl;
+		}
 
 		this->residuumRint_.resize(30, 0.0);
 		this->residuumRc_.resize(10, 0.0);
@@ -445,6 +448,8 @@ namespace FEDD
 		double time = this->getTimeStep() + deltaT;
 
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+
+		elem.compute();
 
 		double **postProcessingResults = elem.postProcess(&displacements[0], &concentrations[0], this->historyUpdated_.data(), &rates[0], &accelerations[0]);
 
