@@ -504,6 +504,7 @@ int main(int argc, char *argv[])
         ParameterListPtr_Type parameterListChemAll(new Teuchos::ParameterList(*parameterListPrecChem));
         sublist(parameterListChemAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter Chem") );
         sublist(parameterListChemAll, "Parameter")->setParameters( parameterListProblem->sublist("Parameter") );
+        sublist(parameterListChemAll, "Parameter Solid")->setParameters( parameterListStructure->sublist("Parameter Solid") );
         parameterListChemAll->setParameters(*parameterListSolverFSI);
         parameterListChemAll->setParameters(*parameterListPrecChem);
 
@@ -964,20 +965,26 @@ int main(int argc, char *argv[])
         bcFactory->addBC(zeroDirichlet3D, 7, 2, domainStructure, "Dirichlet_Z", dim); // inlet fixed in Z direction
         bcFactory->addBC(zeroDirichlet3D, 8, 2, domainStructure, "Dirichlet_Z", dim); // outlet fixed in Z direction
         bcFactory->addBC(zeroDirichlet3D, 9, 2, domainStructure, "Dirichlet_Z", dim); // inlet ring in Z direction
+        bcFactory->addBC(zeroDirichlet3D, 1, 2, domainStructure, "Dirichlet_Z", dim); // outer ring of inlet area
+        bcFactory->addBC(zeroDirichlet3D, 2, 2, domainStructure, "Dirichlet_Z", dim); // outer ring of outlet area
         bcFactory->addBC(zeroDirichlet3D, 10, 2, domainStructure, "Dirichlet_Z", dim); // outlet ring in Z direction
 
         bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim); 
         bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim); 
         bcFactoryStructure->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dim);           
         bcFactoryStructure->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dim); 
-        bcFactoryStructure->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim);           
+        bcFactoryStructure->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim);  
+        bcFactoryStructure->addBC(zeroDirichlet3D, 1, 0, domainStructure, "Dirichlet_Z", dim); 
+        bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);           
         bcFactoryStructure->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim); 
 
         bcFactorySCI->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim); 
         bcFactorySCI->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim); 
         bcFactorySCI->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dim);           
         bcFactorySCI->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dim); 
-        bcFactorySCI->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim);           
+        bcFactorySCI->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim); 
+        bcFactorySCI->addBC(zeroDirichlet3D, 1, 0, domainStructure, "Dirichlet_Z", dim); 
+        bcFactorySCI->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);           
         bcFactorySCI->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim); 
             // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
             // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()
@@ -1039,7 +1046,8 @@ int main(int argc, char *argv[])
         else if(dim==3)
         {
             std::vector<double> parameter_vec(1, parameterListAll->sublist("Parameter").get("Inflow Start Time",0.));
-            bcFactory->addBC(inflowChem, 6,4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            // Diffusion happening at inner wall (the one connected to fluid)
+            /*bcFactory->addBC(inflowChem, 6,4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactoryChem->addBC(inflowChem, 6, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactorySCI->addBC(inflowChem, 6, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
 
@@ -1049,7 +1057,29 @@ int main(int argc, char *argv[])
         
             bcFactory->addBC(inflowChem, 10, 4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactoryChem->addBC(inflowChem, 10, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
-            bcFactorySCI->addBC(inflowChem, 10, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactorySCI->addBC(inflowChem, 10, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem*/
+
+            // Diffusion happening at outer wall
+            bcFactory->addBC(inflowChem, 11,4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactoryChem->addBC(inflowChem, 11, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactorySCI->addBC(inflowChem, 11, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+
+            bcFactory->addBC(inflowChem, 1, 4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactoryChem->addBC(inflowChem, 1, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem    
+            bcFactorySCI->addBC(inflowChem, 1, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+        
+            bcFactory->addBC(inflowChem, 2, 4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactoryChem->addBC(inflowChem, 2, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactorySCI->addBC(inflowChem, 2, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+
+            bcFactory->addBC(inflowChem, 13, 4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactoryChem->addBC(inflowChem, 13, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem    
+            bcFactorySCI->addBC(inflowChem, 13, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+
+            bcFactory->addBC(inflowChem, 14, 4, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactoryChem->addBC(inflowChem, 14, 0, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem    
+            bcFactorySCI->addBC(inflowChem, 14, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            
 
         }
 

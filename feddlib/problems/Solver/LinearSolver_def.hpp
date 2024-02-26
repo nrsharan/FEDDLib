@@ -213,7 +213,7 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
     double range1 = timeProblem->getParameterList()->sublist("General").get("Plot Linear Residual Vector Start",0.0);
     double range2 = timeProblem->getParameterList()->sublist("General").get("Plot Linear Residual Vector End",1.0);
 
-    bool plotLinResVector = timeProblem->getParameterList()->sublist("General").get("Plot Linear Residual Vector",true);
+    bool plotLinResVector = timeProblem->getParameterList()->sublist("General").get("Plot Linear Residual Vector",false);
 
     if(plotLinResVector && timeProblem->time_ >= range1 && timeProblem->time_ <= range2)
         timeProblem->plotLinResVec(timeProblem->time_);
