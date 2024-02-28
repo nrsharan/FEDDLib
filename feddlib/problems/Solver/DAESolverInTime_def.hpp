@@ -1224,9 +1224,11 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
         }
         if (printStress){
-            BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
-            stressVec = stressVecTmp;
-            this->exportPostprocess(stressVec,problemTime_->getDomain(0),sci->getPostprocessingNames());                 
+            if(fmod(timeSteppingTool_->currentTime(),1.0) < 0. + 1e-10 ){
+                BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
+                stressVec = stressVecTmp;
+                this->exportPostprocess(stressVec,problemTime_->getDomain(0),sci->getPostprocessingNames()); 
+            }                
 
         }
 
@@ -2066,10 +2068,11 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             exporterDisplYTxt->exportData( v[1] );
         }
         if (printStress){
-            BlockMultiVectorPtr_Type stressVecTmp= fsci->problemSCI_->getPostProcessingData();
-            stressVec = stressVecTmp;
-            exportPostprocess (stressVec,fsci->problemSCI_->getDomain(0),fsci->problemSCI_->getPostprocessingNames());                 
-
+            if(fmod(timeSteppingTool_->currentTime(),1.0) < 0. + 1e-10 ){
+                BlockMultiVectorPtr_Type stressVecTmp= fsci->problemSCI_->getPostProcessingData();
+                stressVec = stressVecTmp;
+                exportPostprocess (stressVec,fsci->problemSCI_->getDomain(0),fsci->problemSCI_->getPostprocessingNames());                 
+            }
         }
         if (print)
         {
