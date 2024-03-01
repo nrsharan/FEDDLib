@@ -1228,7 +1228,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             double heartbeatStart1 = parameterList_->sublist("Parameter").get("Heart Beat Start 1",0.) ;
             double heartbeatStart2 = parameterList_->sublist("Parameter").get("Heart Beat Start 2",0.) ;
             double heartbeatEnd1 = parameterList_->sublist("Parameter").get("Heart Beat End 1",0.) ;
-            double heartbeatEnd2 = parameterList_->sublist("Parameter").get("Heart Beat End 1",0.) ;
+            double heartbeatEnd2 = parameterList_->sublist("Parameter").get("Heart Beat End 2",0.) ;
 
             double time = timeSteppingTool_->currentTime();
 
@@ -2090,7 +2090,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             double heartbeatStart1 = parameterList_->sublist("Parameter").get("Heart Beat Start 1",0.) ;
             double heartbeatStart2 = parameterList_->sublist("Parameter").get("Heart Beat Start 2",0.) ;
             double heartbeatEnd1 = parameterList_->sublist("Parameter").get("Heart Beat End 1",0.) ;
-            double heartbeatEnd2 = parameterList_->sublist("Parameter").get("Heart Beat End 1",0.) ;
+            double heartbeatEnd2 = parameterList_->sublist("Parameter").get("Heart Beat End 2",0.) ;
 
             double time = timeSteppingTool_->currentTime();
 
