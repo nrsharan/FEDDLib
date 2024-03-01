@@ -2107,7 +2107,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             if(fmod(timeSteppingTool_->currentTime(),modValue) < 0. + 1.e-10 ){
                 BlockMultiVectorPtr_Type stressVecTmp= fsci->problemSCI_->getPostProcessingData();
                 stressVec = stressVecTmp;
-                this->exportPostprocess(stressVec,problemTime_->getDomain(0),fsci->problemSCI_->getPostprocessingNames());
+                this->exportPostprocess(stressVec,problemTime_->getDomain(2),fsci->problemSCI_->getPostprocessingNames());
             }
         }
         if (print)
