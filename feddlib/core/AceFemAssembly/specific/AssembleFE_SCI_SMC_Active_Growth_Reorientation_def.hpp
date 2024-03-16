@@ -396,8 +396,8 @@ namespace FEDD
 		for (int i = 0; i < 30; i++)
 			for (int j = 0; j < 30; j++){
 				this->stiffnessMatrixKuu_[i][j] = stiffnessMatrixKuu[i][j];
-				if(fabs(stiffnessMatrixKuu[i][j] > 1e10))
-				cout << " StiffnessMatrixEntry " << stiffnessMatrixKuu[i][j] << endl;
+				//if(fabs(stiffnessMatrixKuu[i][j] > 1e10))
+				//cout << " StiffnessMatrixEntry " << stiffnessMatrixKuu[i][j] << endl;
 			}
 		
 		
@@ -410,16 +410,16 @@ namespace FEDD
 		for (int i = 0; i < 10; i++)
 			for (int j = 0; j < 30; j++)
 				this->stiffnessMatrixKcu_[i][j] = stiffnessMatrixKcu[i][j];
-		
-		double **stiffnessMatrixKcc = elem.getStiffnessMatrixKcc();
-		for (int i = 0; i < 10; i++)
-			for (int j = 0; j < 10; j++)
-				this->stiffnessMatrixKcc_[i][j] = stiffnessMatrixKcc[i][j];
-		
+
 		double **massMatrixMc = elem.getMassMatrixMc();
 		for (int i = 0; i < 10; i++)
 			for (int j = 0; j < 10; j++)
 				this->massMatrixMc_[i][j] = massMatrixMc[i][j];
+
+        double **stiffnessMatrixKcc = elem.getStiffnessMatrixKcc();
+		for (int i = 0; i < 10; i++)
+			for (int j = 0; j < 10; j++)
+                this->stiffnessMatrixKcc_[i][j] = stiffnessMatrixKcc[i][j] +(1./deltaT)*massMatrixMc[i][j];
 		
 		double *historyUpdated = elem.getHistoryUpdated();
 		for (int i = 0; i < this->historyLength_; i++)

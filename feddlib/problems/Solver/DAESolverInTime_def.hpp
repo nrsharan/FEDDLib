@@ -1110,12 +1110,12 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         MatrixPtr_Type massmatrix;
         sci->setChemMassmatrix( massmatrix );
         //massmatrix->print();
-        if(couplingType=="explicit" ) //|| structureModel=="SCI_sophisticated")
-            this->problemTime_->systemMass_->addBlock( massmatrix, 1, 1);
+        //if(couplingType=="explicit" ) //|| structureModel=="SCI_sophisticated")
+        //    this->problemTime_->systemMass_->addBlock( massmatrix, 1, 1);
 
         // RHS nach BDF2
-        if(couplingType=="explicit" )//|| structureModel=="SCI_sophisticated")
-            this->problemTime_->assemble( "ComputeChemRHSInTime" ); // hier ist massmatrix nicht relevant
+        //if(couplingType=="explicit" )//|| structureModel=="SCI_sophisticated")
+        //    this->problemTime_->assemble( "ComputeChemRHSInTime" ); // hier ist massmatrix nicht relevant
         //this->problemTime_->getRhs()->addBlock( Teuchos::rcp_const_cast<MultiVector_Type>(rhs->getBlock(0)), 0 );
 
       
@@ -1635,7 +1635,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     bool geometryExplicit = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
     bool chemistryExplicit_ =    parameterList_->sublist("Parameter").get("Chemistry Explicit",false);
 
-    std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
+    //std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
 
     int sizeFSI = timeStepDef_.size();
 
@@ -1843,6 +1843,12 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         }
 
         if(!chemistryExplicit_){
+            /*
+               massCoeffChem[0][0] = timeSteppingTool_->getInformationBDF(0) / dt; // 3/(2\Delta t)
+                    problemCoeffChem[0][0] = timeSteppingTool_->getInformationBDF(1); // 1
+                    coeffSourceTermChem = timeSteppingTool_->getInformationBDF(1); // 1
+             */
+            massCoeffFSI[4][4] = massCoeffChem[0][0];
             problemCoeffFSI[4][4] = problemCoeffChem[0][0];
             problemCoeffFSI[2][4] = 1.; // SCI Coupling 1
             problemCoeffFSI[4][2] = 1.; // SCI Coupling 2
@@ -1988,24 +1994,18 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         this->problemTime_->assemble( "ComputeFluidRHSInTime" ); // hier ist massmatrix nicht relevant
         // this->problemTime_->getRhs()->addBlock( Teuchos::rcp_const_cast<MultiVector_Type>(rhs->getBlock(0)), 0 );
 
-
-        {
-        //Do we need this, if BDF for FSI is used correctly? We still need it to save the mass matrices
-        if(couplingType=="explicit" ) //|| structureModel=="SCI_sophisticated")
-            this->problemTime_->assemble("UpdateChemInTime");
-        }
         // Aktuelle Massematrix auf dem Gitter fuer BDF2-Integration und
         // fuer das FSI-System (bei GI wird die Massematrix weiterhin in TimeProblem.reAssemble() assembliert).
         // In der ersten nichtlinearen Iteration wird bei GI also die Massematrix zweimal assembliert.
         // Massematrix fuer FSI holen und fuer timeProblemFluid setzen (fuer BDF2)
         MatrixPtr_Type massmatrixC;
         fsci->setChemMassmatrix( massmatrixC );
-        if(couplingType=="explicit" ) //|| structureModel=="SCI_sophisticated")
-            this->problemTime_->systemMass_->addBlock( massmatrixC, 4, 4);
+       // if(couplingType=="explicit" ) //|| structureModel=="SCI_sophisticated")
+       //     this->problemTime_->systemMass_->addBlock( massmatrixC, 4, 4);
 
         // RHS nach BDF2
-        if(couplingType=="explicit" ) //|| structureModel=="SCI_sophisticated")
-            this->problemTime_->assemble( "ComputeChemRHSInTime" ); // hier ist mas smatrix nicht relevant
+        //if(couplingType=="explicit" ) //|| structureModel=="SCI_sophisticated")
+        //    this->problemTime_->assemble( "ComputeChemRHSInTime" ); // hier ist mas smatrix nicht relevant
         //this->problemTime_->getRhs()->addBlock( Teuchos::rcp_const_cast<MultiVector_Type>(rhs->getBlock(0)), 0 );
 
 

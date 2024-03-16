@@ -1017,7 +1017,7 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerFaCSCI( std::string type )
 
     CommConstPtr_Type comm = timeProblem_->getComm();
     bool useFluidPreconditioner = parameterList->sublist("General").get("Use Fluid Preconditioner", true);
-    bool chemistryExplicit = parameterList->sublist("General").get("Chemistry Explicit", true);
+    bool chemistryExplicit = parameterList->sublist("Parameter").get("Chemistry Explicit", false);
     bool useSolidPreconditioner = parameterList->sublist("General").get("Use Solid Preconditioner", true);
     bool onlyDiagonal = parameterList->sublist("General").get("Only Diagonal", false);
     Teuchos::RCP< PrecOpFaCSCI<SC,LO,GO,NO> > facsci
