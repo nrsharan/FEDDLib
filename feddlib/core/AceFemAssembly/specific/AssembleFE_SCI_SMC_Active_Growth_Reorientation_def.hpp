@@ -419,7 +419,7 @@ namespace FEDD
         double **stiffnessMatrixKcc = elem.getStiffnessMatrixKcc();
 		for (int i = 0; i < 10; i++)
 			for (int j = 0; j < 10; j++)
-                this->stiffnessMatrixKcc_[i][j] = stiffnessMatrixKcc[i][j] +(1./deltaT)*massMatrixMc[i][j];
+                this->stiffnessMatrixKcc_[i][j] = stiffnessMatrixKcc[i][j];
 		
 		double *historyUpdated = elem.getHistoryUpdated();
 		for (int i = 0; i < this->historyLength_; i++)
