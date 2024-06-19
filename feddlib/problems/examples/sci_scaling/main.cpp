@@ -1275,20 +1275,24 @@ int main(int argc, char *argv[])
         else if(dim==3 && bcType=="Artery Plaque"){
            std::vector<double> parameter_vec(1, parameterListAll->sublist("Parameter").get("Inflow Start Time",0.));
            
-            bcFactory->addBC(inflowChem, 5, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactory->addBC(inflowChem, 6, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem outer wall
+
+           /*bcFactory->addBC(inflowChem, 5, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactory->addBC(inflowChem, 8, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactory->addBC(inflowChem, 9, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
 
 		    bcFactory->addBC(zeroDirichlet, 19, 1, domainChem, "Dirichlet", 1); // inflow of Chem
-            bcFactory->addBC(zeroDirichlet, 20, 1, domainChem, "Dirichlet", 1); // inflow of Chem
+            bcFactory->addBC(zeroDirichlet, 20, 1, domainChem, "Dirichlet", 1); // inflow of Chem*/
+
+           bcFactoryChem->addBC(inflowChem, 6, 0, domainChem, "Dirichlet", 1,parameter_vec);
 
 
-           bcFactoryChem->addBC(inflowChem, 5, 0, domainChem, "Dirichlet", 1,parameter_vec);
+           /*bcFactoryChem->addBC(inflowChem, 5, 0, domainChem, "Dirichlet", 1,parameter_vec);
            bcFactoryChem->addBC(inflowChem, 8, 0, domainChem, "Dirichlet", 1,parameter_vec);
            bcFactoryChem->addBC(inflowChem, 9, 0, domainChem, "Dirichlet", 1,parameter_vec);
 
             bcFactoryChem->addBC(zeroDirichlet, 19, 1, domainChem, "Dirichlet", 1); // inflow of Chem
-            bcFactoryChem->addBC(zeroDirichlet, 20, 1, domainChem, "Dirichlet", 1); // inflow of Chem
+            bcFactoryChem->addBC(zeroDirichlet, 20, 1, domainChem, "Dirichlet", 1); // inflow of Chem*/
 
 
          
