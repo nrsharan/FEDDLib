@@ -246,7 +246,6 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditioner( std::string type )
 template <class SC,class LO,class GO,class NO>
 void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
 {
-    cout << " Setup Preconditioner " << endl;
     CommConstPtr_Type comm;
     if (!problem_.is_null())
         comm = problem_->getComm();
@@ -292,7 +291,6 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
 
    // timeProblem_->getSystemCombined()->print();
     //Set Precondtioner lists
-    cout << " Set Preconditioner Lists " << endl;
     if (!precondtionerIsBuilt_) {
         if ( !precType.compare("FROSch") ){
             Teuchos::ArrayRCP<FROSch::DofOrdering> dofOrderings(numberOfBlocks);
@@ -335,7 +333,6 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
                                 repeatedMaps[i] = mapTmp;
                             }
                             else{
-                                cout << " Checking Map for block i=" <<i << endl;
                                 Teuchos::RCP<const Xpetra::Map<LO,GO,NO> > mapConstTmp;
                                 mapConstTmp = problem_->getDomain(i)->getMapRepeated()->getXpetraMap();
                                 Teuchos::RCP<Xpetra::Map<LO,GO,NO> > mapTmp = Teuchos::rcp_const_cast<Xpetra::Map<LO,GO,NO> > (mapConstTmp);
