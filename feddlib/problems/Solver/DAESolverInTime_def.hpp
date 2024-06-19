@@ -1230,6 +1230,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             double heartbeatStart2 = parameterList_->sublist("Parameter").get("Heart Beat Start 2",0.) ;
             double heartbeatEnd1 = parameterList_->sublist("Parameter").get("Heart Beat End 1",0.) ;
             double heartbeatEnd2 = parameterList_->sublist("Parameter").get("Heart Beat End 2",0.) ;
+            double modValue = parameterList_->sublist("Parameter").get("Every X Second",1.) ;
+            double modValueHeartBeat = parameterList_->sublist("Parameter").get("Every X Second Heartbeat",0.1) ;
 
             double time = timeSteppingTool_->currentTime();
 
@@ -1238,10 +1240,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             else if(time >= heartbeatStart2 && time <= heartbeatEnd2)
                 heartbeat=true;
 
-            double modValue = 10.;
-
             if(heartbeat)
-                modValue= 0.1; // smaller post Processing steps in heart beat phases
+                modValue= modValueHeartBeat; // smaller post Processing steps in heart beat phases
 
             if(fmod(timeSteppingTool_->currentTime(),modValue) < 0. + 1.e-10 ){
                 BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
