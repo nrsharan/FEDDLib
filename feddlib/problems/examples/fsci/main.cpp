@@ -282,8 +282,8 @@ void parabolicInflow3DArteryHeartBeat(double* x, double* res, double t, const do
         Q = (Q - 2.85489)/(7.96908-2.85489);
         double lambda = 1.;
 
-        if( parameters[0]+1.0e-10 < heartBeatStart + 0.5)
-		    lambda = 0.90 + 0.1*cos(2*M_PI*parameters[0]);
+        if( t+1.0e-10 < heartBeatStart + 0.5)
+		    lambda = 0.90 + 0.1*cos(2*M_PI*t);
         else 
     	    lambda= 0.8 + 1.2*Q;
 
@@ -618,9 +618,12 @@ int main(int argc, char *argv[])
         string unit = parameterListAll->sublist("Parameter").get("Mesh Unit","cm");
 
         if(convertMesh)
-            partitionerP1.readAndPartition(15,unit , true ); // Convert it from cm to m
+            partitionerP1.readAndPartition(15,unit , true ); // Convert it from mm to cm
         else
             partitionerP1.readAndPartition(15); 
+
+		//domainP1fluid->exportNodeFlags();
+		//domainP1struct->exportElementFlags();
 
         if (!discType.compare("P2")){
             domainP2fluid->buildP2ofP1Domain( domainP1fluid );
@@ -803,11 +806,11 @@ int main(int argc, char *argv[])
         }
 
         vec2D_dbl_Type diffusionTensor(dim,vec_dbl_Type(3));
-        double D0 = parameterListAll->sublist("Parameter Diffusion").get("D0",1.);
+        //double D0 = parameterListAll->sublist("Parameter Diffusion").get("D0",1.);
         for(int i=0; i<dim; i++){
-            diffusionTensor[0][0] =D0;
-            diffusionTensor[1][1] =D0;
-            diffusionTensor[2][2] =D0;
+            diffusionTensor[0][0] =1;
+            diffusionTensor[1][1] =1;
+            diffusionTensor[2][2] =1;
 
             if(i>0){
             diffusionTensor[i][i-1] = 0;
