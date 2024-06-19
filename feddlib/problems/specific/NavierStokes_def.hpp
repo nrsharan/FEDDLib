@@ -232,14 +232,12 @@ void NavierStokes<SC,LO,GO,NO>::assembleDivAndStab() const{
         
         this->system_->addBlock( C, 1, 1 );
     }
-    else{
-        C.reset(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(1)->getApproxEntriesPerRow() ) );
-        this->feFactory_->assemblyIdentity(C);
-        C->resumeFill();
-        C->scale(0. );
-        C->fillComplete( pressureMap, pressureMap );    
-        this->system_->addBlock( C, 1, 1 );
-    }
+    //else 
+    //    C.reset(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(1)->getApproxEntriesPerRow() ) );
+    //    this->feFactory_->assemblyEmptyMatrix(C);
+               
+        //this->system_->addBlock( C, 1, 1 );
+
 };
 
 template<class SC,class LO,class GO,class NO>
@@ -299,7 +297,7 @@ void NavierStokes<SC,LO,GO,NO>::reAssemble(std::string type) const {
         
         MultiVectorConstPtr_Type u = this->solution_->getBlock(0);
         u_rep_->importFromVector(u, true);
-                
+
         MatrixPtr_Type N = Teuchos::rcp(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
         this->feFactory_->assemblyAdvectionVecField( this->dim_, this->domain_FEType_vec_.at(0), N, u_rep_, true );
         
@@ -546,6 +544,7 @@ void NavierStokes<SC,LO,GO,NO>::evalModelImplMonolithic(const Thyra::ModelEvalua
         if (fill_f) {
 
             this->calculateNonLinResidualVec("standard"); // Calculating residual Vector
+            this->calculateNonLinResidualVec("standard"); // Calculating residual Vector
 
 			// Changing the residualVector into a ThyraMultivector
 
@@ -557,13 +556,17 @@ void NavierStokes<SC,LO,GO,NO>::evalModelImplMonolithic(const Thyra::ModelEvalua
         if (fill_W) {
 
             this->reAssemble("Newton"); // ReAssembling matrices with updated u  in this class
+            this->reAssemble("Newton"); // ReAssembling matrices with updated u  in this class
 
             this->setBoundariesSystem(); // setting boundaries to the system
+            this->setBoundariesSystem(); // setting boundaries to the system
 
+			// Changing the system Matrix into a tpetra Matrix (block matrices have 'getXpetraMatrix' feature)
 			// Changing the system Matrix into a tpetra Matrix (block matrices have 'getXpetraMatrix' feature)
             Teuchos::RCP<TpetraOp_Type> W_tpetra = tpetra_extract::getTpetraOperator(W_out);
             Teuchos::RCP<TpetraMatrix_Type> W_tpetraMat = Teuchos::rcp_dynamic_cast<TpetraMatrix_Type>(W_tpetra);
 
+            XpetraMatrixConstPtr_Type W_systemXpetra = this->getSystem()->getMergedMatrix()->getXpetraMatrix(); // The current system matrix of this class
             XpetraMatrixConstPtr_Type W_systemXpetra = this->getSystem()->getMergedMatrix()->getXpetraMatrix(); // The current system matrix of this class
 
             XpetraMatrixPtr_Type W_systemXpetraNonConst = rcp_const_cast<XpetraMatrix_Type>(W_systemXpetra);
@@ -584,6 +587,7 @@ void NavierStokes<SC,LO,GO,NO>::evalModelImplMonolithic(const Thyra::ModelEvalua
         }
 
         if (fill_W_prec) {
+        
         
             this->setupPreconditioner( "Monolithic" );
 
@@ -611,7 +615,13 @@ void NavierStokes<SC,LO,GO,NO>::evalModelImplMonolithic(const Thyra::ModelEvalua
 /*!
 	\brief Block Approach for Nonlinear Solver NOX. Input. Includes calculation of the residual vector and update (reAssembly) of non constant matrices with new solution.
 		   ResidualVec and SystemMatrix of this class are then converted into the corresponding Thyra/Tpetra objects for Solver.
+/*!
+	\brief Block Approach for Nonlinear Solver NOX. Input. Includes calculation of the residual vector and update (reAssembly) of non constant matrices with new solution.
+		   ResidualVec and SystemMatrix of this class are then converted into the corresponding Thyra/Tpetra objects for Solver.
 
+
+
+*/
 
 
 */
@@ -712,7 +722,9 @@ void NavierStokes<SC,LO,GO,NO>::evalModelImplBlock(const Thyra::ModelEvaluatorBa
 
         if (fill_W_prec) {
             if (stokesTekoPrecUsed_){
+            if (stokesTekoPrecUsed_){
                 this->setupPreconditioner( "Teko" );
+            }
             }
             else
                 stokesTekoPrecUsed_ = true;
@@ -754,6 +766,7 @@ void NavierStokes<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, dou
     else
         this->system_->apply( *this->solution_, *this->residualVec_, this->coeff_ );
     
+    
     if (!type.compare("standard")){
         this->residualVec_->update(-1.,*this->rhs_,1.);
 //        if ( !this->sourceTerm_.is_null() )
@@ -767,6 +780,9 @@ void NavierStokes<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, dou
 //        if ( !this->sourceTerm_.is_null() )
 //            this->residualVec_->update(1.,*this->sourceTerm_,1.);
         // this might be set again by the TimeProblem after addition of M*u
+        this->bcFactory_->setBCMinusVector( this->residualVec_, this->solution_, time );    
+    }
+
         this->bcFactory_->setBCMinusVector( this->residualVec_, this->solution_, time );    
     }
 
@@ -870,6 +886,7 @@ Teuchos::RCP<Thyra::PreconditionerBase<SC> > NavierStokes<SC,LO,GO,NO>::create_W
     else{
         this->setupPreconditioner( type ); //this->initializePreconditioner( type ); //
     }
+    
     
 
     Teuchos::RCP<const Thyra::PreconditionerBase<SC> > thyraPrec =  this->getPreconditionerConst()->getThyraPrecConst();

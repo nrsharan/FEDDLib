@@ -23,18 +23,6 @@
 
 using namespace std;
 
-
-void constx3D(double* x, double* res, double t, const double* parameters)
-{
-
-res[0] = 0.01;
-res[1] = 0.;
-res[2] = 0.;
-
-return;
-}
-
-
 void zeroDirichlet(double* x, double* res, double t, const double* parameters){
 
     res[0] = 0.;
@@ -304,7 +292,8 @@ int main(int argc, char *argv[]) {
                     parameter_vec.push_back(.41);//height of inflow region
                 else if(!bcType.compare("Richter3D"))
                     parameter_vec.push_back(.4);
-                
+                else
+                    TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Select a valid boundary condition.");
 
 
                 if ( !bcType.compare("parabolic") || !bcType.compare("parabolic_benchmark") ) {//flag of obstacle
@@ -337,13 +326,7 @@ int main(int argc, char *argv[]) {
                     bcFactory->addBC(zeroDirichlet3D, 3, 0, domainVelocity, "Dirichlet_Z", dim);
                     bcFactory->addBC(zeroDirichlet3D, 5, 0, domainVelocity, "Dirichlet", dim);
                 }
-                else if (!bcType.compare("Test")) {
-                	bcFactory->addBC(zeroDirichlet3D, 1, 0, domainVelocity, "Dirichlet", dim); // walls
-					bcFactory->addBC(constx3D, 3, 0, domainVelocity, "Dirichlet", dim, parameter_vec); // inlet
                 
-                }
-                else
-                    TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Select a valid boundary condition.");
                 NavierStokes<SC,LO,GO,NO> navierStokes( domainVelocity, discVelocity, domainPressure, discPressure, parameterListAll );
 
                 domainVelocity->info();

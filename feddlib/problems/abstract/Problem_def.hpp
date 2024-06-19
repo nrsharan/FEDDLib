@@ -12,9 +12,33 @@
 
 using Teuchos::outArg;
 using Teuchos::REDUCE_MAX;
+using Teuchos::outArg;
+using Teuchos::REDUCE_MAX;
 using Teuchos::REDUCE_SUM;
 using Teuchos::reduceAll;
+using Teuchos::reduceAll;
 
+namespace FEDD
+{
+    template <class SC, class LO, class GO, class NO>
+    Problem<SC, LO, GO, NO>::Problem(CommConstPtr_Type comm) : dim_(-1),
+                                                               comm_(comm),
+                                                               system_(),
+                                                               rhs_(),
+                                                               solution_(),
+                                                               preconditioner_(),
+                                                               linearSolverBuilder_(),
+                                                               verbose_(comm->getRank() == 0),
+                                                               parameterList_(),
+                                                               domainPtr_vec_(),
+                                                               domain_FEType_vec_(),
+                                                               variableName_vec_(),
+                                                               bcFactory_(),
+                                                               feFactory_(),
+                                                               dofsPerNode_vec_(),
+                                                               sourceTerm_(),
+                                                               rhsFuncVec_(),
+                                                               parasSourceFunc_(0)
 namespace FEDD
 {
     template <class SC, class LO, class GO, class NO>
@@ -39,7 +63,14 @@ namespace FEDD
 #ifdef FEDD_TIMER
                                                                ,
                                                                solveProblemTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Solve")), bcMatrixTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Set Boundaries Matrix")), bcRHSTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Set Boundaries RHS"))
+                                                               ,
+                                                               solveProblemTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Solve")), bcMatrixTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Set Boundaries Matrix")), bcRHSTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Set Boundaries RHS"))
 #endif
+    {
+        linearSolverBuilder_.reset(new Stratimikos::DefaultLinearSolverBuilder());
+        preconditioner_ = Teuchos::rcp(new Preconditioner_Type(this));
+        feFactory_.reset(new FEFac_Type());
+    }
     {
         linearSolverBuilder_.reset(new Stratimikos::DefaultLinearSolverBuilder());
         preconditioner_ = Teuchos::rcp(new Preconditioner_Type(this));
@@ -65,10 +96,36 @@ namespace FEDD
                                                                                                      sourceTerm_(),
                                                                                                      rhsFuncVec_(),
                                                                                                      parasSourceFunc_(0)
+    template <class SC, class LO, class GO, class NO>
+    Problem<SC, LO, GO, NO>::Problem(ParameterListPtr_Type &parameterList, CommConstPtr_Type comm) : dim_(-1),
+                                                                                                     comm_(comm),
+                                                                                                     system_(),
+                                                                                                     rhs_(),
+                                                                                                     solution_(),
+                                                                                                     preconditioner_(),
+                                                                                                     linearSolverBuilder_(),
+                                                                                                     verbose_(comm->getRank() == 0),
+                                                                                                     parameterList_(parameterList),
+                                                                                                     domainPtr_vec_(),
+                                                                                                     domain_FEType_vec_(),
+                                                                                                     variableName_vec_(),
+                                                                                                     bcFactory_(),
+                                                                                                     feFactory_(),
+                                                                                                     dofsPerNode_vec_(),
+                                                                                                     sourceTerm_(),
+                                                                                                     rhsFuncVec_(),
+                                                                                                     parasSourceFunc_(0)
 #ifdef FEDD_TIMER
                                                                                                      ,
                                                                                                      solveProblemTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Solve")), bcMatrixTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Set Boundaries Matrix")), bcRHSTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Set Boundaries RHS"))
+                                                                                                     ,
+                                                                                                     solveProblemTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Solve")), bcMatrixTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Set Boundaries Matrix")), bcRHSTimer_(Teuchos::TimeMonitor::getNewCounter("FEDD - Problem - Set Boundaries RHS"))
 #endif
+    {
+        linearSolverBuilder_.reset(new Stratimikos::DefaultLinearSolverBuilder());
+        preconditioner_ = Teuchos::rcp(new Preconditioner_Type(this));
+        feFactory_.reset(new FEFac_Type());
+    }
     {
         linearSolverBuilder_.reset(new Stratimikos::DefaultLinearSolverBuilder());
         preconditioner_ = Teuchos::rcp(new Preconditioner_Type(this));
@@ -112,10 +169,30 @@ namespace FEDD
                           << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("Overlap", 0)
                           << "\t Level Combination: "
                           << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("Level Combination", "Additive") << std::endl;
+            // ch 15.04.19: Hier ggf. unterscheiden zwischen Monolithic und Teko bzw. anderen Block-Precs.
+            ParameterListPtr_Type pListThyraPrec = sublist(parameterList_, "ThyraPreconditioner");
+            std::cout << "\t ### ### ###" << std::endl;
+            std::cout << "\t ### Preconditioner Information ###" << std::endl;
+            std::cout << "\t ### Type: " << parameterList_->sublist("General").get("Preconditioner Method", "Monolithic") << std::endl;
+            std::cout << "\t ### Prec.: " << pListThyraPrec->get("Preconditioner Type", "FROSch") << std::endl;
+
+            if (!pListThyraPrec->get("Preconditioner Type", "FROSch").compare("FROSch") && parameterList_->sublist("General").get("Preconditioner Method", "Monolithic") == "Monolithic")
+            {
+                std::cout << "\t ### Variant: " << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("FROSch Preconditioner Type", "TwoLevelBlockPreconditioner") << std::endl;
+                std::cout << "\t ### Two Level: "
+                          << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("TwoLevel", false)
+                          << "\t Overlap: "
+                          << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("Overlap", 0)
+                          << "\t Level Combination: "
+                          << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("Level Combination", "Additive") << std::endl;
 
                 std::cout << "\t OverlappingOperator Type: "
                           << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("OverlappingOperator Type", "AlgebraicOverlappingOperator") << std::endl;
+                std::cout << "\t OverlappingOperator Type: "
+                          << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("OverlappingOperator Type", "AlgebraicOverlappingOperator") << std::endl;
 
+                std::cout << "\t CoarseOperator Type: "
+                          << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("CoarseOperator Type", "GDSWCoarseOperator") << std::endl;
                 std::cout << "\t CoarseOperator Type: "
                           << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("CoarseOperator Type", "GDSWCoarseOperator") << std::endl;
 
@@ -133,7 +210,28 @@ namespace FEDD
             }
         }
     }
+                for (int i = 0; i < this->parameterList_->get("Number of blocks", 2); i++)
+                {
+                    std::cout << "\t \t # Block " << i + 1 << "\t d.o.f.s: "
+                              << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("DofsPerNode" + std::to_string(i + 1), 1)
+                              << "\t d.o.f. ordering: "
+                              << pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").get("DofOrdering" + std::to_string(i + 1), "NodeWise") << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "\t ### Full preconditioner information only available for Monolithic preconditioner type ###" << std::endl;
+            }
+        }
+    }
 
+    template <class SC, class LO, class GO, class NO>
+    void Problem<SC, LO, GO, NO>::initializeProblem(int nmbVectors)
+    {
+
+        this->system_.reset(new BlockMatrix_Type(1));
+        this->initializeVectors(nmbVectors);
+    }
     template <class SC, class LO, class GO, class NO>
     void Problem<SC, LO, GO, NO>::initializeProblem(int nmbVectors)
     {
@@ -186,6 +284,9 @@ namespace FEDD
     template <class SC, class LO, class GO, class NO>
     void Problem<SC, LO, GO, NO>::addVariable(const DomainConstPtr_Type &domain, std::string FEType, std::string name, int dofsPerNode)
     {
+    template <class SC, class LO, class GO, class NO>
+    void Problem<SC, LO, GO, NO>::addVariable(const DomainConstPtr_Type &domain, std::string FEType, std::string name, int dofsPerNode)
+    {
 
         domainPtr_vec_.push_back(domain);
         domain_FEType_vec_.push_back(FEType);
@@ -193,7 +294,19 @@ namespace FEDD
         feFactory_->addFE(domain);
         dofsPerNode_vec_.push_back(dofsPerNode);
     }
+        domainPtr_vec_.push_back(domain);
+        domain_FEType_vec_.push_back(FEType);
+        variableName_vec_.push_back(name);
+        feFactory_->addFE(domain);
+        dofsPerNode_vec_.push_back(dofsPerNode);
+    }
 
+    // template<class SC,class LO,class GO,class NO>
+    // void Problem<SC,LO,GO,NO>::reAssemble(){
+    //     if (verbose_) {
+    //         cout << "Nothing to reassemble for linear problem." << endl;
+    //     }
+    // }
     // template<class SC,class LO,class GO,class NO>
     // void Problem<SC,LO,GO,NO>::reAssemble(){
     //     if (verbose_) {
@@ -327,6 +440,8 @@ namespace FEDD
 
         return its;
     }
+        return its;
+    }
 
 
 
@@ -336,11 +451,18 @@ namespace FEDD
 
         preconditioner_->buildPreconditioner(type);
     }
+        preconditioner_->buildPreconditioner(type);
+    }
 
     template <class SC, class LO, class GO, class NO>
     void Problem<SC, LO, GO, NO>::initializePreconditioner(std::string type) const
     {
+    template <class SC, class LO, class GO, class NO>
+    void Problem<SC, LO, GO, NO>::initializePreconditioner(std::string type) const
+    {
 
+        preconditioner_->initializePreconditioner(type);
+    }
         preconditioner_->initializePreconditioner(type);
     }
 

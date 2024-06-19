@@ -408,6 +408,24 @@ namespace FEDD
         }
         else
             TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Unknown algebra for initVectorSpaces().");
+            Teuchos::Array<ThyraVecSpaceConstPtr_Type> vecSpaceArray(map->size());
+            for (int i = 0; i < map->size(); i++)
+            {
+                Teuchos::RCP<const XTpetra_Type> xTpetraMap =
+                    Teuchos::rcp_dynamic_cast<const XTpetra_Type>(map->getBlock(i)->getXpetraMap()->getMap());
+                Teuchos::RCP<const tpetra_map> tpetraMap = xTpetraMap->getTpetra_Map();
+                ThyraVecSpaceConstPtr_Type vecSpace = Thyra::createVectorSpace<SC, LO, GO, NO>(tpetraMap);
+                vecSpaceArray[i] = vecSpace;
+            }
+            this->xSpace_ = Teuchos::rcp(new Thyra::DefaultProductVectorSpace<SC>(vecSpaceArray()));
+            this->fSpace_ = Teuchos::rcp(new Thyra::DefaultProductVectorSpace<SC>(vecSpaceArray()));
+        }
+        else if (!ulib.compare("Epetra"))
+        {
+            TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "No implementation for initVectorSpaces() and Epetra.");
+        }
+        else
+            TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Unknown algebra for initVectorSpaces().");
 
         typedef Teuchos::ScalarTraits<SC> ST;
         x0_ = ::Thyra::createMember(this->xSpace_);

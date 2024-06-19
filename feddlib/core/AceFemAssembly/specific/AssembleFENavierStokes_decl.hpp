@@ -2,8 +2,8 @@
 #define ASSEMBLEFENAVIERSTOKES_DECL_hpp
 
 #include "feddlib/core/AceFemAssembly/AssembleFE.hpp"
-#include "feddlib/core/AceFemAssembly/Helper.hpp"
 #include "feddlib/core/FEDDCore.hpp"
+#include "feddlib/core/FE/Helper.hpp"
 #include "feddlib/core/LinearAlgebra/Matrix.hpp"
 #include "feddlib/core/LinearAlgebra/MultiVector.hpp"
 
@@ -28,18 +28,18 @@ class AssembleFENavierStokes : public AssembleFE<SC,LO,GO,NO> {
 	/*!
 	 \brief Assemble the element Jacobian matrix.
 	*/
-	virtual void assembleJacobian();
+	void assembleJacobian() override;
 
 	/*!
 	 \brief Assemble the element right hand side vector.
 	*/
-	virtual void assembleRHS();
+	void assembleRHS() override;
 
 	/*!
 		\brief Assemble the element Jacobian matrix.
 		@param[in] block ID i
 	*/
-	virtual void assembleJacobianBlock(LO i) {};
+	void assembleJacobianBlock(LO i) override {};
 	
 	void setCoeff(SmallMatrix_Type coeff);
 

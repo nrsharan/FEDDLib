@@ -130,6 +130,7 @@ typedef boost::function<double(double* x, double* parameters)>                  
 typedef boost::function<void(double* x, double* res, double* parameters)>               RhsFunc_Type;
 typedef boost::function<void(double* x, double* res, double t, double* parameters)>     GeneralFunc_Type;        
 typedef boost::function<void(double* x, double* res)>     								Func_Type;          
+typedef boost::function<void(double* x, double* res)>     								Func_Type;          
     
 }
 #endif

@@ -290,6 +290,7 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
     if (!useNodeLists)
         nodeListVec = Teuchos::null;
 
+   // timeProblem_->getSystemCombined()->print();
     //Set Precondtioner lists
     cout << " Set Preconditioner Lists " << endl;
     if (!precondtionerIsBuilt_) {

@@ -14,9 +14,7 @@
  Mesh Element Flags test
 
  @brief  Mesh Element Flags test
- @author Christian Hochmuth
  @version 1.0
- @copyright CH
  */
 
 
