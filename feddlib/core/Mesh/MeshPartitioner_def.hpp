@@ -600,15 +600,11 @@ void MeshPartitioner<SC,LO,GO,NO>::setSurfacesToElements(int meshNumber){
     vec2D_int_Type surfElements_vec( numSurfaceEl );
     vec2D_int_Type surfElements_vec_sorted( numSurfaceEl );
 
-    vec2D_int_Type surfElements_vec_sorted( numSurfaceEl );
-
     vec_int_Type surfElementsFlag_vec( numSurfaceEl );
-    vec_GO_Type offsetVec(size);
     vec_GO_Type offsetVec(size);
     int offset = offsetVec[this->comm_->getRank()];
 
     for (int i=0; i<surfElements_vec.size(); i++){
-        vec_int_Type surface = surfaceElements->getElement(i ).getVectorNodeListNonConst(); // surfaceElements->getElement(i + offset).getVectorNodeListNonConst();
         vec_int_Type surface = surfaceElements->getElement(i ).getVectorNodeListNonConst(); // surfaceElements->getElement(i + offset).getVectorNodeListNonConst();
         surfElements_vec.at(i)  = surface;
         std::sort( surface.begin(), surface.end() ); // We need to maintain a consistent numbering in the surface elements, so we use a sorted and ansorted vector

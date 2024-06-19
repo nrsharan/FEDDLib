@@ -107,6 +107,116 @@ void FE<SC,LO,GO,NO>::applyBTinv( vec3D_dbl_ptr_Type& dPhiIn,
         }
     }
 }
+
+/*!
+ \brief Postprocessing: Using a converged velocity solution -> compute averaged viscosity inside an element at center of mass
+@param[in] dim Dimension
+@param[in] FEType FE Discretization
+@param[in] degree Degree of basis function
+@param[in] repeated solution fields for u and p
+@param[in] parameter lists
+*/
+
+
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::computeSteadyViscosityFE_CM(int dim,
+	                                    string FETypeVelocity,
+	                                    string FETypePressure,
+										int dofsVelocity,
+										int dofsPressure,
+										MultiVectorPtr_Type u_rep,
+										MultiVectorPtr_Type p_rep,
+ 										ParameterListPtr_Type params){
+	
+
+    UN FElocVel = checkFE(dim,FETypeVelocity); // Checks for different domains which belongs to a certain fetype
+    UN FElocPres = checkFE(dim,FETypePressure); // Checks for different domains which belongs to a certain fetype
+
+	ElementsPtr_Type elements = domainVec_.at(FElocVel)->getElementsC();
+	ElementsPtr_Type elementsPres = domainVec_.at(FElocPres)->getElementsC();
+
+	vec_dbl_Type solution(0);
+	vec_dbl_Type solution_u;
+	vec_dbl_Type solution_p;
+    vec_dbl_Type solution_viscosity;
+
+    // We have to compute viscosity solution in each element 
+	MultiVectorPtr_Type Sol_viscosity = Teuchos::rcp( new MultiVector_Type( domainVec_.at(FElocVel)->getElementMap(), 1 ) ); //
+    BlockMultiVectorPtr_Type visco_output = Teuchos::rcp( new BlockMultiVector_Type(1) );
+    visco_output->addBlock(Sol_viscosity,0);
+   
+
+	for (UN T=0; T<assemblyFEElements_.size(); T++) {
+       
+		vec_dbl_Type solution(0);
+		solution_u = getSolution(elements->getElement(T).getVectorNodeList(), u_rep,dofsVelocity); // get the solution inside an element on the nodes
+		solution_p = getSolution(elementsPres->getElement(T).getVectorNodeList(), p_rep,dofsPressure);
+
+		solution.insert( solution.end(), solution_u.begin(), solution_u.end() ); // here we insert the solution
+		solution.insert( solution.end(), solution_p.begin(), solution_p.end() );
+
+		assemblyFEElements_[T]->updateSolution(solution); // here we update the value of the solutions inside an element
+ 
+        assemblyFEElements_[T]->computeLocalconstOutputField(); //  we compute the viscosity inside an element
+        solution_viscosity = assemblyFEElements_[T]->getLocalconstOutputField();
+
+        Teuchos::ArrayRCP<SC>  resArray_block = visco_output->getBlockNonConst(0)->getDataNonConst(0); // First 
+        resArray_block[T] = solution_viscosity[0]; // although it is a vector it only has one entry because we compute the value in the center of the element
+          
+	} // end loop over all elements
+    // We could also instead of just overwrite it add an aditional block such that we could also compute other output fields and save it in there
+    this->const_output_fields= visco_output;
+
+
+}
+
+/*!
+ \brief Assembly of constant stiffness matix for laplacian operator \f$ \Delta \f$
+@param[in] dim Dimension
+@param[in] FEType FE Discretization
+@param[in] degree Degree of basis function
+@param[in] A Resulting matrix
+@param[in] callFillComplete If Matrix A should be completely filled at end of function
+@param[in] FELocExternal 
+*/
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::assemblyLaplaceAssFE(int dim,
+                                        string FEType,
+                                        int degree,
+                                        int dofs,
+                                        BlockMatrixPtr_Type &A,
+                                        bool callFillComplete,
+                                        int FELocExternal){
+    ParameterListPtr_Type params = Teuchos::getParametersFromXmlFile("parametersProblemLaplace.xml");
+
+    UN FEloc = checkFE(dim,FEType);
+    ElementsPtr_Type elements = domainVec_.at(FEloc)->getElementsC();
+    vec2D_dbl_ptr_Type pointsRep = domainVec_.at(FEloc)->getPointsRepeated();
+    MapConstPtr_Type map = domainVec_.at(FEloc)->getMapRepeated();
+    vec2D_dbl_Type nodes;
+    int numNodes=dim+1;
+    if(FEType == "P2"){
+        numNodes= 6;
+        if(dim==3)
+            numNodes=10;
+    }
+    tuple_disk_vec_ptr_Type problemDisk = Teuchos::rcp(new tuple_disk_vec_Type(0));
+    tuple_ssii_Type vel ("Laplace",FEType,dofs,numNodes); 
+    problemDisk->push_back(vel);
+    if(assemblyFEElements_.size()== 0)
+        initAssembleFEElements("Laplace",problemDisk,elements, params,pointsRep,domainVec_.at(0)->getElementMap());
+    else if(assemblyFEElements_.size() != elements->numberElements())
+         TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "Number Elements not the same as number assembleFE elements." );
+    for (UN T=0; T<elements->numberElements(); T++) {
+        assemblyFEElements_[T]->assembleJacobian();
+        SmallMatrixPtr_Type elementMatrix = assemblyFEElements_[T]->getJacobian(); 
+      	addFeBlock(A, elementMatrix, elements->getElement(T), map, 0, 0, problemDisk);
+
+    }
+    if(callFillComplete)
+        A->getBlock(0,0)->fillComplete();
+}
+
 /*!
 
  \brief Assembly of Jacobian for Linear Elasticity
@@ -829,7 +939,7 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
  		SmallMatrixPtr_Type elementMatrix;
 
         // ------------------------
-        buildTransformation(elementsSolid->getElement(T).getVectorNodeList(), pointsRep, B, FETypeSolid);
+        Helper::buildTransformation(elementsSolid->getElement(T).getVectorNodeList(), pointsRep, B, FETypeSolid);
         detB = B.computeInverse(Binv);
         //absDetB = std::fabs(detB);
         if(detB <=0.)
@@ -1526,11 +1636,11 @@ void FE<SC,LO,GO,NO>::assemblyReactionTerm(int dim,
 	vec2D_dbl_ptr_Type     phi;
 	vec_dbl_ptr_Type    weights = Teuchos::rcp(new vec_dbl_Type(0));
 
-	UN extraDeg = determineDegree( dim, FEType, Std); //Elementwise assembly of grad u
+	UN extraDeg = Helper::determineDegree( dim, FEType, Std); //Elementwise assembly of grad u
 
-	UN deg = determineDegree( dim, FEType, FEType, Grad, Std, extraDeg);
+	UN deg = Helper::determineDegree( dim, FEType, FEType, Grad, Std, extraDeg);
 
-	getPhi(phi, weights, dim, FEType, deg);
+	Helper::getPhi(phi, weights, dim, FEType, deg);
 	
     // We have a scalar value of concentration in each point
 	vec_dbl_Type uLoc( weights->size() , -1. );
@@ -1546,7 +1656,7 @@ void FE<SC,LO,GO,NO>::assemblyReactionTerm(int dim,
     SmallMatrix<SC> Binv(dim);
 
 	for (UN T=0; T<elements->numberElements(); T++) {
-        buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
+        Helper::buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
         detB = B.computeInverse(Binv);
         absDetB = std::fabs(detB);
 
@@ -1617,11 +1727,11 @@ void FE<SC,LO,GO,NO>::assemblyLinearReactionTerm(int dim,
 	vec2D_dbl_ptr_Type     phi;
 	vec_dbl_ptr_Type    weights = Teuchos::rcp(new vec_dbl_Type(0));
 
-	UN extraDeg = determineDegree( dim, FEType, Std); //Elementwise assembly of grad u
+	UN extraDeg = Helper::determineDegree( dim, FEType, Std); //Elementwise assembly of grad u
 
-	UN deg = determineDegree( dim, FEType, FEType, Grad, Std, extraDeg);
+	UN deg = Helper::determineDegree( dim, FEType, FEType, Grad, Std, extraDeg);
 
-	getPhi(phi, weights, dim, FEType, deg);
+	Helper::getPhi(phi, weights, dim, FEType, deg);
 	
     std::vector<double> valueFunc(1);
 
@@ -1633,7 +1743,7 @@ void FE<SC,LO,GO,NO>::assemblyLinearReactionTerm(int dim,
     SmallMatrix<SC> Binv(dim);
 
 	for (UN T=0; T<elements->numberElements(); T++) {
-        buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
+        Helper::buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
         detB = B.computeInverse(Binv);
         absDetB = std::fabs(detB);
 
@@ -1689,13 +1799,13 @@ void FE<SC,LO,GO,NO>::assemblyDReactionTerm(int dim,
     vec3D_dbl_ptr_Type 	dPhi;
 	vec_dbl_ptr_Type    weights = Teuchos::rcp(new vec_dbl_Type(0));
 
-	UN extraDeg = determineDegree( dim, FEType, Std); //Elementwise assembly of grad u
+	UN extraDeg = Helper::determineDegree( dim, FEType, Std); //Elementwise assembly of grad u
 
-	UN deg = determineDegree( dim, FEType, FEType, Grad, Std, extraDeg);
+	UN deg = Helper::determineDegree( dim, FEType, FEType, Grad, Std, extraDeg);
 
-	getPhi(phi, weights, dim, FEType, deg);
+	Helper::getPhi(phi, weights, dim, FEType, deg);
 	
-    getDPhi(dPhi, weights, dim, FEType, deg);
+    Helper::getDPhi(dPhi, weights, dim, FEType, deg);
 
     // We have a scalar value of concentration in each point
 	vec2D_dbl_Type duLoc( weights->size() ,vec_dbl_Type(dim ,-1. ));
@@ -1713,12 +1823,12 @@ void FE<SC,LO,GO,NO>::assemblyDReactionTerm(int dim,
 	for (UN T=0; T<elements->numberElements(); T++) {
 
         
-        buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
+        Helper::buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
         detB = B.computeInverse(Binv);
         absDetB = std::fabs(detB);
 
         vec3D_dbl_Type dPhiTrans( dPhi->size(), vec2D_dbl_Type( dPhi->at(0).size(), vec_dbl_Type(dim,0.) ) );
-        applyBTinv( dPhi, dPhiTrans, Binv );
+        Helper::applyBTinv( dPhi, dPhiTrans, Binv );
 
         for (int w=0; w<dPhiTrans.size(); w++){ //quads points
             for (int i=0; i < dPhiTrans[0].size(); i++) {
@@ -1783,8 +1893,8 @@ void FE<SC,LO,GO,NO>::assemblyLaplaceDiffusion(int dim,
     vec3D_dbl_ptr_Type 	dPhi;
     vec_dbl_ptr_Type weights = Teuchos::rcp(new vec_dbl_Type(0));
     
-    UN deg = determineDegree(dim,FEType,FEType,Grad,Grad);//+1;
-    getDPhi(dPhi, weights, dim, FEType, deg);
+    UN deg = Helper::determineDegree(dim,FEType,FEType,Grad,Grad);//+1;
+    Helper::getDPhi(dPhi, weights, dim, FEType, deg);
     
     SC detB;
     SC absDetB;
@@ -1826,12 +1936,12 @@ void FE<SC,LO,GO,NO>::assemblyLaplaceDiffusion(int dim,
 
     for (UN T=0; T<elements->numberElements(); T++) {
 
-        buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
+        Helper::buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B, FEType);
         detB = B.computeInverse(Binv);
         absDetB = std::fabs(detB);
 
         vec3D_dbl_Type dPhiTrans( dPhi->size(), vec2D_dbl_Type( dPhi->at(0).size(), vec_dbl_Type(dim,0.) ) );
-        applyBTinv( dPhi, dPhiTrans, Binv );
+        Helper::applyBTinv( dPhi, dPhiTrans, Binv );
 
         if(numMaterials> 0.){
             auto it1 = find( diffTensorID.begin(), diffTensorID.end(),elements->getElement(T).getFlag() );
@@ -4948,9 +5058,9 @@ void FE<SC,LO,GO,NO>::determineEMod(std::string FEType, MultiVectorPtr_Type solu
     vec2D_dbl_ptr_Type 	phi;
     vec_dbl_ptr_Type weights = Teuchos::rcp(new vec_dbl_Type(0));
 
-    UN deg = determineDegree(dim,FEType,FEType,Std,Std);
+    UN deg = Helper::determineDegree(dim,FEType,FEType,Std,Std);
 
-    getPhi( phi, weights, dim, FEType, deg );
+    Helper::getPhi( phi, weights, dim, FEType, deg );
 
     SC detB;
     SC absDetB;
@@ -5022,11 +5132,11 @@ void FE<SC,LO,GO,NO>::assemblyLinElasXDimE(int dim,
     vec_dbl_ptr_Type			weightsDPhi = Teuchos::rcp(new vec_dbl_Type(0));
     vec2D_dbl_ptr_Type			quadPts;
 
-    UN deg = determineDegree( dim, FEType, FEType, Grad, Grad);
+    UN deg = Helper::determineDegree( dim, FEType, FEType, Grad, Grad);
 
     // Hole die grad_phi, hier DPhi
-    this->getDPhi(dPhi, weightsDPhi, dim, FEType, deg);
-    getQuadratureValues(dim, deg, quadPts, weightsDPhi,FEType);
+    Helper::getDPhi(dPhi, weightsDPhi, dim, FEType, deg);
+    Helper::getQuadratureValues(dim, deg, quadPts, weightsDPhi,FEType);
 
     // Definiere die Basisfunktion \phi_i bzw. \phi_j
     // vec_dbl_Type basisValues_i(dim,0.), basisValues_j(dim,0.);
@@ -5073,7 +5183,7 @@ void FE<SC,LO,GO,NO>::assemblyLinElasXDimE(int dim,
             p3 = pointsRep->at(elements->getElement(T).getNode(2));
 
             // Berechne die Transormationsmatrix B fuer das jeweilige Element (2D)
-            buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B);
+            Helper::buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B);
             detB = B.computeInverse(Binv);
             absDetB = std::fabs(detB);
 
@@ -5186,7 +5296,7 @@ void FE<SC,LO,GO,NO>::assemblyLinElasXDimE(int dim,
             p3 = pointsRep->at(elements->getElement(T).getNode(2));
             p4 = pointsRep->at(elements->getElement(T).getNode(3));
 
-            buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B);
+            Helper::buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B);
             detB = B.computeInverse(Binv);
             absDetB = std::fabs(detB);
 
@@ -6788,87 +6898,6 @@ void FE<SC,LO,GO,NO>::assemblyShapeDerivativeDivergence(int dim,
 
 }
 
-template <class SC, class LO, class GO, class NO>
-void FE<SC,LO,GO,NO>::assemblySurfaceIntegralExternal(int dim,
-                                              std::string FEType,
-                                              MultiVectorPtr_Type f,
-                                              MultiVectorPtr_Type d_rep,
-                                              std::vector<SC>& funcParameter,
-                                              RhsFunc_Type func,
-                                              ParameterListPtr_Type params,
-                                              int FEloc) {
-    
-    ElementsPtr_Type elements = domainVec_.at(FEloc)->getElementsC();
-
-    vec2D_dbl_ptr_Type pointsRep = domainVec_.at(FEloc)->getPointsRepeated();
-    
-    SC elScaling;
-    SmallMatrix<SC> B(dim);
-    vec_dbl_Type b(dim);
-    f->putScalar(0.);
-    Teuchos::ArrayRCP< SC > valuesF = f->getDataNonConst(0);
-    
-    int flagSurface = params->sublist("Parameter Solid").get("Flag Surface",5); 
-    
-    std::vector<double> valueFunc(dim);
-
-    SC* paramsFunc = &(funcParameter[0]);
-
-    // The second last entry is a placeholder for the surface element flag. It will be set below
-    for (UN T=0; T<elements->numberElements(); T++) {
-        FiniteElement fe = elements->getElement( T );
-        ElementsPtr_Type subEl = fe.getSubElements(); // might be null
-        for (int surface=0; surface<fe.numSubElements(); surface++) {
-            FiniteElement feSub = subEl->getElement( surface  );
-            if(subEl->getDimension() == dim-1 ){
-               
-                vec_int_Type nodeList = feSub.getVectorNodeListNonConst ();
-
-            
-		        vec_dbl_Type solution_d = getSolution(nodeList, d_rep,dim);
-                vec2D_dbl_Type nodes;
-		        nodes = getCoordinates(nodeList, pointsRep);
-
-
-                double positions[18];
-                int count =0;
-                for(int i=0;i<6;i++)
-                    for(int j=0;j<3;j++){
-                        positions[count] = nodes[i][j];
-                        count++;
-
-                    }
-               		
-               
-                paramsFunc[ funcParameter.size() - 1 ] = feSub.getFlag();
-                vec_dbl_Type p1 = {0.,0.,0.}; // Dummy vector
-                func( &p1[0], &valueFunc[0], paramsFunc);
-  
-                if(valueFunc[0] != 0.){
-
-                    double *residuumVector;
-                    #ifdef FEDD_HAVE_ACEGENINTERFACE
-                    
-                    AceGenInterface::PressureTriangle3D6 pt(valueFunc[0], 1., 35, &positions[0], &solution_d[0]);
-                    pt.computeTangentResidual();
-                    residuumVector = pt.getResiduum();
-                    #endif
-                   
-                    for(int i=0; i< nodeList.size() ; i++){
-                            for(int d=0; d<dim; d++)
-                                valuesF[nodeList[i]*dim+d] += residuumVector[i*dim+d];
-                    }
-
-                    // free(residuumVector);
-                }
-                    
-            }
-        }
-    }
-    //f->scale(-1.);
-
-}
-    
 /// @brief  assemblyNonlinearSurfaceIntegralExternal -
 /// @brief This force is assembled in AceGEN as deformation-dependent load. This force is applied as Pressure boundary in opposite direction of surface normal.
 
@@ -6923,8 +6952,18 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
 
                     }
                 }
+                // middlepoint of surface
+                double x0 = pointsRep->at(nodeList.at(0)).at(0);
+                double y0 = pointsRep->at(nodeList.at(0)).at(1);
+                double z0 = pointsRep->at(nodeList.at(0)).at(2);
+                double x1 = pointsRep->at(nodeList.at(1)).at(0);
+                double y1 = pointsRep->at(nodeList.at(1)).at(1);
+                double z1 = pointsRep->at(nodeList.at(1)).at(2);
+                double x2 = pointsRep->at(nodeList.at(2)).at(0);
+                double y2 = pointsRep->at(nodeList.at(2)).at(1);
+                double z2 = pointsRep->at(nodeList.at(2)).at(2);
 
-                vec_dbl_Type p1 = {0.,0.,0.}; // Dummy vector
+                vec_dbl_Type p1 = {(x0+x1+x2)/3.,(y0+y1+y2)/3.,(z0+z1+z2)/3.}; // Dummy vector
                 paramsFunc[ funcParameter.size() - 1 ] = feSub.getFlag();          
                 func( &p1[0], &valueFunc[0], paramsFunc);
   
@@ -6941,7 +6980,8 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
                     stiffMat = pt.getStiffnessMatrix();
                     #endif
 
-                 
+                    // getResiduumVectorRext(&positions[0], &solution_d[0], 1.0, valueFunc[0], 35, residuumVector);
+                    // getStiffnessMatrixKuuExt(&positions[0], &solution_d[0], 1.0, valueFunc[0], 35, stiffMat); // 16, 35 
 
                     int dofs1 = dim;
                     int numNodes1 =nodeList.size();
@@ -6954,12 +6994,10 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
 
                         }
                     }
-
-                    SmallMatrix_Type elementMatrixWrite(18,0.);
-
-                    SmallMatrix_Type elementMatrixIDsRow(18,0.);
-                    SmallMatrix_Type elementMatrixIDsCol(18,0.);
-
+                    /*cout << " --------------" << endl;
+                    cout << " STIFMAT before " << endl;
+                    elementMatrixPrint.print();
+                    cout << " --------------" << endl;*/
 
                     for (UN i=0; i < numNodes1 ; i++) {
                         for(int di=0; di<dim; di++){
@@ -6972,12 +7010,19 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
                                 for(int d=0; d<dim; d++){
                                     columnIndices1[dim*j+d] = GO ( dim * map->getGlobalElement( nodeList[j] ) + d );
                                     value1[dim*j+d] = stiffMat[rowLO][dim*j+d];	
+                                   
                                 }
                             }  
                             Kext->insertGlobalValues( row, columnIndices1(), value1() ); // Automatically adds entries if a value already exists 
                         }
                     }
-            
+                    /*cout << " --------------" << endl;
+                    cout << " STIFMAT ROW IDs " << endl;
+                    elementMatrixIDsRow.print();
+                    cout << " STIFMAT COL IDs " << endl;
+                    elementMatrixIDsCol.print();
+                    cout << " --------------" << endl;*/
+
 
                                         
                     for(int i=0; i< nodeList.size() ; i++){
@@ -6986,17 +7031,22 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
                         }
                     }
 
-                
+                    // free(stiffMat);
+                    // free(stiffnessMatrixFlat);
+                    // free(residuumVector);
                 }
                 
                     
             }
         }
     }
-    //f->scale(-1.);
+    f->scale(-1.); // CHECK
     Kext->fillComplete(domainVec_.at(FEloc)->getMapVecFieldUnique(),domainVec_.at(FEloc)->getMapVecFieldUnique());
     // Kext->writeMM("K_ext1");
 }
+    
+/// @brief  assemblyNonlinearSurfaceIntegralExternal -
+/// @brief This force is assembled in AceGEN as deformation-dependent load. This force is applied as Pressure boundary in opposite direction of surface normal.
 
 /// Compute Surface Normal based on surface nodes,
 template <class SC, class LO, class GO, class NO>
@@ -7062,14 +7112,14 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
     vec_dbl_ptr_Type weights1 = Teuchos::rcp(new vec_dbl_Type(0));
 
     UN degFunc = funcParameter[funcParameter.size()-1] + 1.e-14;
-    UN deg = determineDegree( dim-1, FEType, Std);// + 1.0;
-    getDPhi(dPhi, weights, dim, FEType, deg);
-    getPhi(phi, weights, dim-1, FEType, deg);
-    getPhi(phi1, weights1, dim-1, FEType, 2);
+    UN deg = Helper::determineDegree( dim-1, FEType, Std);// + 1.0;
+    Helper::getDPhi(dPhi, weights, dim, FEType, deg);
+    Helper::getPhi(phi, weights, dim-1, FEType, deg);
+    Helper::getPhi(phi1, weights1, dim-1, FEType, 2);
 
     vec2D_dbl_ptr_Type quadPoints;
     vec_dbl_ptr_Type w = Teuchos::rcp(new vec_dbl_Type(0));
-    getQuadratureValues(dim-1, deg, quadPoints, w, FEType);
+    Helper::getQuadratureValues(dim-1, deg, quadPoints, w, FEType);
     w.reset();
 
     double viscosity=params->sublist("Parameter").get("Viscosity",0.49); 
@@ -7210,7 +7260,7 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
                     detB1 = std::fabs(detB1);
 
                     // Resulting Quad Points allways (0.5,0,0) (0.5,0.5,0) (0,0.5,0)
-                    buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
+                    Helper::buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
                     elScaling = B.computeScaling( );
                    
                     //cout << endl;
@@ -7244,7 +7294,7 @@ double FE<SC,LO,GO,NO>::assemblyResistanceBoundary(int dim,
                             auto it1 = find( kn1.begin(), kn1.end() ,nodeList[t] );
                             int id_in_element = distance( kn1.begin() , it1 );
 
-                            this->gradPhi(dim,2,id_in_element,quadPointsT1[l],valuePhi);
+                            Helper::gradPhi(dim,2,id_in_element,quadPointsT1[l],valuePhi);
                             for (int j=0; j<3; j++) {
                                 deriPhi1[j] = valuePhi->at(j);
                             }
@@ -7300,12 +7350,12 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundaryPaper(int dim,
 
     vec_dbl_ptr_Type weights = Teuchos::rcp(new vec_dbl_Type(0));
 
-    UN deg = determineDegree( dim-1, FEType, Std);// + 1.0;
-    getPhi(phi, weights, dim-1, FEType, deg);
+    UN deg = Helper::determineDegree( dim-1, FEType, Std);// + 1.0;
+    Helper::getPhi(phi, weights, dim-1, FEType, deg);
 
     vec2D_dbl_ptr_Type quadPoints;
     vec_dbl_ptr_Type w = Teuchos::rcp(new vec_dbl_Type(0));
-    getQuadratureValues(dim-1, deg, quadPoints, w, FEType);
+    Helper::getQuadratureValues(dim-1, deg, quadPoints, w, FEType);
     w.reset();
 
     double poissonRatio=params->sublist("Parameter Fluid").get("Poisson Ratio",0.49); 
@@ -7458,7 +7508,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundaryPaper(int dim,
                     // Calculating R * Q = R * v * A , A = norm_v_E * 0.5
                 // Step 1: Quadrature Points on physical surface:
                     // Resulting Quad Points allways (0.5,0,0) (0.5,0.5,0) (0,0.5,0)
-                    buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
+                    Helper::buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
                     elScaling = B.computeScaling( );
                     
                     //cout << endl;
@@ -7513,12 +7563,12 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
 
     vec_dbl_ptr_Type weights = Teuchos::rcp(new vec_dbl_Type(0));
 
-    UN deg = determineDegree( dim-1, FEType, Std);// + 1.0;
-    getPhi(phi, weights, dim-1, FEType, deg);
+    UN deg = Helper::determineDegree( dim-1, FEType, Std);// + 1.0;
+    Helper::getPhi(phi, weights, dim-1, FEType, deg);
 
     vec2D_dbl_ptr_Type quadPoints;
     vec_dbl_ptr_Type w = Teuchos::rcp(new vec_dbl_Type(0));
-    getQuadratureValues(dim-1, deg, quadPoints, w, FEType);
+    Helper::getQuadratureValues(dim-1, deg, quadPoints, w, FEType);
     w.reset();
 
     double poissonRatio=params->sublist("Parameter Fluid").get("Poisson Ratio",0.49); 
@@ -7659,7 +7709,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingBoundary(int dim,
                     // Calculating R * Q = R * v * A , A = norm_v_E * 0.5
                 // Step 1: Quadrature Points on physical surface:
                     // Resulting Quad Points allways (0.5,0,0) (0.5,0.5,0) (0,0.5,0)
-                    buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
+                    Helper::buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
                     elScaling = B.computeScaling( );
                     
                     //cout << endl;
@@ -7926,12 +7976,12 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingResistanceBoundary(int dim,
 
     vec_dbl_ptr_Type weights = Teuchos::rcp(new vec_dbl_Type(0));
 
-    UN deg = determineDegree( dim-1, FEType, Std);// + 1.0;
-    getPhi(phi, weights, dim-1, FEType, deg);
+    UN deg = Helper::determineDegree( dim-1, FEType, Std);// + 1.0;
+    Helper::getPhi(phi, weights, dim-1, FEType, deg);
 
     vec2D_dbl_ptr_Type quadPoints;
     vec_dbl_ptr_Type w = Teuchos::rcp(new vec_dbl_Type(0));
-    getQuadratureValues(dim-1, deg, quadPoints, w, FEType);
+    Helper::getQuadratureValues(dim-1, deg, quadPoints, w, FEType);
     w.reset();
 
     double poissonRatio=params->sublist("Parameter Fluid").get("Poisson Ratio",0.49); 
@@ -8064,7 +8114,7 @@ double FE<SC,LO,GO,NO>::assemblyAbsorbingResistanceBoundary(int dim,
                     // Calculating R * Q = R * v * A , A = norm_v_E * 0.5
                 // Step 1: Quadrature Points on physical surface:
                     // Resulting Quad Points allways (0.5,0,0) (0.5,0.5,0) (0,0.5,0)
-                    buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
+                    Helper::buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
                     elScaling = B.computeScaling( );
                     
                     //cout << endl;
@@ -8182,11 +8232,11 @@ int FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
 
     vec_dbl_ptr_Type weights = Teuchos::rcp(new vec_dbl_Type(0));
    
-    getPhi(phi, weights, dim-1, FEType, 2);
+    Helper::getPhi(phi, weights, dim-1, FEType, 2);
 
     vec2D_dbl_ptr_Type quadPoints;
     vec_dbl_ptr_Type w = Teuchos::rcp(new vec_dbl_Type(0));
-    getQuadratureValues(dim-1, 2, quadPoints, w, FEType);
+    Helper::getQuadratureValues(dim-1, 2, quadPoints, w, FEType);
     w.reset();
 
     int inletFlag=inflowFlag; //params->sublist("Parameter Fluid").get("Fluid Flag",4); 
@@ -8244,7 +8294,7 @@ int FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
                     
                     // Calculating R * Q = R * v * A , A = norm_v_E * 0.5
                     // Step 1: Quadrature Points on physical surface:    
-                    buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
+                    Helper::buildTransformationSurface( nodeList, pointsRep, B, b, FEType);
                     elScaling = B.computeScaling( );
                     
                     Teuchos::Array<SC> value(0);
@@ -8387,153 +8437,6 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegralExternal(int dim,
 
 }
     
-/// @brief  assemblyNonlinearSurfaceIntegralExternal -
-/// @brief This force is assembled in AceGEN as deformation-dependent load. This force is applied as Pressure boundary in opposite direction of surface normal.
-
-template <class SC, class LO, class GO, class NO>
-void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
-                                              std::string FEType,
-                                              MultiVectorPtr_Type f,
-                                              MultiVectorPtr_Type d_rep,
-                                              MatrixPtr_Type &Kext,
-                                              std::vector<SC>& funcParameter,
-                                              RhsFunc_Type func,
-                                              ParameterListPtr_Type params,
-                                              int FEloc) {
-    
-    // degree of function funcParameter[0]
-
-    ElementsPtr_Type elements = domainVec_.at(FEloc)->getElementsC();
-
-    vec2D_dbl_ptr_Type pointsRep = domainVec_.at(FEloc)->getPointsRepeated();
-
-    MapConstPtr_Type map = domainVec_.at(FEloc)->getMapRepeated();
-    SC elScaling;
-    SmallMatrix<SC> B(dim);
-    vec_dbl_Type b(dim);
-    f->putScalar(0.);
-    Teuchos::ArrayRCP< SC > valuesF = f->getDataNonConst(0);
-        
-    std::vector<double> valueFunc(dim);
-
-    SC* paramsFunc = &(funcParameter[0]);
-
-    // The second last entry is a placeholder for the surface element flag. It will be set below
-    for (UN T=0; T<elements->numberElements(); T++) {
-        FiniteElement fe = elements->getElement( T );
-        ElementsPtr_Type subEl = fe.getSubElements(); // might be null
-        for (int surface=0; surface<fe.numSubElements(); surface++) {
-            FiniteElement feSub = subEl->getElement( surface  );
-            if(subEl->getDimension() == dim-1 ){
-                vec_int_Type nodeList = feSub.getVectorNodeListNonConst ();
-
-		        vec_dbl_Type solution_d = getSolution(nodeList, d_rep,dim);
-                vec2D_dbl_Type nodes;
-		        nodes = getCoordinates(nodeList, pointsRep);
-
-
-                double positions[18];
-                int count =0;
-                for(int i=0;i<6;i++){
-                    for(int j=0;j<3;j++){
-                        positions[count] = nodes[i][j];
-                        count++;
-
-                    }
-                }
-                // middlepoint of surface
-                double x0 = pointsRep->at(nodeList.at(0)).at(0);
-                double y0 = pointsRep->at(nodeList.at(0)).at(1);
-                double z0 = pointsRep->at(nodeList.at(0)).at(2);
-                double x1 = pointsRep->at(nodeList.at(1)).at(0);
-                double y1 = pointsRep->at(nodeList.at(1)).at(1);
-                double z1 = pointsRep->at(nodeList.at(1)).at(2);
-                double x2 = pointsRep->at(nodeList.at(2)).at(0);
-                double y2 = pointsRep->at(nodeList.at(2)).at(1);
-                double z2 = pointsRep->at(nodeList.at(2)).at(2);
-
-                vec_dbl_Type p1 = {(x0+x1+x2)/3.,(y0+y1+y2)/3.,(z0+z1+z2)/3.}; // Dummy vector
-                paramsFunc[ funcParameter.size() - 1 ] = feSub.getFlag();          
-                func( &p1[0], &valueFunc[0], paramsFunc);
-  
-                if(valueFunc[0] != 0.){
-                    
-                    double *residuumVector;
-                    double **stiffMat;
-
-                    #ifdef FEDD_HAVE_ACEGENINTERFACE
-                    AceGenInterface::PressureTriangle3D6 pt(valueFunc[0], 1.0, 35, &positions[0], &solution_d[0]);
-                    pt.computeTangentResidual();
-
-                    residuumVector = pt.getResiduum();
-                    stiffMat = pt.getStiffnessMatrix();
-                    #endif
-
-                    // getResiduumVectorRext(&positions[0], &solution_d[0], 1.0, valueFunc[0], 35, residuumVector);
-                    // getStiffnessMatrixKuuExt(&positions[0], &solution_d[0], 1.0, valueFunc[0], 35, stiffMat); // 16, 35 
-
-                    int dofs1 = dim;
-                    int numNodes1 =nodeList.size();
-
-                    SmallMatrix_Type elementMatrixPrint(18,0.);
-                    for(int i=0; i< 18 ; i++){
-                        for(int j=0; j< 18; j++){
-                           if(fabs(stiffMat[i][j]) >1e-13)
-                                elementMatrixPrint[i][j] = stiffMat[i][j];
-
-                        }
-                    }
-                    /*cout << " --------------" << endl;
-                    cout << " STIFMAT before " << endl;
-                    elementMatrixPrint.print();
-                    cout << " --------------" << endl;*/
-
-                    for (UN i=0; i < numNodes1 ; i++) {
-                        for(int di=0; di<dim; di++){
-                            Teuchos::Array<SC> value1( numNodes1*dim, 0. );
-                            Teuchos::Array<GO> columnIndices1( numNodes1*dim, 0 );
-                            GO row =GO (dim* map->getGlobalElement( nodeList[i] )+di);
-                            LO rowLO = dim*i+di;
-                            // Zeilenweise werden die Einträge global assembliert
-                            for (UN j=0; j <numNodes1; j++){
-                                for(int d=0; d<dim; d++){
-                                    columnIndices1[dim*j+d] = GO ( dim * map->getGlobalElement( nodeList[j] ) + d );
-                                    value1[dim*j+d] = stiffMat[rowLO][dim*j+d];	
-                                   
-                                }
-                            }  
-                            Kext->insertGlobalValues( row, columnIndices1(), value1() ); // Automatically adds entries if a value already exists 
-                        }
-                    }
-                    /*cout << " --------------" << endl;
-                    cout << " STIFMAT ROW IDs " << endl;
-                    elementMatrixIDsRow.print();
-                    cout << " STIFMAT COL IDs " << endl;
-                    elementMatrixIDsCol.print();
-                    cout << " --------------" << endl;*/
-
-
-                                        
-                    for(int i=0; i< nodeList.size() ; i++){
-                        for(int d=0; d<dim; d++){
-                            valuesF[nodeList[i]*dim+d] += residuumVector[i*dim+d];
-                        }
-                    }
-
-                    // free(stiffMat);
-                    // free(stiffnessMatrixFlat);
-                    // free(residuumVector);
-                }
-                
-                    
-            }
-        }
-    }
-    f->scale(-1.);
-    Kext->fillComplete(domainVec_.at(FEloc)->getMapVecFieldUnique(),domainVec_.at(FEloc)->getMapVecFieldUnique());
-    // Kext->writeMM("K_ext1");
-}
-
     
 template <class SC, class LO, class GO, class NO>
 void FE<SC,LO,GO,NO>::assemblySurfaceIntegral(int dim,
@@ -8706,8 +8609,6 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegralFlag(int dim,
                         vec_dbl_Type x(dim,0.); //coordinates
                         for (int k=0; k<dim; k++) {// transform quad points to global coordinates
                             for (int l=0; l<dim-1; l++)
-                                x[ k ] += B[k][l] * (*quadPoints)[ w ][ l ];
-                        	x[k] += b[k];
                                 x[ k ] += B[k][l] * (*quadPoints)[ w ][ l ];
                         	x[k] += b[k];
                         }

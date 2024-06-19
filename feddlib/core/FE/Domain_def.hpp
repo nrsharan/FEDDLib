@@ -139,7 +139,6 @@ partialGlobalInterfaceVecFieldMap_()
 
 template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::info() const{
-void Domain<SC,LO,GO,NO>::info() const{
 
     LO minNumberNodes;
     LO maxNumberNodes;
@@ -185,28 +184,23 @@ LO Domain<SC,LO,GO,NO>::getApproxEntriesPerRow() const{
     if (this->dim_ == 2) {
         if ( this->FEType_ == "P1" ) {
             return 44;
-            return 44;
         }
         else if ( this->FEType_ == "P2" ) {
-            return 60;
             return 60;
         }
         else {
             return 60;
-            return 60;
         }
-    } else {
+    } 
+    else {
         if ( this->FEType_ == "P1" ) {
             return 400;
-            return 400;
         }
         else if ( this->FEType_ == "P2" ) {
             return 460;
         }
-            return 460;
-        }
+        
         else {
-            return 400;
             return 400;
         }
     }

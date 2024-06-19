@@ -64,7 +64,6 @@ void TimeProblem<SC,LO,GO,NO>::assemble( std::string type ) const{
     // If timestepping class is external, it is assumed that the full timedependent problem matrix and rhs are assembled during the assemble call(s)
     std::string timestepping = parameterList_->sublist("Timestepping Parameter").get("Class","Singlestep");
 
-
     if (type == "MassSystem"){
         // is not used in FSI
         // systemMass_ wird gebaut (Massematrix), welche schon mit der Dichte \rho skaliert wurde
@@ -74,7 +73,6 @@ void TimeProblem<SC,LO,GO,NO>::assemble( std::string type ) const{
         if (!nonLinProb.is_null()){// we combine the nonlinear system with the mass matrix in the NonLinearSolver after the reassembly of each linear system
         }
         else{
-            if (timestepping=="External" )
             if (timestepping=="External" )
                 this->systemCombined_ = problem_->getSystem();
             else
@@ -86,14 +84,12 @@ void TimeProblem<SC,LO,GO,NO>::assemble( std::string type ) const{
         problem_->assemble(type);
 
         if (timestepping=="External") 
-
-        if (timestepping=="External") 
             this->systemCombined_ = problem_->getSystem();
         else
             this->combineSystems();
     }
 }
-}
+
 
 
 template<class SC,class LO,class GO,class NO>
@@ -1107,6 +1103,7 @@ Teuchos::RCP<Thyra::LinearOpBase<SC> > TimeProblem<SC,LO,GO,NO>::create_W_op_Blo
     return W_op;
 }
 
+
 template<class SC,class LO,class GO,class NO>
 Teuchos::RCP<Thyra::PreconditionerBase<SC> > TimeProblem<SC,LO,GO,NO>::create_W_prec()
 {
@@ -1121,12 +1118,10 @@ Teuchos::RCP<Thyra::PreconditionerBase<SC> > TimeProblem<SC,LO,GO,NO>::create_W_
         this->setBoundariesSystem();
         
         if ( type == "Teko" || type == "FaCSI-Teko" || type =="Diagonal" ) { //we need to construct the whole preconditioner if Teko is used
-        if ( type == "Teko" || type == "FaCSI-Teko" || type =="Diagonal" ) { //we need to construct the whole preconditioner if Teko is used
             nonLinProb->setupPreconditioner( type );
             precInitOnly_ = false;
         }
         else{
-            nonLinProb->setupPreconditioner( type ); //nonLinProb->initializePreconditioner( type );
             nonLinProb->setupPreconditioner( type ); //nonLinProb->initializePreconditioner( type );
         }
     }
@@ -1137,6 +1132,7 @@ Teuchos::RCP<Thyra::PreconditionerBase<SC> > TimeProblem<SC,LO,GO,NO>::create_W_
     return thyraPrecNonConst;
     
 }
+   
     
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::evalModelImpl( const Thyra::ModelEvaluatorBase::InArgs<SC> &inArgs,

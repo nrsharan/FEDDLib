@@ -1,12 +1,9 @@
 TRIBITS_ADD_EXECUTABLE(
 	unsteadyNonLinElasticityAssFE
-	unsteadyNonLinElasticityAssFE
 	SOURCES main.cpp
 )
 
 TRIBITS_ADD_TEST(
-	unsteadyNonLinElasticityAssFE
-	NAME unsteadyNonLinElasticityAssFE
 	unsteadyNonLinElasticityAssFE
 	NAME unsteadyNonLinElasticityAssFE
 	ARGS
@@ -14,7 +11,6 @@ TRIBITS_ADD_TEST(
 	NUM_MPI_PROCS 4
 )
 
-TRIBITS_COPY_FILES_TO_BINARY_DIR(data_unsteadyNonLinElasticityAssFE
 TRIBITS_COPY_FILES_TO_BINARY_DIR(data_unsteadyNonLinElasticityAssFE
 	SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
 	SOURCE_FILES parametersPrec.xml  parametersProblem.xml parametersSolver.xml parametersProblemStructure.xml

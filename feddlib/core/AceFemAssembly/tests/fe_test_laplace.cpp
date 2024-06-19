@@ -5,6 +5,7 @@
 #include "feddlib/core/FE/FE.hpp"
 #include "feddlib/core/General/ExporterParaView.hpp"
 #include "feddlib/core/LinearAlgebra/MultiVector.hpp"
+#include "feddlib/core/LinearAlgebra/BlockMatrix.hpp"
 #include <Teuchos_GlobalMPISession.hpp>
 #include <Xpetra_DefaultPlatform.hpp>
 #include "feddlib/core/Mesh/MeshPartitioner.hpp"

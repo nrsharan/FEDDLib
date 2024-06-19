@@ -544,7 +544,6 @@ void NavierStokes<SC,LO,GO,NO>::evalModelImplMonolithic(const Thyra::ModelEvalua
         if (fill_f) {
 
             this->calculateNonLinResidualVec("standard"); // Calculating residual Vector
-            this->calculateNonLinResidualVec("standard"); // Calculating residual Vector
 
 			// Changing the residualVector into a ThyraMultivector
 
@@ -556,9 +555,7 @@ void NavierStokes<SC,LO,GO,NO>::evalModelImplMonolithic(const Thyra::ModelEvalua
         if (fill_W) {
 
             this->reAssemble("Newton"); // ReAssembling matrices with updated u  in this class
-            this->reAssemble("Newton"); // ReAssembling matrices with updated u  in this class
 
-            this->setBoundariesSystem(); // setting boundaries to the system
             this->setBoundariesSystem(); // setting boundaries to the system
 
 			// Changing the system Matrix into a tpetra Matrix (block matrices have 'getXpetraMatrix' feature)
@@ -566,7 +563,6 @@ void NavierStokes<SC,LO,GO,NO>::evalModelImplMonolithic(const Thyra::ModelEvalua
             Teuchos::RCP<TpetraOp_Type> W_tpetra = tpetra_extract::getTpetraOperator(W_out);
             Teuchos::RCP<TpetraMatrix_Type> W_tpetraMat = Teuchos::rcp_dynamic_cast<TpetraMatrix_Type>(W_tpetra);
 
-            XpetraMatrixConstPtr_Type W_systemXpetra = this->getSystem()->getMergedMatrix()->getXpetraMatrix(); // The current system matrix of this class
             XpetraMatrixConstPtr_Type W_systemXpetra = this->getSystem()->getMergedMatrix()->getXpetraMatrix(); // The current system matrix of this class
 
             XpetraMatrixPtr_Type W_systemXpetraNonConst = rcp_const_cast<XpetraMatrix_Type>(W_systemXpetra);
@@ -615,14 +611,6 @@ void NavierStokes<SC,LO,GO,NO>::evalModelImplMonolithic(const Thyra::ModelEvalua
 /*!
 	\brief Block Approach for Nonlinear Solver NOX. Input. Includes calculation of the residual vector and update (reAssembly) of non constant matrices with new solution.
 		   ResidualVec and SystemMatrix of this class are then converted into the corresponding Thyra/Tpetra objects for Solver.
-/*!
-	\brief Block Approach for Nonlinear Solver NOX. Input. Includes calculation of the residual vector and update (reAssembly) of non constant matrices with new solution.
-		   ResidualVec and SystemMatrix of this class are then converted into the corresponding Thyra/Tpetra objects for Solver.
-
-
-
-*/
-
 
 */
 #ifdef FEDD_HAVE_TEKO
@@ -780,9 +768,6 @@ void NavierStokes<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, dou
 //        if ( !this->sourceTerm_.is_null() )
 //            this->residualVec_->update(1.,*this->sourceTerm_,1.);
         // this might be set again by the TimeProblem after addition of M*u
-        this->bcFactory_->setBCMinusVector( this->residualVec_, this->solution_, time );    
-    }
-
         this->bcFactory_->setBCMinusVector( this->residualVec_, this->solution_, time );    
     }
 

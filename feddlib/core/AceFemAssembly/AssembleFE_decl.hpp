@@ -4,7 +4,7 @@
 
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/LinearAlgebra/Matrix.hpp"
-#include "feddlib/core/AceFemAssembly/Helper.hpp"
+#include "feddlib/core/FE/Helper.hpp"
 
 namespace FEDD {
 
@@ -214,6 +214,19 @@ namespace FEDD {
         GO getGlobalElementID(){return globalElementID_;};
 
 
+        /*!
+        \brief E.g. In case of non-newtonian fluids the viscosity is not constant - Compute the viscosity for an element depending on the known velocity solution
+        */
+	    virtual void computeLocalconstOutputField() {TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "computeLocalconstOutputField not yet implemented"); };
+          /*!
+
+        /*!
+         \brief Obtain value of resulting postprocessing field at nodes/ inside an element
+         \return values
+        */
+        vec_dbl_Type getLocalconstOutputField() {return constOutputField_;};
+
+
     protected:
 
         /*!
@@ -239,6 +252,10 @@ namespace FEDD {
         RhsFunc_Type rhsFunc_;
 
         int dim_;
+
+        // This can be any postprocessing output field ddefined inside an element using converged solution
+        vec_dbl_Type constOutputField_ ; // can be a vector with values on P1/ P2 nodes or just averaged element value
+
 
 		tuple_disk_vec_ptr_Type diskTuple_;
 		tuple_sd_vec_ptr_Type elementIntormation_;

@@ -127,7 +127,6 @@ public:
          \brief Information about the domain
     */
     void info() const;
-    void info() const;
 
  	/*!
          \brief Build structured mesh in FEDDLib 

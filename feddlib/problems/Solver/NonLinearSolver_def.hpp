@@ -87,7 +87,6 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNOX(NonLinearProblem_Type &problem){
     problemPtr->getLinearSolverBuilder()->setParameterList(p);
 
     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problemPtr->getLinearSolverBuilder()->createLinearSolveStrategy("");
-    Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problemPtr->getLinearSolverBuilder()->createLinearSolveStrategy("");
 
 	//problemPtr->set_W_factory(lowsFactory);
 	//problemPtr->set_W_factory(lowsFactory);
