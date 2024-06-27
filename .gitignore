@@ -3,5 +3,4 @@
 *.so
 *.dylib
 /build
-/.vscode
-.vscode/*
+.vscode/
