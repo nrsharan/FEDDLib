@@ -1,7 +1,6 @@
 #ifndef NAVIERSTOKESASSFE_decl_hpp
 #define NAVIERSTOKESASSFE_decl_hpp
 #include "feddlib/problems/abstract/NonLinearProblem.hpp"
-#include "feddlib/core/AceFemAssembly/TestFE/FE_Test.hpp"
 #include "Xpetra_ThyraUtils.hpp"
 #include "Xpetra_CrsMatrixWrap.hpp"
 #include <Thyra_ProductVectorBase.hpp>
@@ -99,10 +98,16 @@ public:
 //    virtual void assembleExternal( std::string type ){};
     /*####################*/
 
+    void computeSteadyPostprocessingViscosity_Solution(); // Compute the viscosity based on the current velocity solution and save it inside viscosity_element_
+
+
     mutable MatrixPtr_Type 	A_;
     vec_int_ptr_Type pressureIDsLoc;
     MultiVectorPtr_Type u_rep_;
     MultiVectorPtr_Type p_rep_;
+
+    MultiVectorPtr_Type viscosity_element_; //In case of a generalized-Newtonian fluid one can compute viscosity for visualization
+
 private:
     mutable bool stokesTekoPrecUsed_; //Help variable to signal that we constructed the initial preconditioner for NOX with the Stokes system and we do not need to compute it if fill_W_prec is called for the first time. However, the preconditioner is only correct if a Stokes system is solved in the first nonlinear iteration. This only affects the block preconditioners of Teko
     /*####################*/

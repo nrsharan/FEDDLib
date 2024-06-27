@@ -384,7 +384,6 @@ namespace FEDD
 
         BlockMapPtr_Type map = Teuchos::rcp_const_cast<BlockMap_Type>(this->solution_->getMap());
         std::string ulib = map->getUnderlyingLib();
-       
         if (!ulib.compare("Tpetra"))
         {
             typedef Xpetra::TpetraMap<LO, GO, NO> XTpetra_Type;

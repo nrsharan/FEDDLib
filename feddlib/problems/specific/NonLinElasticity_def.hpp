@@ -65,12 +65,16 @@ void NonLinElasticity<SC,LO,GO,NO>::assemble(std::string type) const{
         if(sourceType == "volume")
             this->sourceTerm_->scale(density);
         
+        if(sourceType == "volume")
+            this->sourceTerm_->scale(density);
+        
         this->addToRhs( this->sourceTerm_ );
+
 
         this->setBoundariesRHS();
                 
         
-        this->solution_->putScalar(0.);
+        //this->solution_->putScalar(0.);
         
         u_rep_ = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ));
         MultiVectorConstPtr_Type u = this->solution_->getBlock(0);

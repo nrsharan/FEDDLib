@@ -91,6 +91,7 @@ void TimeProblem<SC,LO,GO,NO>::assemble( std::string type ) const{
 }
 
 
+
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::reAssembleAndFill( BlockMatrixPtr_Type bMat, std::string type ){
 
@@ -100,6 +101,7 @@ void TimeProblem<SC,LO,GO,NO>::reAssembleAndFill( BlockMatrixPtr_Type bMat, std:
 
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::combineSystems() const{
+    //std::cout << "combineSystems is called" << std::endl;
     //std::cout << "combineSystems is called" << std::endl;
     BlockMatrixPtr_Type tmpSystem = problem_->getSystem();
     int size = tmpSystem->size();
@@ -113,6 +115,7 @@ void TimeProblem<SC,LO,GO,NO>::combineSystems() const{
                 MatrixPtr_Type matrix = Teuchos::rcp( new Matrix_Type( tmpSystem->getBlock(i,j)->getMap(), 2*maxNumEntriesPerRow ) );
                 
                 systemCombined_->addBlock( matrix, i, j );
+
 
             }
             else if (systemMass_->blockExists(i,j)) {
@@ -367,6 +370,7 @@ void TimeProblem<SC,LO,GO,NO>::assembleMassSystem( ) const {
         MatrixPtr_Type M;
         if ( timeStepDef_[i][i]>0 ) {
             if (dofsPerNode>1) {
+                M = Teuchos::rcp(new Matrix_Type( this->getDomain(i)->getMapVecFieldUnique(), dimension_*this->getDomain(i)->getApproxEntriesPerRow() ) );
                 M = Teuchos::rcp(new Matrix_Type( this->getDomain(i)->getMapVecFieldUnique(), dimension_*this->getDomain(i)->getApproxEntriesPerRow() ) );
                 feFactory_->assemblyMass(dimension_, problem_->getFEType(i), "Vector", M, true);
 
@@ -663,6 +667,8 @@ int TimeProblem<SC,LO,GO,NO>::solveAndUpdate( const std::string& criterion, doub
     TEUCHOS_TEST_FOR_EXCEPTION(nonLinProb.is_null(), std::runtime_error, "Nonlinear problem is null.");
     
 
+    
+
     int its = solveUpdate(  );
 
     if (criterion=="Update") {
@@ -670,6 +676,8 @@ int TimeProblem<SC,LO,GO,NO>::solveAndUpdate( const std::string& criterion, doub
         nonLinProb->getSolution()->norm2(updateNorm());
         criterionValue = updateNorm[0];
     }
+
+
 
 
     if (criterion=="ResidualAceGen") {
@@ -898,6 +906,7 @@ void TimeProblem<SC,LO,GO,NO>::assembleSourceTerm( double time ){
     
     problem_->assembleSourceTerm(time); 
 
+
 }
 
 template<class SC,class LO,class GO,class NO>
@@ -1060,6 +1069,7 @@ template<class SC,class LO,class GO,class NO>
 Teuchos::RCP<Thyra::LinearOpBase<SC> > TimeProblem<SC,LO,GO,NO>::create_W_op()
 {
 
+
     this->calculateNonLinResidualVec( "standard", time_ );
     this->assemble("Newton");
     
@@ -1093,6 +1103,7 @@ Teuchos::RCP<Thyra::LinearOpBase<SC> > TimeProblem<SC,LO,GO,NO>::create_W_op_Blo
     return W_op;
 }
 
+
 template<class SC,class LO,class GO,class NO>
 Teuchos::RCP<Thyra::PreconditionerBase<SC> > TimeProblem<SC,LO,GO,NO>::create_W_prec()
 {
@@ -1121,6 +1132,7 @@ Teuchos::RCP<Thyra::PreconditionerBase<SC> > TimeProblem<SC,LO,GO,NO>::create_W_
     return thyraPrecNonConst;
     
 }
+   
     
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::evalModelImpl( const Thyra::ModelEvaluatorBase::InArgs<SC> &inArgs,
@@ -1297,6 +1309,7 @@ void TimeProblem<SC,LO,GO,NO>::evalModelImplBlock( const Thyra::ModelEvaluatorBa
         if (fill_W) {
             
             typedef Tpetra::CrsMatrix<SC,LO,GO,NO> TpetraCrsMatrix;
+
 
             this->assemble("Newton");
             

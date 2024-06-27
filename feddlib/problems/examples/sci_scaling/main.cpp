@@ -742,7 +742,8 @@ int main(int argc, char *argv[])
             else
                 partitionerP1.readAndPartition(15); 
 
-
+            domainP1struct->exportElementFlags();
+            domainP1struct->exportNodeFlags();
 		    
             if (!discType.compare("P2")){
 				domainP2chem->buildP2ofP1Domain( domainP1struct );
@@ -997,7 +998,7 @@ int main(int argc, char *argv[])
 			bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim);
 
         }
-         else if(dim==3 && bcType=="Artery Plaque"){
+        else if(dim==3 && bcType=="Artery Plaque"){
         
 			bcFactory->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactory->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dim);
@@ -1018,6 +1019,26 @@ int main(int argc, char *argv[])
              bcFactoryStructure->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dim);
 
+
+			bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim);
+
+        }
+         else if(dim==3 && bcType=="Artery Realistic Plaque"){
+        
+			bcFactory->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dim);
+            bcFactory->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim);
+            bcFactory->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim); // Plaque surface
+			
+			bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim);
+			bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim);
+			
+
+			bcFactoryStructure->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dim);
+            bcFactoryStructure->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dim);
+			bcFactoryStructure->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dim);
+            bcFactoryStructure->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dim);
 
 			bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dim);
 			bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dim);
@@ -1143,7 +1164,7 @@ int main(int argc, char *argv[])
 		        		sci.problemStructureNonLin_->addRhsFunction( rhsHeartBeatCube,0 );
 					
 				}
-				else if(bcType=="Artery" || bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2" || bcType == "Artery Full" || bcType == "Artery Plaque"  ){
+				else if(bcType=="Artery" || bcType=="Realistic Artery 1" || bcType=="Realistic Artery 2" || bcType == "Artery Full" || bcType == "Artery Plaque" || bcType == "Artery Realistic Plaque"  ){
 					if(rhsType=="Constant")
 		    		 	sci.problemStructureNonLin_->addRhsFunction( rhsArtery,0 );
 					if(rhsType=="Paper")
@@ -1244,23 +1265,34 @@ int main(int argc, char *argv[])
            bcFactoryChem->addBC(inflowChem, 9, 0, domainChem, "Dirichlet", 1,parameter_vec);
          
         }
+        else if(dim==3 && bcType=="Artery Realistic Plaque"){
+            std::vector<double> parameter_vec(1, parameterListAll->sublist("Parameter").get("Inflow Start Time",0.));
+           
+            bcFactory->addBC(inflowChem, 11, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+         
+            bcFactoryChem->addBC(inflowChem, 11, 0, domainChem, "Dirichlet", 1,parameter_vec);
+        } 
         else if(dim==3 && bcType=="Artery Plaque"){
            std::vector<double> parameter_vec(1, parameterListAll->sublist("Parameter").get("Inflow Start Time",0.));
            
-            bcFactory->addBC(inflowChem, 5, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
+            bcFactory->addBC(inflowChem, 6, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem outer wall
+
+           /*bcFactory->addBC(inflowChem, 5, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactory->addBC(inflowChem, 8, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
             bcFactory->addBC(inflowChem, 9, 1, domainChem, "Dirichlet", 1,parameter_vec); // inflow of Chem
 
 		    bcFactory->addBC(zeroDirichlet, 19, 1, domainChem, "Dirichlet", 1); // inflow of Chem
-            bcFactory->addBC(zeroDirichlet, 20, 1, domainChem, "Dirichlet", 1); // inflow of Chem
+            bcFactory->addBC(zeroDirichlet, 20, 1, domainChem, "Dirichlet", 1); // inflow of Chem*/
+
+           bcFactoryChem->addBC(inflowChem, 6, 0, domainChem, "Dirichlet", 1,parameter_vec);
 
 
-           bcFactoryChem->addBC(inflowChem, 5, 0, domainChem, "Dirichlet", 1,parameter_vec);
+           /*bcFactoryChem->addBC(inflowChem, 5, 0, domainChem, "Dirichlet", 1,parameter_vec);
            bcFactoryChem->addBC(inflowChem, 8, 0, domainChem, "Dirichlet", 1,parameter_vec);
            bcFactoryChem->addBC(inflowChem, 9, 0, domainChem, "Dirichlet", 1,parameter_vec);
 
             bcFactoryChem->addBC(zeroDirichlet, 19, 1, domainChem, "Dirichlet", 1); // inflow of Chem
-            bcFactoryChem->addBC(zeroDirichlet, 20, 1, domainChem, "Dirichlet", 1); // inflow of Chem
+            bcFactoryChem->addBC(zeroDirichlet, 20, 1, domainChem, "Dirichlet", 1); // inflow of Chem*/
 
 
          

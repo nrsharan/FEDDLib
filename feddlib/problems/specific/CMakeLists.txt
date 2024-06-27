@@ -14,12 +14,18 @@ SET(problems_specific_HEADERS
  	 specific/DiffusionReaction_decl.hpp
  	specific/DiffusionReaction_def.hpp
  	specific/DiffusionReaction.hpp
+ 	 specific/DiffusionReaction_decl.hpp
+ 	specific/DiffusionReaction_def.hpp
+ 	specific/DiffusionReaction.hpp
     #specific/LaplacePseudoCoupled_decl.hpp
     #specific/LaplacePseudoCoupled_def.hpp
     #specific/LaplacePseudoCoupled.hpp
     specific/LinElas_decl.hpp
     specific/LinElas_def.hpp
     specific/LinElas.hpp
+    specific/LinElasAssFE_decl.hpp
+    specific/LinElasAssFE_def.hpp
+    specific/LinElasAssFE.hpp
     specific/LinElasAssFE_decl.hpp
     specific/LinElasAssFE_def.hpp
     specific/LinElasAssFE.hpp
@@ -32,9 +38,15 @@ SET(problems_specific_HEADERS
 	specific/NavierStokesAssFE_decl.hpp
 	specific/NavierStokesAssFE_def.hpp
 	specific/NavierStokesAssFE.hpp
+	specific/NavierStokesAssFE_decl.hpp
+	specific/NavierStokesAssFE_def.hpp
+	specific/NavierStokesAssFE.hpp
     specific/NonLinElasticity_decl.hpp
     specific/NonLinElasticity_def.hpp
     specific/NonLinElasticity.hpp
+    specific/NonLinLaplace_decl.hpp
+    specific/NonLinLaplace_def.hpp
+    specific/NonLinLaplace.hpp
     specific/NonLinElasAssFE_decl.hpp
     specific/NonLinElasAssFE_def.hpp
     specific/NonLinElasAssFE.hpp
@@ -66,13 +78,18 @@ SET(problems_specific_SOURCES
     #specific/LaplacePseudoCoupled.cpp
     specific/LinElas.cpp
     specific/LinElasAssFE.cpp
+    specific/LinElasAssFE.cpp
 #    specific/LinElasFirstOrder.cpp
+	specific/DiffusionReaction.cpp
 	specific/DiffusionReaction.cpp
 	specific/NavierStokes.cpp
 	specific/NavierStokesAssFE.cpp
+	specific/NavierStokesAssFE.cpp
     specific/NonLinElasticity.cpp
+    specific/NonLinLaplace.cpp
     specific/NonLinElasAssFE.cpp
     specific/NonLinTPM.cpp
+    specific/Stokes.cpp
     specific/Stokes.cpp
     specific/TPM.cpp
     specific/FSI.cpp

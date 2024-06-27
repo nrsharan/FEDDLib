@@ -2636,7 +2636,7 @@ void RefinementFactory<SC,LO,GO,NO>::refineType4(EdgeElementsPtr_Type edgeElemen
 			for(int j=0; j<4 ; j++){
 				FiniteElement surfaceTmp = surfaceTriangleElements->getElement(surfaceElementsIDs[j]);
 				triTmp = surfaceTmp.getVectorNodeList();
-				//sort(triTmp.begin(),triTmp.end());
+				sort(triTmp.begin(),triTmp.end());
 				if(triTmp[0] == originTriangleTmp[0] && triTmp[1] == originTriangleTmp[1] && triTmp[2] == originTriangleTmp[2]  ) {
 					originFlag[i] = surfaceTmp.getFlag();
 					interfaceSurface[i] = surfaceTmp.isInterfaceElement();
@@ -3116,7 +3116,7 @@ void RefinementFactory<SC,LO,GO,NO>::refineType3(EdgeElementsPtr_Type edgeElemen
 			for(int j=0; j<4 ; j++){
 				FiniteElement surfaceTmp = surfaceTriangleElements->getElement(surfaceElementsIDs[j]);
 				triTmp = surfaceTmp.getVectorNodeList();
-				//sort(triTmp.begin(),triTmp.end());
+				sort(triTmp.begin(),triTmp.end());
 				if(triTmp[0] == originTriangleTmp[0] && triTmp[1] == originTriangleTmp[1] && triTmp[2] == originTriangleTmp[2]  ) {
 					originFlag[i] = surfaceTmp.getFlag();
 					interfaceSurface[i] = surfaceTmp.isInterfaceElement();
@@ -3518,7 +3518,7 @@ void RefinementFactory<SC,LO,GO,NO>::refineType2(EdgeElementsPtr_Type edgeElemen
 			for(int j=0; j<4 ; j++){
 				FiniteElement surfaceTmp = surfaceTriangleElements->getElement(surfaceElementsIDs[j]);
 				triTmp = surfaceTmp.getVectorNodeList();
-				//sort(triTmp.begin(),triTmp.end());
+				sort(triTmp.begin(),triTmp.end());
 				if(triTmp[0] == originTriangleTmp[0] && triTmp[1] == originTriangleTmp[1] && triTmp[2] == originTriangleTmp[2]  ) {
 					originFlag[i] = surfaceTmp.getFlag();
 					interfaceSurface[i] = surfaceTmp.isInterfaceElement();
@@ -3859,7 +3859,7 @@ void RefinementFactory<SC,LO,GO,NO>::refineType1(EdgeElementsPtr_Type edgeElemen
 			for(int j=0; j<4 ; j++){
 				FiniteElement surfaceTmp = surfaceTriangleElements->getElement(surfaceElementsIDs[j]);
 				triTmp = surfaceTmp.getVectorNodeList();
-				//sort(triTmp.begin(),triTmp.end());
+				sort(triTmp.begin(),triTmp.end());
 				if(triTmp[0] == originTriangleTmp[0] && triTmp[1] == originTriangleTmp[1] && triTmp[2] == originTriangleTmp[2]  ) {
 					originFlag[i] = surfaceTmp.getFlag();
 					interfaceSurface[i] = surfaceTmp.isInterfaceElement();
