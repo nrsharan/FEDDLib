@@ -307,9 +307,7 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
                             }
 
                             Teuchos::RCP<const Xpetra::Map<LO,GO,NO> > mapConstTmp;
-
                             mapConstTmp = problem_->getDomain(i)->getMapVecFieldRepeated()->getXpetraMap();
-
                             Teuchos::RCP<Xpetra::Map<LO,GO,NO> > mapTmp = Teuchos::rcp_const_cast<Xpetra::Map<LO,GO,NO> > (mapConstTmp);
                             repeatedMaps[i] = mapTmp;
 
