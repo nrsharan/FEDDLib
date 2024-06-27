@@ -10,7 +10,13 @@
 #include "feddlib/core/LinearAlgebra/MultiVector.hpp"
 #include "feddlib/core/LinearAlgebra/BlockMatrix.hpp"
 #include "Domain.hpp"
+#include "Helper.hpp"
 #include "sms.hpp"
+#include "feddlib/core/AceFemAssembly/AssembleFE.hpp"
+#include "feddlib/core/AceFemAssembly/specific/AssembleFE_SCI_SMC_Active_Growth_Reorientation_decl.hpp"
+#include "feddlib/core/AceFemAssembly/specific/AssembleFENavierStokes_decl.hpp"
+#include "feddlib/core/AceFemAssembly/specific/AssembleFEGeneralizedNewtonian_decl.hpp"
+#include "feddlib/core/AceFemAssembly/AssembleFEFactory.hpp"
 #include "feddlib/core/AceFemAssembly/AssembleFE.hpp"
 #include "feddlib/core/AceFemAssembly/specific/AssembleFE_SCI_SMC_Active_Growth_Reorientation_decl.hpp"
 #include "feddlib/core/AceFemAssembly/specific/AssembleFENavierStokes_decl.hpp"
@@ -88,6 +94,9 @@ class FE {
 	typedef AssembleFENavierStokes<SC,LO,GO,NO> AssembleFENavierStokes_Type;
     typedef Teuchos::RCP<AssembleFENavierStokes_Type> AssembleFENavierStokesPtr_Type;
 
+    typedef AssembleFEGeneralizedNewtonian<SC,LO,GO,NO> AssembleFEGeneralizedNewtonian_Type;
+    typedef Teuchos::RCP<AssembleFEGeneralizedNewtonian_Type> AssembleFEGeneralizedNewtonianPtr_Type;
+
     typedef AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO> AssembleFE_SCI_SMC_Active_Growth_Reorientation_Type;
     typedef Teuchos::RCP<AssembleFE_SCI_SMC_Active_Growth_Reorientation_Type> AssembleFE_SCI_SMC_Active_Growth_Reorientation_Ptr_Type;
 
@@ -101,9 +110,8 @@ class FE {
 
 	typedef SmallMatrix<SC> SmallMatrix_Type;
     typedef Teuchos::RCP<SmallMatrix_Type> SmallMatrixPtr_Type;
-    
 
-    DomainPtr_vec_Type	domainVec_;
+    DomainConstPtr_vec_Type	domainVec_;
     Teuchos::RCP<ElementSpec> es_;
 
    typedef FiniteElement FiniteElement_Type;
@@ -268,6 +276,12 @@ class FE {
                                  MatrixPtr_Type &A,
                                  bool callFillComplete = true);
 
+    void assemblyNonlinearLaplace(
+        int dim, std::string FEType, int degree, MultiVectorPtr_Type u_rep,
+        BlockMatrixPtr_Type &A, BlockMultiVectorPtr_Type &resVec,
+        ParameterListPtr_Type params, string assembleMode,
+        bool callFillComplete = true, int FELocExternal = -1);
+
     // Assembling the reaction term of the reaction diffusion equation. Maybe add default function.
 	void assemblyLinearReactionTerm(int dim,
     							std::string FEType,
@@ -306,6 +320,7 @@ class FE {
                        MultiVectorPtr_Type &eModVec,
                        DomainConstPtr_Type domain,
                        ParameterListPtr_Type params);
+
     void assemblyLaplaceDiffusion(int Dimension,
                         std::string FEType,
                         int degree,
@@ -314,6 +329,7 @@ class FE {
                         ParameterListPtr_Type params,
                         bool callFillComplete = true,
                         int FELocExternal = -1);
+
 
     void assemblyElasticityJacobianAndStressAceFEM(int dim,
                                                    std::string FEType,
@@ -494,6 +510,12 @@ class FE {
                                            bool callFillComplete = true);
 
 
+    /// @brief Assembling Pressure Integral to determine pressure mean value
+    /// @param dim Dimension
+    /// @param FEType FEType
+    /// @param a Resultin matrix with one column
+    void assemblyPressureMeanValue(int dim, std::string FEType, MatrixPtr_Type a, MatrixPtr_Type aT);
+
     void assemblyRHS(int dim,
                      std::string FEType,
                      MultiVectorPtr_Type  a,
@@ -533,39 +555,7 @@ class FE {
 								bool callFillComplete = true,
 								int FELocExternal=-1);
 
-    void assemblyAceDeformDiffu(int dim,
-								string FETypeChem,
-								string FETypeSolid,
-								int degree,
-								int dofsChem,
-								int dofsSolid,
-								MultiVectorPtr_Type c_rep,
-								MultiVectorPtr_Type d_rep,
-								BlockMatrixPtr_Type &A,
-								BlockMultiVectorPtr_Type &resVec,
-								ParameterListPtr_Type params,
-							    string assembleMode,
-								bool callFillComplete = true,
-								int FELocExternal=-1);
-
-    void assemblyAceDeformDiffuBlock(int dim,
-                                string FETypeChem,
-                                string FETypeSolid,
-                                int degree,
-                                int dofsChem,
-                                int dofsSolid,
-                                MultiVectorPtr_Type c_rep,
-                                MultiVectorPtr_Type d_rep,
-                                BlockMatrixPtr_Type &A,
-                                int blockRow,
-                                int blockCol,
-                                BlockMultiVectorPtr_Type &resVec,
-                                int block,
-                                ParameterListPtr_Type params,
-                                string assembleMode,
-                                bool callFillComplete = true,
-                                int FELocExternal=-1);
-
+    
     void advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep) 
     {
         //UN FElocChem = 1; //checkFE(dim,FETypeChem); // Checks for different domains which belongs to a certain fetype
@@ -592,6 +582,8 @@ class FE {
         }
         
     };
+
+
 
     void advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep) 
     {
@@ -665,19 +657,86 @@ class FE {
                         int FELocExternal=-1);
 
     void postProcessing(int type, MultiVectorPtr_Type &postProcessingVec);
+    
+
+    void assemblyLaplaceAssFE(int dim,
+                            string FEType,
+                            int degree,
+                            int dofs,
+                            BlockMatrixPtr_Type &A,
+                            bool callFillComplete,
+                            int FELocExternal=-1);
+
+    void assemblyAceDeformDiffu(int dim,
+								string FETypeChem,
+								string FETypeSolid,
+								int degree,
+								int dofsChem,
+								int dofsSolid,
+								MultiVectorPtr_Type c_rep,
+								MultiVectorPtr_Type d_rep,
+								BlockMatrixPtr_Type &A,
+								BlockMultiVectorPtr_Type &resVec,
+								ParameterListPtr_Type params,
+							    string assembleMode,
+								bool callFillComplete = true,
+								int FELocExternal=-1);
+
+    void assemblyAceDeformDiffuBlock(int dim,
+                                string FETypeChem,
+                                string FETypeSolid,
+                                int degree,
+                                int dofsChem,
+                                int dofsSolid,
+                                MultiVectorPtr_Type c_rep,
+                                MultiVectorPtr_Type d_rep,
+                                BlockMatrixPtr_Type &A,
+                                int blockRow,
+                                int blockCol,
+                                BlockMultiVectorPtr_Type &resVec,
+                                int block,
+                                ParameterListPtr_Type params,
+                                string assembleMode,
+                                bool callFillComplete = true,
+                                int FELocExternal=-1);
+
+
+	
+                                    
+    void checkMeshOrientation(int dim,string FEType);
+
+    /* Given a converged velocity solution this function 
+       computes the averaged viscosity estimate in each cell at the center of mass 
+       - CM stands for center of mass so the values at the node are averaged to obtain one value
+    */
+    void computeSteadyViscosityFE_CM(int dim,
+	                                    string FETypeVelocity,
+	                                    string FETypePressure,
+										int dofsVelocity,
+										int dofsPressure,
+										MultiVectorPtr_Type u_rep,
+										MultiVectorPtr_Type p_rep,
+ 										ParameterListPtr_Type params);
+
+    // Write prostprocessing output fields like e.g. the viscosity based on  velocity, pressure .. solution
+    // inside this BMV -> For visualization or postprocessing                                
+    BlockMultiVectorPtr_Type const_output_fields;
+
+
 /* ----------------------------------------------------------------------------------------*/
 private:
 
     void addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement_vec element, tuple_disk_vec_ptr_Type problemDisk);
+	
+    void addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement element1,FiniteElement element2, MapConstPtr_Type mapFirstColumn,MapConstPtr_Type mapSecondColumn, tuple_disk_vec_ptr_Type problemDisk);
+	
+    void addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement element, MapConstPtr_Type mapFirstColumn,MapConstPtr_Type mapSecondColumn, tuple_disk_vec_ptr_Type problemDisk);
 
 	//void addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement element, MapConstPtr_Type mapFirstColumn,MapConstPtr_Type mapSecondColumn, tuple_disk_vec_ptr_Type problemDisk);
 
 	//void addFeBlock(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement element, MapConstPtr_Type mapFirstRow, int row, int column, tuple_disk_vec_ptr_Type problemDisk);
 
     void addFeBlockMv(BlockMultiVectorPtr_Type &res, vec_dbl_ptr_Type rhsVec,tuple_disk_vec_ptr_Type problemDisk, FiniteElement_vec element);
-
-
-	void addFeBlockMatrix(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement element, MapConstPtr_Type mapFirstColumn,MapConstPtr_Type mapSecondColumn, tuple_disk_vec_ptr_Type problemDisk);
 
 	void addFeBlock(BlockMatrixPtr_Type &A, SmallMatrixPtr_Type elementMatrix, FiniteElement element, MapConstPtr_Type mapFirstRow, int row, int column, tuple_disk_vec_ptr_Type problemDisk);
 
@@ -686,11 +745,13 @@ private:
     void addFeBlockMv(BlockMultiVectorPtr_Type &res, vec_dbl_ptr_Type rhsVec, FiniteElement elementBlock1,FiniteElement elementBlock2, int dofs1, int dofs2 );
 
     void addFeBlockMv(BlockMultiVectorPtr_Type &res, vec_dbl_ptr_Type rhsVec, FiniteElement elementBlock, int dofs);
-		
+			
 	AssembleFEPtr_vec_Type assemblyFEElements_;
 
 	vec2D_dbl_Type getCoordinates(vec_LO_Type localIDs, vec2D_dbl_ptr_Type points);
 	vec_dbl_Type getSolution(vec_LO_Type localIDs, MultiVectorConstPtr_Type u_rep, int dofsVelocity);
+ 	
+    void computeSurfaceNormal(int dim,vec2D_dbl_ptr_Type pointsRep,vec_int_Type nodeList,vec_dbl_Type &v_E, double &norm_v_E);
 
     //Start of AceGen code
     /*! AceGen code for 3D Neo-Hooke material model
@@ -753,8 +814,7 @@ private:
     void applyDiff(vec3D_dbl_Type& dPhiIn,
                    vec3D_dbl_Type& dPhiOut,
                    SmallMatrix<SC>& diffT);
-    
-    
+        
     void phi(       int Dimension,
                     int intFE,
             		int i,
@@ -797,7 +857,7 @@ private:
     int checkFE(int Dimension,
                 std::string FEType);
 
-    UN determineDegree(UN dim,
+    /*UN determineDegree(UN dim,
                        std::string FEType1,
                        std::string FEType2,
                        VarType type1,
@@ -810,7 +870,7 @@ private:
 
     UN determineDegree(UN dim,
                        std::string FEType,
-                       UN degFunc);
+                       UN degFunc);*/
     
 
     bool setZeros_;

@@ -12,7 +12,10 @@
 
 using Teuchos::outArg;
 using Teuchos::REDUCE_MAX;
+using Teuchos::outArg;
+using Teuchos::REDUCE_MAX;
 using Teuchos::REDUCE_SUM;
+using Teuchos::reduceAll;
 using Teuchos::reduceAll;
 
 namespace FEDD
@@ -73,11 +76,6 @@ namespace FEDD
         linearSolverBuilder_.reset(new Stratimikos::DefaultLinearSolverBuilder());
         preconditioner_ = Teuchos::rcp(new Preconditioner_Type(this));
         feFactory_.reset(new FEFac_Type());
-    }
-
-    template <class SC, class LO, class GO, class NO>
-    Problem<SC, LO, GO, NO>::~Problem()
-    {
     }
 
     template <class SC, class LO, class GO, class NO>
@@ -142,6 +140,7 @@ namespace FEDD
         this->initializeVectors(nmbVectors);
     }
 
+  
     template <class SC, class LO, class GO, class NO>
     void Problem<SC, LO, GO, NO>::addRhsFunction(RhsFunc_Type func)
     {
@@ -192,8 +191,15 @@ namespace FEDD
         variableName_vec_.push_back(name);
         feFactory_->addFE(domain);
         dofsPerNode_vec_.push_back(dofsPerNode);
+   
     }
 
+    // template<class SC,class LO,class GO,class NO>
+    // void Problem<SC,LO,GO,NO>::reAssemble(){
+    //     if (verbose_) {
+    //         cout << "Nothing to reassemble for linear problem." << endl;
+    //     }
+    // }
     // template<class SC,class LO,class GO,class NO>
     // void Problem<SC,LO,GO,NO>::reAssemble(){
     //     if (verbose_) {
@@ -328,12 +334,9 @@ namespace FEDD
         return its;
     }
 
-
-
     template <class SC, class LO, class GO, class NO>
     void Problem<SC, LO, GO, NO>::setupPreconditioner(std::string type) const
     {
-
         preconditioner_->buildPreconditioner(type);
     }
 
@@ -342,6 +345,7 @@ namespace FEDD
     {
 
         preconditioner_->initializePreconditioner(type);
+
     }
 
     template <class SC, class LO, class GO, class NO>

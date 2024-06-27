@@ -246,7 +246,6 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditioner( std::string type )
 template <class SC,class LO,class GO,class NO>
 void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
 {
-
     CommConstPtr_Type comm;
     if (!problem_.is_null())
         comm = problem_->getComm();
@@ -271,6 +270,8 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
     ParameterListPtr_Type pListThyraPrec = sublist( parameterList, "ThyraPreconditioner" );
     ParameterListPtr_Type plFrosch = sublist( sublist( pListThyraPrec, "Preconditioner Types" ), "FROSch");
     
+    //problem->getSystem()->writeMM("SystemWithLagrange");
+
     ThyraLinOpConstPtr_Type thyraMatrix;
     if (!problem_.is_null())
         thyraMatrix = problem_->getSystem()->getThyraLinOp();

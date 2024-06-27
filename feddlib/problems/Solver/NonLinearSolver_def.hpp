@@ -89,10 +89,13 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNOX(NonLinearProblem_Type &problem){
     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problemPtr->getLinearSolverBuilder()->createLinearSolveStrategy("");
 
 	//problemPtr->set_W_factory(lowsFactory);
+	//problemPtr->set_W_factory(lowsFactory);
 
     // Create the initial guess
     Teuchos::RCP<Thyra::VectorBase<SC> > initial_guess = problemPtr->getNominalValues().get_x()->clone_v();
     Thyra::V_S(initial_guess.ptr(),Teuchos::ScalarTraits<SC>::zero());
+    
+      
     
       
     Teuchos::RCP<NOX::Thyra::Group> nox_group(new NOX::Thyra::Group(initial_guess,
@@ -545,6 +548,9 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
         problem.assemble("Newton"); 
 
         problem.setBoundariesSystem();
+
+        problem.getSystem()->writeMM("Assembled");
+
 
         if (timestepping == "External"){//AceGen
             gmresIts += problem.solveAndUpdate( "ResidualAceGen", criterionValue );

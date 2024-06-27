@@ -742,6 +742,8 @@ int main(int argc, char *argv[])
 		    		    	
 		    partitionerP1.readAndPartition(volumeID);
 		    
+            domainP1struct->exportElementFlags();
+            domainP1struct->exportNodeFlags();
 		    
             if (!discType.compare("P2")){
 				domainP2chem->buildP2ofP1Domain( domainP1struct );

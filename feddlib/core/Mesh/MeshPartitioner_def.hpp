@@ -261,6 +261,7 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
     else
         meshUnstr->deleteSurfaceElements();
     
+    
 	// Serially distributed elements
     ElementsPtr_Type elementsMesh = meshUnstr->getElementsC();
     
@@ -358,50 +359,12 @@ void MeshPartitioner<SC,LO,GO,NO>::readAndPartitionMesh( int meshNumber ){
                 pointsRepIndices.push_back( eind[j] ); // Ids of element nodes, globalIDs
         }
     }
-    eind_vec.erase(eind_vec.begin(),eind_vec.end());
-    eptr_vec.erase(eptr_vec.begin(),eptr_vec.end());
-	
-	// Sorting ids with global and corresponding local values to creat repeated map
-    {
-        //Sollte in eigene Funktion
-        {
-            vector<int> index(pointsRepIndices.size(), 0);
-            for (int i = 0 ; i != index.size() ; i++) {
-                index.at(i) = i;
-            }
-            
-            sort(index.begin(), index.end(),
-                 [&](const int& a, const int& b) {
-                     return  pointsRepIndices[a] < pointsRepIndices[b];
-                 }
-                 );
-            
-            pointsRepIndices      = sort_from_ref(pointsRepIndices, index);
-        }
-        
-        //Sollte in eigene Funktion
-        {
-            vector<int> index(pointsRepIndices.size(), 0);
-            for (int i = 0 ; i != index.size() ; i++) {
-                index.at(i) = i;
-            }
-            
-            vector<int> ::iterator it;
-            
-            it = unique (index.begin(), index.end(),
-                         [&](const int& a, const int& b){
-                             if (pointsRepIndices.at(a) == pointsRepIndices.at(b)) {
-                                 return true;
-                             }
-                             else{
-                                 return false;
-                             }});
-            
-            pointsRepIndices = sort_from_ref(pointsRepIndices, index);
-            
-            pointsRepIndices.resize( distance( index.begin(), it ) );
-        }
-    }
+    // TODO KHo why erase the vectors here? eind points to the underlying array and is used later.
+    eind_vec.erase(eind_vec.begin(), eind_vec.end());
+    eptr_vec.erase(eptr_vec.begin(), eptr_vec.end());
+
+    // Sorting ids with global and corresponding local values to create repeated map
+    make_unique(pointsRepIndices);
     if (verbose)
         cout << "done!" << endl;
     
@@ -894,8 +857,7 @@ void MeshPartitioner<SC,LO,GO,NO>::findAndSetSurfaceEdges( vec2D_int_Type& edgeE
     
     int loc, id1Glob, id2Glob;
     if (dim_ == 3){
-        for (int j=0; j<permutation.size(); j++) {
-            
+        for (int j=0; j<permutation.size(); j++) {           
             id1Glob = mapRepeated->getGlobalElement( element.getNode( permutation.at(j).at(0) ) );
             id2Glob = mapRepeated->getGlobalElement( element.getNode( permutation.at(j).at(1) ) );
             vec_int_Type tmpEdge(0);
@@ -910,7 +872,6 @@ void MeshPartitioner<SC,LO,GO,NO>::findAndSetSurfaceEdges( vec2D_int_Type& edgeE
                 
                 int id1 = element.getNode( permutation.at(j).at(0) );
                 int id2 = element.getNode( permutation.at(j).at(1) );
-                
                 vec_int_Type tmpEdgeLocal(0);
                 if (id2>id1)
                     tmpEdgeLocal = { id1 , id2 };
@@ -920,16 +881,21 @@ void MeshPartitioner<SC,LO,GO,NO>::findAndSetSurfaceEdges( vec2D_int_Type& edgeE
                 // If no partition was performed, all information is still global at this point. We still use the function below and partition the mesh and surfaces later.
                 FiniteElement feEdge( tmpEdgeLocal, edgeElementsFlag_vec[loc] );
                 // In some cases an edge is the only part of the surface of an Element. In that case there does not exist a triangle subelement. 
-                // We then have to initialize the edge as subelement.                       
-                                       
+                // We then have to initialize the edge as subelement.     
+                // In very coarse meshes it is even possible that an interior element has multiple surface edges or nodes connected to the surface, which is why we might even set interior edges as subelements                  
                 if ( !element.subElementsInitialized() ){
                     element.initializeSubElements( "P1", 1 ); // only P1 for now                
                     element.addSubElement( feEdge );
                 }
-                else {
+                else{
                     ElementsPtr_Type surfaces = element.getSubElements();
-                    // We set the edge to the corresponding element(s)
-                    surfaces->setToCorrectElement( feEdge );
+                    if(surfaces->getDimension() == 2)   // We set the edge to the corresponding surface element(s)
+                        surfaces->setToCorrectElement( feEdge ); // Case we have surface subelements
+                    else{ // simply adding the edge as subelement
+                        element.addSubElement( feEdge ); // Case we dont have surface subelements
+                        // Comment: Theoretically edges as subelement are only truely relevant when we apply a neuman bc on an edge which is currently not the case. 
+                        // This is just in case!
+                    }
                 }                                
             }
         }

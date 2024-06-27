@@ -75,7 +75,6 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(Problem_Type* problem, BlockMulti
     if (problem->getParameterList()->get("Zero Initial Guess",true)) {
         problem->getSolution()->putScalar(0.);
     }
-    
     Teuchos::RCP<Thyra::MultiVectorBase<SC> >thyraX = problem->getSolution()->getThyraMultiVector();
 
     Teuchos::RCP<const Thyra::MultiVectorBase<SC> > thyraB;
@@ -91,8 +90,9 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(Problem_Type* problem, BlockMulti
     problem->getLinearSolverBuilder()->setParameterList(pListThyraSolver);
     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problem->getLinearSolverBuilder()->createLinearSolveStrategy("");
 
-    if ( type != "MonolithicConstPrec" ||  problem->getPreconditioner()->getThyraPrec().is_null() )
-        problem->setupPreconditioner( "Monolithic" );
+    bool iterativeSolve = !pListThyraSolver->get("Linear Solver Type", "Belos").compare("Belos");
+    if (iterativeSolve && (type != "MonolithicConstPrec" || problem->getPreconditioner()->getThyraPrec().is_null()))
+        problem->setupPreconditioner("Monolithic");
 
     if (!pListThyraSolver->sublist("Preconditioner Types").sublist("FROSch").get("Level Combination","Additive").compare("Multiplicative")) {
         pListThyraSolver->sublist("Preconditioner Types").sublist("FROSch").set("Only apply coarse",true);
@@ -114,7 +114,7 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(Problem_Type* problem, BlockMulti
     Teuchos::RCP<Thyra::LinearOpWithSolveBase<SC> > solver = lowsFactory->createOp();
 //    Teuchos::RCP<Thyra::LinearOpWithSolveBase<SC> > solver = linearOpWithSolve(*lowsFactory, problem->getSystem()->getThyraLinOp());
     ThyraLinOpConstPtr_Type thyraMatrix = problem->getSystem()->getThyraLinOp();
-    if ( !pListThyraSolver->get("Linear Solver Type","Belos").compare("Belos") ) {
+    if ( iterativeSolve ) {
         ThyraPrecPtr_Type thyraPrec = problem->getPreconditioner()->getThyraPrec();
         Thyra::initializePreconditionedOp<SC>(*lowsFactory, thyraMatrix, thyraPrec.getConst(), solver.ptr());
     }
@@ -183,6 +183,9 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
 
     Teuchos::RCP<Thyra::LinearOpWithSolveBase<SC> > solver = lowsFactory->createOp();
     //    solver = linearOpWithSolve(*lowsFactory, problem->getSystem()->getThyraLinOp());
+
+    //timeProblem->combineSystems();
+    // timeProblem->getSystemCombined()->getBlock(0,0)->writeMM("SystemCombined");
 
     ThyraLinOpConstPtr_Type thyraMatrix = timeProblem->getSystemCombined()->getThyraLinOp();
 

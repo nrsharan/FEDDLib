@@ -76,6 +76,7 @@ otherPartialGlobalInterfaceVecFieldMap_()
 
 }
 
+// Constructor for structured 2D Meshes.  
 template <class SC, class LO, class GO, class NO>
 Domain<SC,LO,GO,NO>::Domain(vec_dbl_Type coor, double l, double h, CommConstPtr_Type comm):
 comm_(comm),
@@ -98,6 +99,7 @@ partialGlobalInterfaceVecFieldMap_(),
     length 	= l;
 	height 	= h;
     width = -1;
+    // Available 2D geometries 
     geometries2DVec_.reset(new string_vec_Type(0));
     geometries2DVec_->push_back("Square");
     geometries2DVec_->push_back("BFS");
@@ -106,6 +108,7 @@ partialGlobalInterfaceVecFieldMap_(),
 //    geometries2DVec->push_back("REC");
 }
 
+// Constructor for 3D structured meshes
 template <class SC, class LO, class GO, class NO>
 Domain<SC,LO,GO,NO>::Domain(vec_dbl_Type coor, double l, double w, double h, CommConstPtr_Type comm):
 comm_(comm),
@@ -125,9 +128,12 @@ partialGlobalInterfaceVecFieldMap_()
     length 	= l;
     width 	= w;
     height	= h;
+    // Different geometries available as geometries. 
     geometries3DVec_.reset(new string_vec_Type(0));
-    geometries3DVec_->push_back("Square");
-    geometries3DVec_->push_back("BFS");
+    geometries3DVec_->push_back("Square"); // for 3D this is synonymous to Cube with 6-Element subcube structure
+    geometries3DVec_->push_back("BFS"); // Backward-facing step geometry
+    geometries3DVec_->push_back("Square5Element"); // this is a cube with different 5-Element per subcube structure
+
 
 }
 
@@ -185,13 +191,15 @@ LO Domain<SC,LO,GO,NO>::getApproxEntriesPerRow() const{
         else {
             return 60;
         }
-    } else {
+    } 
+    else {
         if ( this->FEType_ == "P1" ) {
             return 400;
         }
         else if ( this->FEType_ == "P2" ) {
             return 460;
         }
+        
         else {
             return 400;
         }
@@ -253,6 +261,10 @@ void Domain<SC,LO,GO,NO>::buildMesh(int flagsOption , std::string meshType, int 
                     meshStructured->setGeometry3DBox(coorRec, length, width, height);
                     meshStructured->buildMesh3DBFS(	FEType, n_, m_, numProcsCoarseSolve);
                     break;
+                case 2:
+                    meshStructured->setGeometry3DBox(coorRec, length, width, height);
+                    meshStructured->buildMesh3D5Elements(	FEType, n_, m_, numProcsCoarseSolve);
+                break;
                 default:
                     TEUCHOS_TEST_FOR_EXCEPTION(true,std::runtime_error,"Select valid mesh. Structured types are 'structured' and 'structured_bfs' in 3D." );
                     break;
@@ -412,6 +424,42 @@ void Domain<SC,LO,GO,NO>::setMesh(MeshUnstrPtr_Type meshUnstr){
 
     mesh_ = meshUnstr;
 }
+
+
+template <class SC, class LO, class GO, class NO>
+void Domain<SC, LO, GO, NO>::initDummyMesh(MapPtr_Type map)
+{
+    MeshUnstrPtr_Type outputMesh = Teuchos::rcp( new MeshUnstr_Type( comm_) );
+
+    outputMesh->dim_ = this->dim_ ;
+	outputMesh->FEType_ = this->FEType_ ;
+
+	outputMesh->mapUnique_ = map;
+	outputMesh->mapRepeated_ = map;
+	
+    mesh_ = outputMesh;
+}
+
+template <class SC, class LO, class GO, class NO>
+void Domain<SC,LO,GO,NO>::exportMesh(bool exportEdges, bool exportSurfaces, string exportMesh){ 
+
+    MeshUnstrPtr_Type meshUnstructured = Teuchos::rcp_dynamic_cast<MeshUnstr_Type>( mesh_ );
+
+    meshUnstructured->exportMesh(this->getMapUnique() , this->getMapRepeated(), exportEdges, exportSurfaces, exportMesh);
+}
+
+template <class SC, class LO, class GO, class NO>
+void Domain<SC,LO,GO,NO>::preProcessMesh(bool correctSurfaceNormals, bool correctElementOrientation){ 
+
+    if(correctSurfaceNormals)
+        mesh_->correctNormalDirections();
+
+    if(correctElementOrientation)
+        mesh_->correctElementOrientation();
+
+
+}
+
 
 template <class SC, class LO, class GO, class NO>
 UN Domain<SC,LO,GO,NO>::getDimension() const{
@@ -993,7 +1041,135 @@ typename Domain<SC,LO,GO,NO>::MultiVectorPtr_Type Domain<SC,LO,GO,NO>::getNodeLi
     }
     return nodeList;
 }
-    
+
+template <class SC, class LO, class GO, class NO>
+void Domain<SC, LO, GO, NO>::exportNodeFlags(string name)
+{
+        Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+
+        Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(this->getMapUnique()));
+        vec_int_ptr_Type BCFlags = this->getBCFlagUnique(); // Unique flags at points
+
+        Teuchos::ArrayRCP< SC > entries  = exportSolution->getDataNonConst(0);
+        for(int i=0; i< entries.size(); i++){
+            entries[i] = BCFlags->at(i);
+        }
+
+        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst = exportSolution;
+
+        exPara->setup("Mesh_Node_Flags_"+name,this->getMesh(), this->FEType_);
+
+        exPara->addVariable(exportSolutionConst, "Flags", "Scalar", 1,this->getMapUnique()); 
+        exPara->save(0.0);
+
+        exPara->closeExporter();
+} 
+
+template <class SC, class LO, class GO, class NO>
+void Domain<SC, LO, GO, NO>::exportSurfaceNormals(string name)
+{
+        Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+
+        Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(this->getMapVecFieldUnique()));
+        exportSolution->putScalar(0.);
+        ElementsPtr_Type elementsC = this->getElementsC(); // Unique flags at points
+
+        Teuchos::ArrayRCP< SC > entries  = exportSolution->getDataNonConst(0);
+
+        // We iterate over all elements and compute the surface normals to export them
+        for (UN T=0; T<elementsC->numberElements(); T++) {
+            FiniteElement fe = elementsC->getElement( T );
+            ElementsPtr_Type subEl = fe.getSubElements(); // might be null
+            for (int surface=0; surface<fe.numSubElements(); surface++) {
+                FiniteElement feSub = subEl->getElement( surface  );
+                vec_int_Type nodeListElement = fe.getVectorNodeList();
+                if(subEl->getDimension() == dim_-1 ){
+                    vec_int_Type nodeList = feSub.getVectorNodeListNonConst();
+                    
+                    vec_dbl_Type v_E(dim_,1.);
+                    double norm_v_E=1.;
+
+                    Helper::computeSurfaceNormal(this->dim_,this->getPointsRepeated(),nodeList,v_E,norm_v_E);
+
+                    for(int j=0; j< nodeList.size(); j++){
+                        for(int i=0; i< this->dim_; i++){
+                            if(this->getMapUnique()->getLocalElement(this->getMapRepeated()->getGlobalElement(nodeList[j])) != -1 ){  // We only write when we have the node in unique distribution, because we are lazy. Otherwise we would do an import etc. But this will not give us further information.
+                                LO id = this->getMapUnique()->getLocalElement(this->getMapRepeated()->getGlobalElement(nodeList[j]));
+                                entries[id*this->dim_+i] = 1./norm_v_E * v_E[i];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst = exportSolution;
+
+        exPara->setup("Mesh_Surface_Directions_"+name,this->getMesh(), this->FEType_);
+
+        exPara->addVariable(exportSolutionConst, "SurfaceNormals", "Vector", this->dim_,this->getMapUnique()); 
+        exPara->save(0.0);
+
+        exPara->closeExporter();
+} 
+
+template <class SC, class LO, class GO, class NO>
+void Domain<SC, LO, GO, NO>::exportElementOrientation(string name)
+{
+        Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+
+        Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(this->getElementMap()));
+        exportSolution->putScalar(0.);
+        ElementsPtr_Type elementsC = this->getElementsC(); // Unique flags at points
+
+        Teuchos::ArrayRCP< SC > entries  = exportSolution->getDataNonConst(0);
+
+        SC detB;
+        SmallMatrix<SC> B(this->dim_);
+        SmallMatrix<SC> Binv(this->dim_);
+        // We iterate over all elements and compute the surface normals to export them
+        for (UN T=0; T<elementsC->numberElements(); T++) {
+           Helper::buildTransformation(elementsC->getElement(T).getVectorNodeList(), this->getPointsRepeated(), B);
+           detB = B.computeInverse(Binv);
+           entries[T] = detB;
+        }
+
+        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst = exportSolution;
+
+        exPara->setup("Mesh_Element_Orientation_"+name,this->getMesh(), "P0");
+
+        exPara->addVariable(exportSolutionConst, "VolElement", "Scalar", 1,this->getElementMap()); 
+        exPara->save(0.0);
+
+        exPara->closeExporter();
+} 
+
+
+template <class SC, class LO, class GO, class NO>
+void Domain<SC, LO, GO, NO>::exportElementFlags(string name)
+{
+        Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exPara(new ExporterParaView<SC,LO,GO,NO>());
+
+        Teuchos::RCP<MultiVector<SC,LO,GO,NO> > exportSolution(new MultiVector<SC,LO,GO,NO>(this->getElementMap()));
+
+        Teuchos::ArrayRCP< SC > entries  = exportSolution->getDataNonConst(0);
+        ElementsPtr_Type elements = this->getElementsC(); // element list
+
+        for(int i=0; i< entries.size(); i++){
+            entries[i] = elements->getElement(i).getFlag(); // element flags
+        }
+
+        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionConst = exportSolution;
+
+        exPara->setup("Mesh_Element_Flags_"+name,this->getMesh(), "P0");
+
+        exPara->addVariable(exportSolutionConst, "Flags", "Scalar", 1,this->getElementMap(), this->getElementMap());
+
+        exPara->save(0.0);
+
+        exPara->closeExporter();
+
+}   
     
 }
 #endif

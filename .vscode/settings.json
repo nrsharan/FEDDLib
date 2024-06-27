@@ -9,6 +9,7 @@
         "future": "cpp",
         "istream": "cpp",
         "functional": "cpp",
+<<<<<<< HEAD
         "*.inc": "cpp",
         "cctype": "cpp",
         "clocale": "cpp",
@@ -97,4 +98,8 @@
         "locale": "cpp"
     },
     "C_Cpp.dimInactiveRegions": false
+=======
+        "*.inc": "cpp"
+    }
+>>>>>>> 63bdbe667f923d8bc2f6a1e831bc2c554e873e68
 }
