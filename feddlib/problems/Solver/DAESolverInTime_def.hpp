@@ -1243,7 +1243,11 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             if(heartbeat)
                 modValue= modValueHeartBeat; // smaller post Processing steps in heart beat phases
 
-            if(fmod(timeSteppingTool_->currentTime(),modValue) < 0. + 1.e-10 ){
+
+            int n = static_cast<int>(timeSteppingTool_->currentTime()/modValue);
+            double result = timeSteppingTool_->currentTime() - n*modValue;
+
+            if(fabs(remainder(timeSteppingTool_->currentTime(),modValue)) < 0. + 1.e-8 ){
                 BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
                 stressVec = stressVecTmp;
                 this->exportPostprocess(stressVec,problemTime_->getDomain(0),sci->getPostprocessingNames()); 
