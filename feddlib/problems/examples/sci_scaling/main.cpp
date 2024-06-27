@@ -324,6 +324,108 @@ void rhsHeartBeatArtery(double* x, double* res, double* parameters){
       
 }
 
+void rhsHeartBeatArteryPhases(double* x, double* res, double* parameters){
+
+    res[0] =0.;
+    res[1] =0.;
+    res[2] = 0.;
+    double lambda=1.;
+    double force = parameters[1];
+    double loadStepSize = parameters[2];
+    double TRamp = parameters[3];
+    double heartBeatStart = parameters[4];
+
+    double t = parameters[0];
+    double heartBeatStart1 = parameters[5];
+    double heartBeatEnd1 = parameters[6];
+    double heartBeatStart2 = parameters[7];
+    double heartBeatEnd2 = parameters[8];
+
+    if(parameters[0]+1e-12 < TRamp)
+        lambda = 1*(parameters[0]+loadStepSize)/ TRamp;
+    else if(t > heartBeatStart1 && t<heartBeatEnd1)
+    {    
+        double a0    = 11.693284502463376;
+        double a [20] = {1.420706949636449,-0.937457438404759,0.281479818173732,-0.224724363786734,0.080426469802665,0.032077024077824,0.039516941555861, 
+            0.032666881040235,-0.019948718147876,0.006998975442773,-0.033021060067630,-0.015708267688123,-0.029038419813160,-0.003001255512608,-0.009549531539299, 
+            0.007112349455861,0.001970095816773,0.015306208420903,0.006772571935245,0.009480436178357};
+        double b [20] = {-1.325494054863285,0.192277311734674,0.115316087615845,-0.067714675760648,0.207297536049255,-0.044080204999886,0.050362628821152,-0.063456242820606,
+            -0.002046987314705,-0.042350454615554,-0.013150127522194,-0.010408847105535,0.011590255438424,0.013281630639807,0.014991955865968,0.016514327477078, 
+            0.013717154383988,0.012016806933609,-0.003415634499995,0.003188511626163};
+                    
+        double Q = 0.5*a0;
+        
+
+        double t_min = t - fmod(t,1.0)+heartBeatStart1-std::floor(t)+0.5; ; //FlowConditions::t_start_unsteady;
+        double t_max = t_min + 1.0; // One heartbeat lasts 1.0 second    
+        double y = M_PI * ( 2.0*( t-t_min ) / ( t_max - t_min ) -1.0)  ;
+        
+        for(int i=0; i< 20; i++)
+            Q += (a[i]*std::cos((i+1.)*y) + b[i]*std::sin((i+1.)*y) ) ;
+        
+        
+        // Remove initial offset due to FFT
+        Q -= 0.026039341343493;
+        Q = (Q - 2.85489)/(7.96908-2.85489);
+
+        if( t < heartBeatStart1 + 0.5)
+		    lambda = 0.8 + 0.2*cos(2*M_PI*t);
+        else 
+    	    lambda= 0.6 + 0.95*Q;
+    }
+    else if(t>=heartBeatEnd1-1e-08 && t<heartBeatStart2)
+    {
+        if(t < heartBeatEnd1 + 0.5)
+            lambda =  0.6;
+        else if(t < heartBeatEnd1 + 1.0)
+            lambda =  0.6 + 1.2* 0.5 * ( ( 1 - cos( M_PI*t/0.5) ));
+        else
+           lambda =  1.8;
+    }
+    else if(t>=heartBeatStart2-1.e-8 )
+    {
+        double a0    = 11.693284502463376;
+        double a [20] = {1.420706949636449,-0.937457438404759,0.281479818173732,-0.224724363786734,0.080426469802665,0.032077024077824,0.039516941555861, 
+            0.032666881040235,-0.019948718147876,0.006998975442773,-0.033021060067630,-0.015708267688123,-0.029038419813160,-0.003001255512608,-0.009549531539299, 
+            0.007112349455861,0.001970095816773,0.015306208420903,0.006772571935245,0.009480436178357};
+        double b [20] = {-1.325494054863285,0.192277311734674,0.115316087615845,-0.067714675760648,0.207297536049255,-0.044080204999886,0.050362628821152,-0.063456242820606,
+            -0.002046987314705,-0.042350454615554,-0.013150127522194,-0.010408847105535,0.011590255438424,0.013281630639807,0.014991955865968,0.016514327477078, 
+            0.013717154383988,0.012016806933609,-0.003415634499995,0.003188511626163};
+                    
+        double Q = 0.5*a0;
+        
+
+        double t_min = t - fmod(t,1.0)+heartBeatStart2-std::floor(t)+0.5; ; //FlowConditions::t_start_unsteady;
+        double t_max = t_min + 1.0; // One heartbeat lasts 1.0 second    
+        double y = M_PI * ( 2.0*( t-t_min ) / ( t_max - t_min ) -1.0)  ;
+        
+        for(int i=0; i< 20; i++)
+            Q += (a[i]*std::cos((i+1.)*y) + b[i]*std::sin((i+1.)*y) ) ;
+        
+        
+        // Remove initial offset due to FFT
+        Q -= 0.026039341343493;
+        Q = (Q - 2.85489)/(7.96908-2.85489);
+
+        if( t < heartBeatStart2 + 0.5)
+		    lambda = 1.50 + 0.30*cos(2*M_PI*t);
+        else 
+    	    lambda= 1.20 + 1.2*Q;
+    }
+    else
+    {
+        lambda = 1.0;
+    }
+
+    double forceDirection = force/fabs(force);
+    if(parameters[9]==5){
+        res[0] =lambda*force;//+forceDirection*Q;
+        res[1] =lambda*force;//+forceDirection*Q;
+        res[2] =lambda*force;//+forceDirection*Q;        
+    } 
+      
+}
+
 void rhsHeartBeatArteryPulse(double* x, double* res, double* parameters){
 
     res[0] =0.;
@@ -1137,6 +1239,8 @@ int main(int argc, char *argv[])
             		 	sci.problemStructure_->addRhsFunction( rhsArteryPaper,0 );
             		if(rhsType=="Heart Beat")
             		 	sci.problemStructure_->addRhsFunction( rhsHeartBeatArtery,0 );
+                    if(rhsType=="Heart Beat Phases")
+            		 	sci.problemStructure_->addRhsFunction( rhsHeartBeatArteryPhases,0 );
                     if(rhsType=="Paper Pulse")
             		 	sci.problemStructure_->addRhsFunction( rhsArteryPaperPulse,0 );
                     if(rhsType=="Heart Beat Pulse")
@@ -1153,6 +1257,11 @@ int main(int argc, char *argv[])
                 sci.problemStructure_->addParemeterRhs( loadRampEnd );
                 double heartBeatStart= parameterListAll->sublist("Parameter").get("Heart Beat Start",70.);
                 sci.problemStructure_->addParemeterRhs( heartBeatStart );
+                sci.problemStructure_->addParemeterRhs( parameterListProblem->sublist("Parameter").get("Heart Beat Start 1",1.) );
+                sci.problemStructure_->addParemeterRhs( parameterListProblem->sublist("Parameter").get("Heart Beat End 1",2.) );
+                sci.problemStructure_->addParemeterRhs( parameterListProblem->sublist("Parameter").get("Heart Beat Start 2",3.) );
+                sci.problemStructure_->addParemeterRhs( parameterListProblem->sublist("Parameter").get("Heart Beat End 2",4.) );
+
             }
             else{             
                 if(bcType=="Cube"){
@@ -1171,6 +1280,8 @@ int main(int argc, char *argv[])
             		 	sci.problemStructureNonLin_->addRhsFunction( rhsArteryPaper,0 );
             		if(rhsType=="Heart Beat")
             		 	sci.problemStructureNonLin_->addRhsFunction( rhsHeartBeatArtery,0 );
+                    if(rhsType=="Heart Beat Phases")
+            		 	sci.problemStructureNonLin_->addRhsFunction( rhsHeartBeatArteryPhases,0 );
                     if(rhsType=="Paper Pulse")
             		 	sci.problemStructureNonLin_->addRhsFunction(rhsArteryPaperPulse,0 );
                     if(rhsType=="Heart Beat Pulse")
@@ -1187,6 +1298,10 @@ int main(int argc, char *argv[])
                 sci.problemStructureNonLin_->addParemeterRhs( loadRampEnd );
                 double heartBeatStart= parameterListAll->sublist("Parameter").get("Heart Beat Start",70.);
                 sci.problemStructureNonLin_->addParemeterRhs( heartBeatStart );
+                sci.problemStructureNonLin_->addParemeterRhs( parameterListProblem->sublist("Parameter").get("Heart Beat Start 1",1.) );
+                sci.problemStructureNonLin_->addParemeterRhs( parameterListProblem->sublist("Parameter").get("Heart Beat End 1",2.) );
+                sci.problemStructureNonLin_->addParemeterRhs( parameterListProblem->sublist("Parameter").get("Heart Beat Start 2",3.) );
+                sci.problemStructureNonLin_->addParemeterRhs( parameterListProblem->sublist("Parameter").get("Heart Beat End 2",4.) );
 
             }
             
