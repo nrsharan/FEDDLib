@@ -18,6 +18,8 @@ typedef default_go GO;
 typedef Tpetra::KokkosClassic::DefaultNode::DefaultNodeType NO;
 
 void reactionTerm(double *, double *, double *);
+void zeroDirichlet3D(double *, double *, double, const double *);
+void inflowChem(double *, double *, double, const double *);
 
 int main(int argc, char *argv[])
 {
@@ -134,12 +136,79 @@ int main(int argc, char *argv[])
         // Printing information
         sci.info();
 
-        Teuchos::RCP<FEDD::BCBuilder<SC, LO, GO, NO>> bcFactory(new FEDD::BCBuilder<SC, LO, GO, NO>());
+        // Teuchos::RCP<FEDD::BCBuilder<SC, LO, GO, NO>> bcFactory(new FEDD::BCBuilder<SC, LO, GO, NO>());
         Teuchos::RCP<FEDD::BCBuilder<SC, LO, GO, NO>> bcFactoryDiffusion(new FEDD::BCBuilder<SC, LO, GO, NO>());
         Teuchos::RCP<FEDD::BCBuilder<SC, LO, GO, NO>> bcFactoryStructure(new FEDD::BCBuilder<SC, LO, GO, NO>());
 
-        // @TODO Set boundary conditions for plaque
+        // Getting the surface load parameters
+        double pressure = -allParameters->sublist("Parameter").get("Pressure");
+        double rampTimeStep = allParameters->sublist("Parameter").get("Ramp Time Step");
+        double timeRampEnd = allParameters->sublist("Parameter").get("Ramp End Time");
+
+        // Setting the surface load parameters
+        sci.problemStructureNonLin_->addParametersRhs(pressure);
+        sci.problemStructureNonLin_->addParametersRhs(rampTimeStep);
+        sci.problemStructureNonLin_->addParametersRhs(timeRampEnd);
+
+        // Set load function (the second parameter is the block index)
+        sci.problemStructureNonLin_->addRhsFunction(loadFunction, 0);
+
+        // Structure dirichtlet boundary conditions
+        bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactoryStructure->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactoryStructure->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactoryStructure->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactoryStructure->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dimension);
+        bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dimension);
+
+        bcFactory->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactory->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactory->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactory->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactory->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dimension); // Plaque surface
+        bcFactory->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dimension); // plaque surface
+        bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dimension);
+        bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dimension);
+
+        // Diffusion boundary conditions
+        std::vector<double> parameter_vec(1, parameterListAll->sublist("Parameter").get("Inflow Start Time", 0.));
+        bcFactoryDiffusion->addBC(inflowChem, 5, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactoryDiffusion->addBC(inflowChem, 8, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactoryDiffusion->addBC(inflowChem, 9, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+
+        bcFactory->addBC(inflowChem, 5, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactory->addBC(inflowChem, 8, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactory->addBC(inflowChem, 9, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+
+        sci.problemChem_->addBoundaries(bcFactoryDiffusion);
+
+        sci.addBoundaries(bcFactory);
+
+        sci.initializeProblem();
+
+        sci.initializeCE();
+
+        sci.assemble();
+
+        FEDD::DAESolverInTime<SC, LO, GO, NO> daeTimeSolver(allParameters, comm);
+
+        daeTimeSolver.defineTimeStepping(*defTS);
+
+        daeTimeSolver.setProblem(sci);
+
+        daeTimeSolver.setupTimeStepping();
+
+        daeTimeSolver.advanceInTime();
     }
+    TimeMonitor_Type::report(std::cout);
+    stackedTimer->stop("Structure-chemical interaction");
+    StackedTimer::OutputOptions options;
+    options.output_fraction = options.output_histogram = options.output_minmax = true;
+    stackedTimer->report((std::cout), comm, options);
+
+    return (EXIT_SUCCESS);
 }
 
 // @brief Reaction Term in the reaction diffusion equation
@@ -147,4 +216,43 @@ void reactionTerm(double *x, double *res, double *parameters)
 {
     double m = 0.0;
     res[0] = m * x[0];
+}
+
+/* The values of parameters are set in feddlib/core/FE/FE_def.hpp assemblySurfaceIntegralExternal()
+ * x* for some reason gives the middle point of the surface element
+ * parameters[0] is always the time, but all others depend on the order in which they *are added using the addParametersRhs() (which is in Problem_decl.hpp) in the main function
+ * Note that the time starts from 0, i.e. the first time step is 0
+ */
+void loadFunction(double *x, double *res, double *parameters)
+{
+    res[0] = 0.0;
+
+    double currentTime = parameters[0];
+    double pressure = parameters[1];
+    double rampTimeStep = parameters[2];
+    double timeRampEnd = parameters[3];
+    double lambda = 0.0;
+
+    if (currentTime < timeRampEnd)
+        lambda = 0.875 * (currentTime + rampTimeStep);
+    else if (abs(currentTime - timeRampEnd) < 1e-10)
+        lambda = 0.875;
+
+    if (parameters[5] == 5) // If the surface flag is 5
+        res[0] = pressure * lambda;
+}
+
+void zeroDirichlet3D(double *x, double *res, double t, const double *parameters)
+{
+    res[0] = 0.;
+    res[1] = 0.;
+    res[2] = 0.;
+}
+
+void inflowChem(double *x, double *res, double t, const double *parameters)
+{
+    if (t >= parameters[0])
+        res[0] = 1.;
+    else
+        res[0] = 0.;
 }
