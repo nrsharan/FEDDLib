@@ -136,7 +136,7 @@ int main(int argc, char *argv[])
         // Printing information
         sci.info();
 
-        // Teuchos::RCP<FEDD::BCBuilder<SC, LO, GO, NO>> bcFactory(new FEDD::BCBuilder<SC, LO, GO, NO>());
+        Teuchos::RCP<FEDD::BCBuilder<SC, LO, GO, NO>> bcFactory(new FEDD::BCBuilder<SC, LO, GO, NO>());
         Teuchos::RCP<FEDD::BCBuilder<SC, LO, GO, NO>> bcFactoryDiffusion(new FEDD::BCBuilder<SC, LO, GO, NO>());
         Teuchos::RCP<FEDD::BCBuilder<SC, LO, GO, NO>> bcFactoryStructure(new FEDD::BCBuilder<SC, LO, GO, NO>());
 
@@ -242,6 +242,8 @@ void loadFunction(double *x, double *res, double *parameters)
         res[0] = pressure * lambda;
 }
 
+
+// @brief Fix all degrees of freedom
 void zeroDirichlet3D(double *x, double *res, double t, const double *parameters)
 {
     res[0] = 0.;
