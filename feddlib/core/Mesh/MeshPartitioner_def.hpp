@@ -89,8 +89,8 @@ void MeshPartitioner<SC,LO,GO,NO>::determineRanks(){
             (*iterator)++;
             iterator++;
             diff++;
-        }
-
+        }// This piece of code ensure that the sum of fractions is exaclty equal to 100
+        
         this->determineRanksFromFractions( fractions );
         
         if (verbose) {
