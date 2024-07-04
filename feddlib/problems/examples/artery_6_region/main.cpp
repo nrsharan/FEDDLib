@@ -18,20 +18,21 @@ typedef default_go GO;
 typedef Tpetra::KokkosClassic::DefaultNode::DefaultNodeType NO;
 
 void reactionTerm(double *, double *, double *);
+void loadFunction(double *, double *, double *);
 void zeroDirichlet3D(double *, double *, double, const double *);
 void inflowChem(double *, double *, double, const double *);
 
 int main(int argc, char *argv[])
 {
-    Teuchos::oblackhomestream blackhole;
-    Teuchos::GlobalMPISession mpiSession;
+    Teuchos::oblackholestream blackhole;
+    Teuchos::GlobalMPISession mpiSession(&argc, &argv, &blackhole);
 
     Teuchos::RCP<const Teuchos::Comm<int>> comm = Xpetra::DefaultPlatform::getDefaultPlatform().getComm();
 
     Teuchos::CommandLineProcessor commandLineProcessor;
     string underlyingLibrary = "Tpetra";
     string simulationParametersXML = "simulationParameters.xml";
-    string materialParametersXML = "materialParameters.xml";
+    string materialParametersXML = "materialParameters_kim_guzman.xml";
     string solverParametersXML = "solverParameters.xml";
     string structurePreconditionerParametersXML = "preconditionerParameters_Structure.xml";
     string chemistryPreconditionerParametersXML = "preconditionerParameters_Chemistry.xml";
@@ -52,20 +53,20 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Teuchos::RCP<Teuchos::StackedTimer> stackedTimer = Teuchos::rcp(new StackedTimer("Structure-chemical interaction", true));
+    Teuchos::RCP<Teuchos::StackedTimer> stackedTimer = Teuchos::rcp(new Teuchos::StackedTimer("Structure-chemical interaction", true));
     bool verbose(comm->getRank() == 0);
 
-    TimeMonitor::setStackedTimer(stackedTimer);
+    Teuchos::TimeMonitor::setStackedTimer(stackedTimer);
     {
         Teuchos::RCP<Teuchos::ParameterList> simulationParameters = Teuchos::getParametersFromXmlFile(simulationParametersXML);
         Teuchos::RCP<Teuchos::ParameterList> materialParameters = Teuchos::getParametersFromXmlFile(materialParametersXML);
         Teuchos::RCP<Teuchos::ParameterList> solverParameters = Teuchos::getParametersFromXmlFile(solverParametersXML);
         Teuchos::RCP<Teuchos::ParameterList> structurePreconditionerParameters = Teuchos::getParametersFromXmlFile(structurePreconditionerParametersXML);
-        Teuchos::RCP<Teuchos::ParameterList> chemistryPreconditionersParamerters = Teuchos::getParanetersFromXmlFile(chemistryPreconditionerParametersXML);
+        Teuchos::RCP<Teuchos::ParameterList> chemistryPreconditionerParamerters = Teuchos::getParametersFromXmlFile(chemistryPreconditionerParametersXML);
 
-        int dimension = simulationParameters->sublist("Simulation Parameters").get("Dimension");
-        string discretizationType = simulationParameters->sublist("Simulation Parameters").get("Discretization");
-        string preconditionerType = simulationParameters->sublist("Simulation Parameters").get("Preconditioner Type");
+        int dimension = simulationParameters->sublist("Simulation Parameters").get("Dimension", 3);
+        string discretizationType = simulationParameters->sublist("Simulation Parameters").get("Discretization", "P2");
+        // string preconditionerType = simulationParameters->sublist("Simulation Parameters").get("Preconditioner Type");
 
         Teuchos::RCP<Teuchos::ParameterList> allParameters = Teuchos::rcp(new Teuchos::ParameterList(*simulationParameters));
 
@@ -73,14 +74,14 @@ int main(int argc, char *argv[])
 
         allParameters->setParameters(*materialParameters);
 
-        Teuchos::RCP<Teuchos::ParameterList> allDiffusionParameters = Teuchos::rcp(new Teuchos::ParameterList(*chemistryPreconditionerParameters));
-        allDiffusionParameters->sublist("Parameter")->setParameters(simulationParameters->sublist("Parameter Chem"));
-        allDiffusionParameters->sublist("Parameter")->setParameters(simulationParameters->sublist("Simulation Parameters"));
+        Teuchos::RCP<Teuchos::ParameterList> allDiffusionParameters = Teuchos::rcp(new Teuchos::ParameterList(*chemistryPreconditionerParamerters));
+        Teuchos::sublist(allDiffusionParameters, "Parameter")->setParameters(simulationParameters->sublist("Parameter Chem"));
+        Teuchos::sublist(allDiffusionParameters, "Parameter")->setParameters(simulationParameters->sublist("Simulation Parameters"));
         allDiffusionParameters->setParameters(*solverParameters);
-        allDiffusionParameters->setParameters(*chemistryPreconditionerParameters);
+        allDiffusionParameters->setParameters(*chemistryPreconditionerParamerters);
 
         Teuchos::RCP<Teuchos::ParameterList> allStructureParameters = Teuchos::rcp(new Teuchos::ParameterList(*structurePreconditionerParameters));
-        structurePreconditionerParameters->sublist("Parameter")->setParameters(simulationParameters->sublist("Parameter Solid"));
+        Teuchos::sublist(structurePreconditionerParameters, "Parameter")->setParameters(simulationParameters->sublist("Parameter Solid"));
 
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Diffusion;
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Structure;
@@ -98,7 +99,7 @@ int main(int argc, char *argv[])
 
         domainP1Array[0] = domainP1Structure;
 
-        Teuchos::RCP<Teuchos::ParameterList> partitionerParameters = sublist(allParameters, "Mesh Partitioner");
+        Teuchos::RCP<Teuchos::ParameterList> partitionerParameters = Teuchos::sublist(allParameters, "Mesh Partitioner");
         partitionerParameters->set("Build Edge List", true);
         partitionerParameters->set("Build Surface List", true);
 
@@ -127,12 +128,14 @@ int main(int argc, char *argv[])
         (*defTS)[0][0] = 1; // Structure
         (*defTS)[1][1] = 1; // Diffusion
 
+        std::vector<std::vector<double>> diffusionTensor(dimension, std::vector<double>(3));
+
         // Creating an object of the SCI system
         FEDD::SCI<SC, LO, GO, NO> sci(domainStructure, discretizationType,
                                       domainDiffusion, discretizationType,
-                                      reactionTerm, allStructureParameters,
-                                      allDiffusionParameters, allParameters,
-                                      defTS);
+                                      diffusionTensor, reactionTerm,
+                                      allStructureParameters, allDiffusionParameters,
+                                      allParameters, defTS);
         // Printing information
         sci.info();
 
@@ -141,14 +144,14 @@ int main(int argc, char *argv[])
         Teuchos::RCP<FEDD::BCBuilder<SC, LO, GO, NO>> bcFactoryStructure(new FEDD::BCBuilder<SC, LO, GO, NO>());
 
         // Getting the surface load parameters
-        double pressure = -allParameters->sublist("Parameter").get("Pressure");
-        double rampTimeStep = allParameters->sublist("Parameter").get("Ramp Time Step");
-        double timeRampEnd = allParameters->sublist("Parameter").get("Ramp End Time");
+        double pressure = -allParameters->sublist("Parameter").get("Pressure", 0.016);
+        double rampTimeStep = allParameters->sublist("Parameter").get("Ramp Time Step", 0.05);
+        double timeRampEnd = allParameters->sublist("Parameter").get("Ramp End Time", 1.0);
 
         // Setting the surface load parameters
-        sci.problemStructureNonLin_->addParametersRhs(pressure);
-        sci.problemStructureNonLin_->addParametersRhs(rampTimeStep);
-        sci.problemStructureNonLin_->addParametersRhs(timeRampEnd);
+        sci.problemStructureNonLin_->addParemeterRhs(pressure);
+        sci.problemStructureNonLin_->addParemeterRhs(rampTimeStep);
+        sci.problemStructureNonLin_->addParemeterRhs(timeRampEnd);
 
         // Set load function (the second parameter is the block index)
         sci.problemStructureNonLin_->addRhsFunction(loadFunction, 0);
@@ -173,7 +176,7 @@ int main(int argc, char *argv[])
         bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dimension);
 
         // Diffusion boundary conditions
-        std::vector<double> parameter_vec(1, parameterListAll->sublist("Parameter").get("Inflow Start Time", 0.));
+        std::vector<double> parameter_vec(1, allParameters->sublist("Parameter").get("Inflow Start Time", 0.));
         bcFactoryDiffusion->addBC(inflowChem, 5, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
         bcFactoryDiffusion->addBC(inflowChem, 8, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
         bcFactoryDiffusion->addBC(inflowChem, 9, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
@@ -202,9 +205,9 @@ int main(int argc, char *argv[])
 
         daeTimeSolver.advanceInTime();
     }
-    TimeMonitor_Type::report(std::cout);
+    FEDD::TimeMonitor_Type::report(std::cout);
     stackedTimer->stop("Structure-chemical interaction");
-    StackedTimer::OutputOptions options;
+    Teuchos::StackedTimer::OutputOptions options;
     options.output_fraction = options.output_histogram = options.output_minmax = true;
     stackedTimer->report((std::cout), comm, options);
 
@@ -241,7 +244,6 @@ void loadFunction(double *x, double *res, double *parameters)
     if (parameters[5] == 5) // If the surface flag is 5
         res[0] = pressure * lambda;
 }
-
 
 // @brief Fix all degrees of freedom
 void zeroDirichlet3D(double *x, double *res, double t, const double *parameters)

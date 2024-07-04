@@ -39,7 +39,7 @@
     <ParameterList name="Mesh Partitioner">
         <Parameter name="Contiguous" type="bool" value="true"/>
         
-        <Parameter name="Mesh 1 Name" type="string" value="plaque_short_6_k.mesh"/> <!-- plaque_short_6_k.mesh -->
+        <Parameter name="Mesh 1 Name" type="string" value="Artery_kim_guzman.mesh"/> <!-- plaque_short_6_k.mesh -->
         
         <Parameter name="Automatic partition" type="bool" value="false"/> <!-- find ratio for ranks based on the number of elements of each mesh -->
         
