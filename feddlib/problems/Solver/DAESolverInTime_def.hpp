@@ -994,6 +994,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     std::string structureModel = parameterList_->sublist("Parameter").get("Structure Model","SCI_NH");
     std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
 
+    double timeStep = 0;
+
     while(timeSteppingTool_->continueTimeStepping())
     {
         for(int i=0; i<numSegments ; i++){
@@ -1225,6 +1227,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
         }
         if (printStress){
+            timeStep = timeStep + 1.;
+
             bool heartbeat= false;
             double heartbeatStart1 = parameterList_->sublist("Parameter").get("Heart Beat Start 1",0.) ;
             double heartbeatStart2 = parameterList_->sublist("Parameter").get("Heart Beat Start 2",0.) ;
@@ -1244,10 +1248,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
                 modValue= modValueHeartBeat; // smaller post Processing steps in heart beat phases
 
 
-            int n = static_cast<int>(timeSteppingTool_->currentTime()/modValue);
-            double result = timeSteppingTool_->currentTime() - n*modValue;
 
-            if(fabs(remainder(timeSteppingTool_->currentTime(),modValue)) < 0. + 1.e-8 ){
+            if(fabs(remainder(timeStep,modValue)) < 0. + 1.e-8 ){
                 BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
                 stressVec = stressVecTmp;
                 this->exportPostprocess(stressVec,problemTime_->getDomain(0),sci->getPostprocessingNames()); 

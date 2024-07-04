@@ -85,15 +85,15 @@ int main(int argc, char *argv[])
 
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Diffusion;
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Structure;
-        Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP2Diffusion;
-        Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP2Structure;
+        // Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP2Diffusion;
+        // Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP2Structure;
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainDiffusion;
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainStructure;
 
         domainP1Diffusion.reset(new FEDD::Domain<SC, LO, GO, NO>(comm, dimension));
         domainP1Structure.reset(new FEDD::Domain<SC, LO, GO, NO>(comm, dimension));
-        domainP2Diffusion.reset(new FEDD::Domain<SC, LO, GO, NO>(comm, dimension));
-        domainP2Structure.reset(new FEDD::Domain<SC, LO, GO, NO>(comm, dimension));
+        domainDiffusion.reset(new FEDD::Domain<SC, LO, GO, NO>(comm, dimension));
+        domainStructure.reset(new FEDD::Domain<SC, LO, GO, NO>(comm, dimension));
 
         std::vector<Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>>> domainP1Array(1);
 
@@ -157,33 +157,42 @@ int main(int argc, char *argv[])
         sci.problemStructureNonLin_->addRhsFunction(loadFunction, 0);
 
         // Structure dirichtlet boundary conditions
-        bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactoryStructure->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactoryStructure->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactoryStructure->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactoryStructure->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dimension);
-        bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dimension);
+        bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension); // z=0
+        bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension); // z=0.5
+        bcFactoryStructure->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dimension); // z=0, inner ring
+        bcFactoryStructure->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dimension); // z=0.5 inner ring
+        bcFactoryStructure->addBC(zeroDirichlet3D, 6, 0, domainStructure, "Dirichlet_Z", dimension); // z=0, outer ring
+        bcFactoryStructure->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dimension);  // z=0.5, outer ring
+        bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dimension); // additional point(s) on outer ring held in x-z direction
+        bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dimension); // additional point(s) on outer ring held in y-z direction
 
         bcFactory->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension);
         bcFactory->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactory->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dimension);
         bcFactory->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactory->addBC(zeroDirichlet3D, 6, 0, domainStructure, "Dirichlet_Z", dimension); 
         bcFactory->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactory->addBC(zeroDirichlet3D, 10, 0, domainStructure, "Dirichlet_Z", dimension); // Plaque surface
-        bcFactory->addBC(zeroDirichlet3D, 11, 0, domainStructure, "Dirichlet_Z", dimension); // plaque surface
         bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dimension);
         bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dimension);
 
         // Diffusion boundary conditions
         std::vector<double> parameter_vec(1, allParameters->sublist("Parameter").get("Inflow Start Time", 0.));
-        bcFactoryDiffusion->addBC(inflowChem, 5, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
-        bcFactoryDiffusion->addBC(inflowChem, 8, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
-        bcFactoryDiffusion->addBC(inflowChem, 9, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactoryDiffusion->addBC(inflowChem, 5, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // Inflow through inner wall
+        bcFactoryDiffusion->addBC(inflowChem, 7, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0, inner ring on innter wall
+        bcFactoryDiffusion->addBC(inflowChem, 8, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0.5 inner ring
 
         bcFactory->addBC(inflowChem, 5, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactory->addBC(inflowChem, 7, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
         bcFactory->addBC(inflowChem, 8, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
-        bcFactory->addBC(inflowChem, 9, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+
+        // FOR INFLOW FROM OUTER WALL
+        /*bcFactoryDiffusion->addBC(inflowChem, 4, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // Inflow through inner wall
+        bcFactoryDiffusion->addBC(inflowChem, 6, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0, outer ring on innter wall
+        bcFactoryDiffusion->addBC(inflowChem,9, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0.5 outer ring
+
+        bcFactory->addBC(inflowChem, 4, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactory->addBC(inflowChem, 6, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactory->addBC(inflowChem,9, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);*/
 
         sci.problemChem_->addBoundaries(bcFactoryDiffusion);
 
