@@ -125,10 +125,26 @@ int main(int argc, char *argv[])
 
         // Define the block system
         Teuchos::RCP<FEDD::SmallMatrix<int>> defTS;
+        defTS.reset(new FEDD::SmallMatrix<int>(2));
         (*defTS)[0][0] = 1; // Structure
         (*defTS)[1][1] = 1; // Diffusion
 
         std::vector<std::vector<double>> diffusionTensor(dimension, std::vector<double>(3));
+        double D0 = allParameters->sublist("Parameter Diffusion").get("D0", 1.);
+        for (int i = 0; i < dimension; i++)
+        {
+            diffusionTensor[0][0] = D0;
+            diffusionTensor[1][1] = D0;
+            diffusionTensor[2][2] = D0;
+
+            if (i > 0)
+            {
+                diffusionTensor[i][i - 1] = 0;
+                diffusionTensor[i - 1][i] = 0;
+            }
+            else
+                diffusionTensor[i][i + 1] = 0;
+        }
 
         // Creating an object of the SCI system
         FEDD::SCI<SC, LO, GO, NO> sci(domainStructure, discretizationType,
@@ -145,7 +161,7 @@ int main(int argc, char *argv[])
 
         // Getting the surface load parameters
         double pressure = -allParameters->sublist("Parameter").get("Pressure", 0.016);
-        double rampTimeStep = allParameters->sublist("Parameter").get("Ramp Time Step", 0.05);
+        double rampTimeStep = allParameters->sublist("Parameter").get("Load Step Size", 0.05);
         double timeRampEnd = allParameters->sublist("Parameter").get("Ramp End Time", 1.0);
 
         // Setting the surface load parameters
@@ -166,6 +182,11 @@ int main(int argc, char *argv[])
         bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dimension); // additional point(s) on outer ring held in x-z direction
         bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dimension); // additional point(s) on outer ring held in y-z direction
 
+        if (!sci.problemStructure_.is_null())
+            sci.problemStructure_->addBoundaries(bcFactoryStructure);
+        else
+            sci.problemStructureNonLin_->addBoundaries(bcFactoryStructure);
+
         bcFactory->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension);
         bcFactory->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension);
         bcFactory->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dimension);
@@ -181,9 +202,9 @@ int main(int argc, char *argv[])
         bcFactoryDiffusion->addBC(inflowChem, 7, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0, inner ring on innter wall
         bcFactoryDiffusion->addBC(inflowChem, 8, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0.5 inner ring
 
-        bcFactory->addBC(inflowChem, 5, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
-        bcFactory->addBC(inflowChem, 7, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
-        bcFactory->addBC(inflowChem, 8, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactory->addBC(inflowChem, 5, 1, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactory->addBC(inflowChem, 7, 1, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactory->addBC(inflowChem, 8, 1, domainDiffusion, "Dirichlet", 1, parameter_vec);
 
         // FOR INFLOW FROM OUTER WALL
         /*bcFactoryDiffusion->addBC(inflowChem, 4, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // Inflow through inner wall

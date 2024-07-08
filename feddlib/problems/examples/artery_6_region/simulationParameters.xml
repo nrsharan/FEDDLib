@@ -17,7 +17,7 @@
         <Parameter name="Load Stepping" type="bool" value="true"/>
         <Parameter name="Inflow Start Time" type="double" value="10.0"/><!-- Start of diffusion process -->
         <Parameter name="Heart Beat Start" type="double" value="70.0"/><!-- Start of heart beat -->
-        <Parameter name="Ramp Time Step" type="double" value="0.05"/><!-- Length/size of Loadsteps -->
+        <Parameter name="Load Step Size" type="double" value="0.05"/><!-- Length/size of Loadsteps -->
         <Parameter name="Ramp End Time" type="double" value="1.0"/><!-- End of Load Stepping -->
         <Parameter name="External Force" type="bool" value="true"/>
         <Parameter name="Nonlinear External Force" type="bool" value="true"/>
@@ -39,7 +39,7 @@
     <ParameterList name="Mesh Partitioner">
         <Parameter name="Contiguous" type="bool" value="true"/>
         
-        <Parameter name="Mesh 1 Name" type="string" value="Artery_kim_guzman.mesh"/> <!-- plaque_short_6_k.mesh -->
+        <Parameter name="Mesh 1 Name" type="string" value="Artery_kim_guzman_SCI.mesh"/> <!-- plaque_short_6_k.mesh -->
         
         <Parameter name="Automatic partition" type="bool" value="false"/> <!-- find ratio for ranks based on the number of elements of each mesh -->
         
@@ -86,7 +86,7 @@
         <Parameter name="Class" type="string" value="Multistep"/> <!-- External, Multistep-->
         <Parameter name="Timestepping type" type="string" value="non-adaptive"/><!--non-adaptive,adaptive:not working for BDF2-->
     
-        <Parameter name="Final time" type="double" value="0.1"/>
+        <Parameter name="Final time" type="double" value="1"/>
         <Parameter name="dt" type="double" value=".05"/>
         <Parameter name="beta" type="double" value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma" type="double" value="0.5"/> <!-- newmark method parameter-->
