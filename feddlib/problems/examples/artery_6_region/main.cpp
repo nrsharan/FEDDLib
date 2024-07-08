@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         Teuchos::RCP<Teuchos::ParameterList> materialParameters = Teuchos::getParametersFromXmlFile(materialParametersXML);
         Teuchos::RCP<Teuchos::ParameterList> solverParameters = Teuchos::getParametersFromXmlFile(solverParametersXML);
         Teuchos::RCP<Teuchos::ParameterList> structurePreconditionerParameters = Teuchos::getParametersFromXmlFile(structurePreconditionerParametersXML);
-        Teuchos::RCP<Teuchos::ParameterList> chemistryPreconditionerParamerters = Teuchos::getParametersFromXmlFile(chemistryPreconditionerParametersXML);
+        Teuchos::RCP<Teuchos::ParameterList> chemistryPreconditionerParamerters = Teuchos::getParametersFromXmlFile(chemistryPreconditionerParametersXML); // Parameters for solving Chemistry explicit
 
         int dimension = simulationParameters->sublist("Simulation Parameters").get("Dimension", 3);
         string discretizationType = simulationParameters->sublist("Simulation Parameters").get("Discretization", "P2");
@@ -72,7 +72,9 @@ int main(int argc, char *argv[])
 
         Teuchos::RCP<Teuchos::ParameterList> preconditionerParameters = Teuchos::rcp(new Teuchos::ParameterList(*structurePreconditionerParameters));
 
-        allParameters->setParameters(*materialParameters);
+        allParameters->setParameters(*materialParameters); // Adding Material Parameters
+        allParameters->setParameters(*structurePreconditionerParameters); // Adding Preconditioning Parameters
+
 
         Teuchos::RCP<Teuchos::ParameterList> allDiffusionParameters = Teuchos::rcp(new Teuchos::ParameterList(*chemistryPreconditionerParamerters));
         Teuchos::sublist(allDiffusionParameters, "Parameter")->setParameters(simulationParameters->sublist("Parameter Chem"));
