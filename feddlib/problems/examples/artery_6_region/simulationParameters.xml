@@ -70,7 +70,11 @@
         <Parameter name="Export Data" type="bool" value="true"/>
         <Parameter name="Export Extra Data" type="bool" value="false"/>
         <Parameter name="Export drag and lift" type="bool" value="true"/>
-        
+
+        <Parameter name="Export Stress" type="bool" value="true"/>
+        <Parameter name="Every X Second" type="double" value="1."/> <!-- Output frequency for stresses and co. during normal phase. 1 = every time step. 10 = every tenth time step -->
+        <!-- <Parameter name="Every X Second Heartbeat" type="double" value="0.01"/> --> <!-- Output frequency for stresses and co. during heartbeat phases. Currently no heartbeat rhs -->
+
         <Parameter name="Preconditioner Method" type="string" value="Monolithic"/> <!-- Monolithic, FaCSI, FaCSI-Teko -->
        
         <Parameter name="Only Diagonal" type="bool" value="false"/>
