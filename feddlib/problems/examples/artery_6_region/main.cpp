@@ -273,7 +273,7 @@ void loadFunction(double *x, double *res, double *parameters)
     else if (abs(currentTime - timeRampEnd) < 1e-10)
         lambda = 0.875;
 
-    if (parameters[5] == 5) // If the surface flag is 5
+    if (parameters[4] == 5) // If the surface flag is 5
         res[0] = pressure * lambda;
 }
 
