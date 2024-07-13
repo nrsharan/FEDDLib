@@ -8,7 +8,7 @@
 		<Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  structured, unstructured -->
         <Parameter name="H/h" type="int" value="1"/> <!-- only relevant for structured meshes -->
     
-        <Parameter name="Pressure" type="double" value="0.016"/> <!-- Load applied on interior wall -->
+        <Parameter name="Pressure" type="double" value="12.95131763460572"/> <!-- Load applied on interior wall. Equates to 97.14 mmHg and hence results in 85mmHg(0.875 times) -->
         <Parameter name="Source Type" type="string"   value="surface"/>
         <Parameter name="Model Geometry" type="string" value="Laplace"/>
         
@@ -102,10 +102,10 @@
             </ParameterList>
              <ParameterList name="2">
                 <Parameter name="Start Time" type="double" value="1."/>
-                <Parameter name="dt" type="double" value="0.2"/>
+                <Parameter name="dt" type="double" value="0.5"/>
             </ParameterList>
              <ParameterList name="3">
-                <Parameter name="Start Time" type="double" value="70."/>
+                <Parameter name="Start Time" type="double" value="20."/>
                 <Parameter name="dt" type="double" value="0.02."/>
             </ParameterList>
              <ParameterList name="4">
