@@ -86,12 +86,12 @@
       <ParameterList name="Timestepping Intervalls Growth">
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
-          <Parameter name="Start Time" type="double" value="820.0" />
-          <Parameter name="End Time" type="double" value="900.0" />
+          <Parameter name="Start Time" type="double" value="20.0" />
+          <Parameter name="End Time" type="double" value="800.0" />
         </ParameterList>
       </ParameterList>
       <ParameterList name="Timestepping Intervalls Reorientation">
-        <Parameter name="Number of Segments" type="int" value="3" />
+        <Parameter name="Number of Segments" type="int" value="2" />
         <ParameterList name="1">
           <Parameter name="Start Time" type="double" value="1.0" />
           <Parameter name="End Time" type="double" value="20.0" />
@@ -100,10 +100,10 @@
           <Parameter name="Start Time" type="double" value="800.0" />
           <Parameter name="End Time" type="double" value="820.0" />
         </ParameterList>
-        <ParameterList name="3">
+        <!-- <ParameterList name="3">
           <Parameter name="Start Time" type="double" value="900.0" />
           <Parameter name="End Time" type="double" value="920.0" />
-        </ParameterList>
+        </ParameterList> -->
       </ParameterList>
 
     </ParameterList>
@@ -159,7 +159,7 @@
       <Parameter name="C50" type="double" value="0.5" />
       <Parameter name="D0" type="double" value="6.e-5" />
       <Parameter name="M" type="double" value="0." />
-      <Parameter name="ActiveStartTime" type="double" value="20.0" />
+      <Parameter name="ActiveStartTime" type="double" value="820.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
       <Parameter name="growthStartTime" type="double" value="0.0" />
@@ -186,25 +186,25 @@
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="2." />
       <ParameterList name="Timestepping Intervalls Active">
-        <Parameter name="Number of Segments" type="int" value="2" />
+        <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
-          <Parameter name="Start Time" type="double" value="20." />
-          <Parameter name="End Time" type="double" value="800." />
+          <Parameter name="Start Time" type="double" value="820." />
+          <Parameter name="End Time" type="double" value="2500." />
         </ParameterList>
-        <ParameterList name="2">
+        <!-- <ParameterList name="2">
           <Parameter name="Start Time" type="double" value="920." />
           <Parameter name="End Time" type="double" value="150000." />
-        </ParameterList>
+        </ParameterList> -->
       </ParameterList>
       <ParameterList name="Timestepping Intervalls Growth">
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
-          <Parameter name="Start Time" type="double" value="820.0" />
-          <Parameter name="End Time" type="double" value="900.0" />
+          <Parameter name="Start Time" type="double" value="20.0" />
+          <Parameter name="End Time" type="double" value="800.0" />
         </ParameterList>
       </ParameterList>
       <ParameterList name="Timestepping Intervalls Reorientation">
-        <Parameter name="Number of Segments" type="int" value="3" />
+        <Parameter name="Number of Segments" type="int" value="2" />
         <ParameterList name="1">
           <Parameter name="Start Time" type="double" value="1.0" />
           <Parameter name="End Time" type="double" value="20.0" />
@@ -213,10 +213,10 @@
           <Parameter name="Start Time" type="double" value="800.0" />
           <Parameter name="End Time" type="double" value="820.0" />
         </ParameterList>
-        <ParameterList name="3">
+        <!-- <ParameterList name="3">
           <Parameter name="Start Time" type="double" value="900.0" />
           <Parameter name="End Time" type="double" value="920.0" />
-        </ParameterList>
+        </ParameterList> -->
       </ParameterList>
 
     </ParameterList>
@@ -272,7 +272,7 @@
       <Parameter name="C50" type="double" value="0.5" />
       <Parameter name="D0" type="double" value="3.e-5" />
       <Parameter name="M" type="double" value="0." />
-      <Parameter name="ActiveStartTime" type="double" value="20.0" />
+      <Parameter name="ActiveStartTime" type="double" value="820.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
       <Parameter name="growthStartTime" type="double" value="0.0" />
@@ -299,25 +299,25 @@
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="2." />
       <ParameterList name="Timestepping Intervalls Active">
-        <Parameter name="Number of Segments" type="int" value="2" />
+        <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
-          <Parameter name="Start Time" type="double" value="20." />
-          <Parameter name="End Time" type="double" value="800." />
+          <Parameter name="Start Time" type="double" value="820." />
+          <Parameter name="End Time" type="double" value="2500." />
         </ParameterList>
-        <ParameterList name="2">
+        <!-- <ParameterList name="2">
           <Parameter name="Start Time" type="double" value="920." />
           <Parameter name="End Time" type="double" value="150000." />
-        </ParameterList>
+        </ParameterList> -->
       </ParameterList>
       <ParameterList name="Timestepping Intervalls Growth">
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
-          <Parameter name="Start Time" type="double" value="820.0" />
-          <Parameter name="End Time" type="double" value="900.0" />
+          <Parameter name="Start Time" type="double" value="20.0" />
+          <Parameter name="End Time" type="double" value="800.0" />
         </ParameterList>
       </ParameterList>
       <ParameterList name="Timestepping Intervalls Reorientation">
-        <Parameter name="Number of Segments" type="int" value="3" />
+        <Parameter name="Number of Segments" type="int" value="2" />
         <ParameterList name="1">
           <Parameter name="Start Time" type="double" value="1.0" />
           <Parameter name="End Time" type="double" value="20.0" />
@@ -326,10 +326,10 @@
           <Parameter name="Start Time" type="double" value="800.0" />
           <Parameter name="End Time" type="double" value="820.0" />
         </ParameterList>
-        <ParameterList name="3">
+        <!-- <ParameterList name="3">
           <Parameter name="Start Time" type="double" value="900.0" />
           <Parameter name="End Time" type="double" value="920.0" />
-        </ParameterList>
+        </ParameterList> -->
       </ParameterList>
 
     </ParameterList>
@@ -728,7 +728,7 @@
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="2." />
       <ParameterList name="Timestepping Intervalls Reorientation">
-        <Parameter name="Number of Segments" type="int" value="3" />
+        <Parameter name="Number of Segments" type="int" value="2" />
         <ParameterList name="1">
           <Parameter name="Start Time" type="double" value="1.0" />
           <Parameter name="End Time" type="double" value="20.0" />
@@ -737,9 +737,16 @@
           <Parameter name="Start Time" type="double" value="800.0" />
           <Parameter name="End Time" type="double" value="820.0" />
         </ParameterList>
-        <ParameterList name="3">
+        <!-- <ParameterList name="3">
           <Parameter name="Start Time" type="double" value="900.0" />
           <Parameter name="End Time" type="double" value="920.0" />
+        </ParameterList> -->
+      </ParameterList>
+      <ParameterList name="Timestepping Intervalls Growth">
+        <Parameter name="Number of Segments" type="int" value="1" />
+        <ParameterList name="1">
+          <Parameter name="Start Time" type="double" value="20.0" />
+          <Parameter name="End Time" type="double" value="800.0" />
         </ParameterList>
       </ParameterList>
     </ParameterList>
