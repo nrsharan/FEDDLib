@@ -71,8 +71,8 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
         exporterIterationsChem_->setup( "linearIterations_chem", this->comm_ );
     }
 
-    postProcessingnames_.resize(14);
-    postProcessingnames_ = {"vonMisesStress", "SCirc","SAxial","SRadial","W","Growth1","Growth2","Growth3","Strech1","Strech2","nC1","nC2","nD1","nD2"};
+    postProcessingnames_.resize(23);
+    postProcessingnames_ = {"vonMisesStress", "SCirc","SAxial","SRadial","W","Growth1","Growth2","Growth3","Strech1","Strech2","nC1","nC2","nD1","nD2","Ag11","Ag12","Ag13","Ag21","Ag22","Ag23","Ag31","Ag32","Ag33"};
 
 }
 
