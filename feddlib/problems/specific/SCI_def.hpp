@@ -1229,6 +1229,14 @@ typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostPro
     MultiVectorPtr_Type Strech2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
     this->feFactory_->postProcessing(28, Strech2);
 
+    std::vector<MultiVectorPtr_Type> Ag1n;
+
+    for(int i=30;i<39;i++)
+    {
+        Ag1n.push_back(Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() )));
+        this->feFactory_->postProcessing(i, Ag1n[i-30]);
+    }
+
     MultiVectorPtr_Type nC1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
     this->feFactory_->postProcessing(45, nC1);
 
@@ -1255,7 +1263,8 @@ typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostPro
     postProcess->addBlock(nC2,11);
     postProcess->addBlock(nD1,12);
     postProcess->addBlock(nD2,13);
-
+    for(int i=0;i<Ag1n.size();i++)
+        postProcess->addBlock(Ag1n[i],14+i);
     
     return postProcess;
 }
