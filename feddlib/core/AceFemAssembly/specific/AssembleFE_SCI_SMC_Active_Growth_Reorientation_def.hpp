@@ -470,12 +470,27 @@ namespace FEDD
 		double **postProcessingResults = elem.postProcess(&displacements[0], &concentrations[0], this->history_.data(), &rates[0], &accelerations[0]);
 
 		for (int i = 0; i < 10; i++){
-			//cout << " Node " << i << " " ;
+			cout << " Node " << i << " " ;
 			for (int j = 0; j < this->postDataLength_; j++){
 				(*this->postProcessingData_)[i][j] = postProcessingResults[i][j];
-			//	cout << postProcessingResults[i][j] << " " ;
+				//cout << postProcessingResults[i][j] << " " ;
 			}
-			//cout << endl;
+			cout << "Mises Stress: " << postProcessingResults[i][10] << " " ;
+			cout << "SCirc: " << postProcessingResults[i][11] << " " ;
+			cout << "SAxial: " << postProcessingResults[i][12] << " " ;
+			cout << "SRadial: " << postProcessingResults[i][13] << " " ;
+			//30 - 38      "Ag1n1","Ag1n2","Ag1n3","Ag2n1","Ag2n2","Ag2n3",
+            //           "Ag3n1","Ag3n2","Ag3n3"
+			cout << "Ag1n1: " << postProcessingResults[i][30] << " " ;
+			cout << "Ag1n2: " << postProcessingResults[i][31] << " " ;
+			cout << "Ag1n3: " << postProcessingResults[i][32] << " " ;
+			cout << "Ag2n1: " << postProcessingResults[i][33] << " " ;
+			cout << "Ag2n2: " << postProcessingResults[i][34] << " " ;
+			cout << "Ag2n3: " << postProcessingResults[i][35] << " " ;
+			cout << "Ag3n1: " << postProcessingResults[i][36] << " " ;
+			cout << "Ag3n2: " << postProcessingResults[i][37] << " " ;
+			cout << "Ag3n3: " << postProcessingResults[i][38] << " " ;			
+			cout << endl;
 		}
 #endif
 	}
