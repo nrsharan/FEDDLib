@@ -11,9 +11,9 @@ namespace FEDD
 
 	template <class SC, class LO, class GO, class NO>
 	AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::AssembleFE_SCI_SMC_Active_Growth_Reorientation(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params, tuple_disk_vec_ptr_Type tuple) : AssembleFE<SC, LO, GO, NO>(flag, nodesRefConfig, params, tuple),
-	timeParametersVecActive_(0),
-	timeParametersVecGrowth_(0),
-	timeParametersVecReorientation_(0)
+																																																						   timeParametersVecActive_(0),
+																																																						   timeParametersVecGrowth_(0),
+																																																						   timeParametersVecReorientation_(0)
 	{
 
 		int numMaterials = this->params_->sublist("Parameter Solid").get("Number of Materials", 1);
@@ -28,15 +28,14 @@ namespace FEDD
 
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
-
-		//this->element_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->iCode_);
+		// this->element_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->iCode_);
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 tempElem = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->iCode_);
 		this->historyLength_ = tempElem.getHistoryLength();
 		this->numberOfIntegrationPoints_ = tempElem.getNumberOfGaussPoints();
 		this->postDataLength_ = tempElem.getNumberOfPostData();
 		this->domainDataLength_ = tempElem.getNumberOfDomainData();
-		char** domainDataNames = tempElem.getDomainDataNames();
-		char** postDataNames = tempElem.getPostDataNames();
+		char **domainDataNames = tempElem.getDomainDataNames();
+		char **postDataNames = tempElem.getPostDataNames();
 
 		std::vector<std::string> subString(this->domainDataLength_);
 
@@ -53,16 +52,15 @@ namespace FEDD
 			subString[i] = domainDataNames_[i].substr(pos1 + 1, pos2 - pos1 - 1);
 			this->domainDataNames_[i] = subString[i];
 			this->domainData_[i] = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get(subString[i], 1.e13);
-			//cout << " DomainDataNames_ " << i << " "  << this->domainDataNames_[i] << " with value " << this->domainData_[i] << endl;
-						
+			// cout << " DomainDataNames_ " << i << " "  << this->domainDataNames_[i] << " with value " << this->domainData_[i] << endl;
+
 			TEUCHOS_TEST_FOR_EXCEPTION(this->domainData_[i] > 1.e12, std::logic_error, " Parameter not set correctly. Parameter " << this->domainDataNames_[i] << " received default value!!");
-
-
 		}
 
-		for (int i = 0; i < this->postDataLength_; i++){
+		for (int i = 0; i < this->postDataLength_; i++)
+		{
 			this->postDataNames_[i] = std::string(postDataNames[i]);
-			//cout << " Post Data Names " << i << " " << this->postDataNames_[i] << endl;
+			// cout << " Post Data Names " << i << " " << this->postDataNames_[i] << endl;
 		}
 
 		this->residuumRint_.resize(30, 0.0);
@@ -92,11 +90,11 @@ namespace FEDD
 		this->accelerations_ = std::vector<double>(30, 0.0);
 		this->concentrations_ = std::vector<double>(10, 0.0);
 		this->rates_ = std::vector<double>(10, 0.0);
-		
+
 		// Einlesen durch Parameterdatei irgendwann cool
 
 		// historyGP: Vector of history variables [Order: LambdaBarC1, LambdaBarC2, nA1, nA2, nB1, nB2, nC1, nC2, nD1, nD2, LambdaA1, LambdaA2, k251, k252, LambdaBarP1, LambdaBarP2, Theta1, Theta2, Theta3, Ag11, Ag12, Ag13, Ag21, Ag22, Ag23, Ag31, Ag32, Ag33, a11, a12, a13, a21, a22, a23] (The length must be equal to number of history variables per gauss point(34) * number of gauss points)
-		std::vector<double> historyGP = {1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.82758, 1.82758, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0.,0.,0.,0.,0.,0.,0.};
+		std::vector<double> historyGP = {1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.82758, 1.82758, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
 
 		this->history_ = historyGP;
 
@@ -118,7 +116,7 @@ namespace FEDD
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
 		// Element ID
-		//this->element_.setElementID(this->getGlobalElementID());
+		// this->element_.setElementID(this->getGlobalElementID());
 
 		// Nodal Positions in Reference Coordinates
 		int count = 0;
@@ -130,67 +128,65 @@ namespace FEDD
 				count++;
 			}
 		}
-		//this->element_.setPositions(this->positions_.data());
+		// this->element_.setPositions(this->positions_.data());
 
 		// Domain Data
-		//this->element_.setDomainData(this->domainData_.data());
+		// this->element_.setDomainData(this->domainData_.data());
 
 		// History Variables - initial values
-		//this->element_.setHistoryVector(this->history_.data());
+		// this->element_.setHistoryVector(this->history_.data());
 
-		//this->element_.setSubIterationTolerance(this->subiterationTolerance_);
+		// this->element_.setSubIterationTolerance(this->subiterationTolerance_);
 
-		//this->element_.setComputeCompleted(false);
-
+		// this->element_.setComputeCompleted(false);
 
 		// -----------
 		// Active and Growth Time intervalls
-    	int numSegmentsActive = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Active").get("Number of Segments",0);
-    	int numSegmentsGrowth = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Growth").get("Number of Segments",0);
-    	int numSegmentsReorientation = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Reorientation").get("Number of Segments",0);
+		int numSegmentsActive = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Active").get("Number of Segments", 0);
+		int numSegmentsGrowth = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Growth").get("Number of Segments", 0);
+		int numSegmentsReorientation = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Reorientation").get("Number of Segments", 0);
 
-		//timeParametersVecActive[0]_.resize((0,vec_dbl_Type(2)));
-		//timeParametersVecGrowth[0]_.resize((0,vec_dbl_Type(2)));
+		// timeParametersVecActive[0]_.resize((0,vec_dbl_Type(2)));
+		// timeParametersVecGrowth[0]_.resize((0,vec_dbl_Type(2)));
 
+		for (int i = 1; i <= numSegmentsActive; i++)
+		{
 
-		for(int i=1; i <= numSegmentsActive; i++){
+			double startTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Active").sublist(std::to_string(i)).get("Start Time", 0.);
+			double endTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Active").sublist(std::to_string(i)).get("End Time", 0.);
 
-			double startTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Active").sublist(std::to_string(i)).get("Start Time",0.);
-			double endTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Active").sublist(std::to_string(i)).get("End Time",0.);
-			
-			if(i==1)
-				TEUCHOS_TEST_FOR_EXCEPTION(startTime != this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("ActiveStartTime",0.), std::logic_error, "!!!WARNING:: The ActiveStartTime and the start of Time stepping intervalls for active response do not match!!!");
+			if (i == 1)
+				TEUCHOS_TEST_FOR_EXCEPTION(startTime != this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("ActiveStartTime", 0.), std::logic_error, "!!!WARNING:: The ActiveStartTime and the start of Time stepping intervalls for active response do not match!!!");
 
-			vec_dbl_Type segment = {startTime,endTime};
+			vec_dbl_Type segment = {startTime, endTime};
 			timeParametersVecActive_.push_back(segment);
 
-			//cout << " Active Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
+			// cout << " Active Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
 		}
 
-		for(int i=1; i <= numSegmentsGrowth; i++){
+		for (int i = 1; i <= numSegmentsGrowth; i++)
+		{
 
-			double startTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Growth").sublist(std::to_string(i)).get("Start Time",0.);
-			double endTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Growth").sublist(std::to_string(i)).get("End Time",0.);
+			double startTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Growth").sublist(std::to_string(i)).get("Start Time", 0.);
+			double endTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Growth").sublist(std::to_string(i)).get("End Time", 0.);
 
-			vec_dbl_Type segment = {startTime,endTime};
+			vec_dbl_Type segment = {startTime, endTime};
 			timeParametersVecGrowth_.push_back(segment);
-			//cout << " Growth Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
-
+			// cout << " Growth Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
 		}
 
-		for(int i=1; i <= numSegmentsGrowth; i++){
+		for (int i = 1; i <= numSegmentsGrowth; i++)
+		{
 
-			double startTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Reorientation").sublist(std::to_string(i)).get("Start Time",0.);
-			double endTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Reorientation").sublist(std::to_string(i)).get("End Time",0.);
+			double startTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Reorientation").sublist(std::to_string(i)).get("Start Time", 0.);
+			double endTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Reorientation").sublist(std::to_string(i)).get("End Time", 0.);
 
-			vec_dbl_Type segment = {startTime,endTime};
+			vec_dbl_Type segment = {startTime, endTime};
 			timeParametersVecReorientation_.push_back(segment);
-			//cout << " Reorientation Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
-
+			// cout << " Reorientation Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
 		}
 
 #endif
-		
 	}
 
 	template <class SC, class LO, class GO, class NO>
@@ -221,7 +217,6 @@ namespace FEDD
 #endif
 
 		this->jacobian_ = elementMatrix;
-		
 	}
 	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::advanceInTime(double dt)
@@ -240,57 +235,62 @@ namespace FEDD
 		this->timeIncrement_ = dt;
 
 		// Checking for Active Response
-		bool found=false;
-		for(int i=0; i<timeParametersVecActive_.size() ; i++){
-			if(this->timeStep_ +1.0e-12 > timeParametersVecActive_[i][0] &&  this->timeStep_ - 1.0e-12 < timeParametersVecActive_[i][1] ){
-				this->activeBool_=1;
-				if(!this->activeInitialized_){
+		bool found = false;
+		for (int i = 0; i < timeParametersVecActive_.size(); i++)
+		{
+			if (this->timeStep_ + 1.0e-12 > timeParametersVecActive_[i][0] && this->timeStep_ - 1.0e-12 < timeParametersVecActive_[i][1])
+			{
+				this->activeBool_ = 1;
+				if (!this->activeInitialized_)
+				{
 					this->initializeActiveResponse();
 					this->initializeGrowth();
 				}
-				found=true;
-			}
-			else if(!found)
-				this->activeBool_=0;
-		}
-		
-		// Checking for growth
-		found = false;
-		for(int i=0; i<timeParametersVecGrowth_.size() ; i++){			
-			if(this->timeStep_ +1.0e-12 > timeParametersVecGrowth_[i][0] &&  this->timeStep_ - 1.0e-12 < timeParametersVecGrowth_[i][1] ){
-				this->growthBool_=1;
-				if(!growthInitialized_)
-					this->initializeGrowth();
-				found=true;
-
-			}
-			else if(!found)
-				growthBool_=0;
-		}
-		
-		found = false;
-		for(int i=0; i<timeParametersVecReorientation_.size() ; i++){			
-			if(this->timeStep_ +1.0e-12 > timeParametersVecReorientation_[i][0] &&  this->timeStep_ - 1.0e-12 < timeParametersVecReorientation_[i][1] ){
-				this->reorientationBool_=1;
 				found = true;
 			}
-			else if(!found)
-				this->reorientationBool_=0;
+			else if (!found)
+				this->activeBool_ = 0;
 		}
 
-		if(activeBool_ == 1 && growthBool_==1)
+		// Checking for growth
+		found = false;
+		for (int i = 0; i < timeParametersVecGrowth_.size(); i++)
+		{
+			if (this->timeStep_ + 1.0e-12 > timeParametersVecGrowth_[i][0] && this->timeStep_ - 1.0e-12 < timeParametersVecGrowth_[i][1])
+			{
+				this->growthBool_ = 1;
+				if (!growthInitialized_)
+					this->initializeGrowth();
+				found = true;
+			}
+			else if (!found)
+				growthBool_ = 0;
+		}
+
+		found = false;
+		for (int i = 0; i < timeParametersVecReorientation_.size(); i++)
+		{
+			if (this->timeStep_ + 1.0e-12 > timeParametersVecReorientation_[i][0] && this->timeStep_ - 1.0e-12 < timeParametersVecReorientation_[i][1])
+			{
+				this->reorientationBool_ = 1;
+				found = true;
+			}
+			else if (!found)
+				this->reorientationBool_ = 0;
+		}
+
+		if (activeBool_ == 1 && growthBool_ == 1)
 			cout << " WARNING: GROWTH AND ACTIVE RESPONSE HAPPENING SIMULTANEOUSLY!!" << endl;
 
-
-		this->updateDomainData("growthBool",growthBool_);	
-		this->updateDomainData("ActiveBool",activeBool_);
-		this->updateDomainData("reorientationBool",reorientationBool_);
+		this->updateDomainData("growthBool", growthBool_);
+		this->updateDomainData("ActiveBool", activeBool_);
+		this->updateDomainData("reorientationBool", reorientationBool_);
 
 		if (this->globalElementID_ == 0)
 		{
 			cout << " ---------------------------------------------- " << endl;
 			cout << " AssembleFE_SCI_SMC: Advancing time in elements" << endl;
-			cout << " Timestep: " << this->timeStep_ << " \t timeincrement: " << this->timeIncrement_ << endl;
+			cout << " Timestep: " << this->timeStep_ << " \t timeincrement: " << this->timeIncrement_ << " \t Current time: " << this->timeIncrement_ + this->timeStep_ << endl;
 			cout << " Growth " << growthBool_ << endl;
 			cout << " Active " << activeBool_ << endl;
 			cout << " Reorientation " << reorientationBool_ << endl;
@@ -306,10 +306,9 @@ namespace FEDD
 		// cout << endl;
 		for (int i = 0; i < 10; i++)
 			this->solutionC_n_[i] = (*this->solution_)[i + 30]; // this is the LAST solution of newton iterations
-//#ifdef FEDD_HAVE_ACEGENINTERFACE
-//		this->element_.setComputeCompleted(false);
-//#endif
-
+																// #ifdef FEDD_HAVE_ACEGENINTERFACE
+																//		this->element_.setComputeCompleted(false);
+																// #endif
 	}
 
 	template <class SC, class LO, class GO, class NO>
@@ -322,10 +321,8 @@ namespace FEDD
 
 		assemble_SCI_SMC_Active_Growth_Reorientation();
 
-
 		for (int i = 0; i < 30; i++)
 			(*this->rhsVec_)[i] = this->residuumRint_[i]; //+residuumRDyn[i];
-
 
 		for (int i = 0; i < 10; i++)
 			(*this->rhsVec_)[i + 30] = this->residuumRc_[i];
@@ -338,37 +335,37 @@ namespace FEDD
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
 		double deltaT = this->getTimeIncrement();
-		//this->element_.setTimeIncrement(deltaT);
+		// this->element_.setTimeIncrement(deltaT);
 
 		double time = this->getTimeStep() + deltaT;
-		//this->element_.setTime(time);
+		// this->element_.setTime(time);
 
 		for (int i = 0; i < 30; i++)
 			this->displacements_[i] = (*this->solution_)[i];
-		//this->element_.setDisplacements(this->displacements_.data());
+		// this->element_.setDisplacements(this->displacements_.data());
 
 		for (int i = 0; i < 10; i++)
 		{
 			this->concentrations_[i] = (*this->solution_)[i + 30];
 			solutionC_n1_[i] = (*this->solution_)[i + 30]; // in each newtonstep solution for n+1 is updated.
 		}
-		//this->element_.setConcentrations(this->concentrations_.data());
+		// this->element_.setConcentrations(this->concentrations_.data());
 
-		//this->element_.setAccelerations(this->accelerations_.data());
+		// this->element_.setAccelerations(this->accelerations_.data());
 
 		for (int i = 0; i < 10; i++)
 			this->rates_[i] = (this->solutionC_n1_[i] - this->solutionC_n_[i]) / deltaT;
-		//this->element_.setRates(this->rates_.data());
+		// this->element_.setRates(this->rates_.data());
 
-		//this->element_.setHistoryVector(this->history_.data());
+		// this->element_.setHistoryVector(this->history_.data());
 
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
-		
-		//std::cout << "elem.compute starts" << std::endl;
+
+		// std::cout << "elem.compute starts" << std::endl;
 
 		int errorCode = elem.compute();
 
-		//std::cout << "elem.compute ends" << std::endl;
+		// std::cout << "elem.compute ends" << std::endl;
 
 		// vec_dbl_Type residuumRint_;
 		// vec_dbl_Type residuumRdyn_;
@@ -383,29 +380,29 @@ namespace FEDD
 		double *residuumRint = elem.getResiduumVectorRint();
 		for (int i = 0; i < 30; i++)
 			this->residuumRint_[i] = residuumRint[i];
-		
+
 		double *residuumRdyn = elem.getResiduumVectorRdyn();
 		for (int i = 0; i < 30; i++)
 			this->residuumRdyn_[i] = residuumRdyn[i];
-		
+
 		double *residuumRc = elem.getResiduumVectorRc();
 		for (int i = 0; i < 10; i++)
 			this->residuumRc_[i] = residuumRc[i];
-		
+
 		double **stiffnessMatrixKuu = elem.getStiffnessMatrixKuu();
 		for (int i = 0; i < 30; i++)
-			for (int j = 0; j < 30; j++){
+			for (int j = 0; j < 30; j++)
+			{
 				this->stiffnessMatrixKuu_[i][j] = stiffnessMatrixKuu[i][j];
-				//if(fabs(stiffnessMatrixKuu[i][j] > 1e10))
-				//cout << " StiffnessMatrixEntry " << stiffnessMatrixKuu[i][j] << endl;
+				// if(fabs(stiffnessMatrixKuu[i][j] > 1e10))
+				// cout << " StiffnessMatrixEntry " << stiffnessMatrixKuu[i][j] << endl;
 			}
-		
-		
+
 		double **stiffnessMatrixKuc = elem.getStiffnessMatrixKuc();
 		for (int i = 0; i < 30; i++)
 			for (int j = 0; j < 10; j++)
 				this->stiffnessMatrixKuc_[i][j] = stiffnessMatrixKuc[i][j];
-		
+
 		double **stiffnessMatrixKcu = elem.getStiffnessMatrixKcu();
 		for (int i = 0; i < 10; i++)
 			for (int j = 0; j < 30; j++)
@@ -416,11 +413,11 @@ namespace FEDD
 			for (int j = 0; j < 10; j++)
 				this->massMatrixMc_[i][j] = massMatrixMc[i][j];
 
-        double **stiffnessMatrixKcc = elem.getStiffnessMatrixKcc();
+		double **stiffnessMatrixKcc = elem.getStiffnessMatrixKcc();
 		for (int i = 0; i < 10; i++)
 			for (int j = 0; j < 10; j++)
-                this->stiffnessMatrixKcc_[i][j] = stiffnessMatrixKcc[i][j];
-		
+				this->stiffnessMatrixKcc_[i][j] = stiffnessMatrixKcc[i][j];
+
 		double *historyUpdated = elem.getHistoryUpdated();
 		for (int i = 0; i < this->historyLength_; i++)
 			this->historyUpdated_[i] = historyUpdated[i];
@@ -451,17 +448,16 @@ namespace FEDD
 		for (int i = 0; i < 10; i++)
 			rates[i] = (this->solutionC_n1_[i] - this->solutionC_n_[i]) / this->getTimeIncrement();
 
-
 		double deltaT = this->getTimeIncrement();
 
 		double time = this->getTimeStep() + deltaT;
 
-		if(this->growthInitialized_==true)
-		{
-			for(int i=0;i<this->historyLength_;i++)
-				std::cout << this->history_[i] << " ";
-			std::cout << std::endl;
-		}
+		// if(this->growthInitialized_==true)
+		// {
+		// 	for(int i=0;i<this->historyLength_;i++)
+		// 		std::cout << this->history_[i] << " ";
+		// 	std::cout << std::endl;
+		// }
 
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
@@ -469,28 +465,33 @@ namespace FEDD
 
 		double **postProcessingResults = elem.postProcess(&displacements[0], &concentrations[0], this->history_.data(), &rates[0], &accelerations[0]);
 
-		for (int i = 0; i < 10; i++){
-			cout << " Node " << i << " " ;
-			for (int j = 0; j < this->postDataLength_; j++){
+		for (int i = 0; i < 10; i++)
+		{
+			cout << " Node " << i << " ";
+			for (int j = 0; j < this->postDataLength_; j++)
+			{
 				(*this->postProcessingData_)[i][j] = postProcessingResults[i][j];
-				//cout << postProcessingResults[i][j] << " " ;
+				// cout << postProcessingResults[i][j] << " " ;
 			}
-			cout << "Mises Stress: " << postProcessingResults[i][10] << " " ;
-			cout << "SCirc: " << postProcessingResults[i][11] << " " ;
-			cout << "SAxial: " << postProcessingResults[i][12] << " " ;
-			cout << "SRadial: " << postProcessingResults[i][13] << " " ;
-			//30 - 38      "Ag1n1","Ag1n2","Ag1n3","Ag2n1","Ag2n2","Ag2n3",
-            //           "Ag3n1","Ag3n2","Ag3n3"
-			cout << "Ag1n1: " << postProcessingResults[i][30] << " " ;
-			cout << "Ag1n2: " << postProcessingResults[i][31] << " " ;
-			cout << "Ag1n3: " << postProcessingResults[i][32] << " " ;
-			cout << "Ag2n1: " << postProcessingResults[i][33] << " " ;
-			cout << "Ag2n2: " << postProcessingResults[i][34] << " " ;
-			cout << "Ag2n3: " << postProcessingResults[i][35] << " " ;
-			cout << "Ag3n1: " << postProcessingResults[i][36] << " " ;
-			cout << "Ag3n2: " << postProcessingResults[i][37] << " " ;
-			cout << "Ag3n3: " << postProcessingResults[i][38] << " " ;			
-			cout << endl;
+			if (this->growthInitialized_ == true && i == 0)
+			{
+				cout << "Mises Stress: " << postProcessingResults[i][10] << " ";
+				cout << "SCirc: " << postProcessingResults[i][11] << " ";
+				cout << "SAxial: " << postProcessingResults[i][12] << " ";
+				cout << "SRadial: " << postProcessingResults[i][13] << " ";
+				// 30 - 38      "Ag1n1","Ag1n2","Ag1n3","Ag2n1","Ag2n2","Ag2n3",
+				//            "Ag3n1","Ag3n2","Ag3n3"
+				cout << "Ag1n1: " << postProcessingResults[i][30] << " ";
+				cout << "Ag1n2: " << postProcessingResults[i][31] << " ";
+				cout << "Ag1n3: " << postProcessingResults[i][32] << " ";
+				cout << "Ag2n1: " << postProcessingResults[i][33] << " ";
+				cout << "Ag2n2: " << postProcessingResults[i][34] << " ";
+				cout << "Ag2n3: " << postProcessingResults[i][35] << " ";
+				cout << "Ag3n1: " << postProcessingResults[i][36] << " ";
+				cout << "Ag3n2: " << postProcessingResults[i][37] << " ";
+				cout << "Ag3n3: " << postProcessingResults[i][38] << " ";
+				cout << endl;
+			}
 		}
 #endif
 	}
@@ -527,7 +528,6 @@ namespace FEDD
 		for (int i = 0; i < 10; i++)
 			rates[i] = (this->solutionC_n1_[i] - this->solutionC_n_[i]) / this->getTimeIncrement();
 
-
 		double deltaT = this->getTimeIncrement();
 
 		double time = this->getTimeStep() + deltaT;
@@ -558,8 +558,8 @@ namespace FEDD
 
 		std::vector<double> stretches = elem.getGaussPointStretches();
 		cout << " Streches: ";
-		for(int i=0; i< stretches.size() ; i++)
-			cout << stretches[i] << " " ;
+		for (int i = 0; i < stretches.size(); i++)
+			cout << stretches[i] << " ";
 		cout << endl;
 
 		int historyPerGP = (int)this->historyLength_ / this->numberOfIntegrationPoints_;
@@ -569,14 +569,14 @@ namespace FEDD
 			this->history_[i * historyPerGP + 11] = stretches[i * 2 + 1];
 		}
 #endif
-		activeInitialized_=true;
+		activeInitialized_ = true;
 	}
-	
+
 	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::updateDomainData(std::string dataName, double dataValue)
 	{
 		int position = findPosition(dataName, this->domainDataNames_);
-		//cout << " !!!! Position " << position << " of " << dataName << " found " << endl;
+		// cout << " !!!! Position " << position << " of " << dataName << " found " << endl;
 		this->domainData_[position] = dataValue;
 	}
 
