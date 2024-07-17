@@ -270,7 +270,7 @@ void loadFunction(double *x, double *res, double *parameters)
 
     if (currentTime < timeRampEnd)
         lambda = 0.875 * (currentTime + rampTimeStep);
-    else if (abs(currentTime - timeRampEnd) < 1e-10)
+    else
         lambda = 0.875;
 
     if (parameters[4] == 5) // If the surface flag is 5
