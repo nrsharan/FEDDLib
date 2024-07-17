@@ -456,11 +456,18 @@ namespace FEDD
 
 		double time = this->getTimeStep() + deltaT;
 
+		if(this->growthInitialized_==true)
+		{
+			for(int i=0;i<this->historyLength_;i++)
+				std::cout << this->history_[i] << " ";
+			std::cout << std::endl;
+		}
+
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
 		elem.compute();
 
-		double **postProcessingResults = elem.postProcess(&displacements[0], &concentrations[0], this->historyUpdated_.data(), &rates[0], &accelerations[0]);
+		double **postProcessingResults = elem.postProcess(&displacements[0], &concentrations[0], this->history_.data(), &rates[0], &accelerations[0]);
 
 		for (int i = 0; i < 10; i++){
 			//cout << " Node " << i << " " ;
