@@ -467,7 +467,7 @@ namespace FEDD
 
 		for (int i = 0; i < 10; i++)
 		{
-			cout << " Node " << i << " ";
+			//cout << " Node " << i << " ";
 			for (int j = 0; j < this->postDataLength_; j++)
 			{
 				(*this->postProcessingData_)[i][j] = postProcessingResults[i][j];
