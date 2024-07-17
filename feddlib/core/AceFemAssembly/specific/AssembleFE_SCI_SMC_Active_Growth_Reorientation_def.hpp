@@ -457,13 +457,18 @@ namespace FEDD
 		// 	for(int i=0;i<this->historyLength_;i++)
 		// 		std::cout << this->history_[i] << " ";
 		// 	std::cout << std::endl;
-		// }
+		// } -- This seems to be okay
 
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
+		std::cout << "History values going into PP: " << std::endl;
+		std::cout << "Agn1: { " << this->history_[19] << ", " << this->history_[20] << ", " << this->history_[21] << " }" << std::endl;
+		std::cout << "Agn2: { " << this->history_[22] << ", " << this->history_[23] << ", " << this->history_[24] << " }" << std::endl;
+		std::cout << "Agn3: { " << this->history_[25] << ", " << this->history_[26] << ", " << this->history_[27] << " }" << std::endl;
+
 		// elem.compute(); --THis shit right here could be the problem
 
-		double **postProcessingResults = elem.postProcess(&displacements[0], &concentrations[0], this->history_.data(), &rates[0], &accelerations[0]);
+		double **postProcessingResults = elem.postProcess(&displacements[0], &concentrations[0], this->history_.data(), &rates[0], &accelerations[0]); //Inside this the values are 0
 
 		for (int i = 0; i < 10; i++)
 		{
