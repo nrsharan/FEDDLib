@@ -473,25 +473,25 @@ namespace FEDD
 				(*this->postProcessingData_)[i][j] = postProcessingResults[i][j];
 				// cout << postProcessingResults[i][j] << " " ;
 			}
-			if (this->growthInitialized_ == true && i == 0)
-			{
-				cout << "Mises Stress: " << postProcessingResults[i][10] << " ";
-				cout << "SCirc: " << postProcessingResults[i][11] << " ";
-				cout << "SAxial: " << postProcessingResults[i][12] << " ";
-				cout << "SRadial: " << postProcessingResults[i][13] << " ";
-				// 30 - 38      "Ag1n1","Ag1n2","Ag1n3","Ag2n1","Ag2n2","Ag2n3",
-				//            "Ag3n1","Ag3n2","Ag3n3"
-				cout << "Ag1n1: " << postProcessingResults[i][30] << " ";
-				cout << "Ag1n2: " << postProcessingResults[i][31] << " ";
-				cout << "Ag1n3: " << postProcessingResults[i][32] << " ";
-				cout << "Ag2n1: " << postProcessingResults[i][33] << " ";
-				cout << "Ag2n2: " << postProcessingResults[i][34] << " ";
-				cout << "Ag2n3: " << postProcessingResults[i][35] << " ";
-				cout << "Ag3n1: " << postProcessingResults[i][36] << " ";
-				cout << "Ag3n2: " << postProcessingResults[i][37] << " ";
-				cout << "Ag3n3: " << postProcessingResults[i][38] << " ";
-				cout << endl;
-			}
+			// if (this->growthInitialized_ == true && i == 0)
+			// {
+			// 	cout << "Mises Stress: " << postProcessingResults[i][10] << " ";
+			// 	cout << "SCirc: " << postProcessingResults[i][11] << " ";
+			// 	cout << "SAxial: " << postProcessingResults[i][12] << " ";
+			// 	cout << "SRadial: " << postProcessingResults[i][13] << " ";
+			// 	// 30 - 38      "Ag1n1","Ag1n2","Ag1n3","Ag2n1","Ag2n2","Ag2n3",
+			// 	//            "Ag3n1","Ag3n2","Ag3n3"
+			// 	cout << "Ag1n1: " << postProcessingResults[i][30] << " ";
+			// 	cout << "Ag1n2: " << postProcessingResults[i][31] << " ";
+			// 	cout << "Ag1n3: " << postProcessingResults[i][32] << " ";
+			// 	cout << "Ag2n1: " << postProcessingResults[i][33] << " ";
+			// 	cout << "Ag2n2: " << postProcessingResults[i][34] << " ";
+			// 	cout << "Ag2n3: " << postProcessingResults[i][35] << " ";
+			// 	cout << "Ag3n1: " << postProcessingResults[i][36] << " ";
+			// 	cout << "Ag3n2: " << postProcessingResults[i][37] << " ";
+			// 	cout << "Ag3n3: " << postProcessingResults[i][38] << " ";
+			// 	cout << endl;
+			// }
 		}
 #endif
 	}
