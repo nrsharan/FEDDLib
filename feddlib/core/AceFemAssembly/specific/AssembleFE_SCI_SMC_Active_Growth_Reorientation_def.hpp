@@ -540,14 +540,16 @@ namespace FEDD
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
 		std::vector<double> historyNew = elem.initializeGrowthOrientationVectors();
-		std::cout << "Growth Orientation Vectors being set! \n HistoryOld: \n";
-		for (int i = 0; i < this->historyLength_; i++)
-			std::cout << this->history_[i] << " ";
-		std::cout << "\n HistoryNew: \n";
-		for (int i = 0; i < historyNew.size(); i++)
-			std::cout << historyNew[i] << " ";
-		for (int i = 0; i < this->historyLength_; i++)
+		// std::cout << "Growth Orientation Vectors being set! \n HistoryOld: \n";
+		// for (int i = 0; i < this->historyLength_; i++)
+		// 	std::cout << this->history_[i] << " ";
+		// std::cout << "\n HistoryNew: \n";
+		// for (int i = 0; i < historyNew.size(); i++)
+		// 	std::cout << historyNew[i] << " ";
+		for (int i = 0; i < this->historyLength_; i++){
 			this->history_[i] = historyNew[i];
+			this->historyUpdated_[i] = historyNew[i];
+		}
 #endif
 		growthInitialized_ = true;
 	}
@@ -572,6 +574,8 @@ namespace FEDD
 		{
 			this->history_[i * historyPerGP + 10] = stretches[i * 2];
 			this->history_[i * historyPerGP + 11] = stretches[i * 2 + 1];
+			this->historyUpdated_[i * historyPerGP + 10] = stretches[i * 2];
+			this->historyUpdated_[i * historyPerGP + 11] = stretches[i * 2 + 1];
 		}
 #endif
 		activeInitialized_ = true;
