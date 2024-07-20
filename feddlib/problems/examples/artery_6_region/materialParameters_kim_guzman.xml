@@ -87,7 +87,7 @@
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
           <Parameter name="Start Time" type="double" value="20.0" />
-          <Parameter name="End Time" type="double" value="800.0" />
+          <Parameter name="End Time" type="double" value="200.0" />
         </ParameterList>
       </ParameterList>
       <ParameterList name="Timestepping Intervalls Reorientation">
@@ -97,8 +97,8 @@
           <Parameter name="End Time" type="double" value="20.0" />
         </ParameterList>
         <ParameterList name="2">
-          <Parameter name="Start Time" type="double" value="800.0" />
-          <Parameter name="End Time" type="double" value="820.0" />
+          <Parameter name="Start Time" type="double" value="200.0" />
+          <Parameter name="End Time" type="double" value="220.0" />
         </ParameterList>
         <!-- <ParameterList name="3">
           <Parameter name="Start Time" type="double" value="900.0" />
@@ -188,8 +188,8 @@
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
-          <Parameter name="Start Time" type="double" value="820." />
-          <Parameter name="End Time" type="double" value="2500." />
+          <Parameter name="Start Time" type="double" value="220.0" />
+          <Parameter name="End Time" type="double" value="2000.0" />
         </ParameterList>
         <!-- <ParameterList name="2">
           <Parameter name="Start Time" type="double" value="920." />
@@ -200,7 +200,7 @@
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
           <Parameter name="Start Time" type="double" value="20.0" />
-          <Parameter name="End Time" type="double" value="800.0" />
+          <Parameter name="End Time" type="double" value="200.0" />
         </ParameterList>
       </ParameterList>
       <ParameterList name="Timestepping Intervalls Reorientation">
@@ -210,8 +210,8 @@
           <Parameter name="End Time" type="double" value="20.0" />
         </ParameterList>
         <ParameterList name="2">
-          <Parameter name="Start Time" type="double" value="800.0" />
-          <Parameter name="End Time" type="double" value="820.0" />
+          <Parameter name="Start Time" type="double" value="200.0" />
+          <Parameter name="End Time" type="double" value="220.0" />
         </ParameterList>
         <!-- <ParameterList name="3">
           <Parameter name="Start Time" type="double" value="900.0" />
@@ -301,8 +301,8 @@
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
-          <Parameter name="Start Time" type="double" value="820." />
-          <Parameter name="End Time" type="double" value="2500." />
+          <Parameter name="Start Time" type="double" value="220.0" />
+          <Parameter name="End Time" type="double" value="2000.0" />
         </ParameterList>
         <!-- <ParameterList name="2">
           <Parameter name="Start Time" type="double" value="920." />
@@ -313,7 +313,7 @@
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
           <Parameter name="Start Time" type="double" value="20.0" />
-          <Parameter name="End Time" type="double" value="800.0" />
+          <Parameter name="End Time" type="double" value="200.0" />
         </ParameterList>
       </ParameterList>
       <ParameterList name="Timestepping Intervalls Reorientation">
@@ -323,8 +323,8 @@
           <Parameter name="End Time" type="double" value="20.0" />
         </ParameterList>
         <ParameterList name="2">
-          <Parameter name="Start Time" type="double" value="800.0" />
-          <Parameter name="End Time" type="double" value="820.0" />
+          <Parameter name="Start Time" type="double" value="200.0" />
+          <Parameter name="End Time" type="double" value="220.0" />
         </ParameterList>
         <!-- <ParameterList name="3">
           <Parameter name="Start Time" type="double" value="900.0" />
@@ -734,8 +734,8 @@
           <Parameter name="End Time" type="double" value="20.0" />
         </ParameterList>
         <ParameterList name="2">
-          <Parameter name="Start Time" type="double" value="800.0" />
-          <Parameter name="End Time" type="double" value="820.0" />
+          <Parameter name="Start Time" type="double" value="200.0" />
+          <Parameter name="End Time" type="double" value="220.0" />
         </ParameterList>
         <!-- <ParameterList name="3">
           <Parameter name="Start Time" type="double" value="900.0" />
@@ -746,7 +746,7 @@
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
           <Parameter name="Start Time" type="double" value="20.0" />
-          <Parameter name="End Time" type="double" value="800.0" />
+          <Parameter name="End Time" type="double" value="200.0" />
         </ParameterList>
       </ParameterList>
     </ParameterList>
