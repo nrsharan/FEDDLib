@@ -1249,7 +1249,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
 
 
-            if(fabs(remainder(timeStep,modValue)) < 0. + 1.e-8 ){
+            if(fabs(remainder(time,modValue)) < 0. + 1.e-8 ){
                 BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
                 stressVec = stressVecTmp;
                 this->exportPostprocess(stressVec,problemTime_->getDomain(0),sci->getPostprocessingNames()); 
