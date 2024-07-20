@@ -196,7 +196,7 @@ namespace FEDD
 		SmallMatrixPtr_Type elementMatrix = Teuchos::rcp(new SmallMatrix_Type(this->dofsElement_, 0.));
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
-		assemble_SCI_SMC_Active_Growth_Reorientation(); // Use this if nothing works!
+		assemble_SCI_SMC_Active_Growth_Reorientation(true);
 
 		for (int i = 0; i < 30; i++)
 			for (int j = 0; j < 30; j++)
@@ -319,7 +319,7 @@ namespace FEDD
 
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
-		assemble_SCI_SMC_Active_Growth_Reorientation();
+		assemble_SCI_SMC_Active_Growth_Reorientation(false);
 
 		for (int i = 0; i < 30; i++)
 			(*this->rhsVec_)[i] = this->residuumRint_[i]; //+residuumRDyn[i];
@@ -330,7 +330,7 @@ namespace FEDD
 	}
 
 	template <class SC, class LO, class GO, class NO>
-	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::assemble_SCI_SMC_Active_Growth_Reorientation()
+	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::assemble_SCI_SMC_Active_Growth_Reorientation(bool computeTangent)
 	{
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
@@ -363,7 +363,7 @@ namespace FEDD
 
 		// std::cout << "elem.compute starts" << std::endl;
 
-		int errorCode = elem.compute();
+		int errorCode = elem.compute(computeTangent);
 
 		// std::cout << "elem.compute ends" << std::endl;
 
@@ -389,6 +389,7 @@ namespace FEDD
 		for (int i = 0; i < 10; i++)
 			this->residuumRc_[i] = residuumRc[i];
 
+		if(computeTangent){
 		double **stiffnessMatrixKuu = elem.getStiffnessMatrixKuu();
 		for (int i = 0; i < 30; i++)
 			for (int j = 0; j < 30; j++)
@@ -421,6 +422,7 @@ namespace FEDD
 		double *historyUpdated = elem.getHistoryUpdated();
 		for (int i = 0; i < this->historyLength_; i++)
 			this->historyUpdated_[i] = historyUpdated[i];
+		}
 
 #endif
 	}
