@@ -60,7 +60,8 @@ timeSteppingTool_(),
 exporter_vector_(),
 export_solution_vector_(),
 boolExporterSetup_(false),
-boolExporterSetupPostprocess_(false)
+boolExporterSetupPostprocess_(false),
+postprocessCounter_(0)
 #ifdef FEDD_TIMER
 ,solveProblemTimer_ (Teuchos::TimeMonitor::getNewCounter("FEDD - DAETime - Solve Problem"))
 #endif
@@ -91,7 +92,8 @@ timeSteppingTool_(),
 exporter_vector_(),
 export_solution_vector_(),
 boolExporterSetup_(false),
-boolExporterSetupPostprocess_(false)
+boolExporterSetupPostprocess_(false),
+postprocessCounter_(0)
 #ifdef FEDD_TIMER
 ,solveProblemTimer_ (Teuchos::TimeMonitor::getNewCounter("FEDD - DAETime - Solve Problem"))
 #endif
@@ -1228,7 +1230,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         }
         if (printStress){
             timeStep = timeStep + 1.;
-
+            postprocessCounter_++;
             bool heartbeat= false;
             double heartbeatStart1 = parameterList_->sublist("Parameter").get("Heart Beat Start 1",0.) ;
             double heartbeatStart2 = parameterList_->sublist("Parameter").get("Heart Beat Start 2",0.) ;
@@ -1249,10 +1251,16 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
 
 
-            if(fabs(remainder(time,modValue)) < 0. + 1.e-8 ){
+            // if(fabs(remainder(time,modValue)) < 0. + 1.e-8 ){
+            //     BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
+            //     stressVec = stressVecTmp;
+            //     this->exportPostprocess(stressVec,problemTime_->getDomain(0),sci->getPostprocessingNames()); 
+            // }
+            if(postprocessCounter_ == modValue){
                 BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
                 stressVec = stressVecTmp;
                 this->exportPostprocess(stressVec,problemTime_->getDomain(0),sci->getPostprocessingNames()); 
+                postprocessCounter_=0;
             }                
 
         }

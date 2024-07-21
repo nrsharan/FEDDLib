@@ -190,6 +190,7 @@ public:
 
 private:
 
+    int postprocessCounter_;
 #ifdef FEDD_TIMER
     TimePtr_Type solveProblemTimer_;
 #endif
