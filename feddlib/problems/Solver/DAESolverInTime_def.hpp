@@ -60,8 +60,7 @@ timeSteppingTool_(),
 exporter_vector_(),
 export_solution_vector_(),
 boolExporterSetup_(false),
-boolExporterSetupPostprocess_(false),
-postprocessCounter_(0)
+boolExporterSetupPostprocess_(false)
 #ifdef FEDD_TIMER
 ,solveProblemTimer_ (Teuchos::TimeMonitor::getNewCounter("FEDD - DAETime - Solve Problem"))
 #endif
@@ -92,8 +91,7 @@ timeSteppingTool_(),
 exporter_vector_(),
 export_solution_vector_(),
 boolExporterSetup_(false),
-boolExporterSetupPostprocess_(false),
-postprocessCounter_(0)
+boolExporterSetupPostprocess_(false)
 #ifdef FEDD_TIMER
 ,solveProblemTimer_ (Teuchos::TimeMonitor::getNewCounter("FEDD - DAETime - Solve Problem"))
 #endif
