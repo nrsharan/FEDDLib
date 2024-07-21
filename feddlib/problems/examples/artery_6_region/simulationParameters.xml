@@ -90,7 +90,7 @@
         <Parameter name="Class" type="string" value="Multistep"/> <!-- External, Multistep-->
         <Parameter name="Timestepping type" type="string" value="non-adaptive"/><!--non-adaptive,adaptive:not working for BDF2-->
     
-        <Parameter name="Final time" type="double" value="2500"/>
+        <Parameter name="Final time" type="double" value="2000"/>
         <Parameter name="dt" type="double" value=".05"/>
         <Parameter name="beta" type="double" value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma" type="double" value="0.5"/> <!-- newmark method parameter-->
@@ -117,11 +117,11 @@
                 <Parameter name="dt" type="double" value="0.2"/>
             </ParameterList>
             <ParameterList name="6">
-                <Parameter name="Start Time" type="double" value="200."/>
+                <Parameter name="Start Time" type="double" value="300."/>
                 <Parameter name="dt" type="double" value="0.5"/>
             </ParameterList>
             <ParameterList name="7">
-                <Parameter name="Start Time" type="double" value="220."/>
+                <Parameter name="Start Time" type="double" value="320."/>
                 <Parameter name="dt" type="double" value="0.25"/>
             </ParameterList>
          </ParameterList> 
