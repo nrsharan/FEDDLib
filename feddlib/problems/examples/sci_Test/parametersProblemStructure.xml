@@ -79,7 +79,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="0" />
+      <Parameter name="growthDirectionBool" type="double" value="1" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="2." />
@@ -181,7 +181,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="0" />
+      <Parameter name="growthDirectionBool" type="double" value="1" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="2." />
@@ -294,7 +294,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="0" />
+      <Parameter name="growthDirectionBool" type="double" value="1" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="2." />
@@ -407,7 +407,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="0" />
+      <Parameter name="growthDirectionBool" type="double" value="1" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="2." />
@@ -486,7 +486,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="0" />
+      <Parameter name="growthDirectionBool" type="double" value="1" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="2." />
@@ -565,7 +565,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="0" />
+      <Parameter name="growthDirectionBool" type="double" value="1" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="2." />
@@ -644,7 +644,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="0" />
+      <Parameter name="growthDirectionBool" type="double" value="1" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="2." />
