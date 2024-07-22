@@ -1228,14 +1228,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         }
         if (printStress){
             timeStep = timeStep + 1.;
-
             bool heartbeat= false;
             double heartbeatStart1 = parameterList_->sublist("Parameter").get("Heart Beat Start 1",0.) ;
             double heartbeatStart2 = parameterList_->sublist("Parameter").get("Heart Beat Start 2",0.) ;
             double heartbeatEnd1 = parameterList_->sublist("Parameter").get("Heart Beat End 1",0.) ;
             double heartbeatEnd2 = parameterList_->sublist("Parameter").get("Heart Beat End 2",0.) ;
-            double modValue = parameterList_->sublist("Parameter").get("Every X Second",1.) ;
-            double modValueHeartBeat = parameterList_->sublist("Parameter").get("Every X Second Heartbeat",0.1) ;
+            double modValue = parameterList_->sublist("General").get("Every X Second",1.) ;
+            double modValueHeartBeat = parameterList_->sublist("General").get("Every X Second Heartbeat",0.1) ;
 
             double time = timeSteppingTool_->currentTime();
 
@@ -1253,7 +1252,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
                 BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
                 stressVec = stressVecTmp;
                 this->exportPostprocess(stressVec,problemTime_->getDomain(0),sci->getPostprocessingNames()); 
-            }                
+            }
 
         }
 

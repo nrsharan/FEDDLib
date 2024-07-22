@@ -8,15 +8,15 @@
 		<Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  structured, unstructured -->
         <Parameter name="H/h" type="int" value="1"/> <!-- only relevant for structured meshes -->
     
-        <Parameter name="Pressure" type="double" value="0.016"/> <!-- Load applied on interior wall -->
+        <Parameter name="Pressure" type="double" value="12.95131763460572"/> <!-- Load applied on interior wall. Equates to 97.14 mmHg and hence results in 85mmHg(0.875 times) -->
         <Parameter name="Source Type" type="string"   value="surface"/>
         <Parameter name="Model Geometry" type="string" value="Laplace"/>
         
         <Parameter name="SCI" type="bool" value="true"/>
         <Parameter name="Chemistry Explicit" type="bool" value="false"/>
         <Parameter name="Load Stepping" type="bool" value="true"/>
-        <Parameter name="Inflow Start Time" type="double" value="10.0"/><!-- Start of diffusion process -->
-        <Parameter name="Heart Beat Start" type="double" value="70.0"/><!-- Start of heart beat -->
+        <Parameter name="Inflow Start Time" type="double" value="10000000.0"/><!-- Start of diffusion process -->
+        <Parameter name="Heart Beat Start" type="double" value="70000000.0"/><!-- Start of heart beat -->
         <Parameter name="Load Step Size" type="double" value="0.05"/><!-- Length/size of Loadsteps -->
         <Parameter name="Ramp End Time" type="double" value="1.0"/><!-- End of Load Stepping -->
         <Parameter name="External Force" type="bool" value="true"/>
@@ -31,7 +31,7 @@
         <Parameter name="Use update tol" type="bool" value="true"/>
         <Parameter name="Use WRMS" type="bool" value="false"/>
         
-        <Parameter name="MaxNonLinIts" type="int" value="10"/>
+        <Parameter name="MaxNonLinIts" type="int" value="20"/>
 
         <Parameter name="Criterion" type="string" value="Update"/><!-- Criterion for nonlinear solve, Residual or Update: Residual is the norm of the nonlinear residual; Update is the norm of the update -->
     </ParameterList>
@@ -72,7 +72,7 @@
         <Parameter name="Export drag and lift" type="bool" value="true"/>
 
         <Parameter name="Export Stress" type="bool" value="true"/>
-        <Parameter name="Every X Second" type="double" value="1."/> <!-- Output frequency for stresses and co. during normal phase. 1 = every time step. 10 = every tenth time step -->
+        <Parameter name="Every X Second" type="double" value="20."/> <!-- Output frequency for stresses and co. during normal phase. 1 = every time step. 10 = every tenth time step -->
         <!-- <Parameter name="Every X Second Heartbeat" type="double" value="0.01"/> --> <!-- Output frequency for stresses and co. during heartbeat phases. Currently no heartbeat rhs -->
 
         <Parameter name="Preconditioner Method" type="string" value="Monolithic"/> <!-- Monolithic, FaCSI, FaCSI-Teko -->
@@ -90,27 +90,39 @@
         <Parameter name="Class" type="string" value="Multistep"/> <!-- External, Multistep-->
         <Parameter name="Timestepping type" type="string" value="non-adaptive"/><!--non-adaptive,adaptive:not working for BDF2-->
     
-        <Parameter name="Final time" type="double" value="1"/>
+        <Parameter name="Final time" type="double" value="2000"/>
         <Parameter name="dt" type="double" value=".05"/>
         <Parameter name="beta" type="double" value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma" type="double" value="0.5"/> <!-- newmark method parameter-->
         <ParameterList name="Timestepping Intervalls">
-            <Parameter name="Number of Segments" type="int" value="4"/>
+            <Parameter name="Number of Segments" type="int" value="7"/>
             <ParameterList name="1">
                 <Parameter name="Start Time" type="double" value="0."/>
                 <Parameter name="dt" type="double" value="0.05"/>
             </ParameterList>
              <ParameterList name="2">
                 <Parameter name="Start Time" type="double" value="1."/>
-                <Parameter name="dt" type="double" value="0.2"/>
+                <Parameter name="dt" type="double" value="0.5"/>
             </ParameterList>
              <ParameterList name="3">
-                <Parameter name="Start Time" type="double" value="70."/>
-                <Parameter name="dt" type="double" value="0.02."/>
+                <Parameter name="Start Time" type="double" value="20."/>
+                <Parameter name="dt" type="double" value="0.05"/>
             </ParameterList>
              <ParameterList name="4">
-                <Parameter name="Start Time" type="double" value="500."/>
-                <Parameter name="dt" type="double" value="0.02"/>
+                <Parameter name="Start Time" type="double" value="25."/>
+                <Parameter name="dt" type="double" value="0.1"/>
+            </ParameterList>
+            <ParameterList name="5">
+                <Parameter name="Start Time" type="double" value="50."/>
+                <Parameter name="dt" type="double" value="0.2"/>
+            </ParameterList>
+            <ParameterList name="6">
+                <Parameter name="Start Time" type="double" value="300."/>
+                <Parameter name="dt" type="double" value="0.5"/>
+            </ParameterList>
+            <ParameterList name="7">
+                <Parameter name="Start Time" type="double" value="320."/>
+                <Parameter name="dt" type="double" value="0.25"/>
             </ParameterList>
          </ParameterList> 
     </ParameterList>
