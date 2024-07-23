@@ -22,6 +22,8 @@
         <Parameter name="External Force" type="bool" value="true"/>
         <Parameter name="Nonlinear External Force" type="bool" value="true"/>
         <Parameter name="Coupling Type" type="string" value="implicit"/>
+        <Parameter name="Accelerated Active Until" type="double" value="520.0"/>
+        <Parameter name="Active Acceleration Multiplier" type="double" value="20.0"/>
 
        
         <Parameter name="relNonLinTol" type="double" value="1.0e-8"/>
@@ -123,6 +125,10 @@
             <ParameterList name="7">
                 <Parameter name="Start Time" type="double" value="320."/>
                 <Parameter name="dt" type="double" value="0.25"/>
+            </ParameterList>
+            <ParameterList name="8">
+                <Parameter name="Start Time" type="double" value="550."/>
+                <Parameter name="dt" type="double" value="2.0"/>
             </ParameterList>
          </ParameterList> 
     </ParameterList>

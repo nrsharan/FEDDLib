@@ -15,7 +15,12 @@ namespace FEDD
 																																																						   timeParametersVecGrowth_(0),
 																																																						   timeParametersVecReorientation_(0)
 	{
+		activeAcceleratedEndTime_ = this->params_->sublist("Parameter").get("Accelerated Active Until",-1.);
+		TEUCHOS_TEST_FOR_EXCEPTION(activeAcceleratedEndTime_ < 0, std::logic_error, "!!! Warning: Accelerated Active Until not set correctly. Please Check Parameterlist !!!");
 
+		activeAcceleratedMultiplier_ = this->params_->sublist("Parameter").get("Active Acceleration Multiplier",-1.);
+		TEUCHOS_TEST_FOR_EXCEPTION(activeAcceleratedMultiplier_ < 0, std::logic_error, "!!! Warning: Active Acceleration Multiplier not set correctly. Please Check Parameterlist !!!");
+		
 		int numMaterials = this->params_->sublist("Parameter Solid").get("Number of Materials", 1);
 		int materialID = 0;
 		for (int i = 1; i <= numMaterials; i++)
@@ -358,8 +363,19 @@ namespace FEDD
 		// this->element_.setRates(this->rates_.data());
 
 		// this->element_.setHistoryVector(this->history_.data());
+		std::vector<double> domainDataModified(this->domainDataLength_);
 
-		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		for(int i=0;i<this->domainDataLength_;i++)
+		{
+			if((this->domainDataNames_[i].contains("LambdaBarCDotMax") || this->domainDataNames_[i].contains("LambdaBarCDotMin") || this->domainDataNames_[i].contains("Eta") || this->domainDataNames_[i].contains("K3") || this->domainDataNames_[i].contains("K4") || this->domainDataNames_[i].contains("K7") || this->domainDataNames_[i].contains("Beta1") || this->domainDataNames_[i].contains("Gamma6") this->domainDataNames_[i].contains("KDotMin") || this->domainDataNames_[i].contains("KDotMax") || this->domainDataNames_[i].contains("LambdaBarDotPMin") || this->domainDataNames_[i].contains("LambdaBarDotPMax")) && time < this->activeAcceleratedEndTime_)
+				domainDataModified[i] = this->domainData_[i] * this->activeAcceleratedMultiplier_;
+			else if((this->domainDataNames_[i].contains("Gamma5") || this->domainDataNames_[i].contains("Gamma2")) && time < this->activeAcceleratedEndTime_)
+				domainDataModified[i] = this->domainData_[i] / this->activeAcceleratedMultiplier_;
+			else
+			domainDataModified[i] = this->domainData_[i];
+		}
+
+		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
 		// std::cout << "elem.compute starts" << std::endl;
 

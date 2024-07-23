@@ -142,6 +142,8 @@ namespace FEDD
 		int activeBool_ = 0;
 		int growthBool_ = 0;
 		int reorientationBool_=0;
+		double activeAcceleratedEndTime_=0.;
+		double activeAcceleratedMultiplier_=1.;
 
 		bool activeInitialized_=false;
 		bool growthInitialized_=false;
