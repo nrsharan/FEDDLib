@@ -4,6 +4,7 @@
 #include "AssembleFE_SCI_SMC_Active_Growth_Reorientation_decl.hpp"
 
 #include <vector>
+#include <string>
 // #include <iostream>
 
 namespace FEDD
