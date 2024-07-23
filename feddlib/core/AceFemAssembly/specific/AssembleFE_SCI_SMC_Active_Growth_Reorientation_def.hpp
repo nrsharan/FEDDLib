@@ -367,10 +367,13 @@ namespace FEDD
 		std::vector<double> domainDataModified(this->domainDataLength_);
 
 		for(int i=0;i<this->domainDataLength_;i++)
-		{
-			if((this->domainDataNames_[i].contains("LambdaBarCDotMax") || this->domainDataNames_[i].contains("LambdaBarCDotMin") || this->domainDataNames_[i].contains("Eta") || this->domainDataNames_[i].contains("K3") || this->domainDataNames_[i].contains("K4") || this->domainDataNames_[i].contains("K7") || this->domainDataNames_[i].contains("Beta1") || this->domainDataNames_[i].contains("Gamma6") || this->domainDataNames_[i].contains("KDotMin") || this->domainDataNames_[i].contains("KDotMax") || this->domainDataNames_[i].contains("LambdaBarDotPMin") || this->domainDataNames_[i].contains("LambdaBarDotPMax")) && (time < this->activeAcceleratedEndTime_))
+		{	
+			bool isFound = (this->domainDataNames_[i].find("LambdaBarCDotMax") != string::npos) || (this->domainDataNames_[i].find("LambdaBarCDotMin") != string::npos) || (this->domainDataNames_[i].find("Eta") != string::npos) || (this->domainDataNames_[i].find("K3") != string::npos) || (this->domainDataNames_[i].find("K4") != string::npos) || (this->domainDataNames_[i].find("K7") != string::npos) || (this->domainDataNames_[i].find("Beta1") != string::npos) || (this->domainDataNames_[i].find("Gamma6") != string::npos) || (this->domainDataNames_[i].find("KDotMin") != string::npos) || (this->domainDataNames_[i].find("KDotMax") != string::npos) || (this->domainDataNames_[i].find("LambdaBarDotPMin") != string::npos) || (this->domainDataNames_[i].find("LambdaBarDotPMax") != string::npos);
+			// if((this->domainDataNames_[i].contains("LambdaBarCDotMax") || this->domainDataNames_[i].contains("LambdaBarCDotMin") || this->domainDataNames_[i].contains("Eta") || this->domainDataNames_[i].contains("K3") || this->domainDataNames_[i].contains("K4") || this->domainDataNames_[i].contains("K7") || this->domainDataNames_[i].contains("Beta1") || this->domainDataNames_[i].contains("Gamma6") || this->domainDataNames_[i].contains("KDotMin") || this->domainDataNames_[i].contains("KDotMax") || this->domainDataNames_[i].contains("LambdaBarDotPMin") || this->domainDataNames_[i].contains("LambdaBarDotPMax")) && (time < this->activeAcceleratedEndTime_))
+			if(isFound && (time < this->activeAcceleratedEndTime_))
 				domainDataModified[i] = this->domainData_[i] * this->activeAcceleratedMultiplier_;
-			else if((this->domainDataNames_[i].contains("Gamma5") || this->domainDataNames_[i].contains("Gamma2")) && (time < this->activeAcceleratedEndTime_))
+			// else if((this->domainDataNames_[i].contains("Gamma5") || this->domainDataNames_[i].contains("Gamma2")) && (time < this->activeAcceleratedEndTime_))
+			else if((this->domainDataNames_[i].find("Gamma5") != string::npos) || (this->domainDataNames_[i].find("Gamma2") != string::npos) && (time < this->activeAcceleratedEndTime_))
 				domainDataModified[i] = this->domainData_[i] / this->activeAcceleratedMultiplier_;
 			else
 				domainDataModified[i] = this->domainData_[i];
