@@ -128,7 +128,7 @@
             </ParameterList>
             <ParameterList name="8">
                 <Parameter name="Start Time" type="double" value="550."/>
-                <Parameter name="dt" type="double" value="2.0"/>
+                <Parameter name="dt" type="double" value="0.5"/>
             </ParameterList>
          </ParameterList> 
     </ParameterList>
