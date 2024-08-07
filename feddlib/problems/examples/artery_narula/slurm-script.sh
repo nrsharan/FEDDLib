@@ -7,6 +7,8 @@
 #SBATCH --output=/home/hpc/k105be/k105be13/slurm/outputs/narula_artery.%j.out              ### output file for console output
 #SBATCH --error=/home/hpc/k105be/k105be13/slurm/outputs/narula_artery.%j.err               ### output file for console error
 #SBATCH --ntasks=108              ### Number of tasks per job    (or next line, should one of them)
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=sharan.nuraniramesh@rub.de
 
 unset SLURM_EXPORT_ENV
 
