@@ -55,7 +55,7 @@
       <Parameter name="P1" type="double" value="0.6" />
       <Parameter name="P3" type="double" value="0.6" />
       <Parameter name="C50" type="double" value="0.5" />
-      <Parameter name="D0" type="double" value="6.e-5" />
+      <Parameter name="D0" type="double" value="6.e-3" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -157,7 +157,7 @@
       <Parameter name="P1" type="double" value="0.6" />
       <Parameter name="P3" type="double" value="0.6" />
       <Parameter name="C50" type="double" value="0.5" />
-      <Parameter name="D0" type="double" value="6.e-5" />
+      <Parameter name="D0" type="double" value="6.e-3" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="320.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -188,8 +188,8 @@
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
-          <Parameter name="Start Time" type="double" value="320." />
-          <Parameter name="End Time" type="double" value="2000." />
+          <Parameter name="Start Time" type="double" value="320.0" />
+          <Parameter name="End Time" type="double" value="2000.0" />
         </ParameterList>
         <!-- <ParameterList name="2">
           <Parameter name="Start Time" type="double" value="920." />
@@ -270,7 +270,7 @@
       <Parameter name="P1" type="double" value="0.6" />
       <Parameter name="P3" type="double" value="0.6" />
       <Parameter name="C50" type="double" value="0.5" />
-      <Parameter name="D0" type="double" value="3.e-5" />
+      <Parameter name="D0" type="double" value="3.e-3" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="320.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -301,8 +301,8 @@
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
-          <Parameter name="Start Time" type="double" value="320." />
-          <Parameter name="End Time" type="double" value="2000." />
+          <Parameter name="Start Time" type="double" value="320.0" />
+          <Parameter name="End Time" type="double" value="2000.0" />
         </ParameterList>
         <!-- <ParameterList name="2">
           <Parameter name="Start Time" type="double" value="920." />
@@ -383,7 +383,7 @@
       <Parameter name="P1" type="double" value="0.6" />
       <Parameter name="P3" type="double" value="0.6" />
       <Parameter name="C50" type="double" value="0.5" />
-      <Parameter name="D0" type="double" value="6.e-6" />
+      <Parameter name="D0" type="double" value="6.e-4" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -462,7 +462,7 @@
       <Parameter name="P1" type="double" value="0.6" />
       <Parameter name="P3" type="double" value="0.6" />
       <Parameter name="C50" type="double" value="0.5" />
-      <Parameter name="D0" type="double" value="6.e-8" />
+      <Parameter name="D0" type="double" value="6.e-6" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -541,7 +541,7 @@
       <Parameter name="P1" type="double" value="0.6" />
       <Parameter name="P3" type="double" value="0.6" />
       <Parameter name="C50" type="double" value="0.5" />
-      <Parameter name="D0" type="double" value="6.e-8" />
+      <Parameter name="D0" type="double" value="6.e-6" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -620,7 +620,7 @@
       <Parameter name="P1" type="double" value="0.6" />
       <Parameter name="P3" type="double" value="0.6" />
       <Parameter name="C50" type="double" value="0.5" />
-      <Parameter name="D0" type="double" value="6.e-8" />
+      <Parameter name="D0" type="double" value="6.e-6" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />

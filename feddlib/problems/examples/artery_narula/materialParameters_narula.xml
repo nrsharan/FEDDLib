@@ -188,8 +188,8 @@
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
-          <Parameter name="Start Time" type="double" value="320." />
-          <Parameter name="End Time" type="double" value="2000." />
+          <Parameter name="Start Time" type="double" value="320.0" />
+          <Parameter name="End Time" type="double" value="2000.0" />
         </ParameterList>
         <!-- <ParameterList name="2">
           <Parameter name="Start Time" type="double" value="920." />
@@ -301,8 +301,8 @@
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="1" />
         <ParameterList name="1">
-          <Parameter name="Start Time" type="double" value="320." />
-          <Parameter name="End Time" type="double" value="2000." />
+          <Parameter name="Start Time" type="double" value="320.0" />
+          <Parameter name="End Time" type="double" value="2000.0" />
         </ParameterList>
         <!-- <ParameterList name="2">
           <Parameter name="Start Time" type="double" value="920." />

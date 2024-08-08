@@ -8,17 +8,17 @@
 		<Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  structured, unstructured -->
         <Parameter name="H/h" type="int" value="1"/> <!-- only relevant for structured meshes -->
     
-        <Parameter name="Volume force" type="double" value="12.95131763460572"/> <!-- Load applied on interior wall. Equates to 97.14 mmHg and hence results in 85mmHg(0.875 times) -->
+        <Parameter name="Pressure" type="double" value="12.95131763460572"/> <!-- Load applied on interior wall. Equates to 97.14 mmHg and hence results in 85mmHg(0.875 times) -->
         <Parameter name="Source Type" type="string"   value="surface"/>
         <Parameter name="Model Geometry" type="string" value="Laplace"/>
         
         <Parameter name="SCI" type="bool" value="true"/>
         <Parameter name="Chemistry Explicit" type="bool" value="false"/>
         <Parameter name="Load Stepping" type="bool" value="true"/>
-        <Parameter name="Inflow Start Time" type="double" value="100000.0"/><!-- Start of diffusion process -->
-        <Parameter name="Heart Beat Start" type="double" value="700000.0"/><!-- Start of heart beat -->
+        <Parameter name="Inflow Start Time" type="double" value="10000000.0"/><!-- Start of diffusion process -->
+        <Parameter name="Heart Beat Start" type="double" value="70000000.0"/><!-- Start of heart beat -->
         <Parameter name="Load Step Size" type="double" value="0.05"/><!-- Length/size of Loadsteps -->
-        <Parameter name="Load Ramp End" type="double" value="1.0"/><!-- End of Load Stepping -->
+        <Parameter name="Ramp End Time" type="double" value="1.0"/><!-- End of Load Stepping -->
         <Parameter name="External Force" type="bool" value="true"/>
         <Parameter name="Nonlinear External Force" type="bool" value="true"/>
         <Parameter name="Coupling Type" type="string" value="implicit"/>
@@ -33,7 +33,7 @@
         <Parameter name="Use update tol" type="bool" value="true"/>
         <Parameter name="Use WRMS" type="bool" value="false"/>
         
-        <Parameter name="MaxNonLinIts" type="int" value="10"/>
+        <Parameter name="MaxNonLinIts" type="int" value="20"/>
 
         <Parameter name="Criterion" type="string" value="Update"/><!-- Criterion for nonlinear solve, Residual or Update: Residual is the norm of the nonlinear residual; Update is the norm of the update -->
     </ParameterList>
@@ -41,7 +41,7 @@
     <ParameterList name="Mesh Partitioner">
         <Parameter name="Contiguous" type="bool" value="true"/>
         
-        <Parameter name="Mesh 1 Name" type="string" value="plaque_short_6_k.mesh"/> <!-- plaque_short_6_k.mesh -->
+        <Parameter name="Mesh 1 Name" type="string" value="Artery_plasschaert_heeneman_daemem_SCI.mesh"/> <!-- plaque_short_6_k.mesh -->
         
         <Parameter name="Automatic partition" type="bool" value="false"/> <!-- find ratio for ranks based on the number of elements of each mesh -->
         
@@ -72,7 +72,7 @@
         <Parameter name="Export Data" type="bool" value="true"/>
         <Parameter name="Export Extra Data" type="bool" value="false"/>
         <Parameter name="Export drag and lift" type="bool" value="true"/>
-        
+
         <Parameter name="Export Stress" type="bool" value="true"/>
         <Parameter name="Every X Second" type="double" value="20."/> <!-- Output frequency for stresses and co. during normal phase. 1 = every time step. 10 = every tenth time step -->
         <!-- <Parameter name="Every X Second Heartbeat" type="double" value="0.01"/> --> <!-- Output frequency for stresses and co. during heartbeat phases. Currently no heartbeat rhs -->
