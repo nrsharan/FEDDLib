@@ -494,7 +494,7 @@
     <ParameterList name="6">
       <!--linear,Neo-Hooke
       Only relevant for explicit coupling-->
-      <Parameter name="Volume Flag" type="int" value="21" /> <!--FibCap-->
+      <Parameter name="Volume Flag" type="int" value="20" /> <!--FibCap-->
       <Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation" />
       <!-- For Explicit Coupling and SCI_NH -->
       <Parameter name="Neo-Hooke Modell" type="int" value="1" /> <!--different
