@@ -494,7 +494,7 @@
     <ParameterList name="6">
       <!--linear,Neo-Hooke
       Only relevant for explicit coupling-->
-      <Parameter name="Volume Flag" type="int" value="20" /> <!--Lipid-->
+      <Parameter name="Volume Flag" type="int" value="20" /> <!--Calc2-->
       <Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation" />
       <!-- For Explicit Coupling and SCI_NH -->
       <Parameter name="Neo-Hooke Modell" type="int" value="1" /> <!--different
@@ -524,7 +524,7 @@
       <Parameter name="Beta2" type="double" value="26.68" />
       <Parameter name="Alpha2" type="double" value="151.73775" />
       <Parameter name="Alpha3" type="double" value="2.75662" />
-      <Parameter name="Alpha1" type="double" value="5.762535" />
+      <Parameter name="Alpha1" type="double" value="11525.07" />
       <Parameter name="Alpha4" type="double" value="0." />
       <Parameter name="Alpha5" type="double" value="3.08798" />
       <Parameter name="Gamma6" type="double" value="1.5" />
@@ -541,7 +541,7 @@
       <Parameter name="P1" type="double" value="0.6" />
       <Parameter name="P3" type="double" value="0.6" />
       <Parameter name="C50" type="double" value="0.5" />
-      <Parameter name="D0" type="double" value="6.e-4" />
+      <Parameter name="D0" type="double" value="6.e-6" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />

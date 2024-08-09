@@ -17,7 +17,7 @@
         <Parameter name="Load Stepping" type="bool" value="true"/>
         <Parameter name="Inflow Start Time" type="double" value="10000000.0"/><!-- Start of diffusion process -->
         <Parameter name="Heart Beat Start" type="double" value="70000000.0"/><!-- Start of heart beat -->
-        <Parameter name="Load Step Size" type="double" value="0.05"/><!-- Length/size of Loadsteps -->
+        <Parameter name="Load Step Size" type="double" value="0.02"/><!-- Length/size of Loadsteps -->
         <Parameter name="Ramp End Time" type="double" value="1.0"/><!-- End of Load Stepping -->
         <Parameter name="External Force" type="bool" value="true"/>
         <Parameter name="Nonlinear External Force" type="bool" value="true"/>
@@ -100,7 +100,7 @@
             <Parameter name="Number of Segments" type="int" value="8"/>
             <ParameterList name="1">
                 <Parameter name="Start Time" type="double" value="0."/>
-                <Parameter name="dt" type="double" value="0.05"/>
+                <Parameter name="dt" type="double" value="0.02"/>
             </ParameterList>
              <ParameterList name="2">
                 <Parameter name="Start Time" type="double" value="1."/>

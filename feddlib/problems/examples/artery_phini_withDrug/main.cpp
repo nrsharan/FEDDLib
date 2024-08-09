@@ -74,7 +74,8 @@ int main(int argc, char *argv[])
 
         allParameters->setParameters(*materialParameters); // Adding Material Parameters
         allParameters->setParameters(*structurePreconditionerParameters); // Adding Preconditioning Parameters
-
+        allParameters->setParameters(*solverParameters); // Adding Solver Parameters
+        allParameters->setParameters(*chemistryPreconditionerParamerters); // Adding Chemistry Preconditioner Parameters
 
         Teuchos::RCP<Teuchos::ParameterList> allDiffusionParameters = Teuchos::rcp(new Teuchos::ParameterList(*chemistryPreconditionerParamerters));
         Teuchos::sublist(allDiffusionParameters, "Parameter")->setParameters(simulationParameters->sublist("Parameter Chem"));
