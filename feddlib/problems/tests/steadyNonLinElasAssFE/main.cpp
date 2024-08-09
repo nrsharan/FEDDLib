@@ -94,6 +94,19 @@ void rhsX(double* x, double* res, double* parameters){
     return;
 }
 
+void rhs2DX(double* x, double* res, double* parameters){
+    // parameters[0] is the time, not needed here
+    res[0] = parameters[1];
+    res[1] = 0.;
+    return;
+}
+void rhs2DY(double* x, double* res, double* parameters){
+    // parameters[0] is the time, not needed here
+    res[0] = 0.0;
+    res[1] = parameters[1];
+    return;
+}
+
 void rhsYZ(double* x, double* res, double* parameters){
     // parameters[0] is the time, not needed here
     res[0] = 0.;
@@ -314,16 +327,21 @@ int main(int argc, char *argv[])
             
 
         // LinElas Objekt erstellen
-        NonLinElasticity<SC,LO,GO,NO> NonLinElas( domain, FEType, parameterListAll );
+        NonLinElasAssFE<SC,LO,GO,NO> NonLinElas( domain, FEType, parameterListAll );
 
         NonLinElas.addBoundaries(bcFactory); // Dem Problem RW hinzufuegen
 
-         if(bcType=="Cube"){
-    		 	NonLinElas.addRhsFunction( rhsYZ );
-		}
-		else if(bcType=="Artery" ){
-    	 	NonLinElas.addRhsFunction( rhsArtery);
-		}
+        if(dim==3){
+            if(bcType=="Cube"){
+                    NonLinElas.addRhsFunction( rhsYZ );
+            }
+            else if(bcType=="Artery" ){
+                NonLinElas.addRhsFunction( rhsArtery);
+            }
+        }
+        else    
+            NonLinElas.addRhsFunction(rhs2DX);
+
   		double force = parameterListAll->sublist("Parameter").get("Volume force",1.);
    
         NonLinElas.addParemeterRhs( force );
@@ -345,38 +363,38 @@ int main(int argc, char *argv[])
 
 
         // LinElas Objekt erstellen
-        NonLinElasAssFE<SC,LO,GO,NO> NonLinElasAssFE( domain, FEType, parameterListAll );
+        // NonLinElasAssFE<SC,LO,GO,NO> NonLinElasAssFE( domain, FEType, parameterListAll );
 
-        NonLinElasAssFE.addBoundaries(bcFactory); // Dem Problem RW hinzufuegen
+        // NonLinElasAssFE.addBoundaries(bcFactory); // Dem Problem RW hinzufuegen
 
-        if(bcType=="Cube"){
-    		NonLinElasAssFE.addRhsFunction( rhsYZ );
-		}
-		else if(bcType=="Artery" ){
-    	 	NonLinElasAssFE.addRhsFunction( rhsArtery);
-		}
+        // if(bcType=="Cube"){
+    	// 	NonLinElasAssFE.addRhsFunction( rhsYZ );
+		// }
+		// else if(bcType=="Artery" ){
+    	//  	NonLinElasAssFE.addRhsFunction( rhsArtery);
+		// }
        
-        NonLinElasAssFE.addParemeterRhs( force );
+        // NonLinElasAssFE.addParemeterRhs( force );
 
 
         
-        // ######################
-        // Matrix assemblieren, RW setzen und System loesen
-        // ######################
-        NonLinElasAssFE.initializeProblem();
-        NonLinElasAssFE.assemble();                
-        NonLinElasAssFE.setBoundaries(); // In der Klasse Problem
-        NonLinElasAssFE.setBoundariesRHS();
+        // // ######################
+        // // Matrix assemblieren, RW setzen und System loesen
+        // // ######################
+        // NonLinElasAssFE.initializeProblem();
+        // NonLinElasAssFE.assemble();                
+        // NonLinElasAssFE.setBoundaries(); // In der Klasse Problem
+        // NonLinElasAssFE.setBoundariesRHS();
 
 
-        NonLinearSolver<SC,LO,GO,NO> nlSolverAssFE( nlSolverType );
-        nlSolverAssFE.solve( NonLinElasAssFE );
-        comm->barrier();
+        // NonLinearSolver<SC,LO,GO,NO> nlSolverAssFE( nlSolverType );
+        // nlSolverAssFE.solve( NonLinElasAssFE );
+        // comm->barrier();
         
 		if(comm->getRank() ==0){
 			cout << " ############################################### " << endl;
 			cout << " Nonlinear Iterations FEDDLib Assembly : " << nlSolver.getNonLinIts() << endl; 
-			cout << " Nonlinear Iterations AceGEN Assembly  : " << nlSolverAssFE.getNonLinIts() << endl;
+			// cout << " Nonlinear Iterations AceGEN Assembly  : " << nlSolverAssFE.getNonLinIts() << endl;
 			cout << " ############################################### " << endl;
 
 		}
@@ -406,38 +424,38 @@ int main(int argc, char *argv[])
 			MultiVectorConstPtr_Type valuesSolidConst1 = NonLinElas.getSolution()->getBlock(0);
 			exPara->addVariable( valuesSolidConst1, "valuesNonLinElas", "Vector", dim, domain->getMapUnique());
 
-			MultiVectorConstPtr_Type valuesSolidConst2 = NonLinElasAssFE.getSolution()->getBlock(0);
-			exPara->addVariable( valuesSolidConst2, "valuesNonLinElasAssFE", "Vector", dim, domain->getMapUnique());
+			// MultiVectorConstPtr_Type valuesSolidConst2 = NonLinElasAssFE.getSolution()->getBlock(0);
+			// exPara->addVariable( valuesSolidConst2, "valuesNonLinElasAssFE", "Vector", dim, domain->getMapUnique());
 
-			// Calculating the error per node
-			Teuchos::RCP<MultiVector<SC,LO,GO,NO> > errorValues = Teuchos::rcp(new MultiVector<SC,LO,GO,NO>( valuesSolidConst1->getMap() ) ); 
-			//this = alpha*A + beta*B + gamma*this
-			errorValues->update( 1., valuesSolidConst2, -1. ,valuesSolidConst1, 0.);
+			// // Calculating the error per node
+			// Teuchos::RCP<MultiVector<SC,LO,GO,NO> > errorValues = Teuchos::rcp(new MultiVector<SC,LO,GO,NO>( valuesSolidConst1->getMap() ) ); 
+			// //this = alpha*A + beta*B + gamma*this
+			// errorValues->update( 1., valuesSolidConst2, -1. ,valuesSolidConst1, 0.);
 
-			// Taking abs norm
-			Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > errorValuesAbs = errorValues;
+			// // Taking abs norm
+			// Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > errorValuesAbs = errorValues;
 
-			errorValues->abs(errorValuesAbs);
+			// errorValues->abs(errorValuesAbs);
 
-			exPara->addVariable( errorValuesAbs, "erroeValues", "Vector", dim, domain->getMapUnique());
+			// exPara->addVariable( errorValuesAbs, "erroeValues", "Vector", dim, domain->getMapUnique());
 			exPara->save(0.0);
 
- 			Teuchos::Array<SC> norm(1); 
-    		errorValues->normInf(norm);//const Teuchos::ArrayView<typename Teuchos::ScalarTraits<SC>::magnitudeType> &norms);
-			double res = norm[0];
-			if(comm->getRank() ==0)
-				cout << " Inf Norm of Error of Solutions " << res << endl;
-			double infNormError = res;
+ 			// Teuchos::Array<SC> norm(1); 
+    		// errorValues->normInf(norm);//const Teuchos::ArrayView<typename Teuchos::ScalarTraits<SC>::magnitudeType> &norms);
+			// double res = norm[0];
+			// if(comm->getRank() ==0)
+			// 	cout << " Inf Norm of Error of Solutions " << res << endl;
+			// double infNormError = res;
 		
-			NonLinElas.getSolution()->getBlock(0)->normInf(norm);
-			res = norm[0];
-			if(comm->getRank() ==0)
-				cout << " Relative error Inf-Norm of solution nonlinear elasticity " << infNormError/res << endl;
+			// NonLinElas.getSolution()->getBlock(0)->normInf(norm);
+			// res = norm[0];
+			// if(comm->getRank() ==0)
+			// 	cout << " Relative error Inf-Norm of solution nonlinear elasticity " << infNormError/res << endl;
 
-			NonLinElasAssFE.getSolution()->getBlock(0)->normInf(norm);
-			res = norm[0];
-			if(comm->getRank() ==0)
-				cout << " Relative error Inf-Norm of solutions nonlinear elasticity assemFE " << infNormError/res << endl;
+			// NonLinElasAssFE.getSolution()->getBlock(0)->normInf(norm);
+			// res = norm[0];
+			// if(comm->getRank() ==0)
+			// 	cout << " Relative error Inf-Norm of solutions nonlinear elasticity assemFE " << infNormError/res << endl;
 		
 
           // TEUCHOS_TEST_FOR_EXCEPTION( infNormError > 1e-11 , std::logic_error, "Inf Norm of Error between calculated solutions is too great. Exceeded 1e-11. ");

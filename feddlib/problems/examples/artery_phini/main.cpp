@@ -73,6 +73,7 @@ int main(int argc, char *argv[])
         Teuchos::RCP<Teuchos::ParameterList> preconditionerParameters = Teuchos::rcp(new Teuchos::ParameterList(*structurePreconditionerParameters));
 
         allParameters->setParameters(*materialParameters); // Adding Material Parameters
+        allParameters->setParameters(*solverParameters); // Adding Material Parameters
         allParameters->setParameters(*structurePreconditionerParameters); // Adding Preconditioning Parameters
 
 
