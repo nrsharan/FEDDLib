@@ -210,14 +210,14 @@ int main(int argc, char *argv[])
         bcFactory->addBC(inflowChem, 7, 1, domainDiffusion, "Dirichlet", 1, parameter_vec);
         bcFactory->addBC(inflowChem, 8, 1, domainDiffusion, "Dirichlet", 1, parameter_vec);
 
-        // FOR INFLOW FROM OUTER WALL
-        /*bcFactoryDiffusion->addBC(inflowChem, 4, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // Inflow through inner wall
-        bcFactoryDiffusion->addBC(inflowChem, 6, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0, outer ring on innter wall
-        bcFactoryDiffusion->addBC(inflowChem,9, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0.5 outer ring
+        // Inflow through outer wall
+        bcFactoryDiffusion->addBC(inflowChem, 4, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // Inflow through outer wall
+        bcFactoryDiffusion->addBC(inflowChem, 6, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0, outer ring on outer wall
+        bcFactoryDiffusion->addBC(inflowChem, 9, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0.5 inner ring
 
-        bcFactory->addBC(inflowChem, 4, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
-        bcFactory->addBC(inflowChem, 6, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);
-        bcFactory->addBC(inflowChem,9, 0, domainDiffusion, "Dirichlet", 1, parameter_vec);*/
+        bcFactory->addBC(inflowChem, 4, 1, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactory->addBC(inflowChem, 6, 1, domainDiffusion, "Dirichlet", 1, parameter_vec);
+        bcFactory->addBC(inflowChem, 9, 1, domainDiffusion, "Dirichlet", 1, parameter_vec);
 
         sci.problemChem_->addBoundaries(bcFactoryDiffusion);
 
