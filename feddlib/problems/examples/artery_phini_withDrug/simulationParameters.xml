@@ -100,7 +100,7 @@
             <Parameter name="Number of Segments" type="int" value="13"/>
             <ParameterList name="1">
                 <Parameter name="Start Time" type="double" value="0."/>
-                <Parameter name="dt" type="double" value="0.05"/>
+                <Parameter name="dt" type="double" value="0.02"/>
             </ParameterList>
              <ParameterList name="2">
                 <Parameter name="Start Time" type="double" value="1."/>
