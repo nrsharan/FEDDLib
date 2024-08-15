@@ -95,7 +95,7 @@
         <ParameterList name="1">
           <Parameter name="Start Time" type="double" value="1.0" />
           <Parameter name="End Time" type="double" value="20.0" />
-        </ParameterList>
+        </ParameterList>Active
         <ParameterList name="2">
           <Parameter name="Start Time" type="double" value="220.0" />
           <Parameter name="End Time" type="double" value="240.0" />
@@ -159,7 +159,7 @@
       <Parameter name="C50" type="double" value="0.5" />
       <Parameter name="D0" type="double" value="6.e-5" />
       <Parameter name="M" type="double" value="0." />
-      <Parameter name="ActiveStartTime" type="double" value="320.0" />
+      <Parameter name="ActiveStartTime" type="double" value="20.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
       <Parameter name="growthStartTime" type="double" value="0.0" />
@@ -272,7 +272,7 @@
       <Parameter name="C50" type="double" value="0.5" />
       <Parameter name="D0" type="double" value="3.e-5" />
       <Parameter name="M" type="double" value="0." />
-      <Parameter name="ActiveStartTime" type="double" value="320.0" />
+      <Parameter name="ActiveStartTime" type="double" value="20.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
       <Parameter name="growthStartTime" type="double" value="0.0" />
