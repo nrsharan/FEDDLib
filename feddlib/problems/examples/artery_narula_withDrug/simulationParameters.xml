@@ -17,12 +17,12 @@
         <Parameter name="Load Stepping" type="bool" value="true"/>
         <Parameter name="Inflow Start Time" type="double" value="860.0"/><!-- Start of diffusion process -->
         <Parameter name="Heart Beat Start" type="double" value="70000000.0"/><!-- Start of heart beat -->
-        <Parameter name="Load Step Size" type="double" value="0.05"/><!-- Length/size of Loadsteps -->
+        <Parameter name="Load Step Size" type="double" value="0.02"/><!-- Length/size of Loadsteps -->
         <Parameter name="Ramp End Time" type="double" value="1.0"/><!-- End of Load Stepping -->
         <Parameter name="External Force" type="bool" value="true"/>
         <Parameter name="Nonlinear External Force" type="bool" value="true"/>
         <Parameter name="Coupling Type" type="string" value="implicit"/>
-        <Parameter name="Accelerated Active Until" type="double" value="540.0"/>
+        <Parameter name="Accelerated Active Until" type="double" value="220.0"/>
         <Parameter name="Active Acceleration Multiplier" type="double" value="20.0"/>
 
        
@@ -100,7 +100,7 @@
             <Parameter name="Number of Segments" type="int" value="13"/>
             <ParameterList name="1">
                 <Parameter name="Start Time" type="double" value="0."/>
-                <Parameter name="dt" type="double" value="0.05"/>
+                <Parameter name="dt" type="double" value="0.02"/>
             </ParameterList>
              <ParameterList name="2">
                 <Parameter name="Start Time" type="double" value="1."/>
@@ -112,15 +112,15 @@
             </ParameterList>
              <ParameterList name="4">
                 <Parameter name="Start Time" type="double" value="50."/>
-                <Parameter name="dt" type="double" value="0.15"/>
+                <Parameter name="dt" type="double" value="0.1"/>
             </ParameterList>
             <ParameterList name="5">
                 <Parameter name="Start Time" type="double" value="80."/>
-                <Parameter name="dt" type="double" value="0.2"/>
+                <Parameter name="dt" type="double" value="0.15"/>
             </ParameterList>
             <ParameterList name="6">
                 <Parameter name="Start Time" type="double" value="110."/>
-                <Parameter name="dt" type="double" value="0.25"/>
+                <Parameter name="dt" type="double" value="0.2"/>
             </ParameterList>
             <ParameterList name="7">
                 <Parameter name="Start Time" type="double" value="220."/>
