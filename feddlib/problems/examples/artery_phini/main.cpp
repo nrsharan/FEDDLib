@@ -75,8 +75,7 @@ int main(int argc, char *argv[])
         allParameters->setParameters(*materialParameters); // Adding Material Parameters
         allParameters->setParameters(*solverParameters); // Adding Material Parameters
         allParameters->setParameters(*structurePreconditionerParameters); // Adding Preconditioning Parameters
-        allParameters->setParameters(*solverParameters); // Adding Solver Parameters
-        allParameters->setParameters(*chemistryPreconditionerParamerters); // Adding Chemistry Preconditioner Parameters
+        //allParameters->setParameters(*chemistryPreconditionerParamerters); // Adding Chemistry Preconditioner Parameters
 
         Teuchos::RCP<Teuchos::ParameterList> allDiffusionParameters = Teuchos::rcp(new Teuchos::ParameterList(*chemistryPreconditionerParamerters));
         Teuchos::sublist(allDiffusionParameters, "Parameter")->setParameters(simulationParameters->sublist("Parameter Chem"));
@@ -85,7 +84,9 @@ int main(int argc, char *argv[])
         allDiffusionParameters->setParameters(*chemistryPreconditionerParamerters);
 
         Teuchos::RCP<Teuchos::ParameterList> allStructureParameters = Teuchos::rcp(new Teuchos::ParameterList(*structurePreconditionerParameters));
-        Teuchos::sublist(structurePreconditionerParameters, "Parameter")->setParameters(simulationParameters->sublist("Parameter Solid"));
+        Teuchos::sublist(allStructureParameters, "Parameter")->setParameters(simulationParameters->sublist("Parameter Solid"));
+        allStructureParameters->setParameters(*materialParameters); // Adding Material Parameters
+        allStructureParameters->setParameters(*solverParameters); // Adding Material Parameters
 
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Diffusion;
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Structure;
