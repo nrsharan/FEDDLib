@@ -69,6 +69,7 @@ int main(int argc, char *argv[])
         // string preconditionerType = simulationParameters->sublist("Simulation Parameters").get("Preconditioner Type");
 
         Teuchos::RCP<Teuchos::ParameterList> allParameters = Teuchos::rcp(new Teuchos::ParameterList(*simulationParameters));
+        allParameters->sublist("Parameter").set("Chemistry Explicit", false );  // We set chemistry explicit to false again here, since this main only considers chem explicit 
 
         Teuchos::RCP<Teuchos::ParameterList> preconditionerParameters = Teuchos::rcp(new Teuchos::ParameterList(*structurePreconditionerParameters));
 
