@@ -1131,9 +1131,6 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
     }
     else if(FEType == "P1-disc" || FEType == "P1-disc-global")
         buildP1_Disc_Q2_3DCube( N, MM, numProcsCoarseSolve, underlyingLib );
-    else if(FEType == "Q1"){
-        build3DQ1Cube( N, M, numProcsCoarseSolve, underlyingLib );
-    }
     else if(FEType == "Q2"){
         build3DQ2Cube( N, MM, numProcsCoarseSolve, underlyingLib );
     }
@@ -1424,7 +1421,7 @@ void MeshStructured<SC,LO,GO,NO>::build3DQ1Cube(int N,
         (*this->bcFlagUni_)[i] = (*this->bcFlagRep_)[index];
     }
 
-    LO offset = (M+1);
+    //LO offset = (M+1);
 
     counter = 0;
     for (int t=0; t < M; t++) {
@@ -2007,6 +2004,7 @@ void MeshStructured<SC,LO,GO,NO>::build3DQ2BFS(int N,
     }
     buildElementsClass(elementsVec);
 }
+
 
 template <class SC, class LO, class GO, class NO>
 void MeshStructured<SC,LO,GO,NO>::buildMesh2DBFS(std::string FEType,

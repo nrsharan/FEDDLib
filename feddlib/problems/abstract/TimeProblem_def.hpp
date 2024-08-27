@@ -509,7 +509,7 @@ void TimeProblem<SC,LO,GO,NO>::calculateNonLinResidualVec( std::string type, dou
             this->bcFactory_->setVectorMinusBC( nonLinProb->getResidualVector(), nonLinProb->getSolution(), time );
 
 
-        bool plotResVector = nonLinProb->getParameterList()->sublist("General").get("Plot Residual Vector",true);
+        bool plotResVector = nonLinProb->getParameterList()->sublist("General").get("Plot Residual Vector",false);
         double range1 = nonLinProb->getParameterList()->sublist("General").get("Plot Residual Vector Start",0.0);
         double range2 = nonLinProb->getParameterList()->sublist("General").get("Plot Residual Vector End",1.0);
         if(plotResVector && time >= range1 && time <= range2)

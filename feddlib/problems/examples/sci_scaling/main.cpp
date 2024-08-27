@@ -1448,7 +1448,7 @@ int main(int argc, char *argv[])
         daeTimeSolver.advanceInTime();
     }
     TimeMonitor_Type::report(std::cout);
-        stackedTimer->stop("Structure-chemical interaction");
+    stackedTimer->stop("Structure-chemical interaction");
 	StackedTimer::OutputOptions options;
 	options.output_fraction = options.output_histogram = options.output_minmax = true;
 	stackedTimer->report((std::cout),comm,options);
