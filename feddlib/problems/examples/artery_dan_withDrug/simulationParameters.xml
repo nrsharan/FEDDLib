@@ -26,9 +26,9 @@
         <Parameter name="Active Acceleration Multiplier" type="double" value="20.0"/>
 
        
-        <Parameter name="relNonLinTol" type="double" value="1.0e-8"/>
-        <Parameter name="absNonLinTol" type="double" value="1.0e-8"/>
-        <Parameter name="updateTol" type="double" value="1.0e-8"/>
+        <Parameter name="relNonLinTol" type="double" value="1.0e-7"/>
+        <Parameter name="absNonLinTol" type="double" value="1.0e-7"/>
+        <Parameter name="updateTol" type="double" value="1.0e-7"/>
         <Parameter name="Combo" type="string" value="OR"/>
         <Parameter name="Use update tol" type="bool" value="true"/>
         <Parameter name="Use WRMS" type="bool" value="false"/>

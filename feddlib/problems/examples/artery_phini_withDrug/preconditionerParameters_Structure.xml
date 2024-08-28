@@ -30,7 +30,7 @@
                 </ParameterList>
 
                 <ParameterList name="RGDSWCoarseOperator">
-                    <Parameter name="Store Phi" type="bool" value="true"/>
+                    <Parameter name="Store Phi" type="bool" value="false"/>
                 
                     <Parameter name="Phi: Dropping Threshold" type="double" value="1.0e-5"/>
                 
@@ -40,7 +40,7 @@
                     <Parameter name="Use Triple MatrixMultiply" type="bool" value="false"/>
                     <Parameter name="Test Unconnected Interface" type="bool" value="false"/>
                     
-                    <Parameter name="Reuse: Coarse Basis" type="bool" value="false"/>
+                    <Parameter name="Reuse: Coarse Basis" type="bool" value="true"/>
                     <Parameter name="Reuse: Coarse Matrix" type="bool" value="false"/>
                     
                     <Parameter name="Reuse: Extension Symbolic Factorization" type="bool" value="true"/>
@@ -70,8 +70,8 @@
                     
                     <ParameterList name="Distribution">
                         <Parameter name="Type" type="string" value="linear"/>
-                        <Parameter name="GatheringSteps"  type="int" value="3"/>
-                        <Parameter name="NumProcs" type="int" value="5"/>
+                        <Parameter name="GatheringSteps"  type="int" value="1"/>
+                        <Parameter name="NumProcs" type="int" value="1"/>
                         <Parameter name="Factor" type="double" value="1."/>
                          <ParameterList name="Zoltan2 Parameter">
                             <Parameter name="algorithm" type="string"   value="parmetis"/>
