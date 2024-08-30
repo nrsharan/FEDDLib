@@ -90,8 +90,6 @@ int main(int argc, char *argv[])
         allStructureParameters->setParameters(*materialParameters); // Adding Material Parameters
         allStructureParameters->setParameters(*solverParameters); // Adding Solver Parameters
 
-        
-
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Diffusion;
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Structure;
         // Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP2Diffusion;

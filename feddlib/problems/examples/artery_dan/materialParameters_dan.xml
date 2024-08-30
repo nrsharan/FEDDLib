@@ -95,7 +95,7 @@
         <ParameterList name="1">
           <Parameter name="Start Time" type="double" value="1.0" />
           <Parameter name="End Time" type="double" value="20.0" />
-        </ParameterList>Active
+        </ParameterList>
         <ParameterList name="2">
           <Parameter name="Start Time" type="double" value="220.0" />
           <Parameter name="End Time" type="double" value="240.0" />
