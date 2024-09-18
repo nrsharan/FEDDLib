@@ -134,7 +134,7 @@
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
-      <Parameter name="Kappa" type="double" value="148.262" />
+      <Parameter name="Kappa" type="double" value="75.0" />
       <Parameter name="Beta1" type="double" value="0.00100" />
       <Parameter name="MuA" type="double" value="11.857" />
       <Parameter name="Beta2" type="double" value="26.68" />
@@ -251,7 +251,7 @@
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
-      <Parameter name="Kappa" type="double" value="118.6096" />
+      <Parameter name="Kappa" type="double" value="50.0" />
       <Parameter name="Beta1" type="double" value="0.001006" />
       <Parameter name="MuA" type="double" value="9.4856" />
       <Parameter name="Beta2" type="double" value="26.68" />
