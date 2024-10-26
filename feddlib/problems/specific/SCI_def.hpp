@@ -32,7 +32,7 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
     
     //std::string linearization = parameterListSCI->sublist("General").get("Linearization","FixedPoint");
     
-    //TEUCHOS_TEST_FOR_EXCEPTION( !(linearization == "Newton" || linearization == "NOX")  && materialModel_ != "linear", std::runtime_error, "Nonlinear material models can only be used with Newton's method or FixedPoint (nonlinear material Jacobian will still be used).");
+    //TEUCHOS_TEST_FOR_EXCEPTION( !(linearization == "Newton"|| linearization == "NOX")  && materialModel_ != "linear", std::runtime_error, "Nonlinear material models can only be used with Newton's method or FixedPoint (nonlinear material Jacobian will still be used).");
     this->addVariable( domainStructure, FETypeStructure, "d_s", domainStructure->getDimension() ); // Structure
     this->addVariable( domainChem, FETypeChem, "c", 1); // Chemistry scalar valued problem
 
@@ -50,7 +50,6 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
     problemChem_->initializeProblem();
 
     //We initialize the subproblems. In the main routine, we need to call initializeFSI(). There, we first initialize the vectors of the FSI problem and then we set the pointers of the subproblems to the vectors of the full monolithic FSI system. This way all values are only saved once in the subproblems and can be used by the monolithic FSI system.
-    
     meshDisplacementNew_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
     meshDisplacementOld_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
     
@@ -124,6 +123,7 @@ void SCI<SC,LO,GO,NO>::info()
 template<class SC,class LO,class GO,class NO>
 void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
 {
+
     if (type == "") {
         if (this->verbose_)
         {
@@ -230,6 +230,7 @@ void SCI<SC,LO,GO,NO>::solveChemistryProblem() const
     SmallMatrix<int> defChem(1);
     double dt = timeSteppingTool_->get_dt();
 
+    // Always bdf 1
     defChem[0][0] = 1;
     massCoeffChem[0][0] = timeSteppingTool_->getInformationBDF(0) / dt;
     problemCoeffChem[0][0] = timeSteppingTool_->getInformationBDF(1);
@@ -242,32 +243,6 @@ void SCI<SC,LO,GO,NO>::solveChemistryProblem() const
     this->setChemMassmatrix(massmatrix);
     // 1. Assemble Chemisty Problem
     this->problemTimeChem_->assemble();
-    /*MatrixPtr_Type A(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );       
-    MatrixPtr_Type B(new Matrix_Type( this->getDomain(1)->getMapUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
-    MatrixPtr_Type BT(new Matrix_Type(this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ) );
-    MatrixPtr_Type C(new Matrix_Type( this->getDomain(1)->getMapUnique(),this->getDomain(1)->getDimension() * this->getDomain(1)->getApproxEntriesPerRow() ));
-    // For implicit the system is ordered differently with solid block in 0,0 and diffusion in 1,1
-    
-    // As the implementation is based on a 2x2 System we use a tmp system for the actual assembly routine.
-    BlockMatrixPtr_Type systemTmp(new BlockMatrix_Type(2)); 
-    systemTmp->addBlock(A,0,0);
-    systemTmp->addBlock(BT,0,1);
-    systemTmp->addBlock(B,1,0);
-    systemTmp->addBlock(C,1,1);
-    MultiVectorConstPtr_Type c; 
-    if(chemistryExplicit_)
-        c= this->problemTimeChem_->getSolution()->getBlock(0);
-    else
-        c = this->solution_->getBlock(1);
-
-    c_rep_->importFromVector(c, true);
-
-    MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
-    d_rep_->importFromVector(d, true); 
-    
-    this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,systemTmp,this->residualVec_, this->parameterList_, "Jacobian", true);
-    
-    this->problemTimeChem_->getSystem()->addBlock(systemTmp->getBlock(1,1),0,0);*/
     // 2. Rhs
     this->computeChemRHSInTime();
 
@@ -286,6 +261,17 @@ void SCI<SC,LO,GO,NO>::solveChemistryProblem() const
 
     if (!exporterChem_.is_null())
             this->exporterChem_->save( this->timeSteppingTool_->currentTime() );
+
+    // If we want to safe/export the solution, we need to call the function here, as the chemistry problem is decoupled from the rest
+    // and does not encounter the usual export point within the time stepping loop
+    // BlockMultiVectorPtrArray_Type solution; solution.resize(1);
+    // solution[0] = Teuchos::rcp( new BlockMultiVector_Type( this->problemTimeChem_->getSolution()->getMap() ) );
+    // solution[0]->addBlock(this->problemTimeChem_->getSolution()->getBlock(0),0);
+
+    // cout << " Solve chemistry problem " << endl;
+
+    // //this->problemTimeChem_->checkForExportAndExport( solution,"Solution" );
+
 
 }
 template<class SC,class LO,class GO,class NO>
@@ -496,8 +482,6 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     if(!chemistryExplicit_){
         this->residualVec_->addBlock(Teuchos::rcp_const_cast<MultiVector_Type>(resTmp->getBlock(1)),1);
     }
-
-   
 
     if(nonlinearExternalForce_)
         computeSolidRHSInTime();
@@ -1001,7 +985,10 @@ void SCI<SC,LO,GO,NO>::setSolidMassmatrix( MatrixPtr_Type& massmatrix ) const
 
     int size = this->problemTimeStructure_->getSystem()->size();
 
-    if(timeSteppingTool_->currentTime() == 0.0)
+    bool restart = this->parameterList_->sublist("Timestepping Parameter").get("Restart", false);
+    double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0); 
+ 
+    if(timeSteppingTool_->currentTime() == 0.0 || (restart &&  timeSteppingTool_->currentTime() -1.e-5 < timeStepRestart ))
     {
         this->problemTimeStructure_->systemMass_.reset(new BlockMatrix_Type(size));
         {
@@ -1053,6 +1040,9 @@ void SCI<SC,LO,GO,NO>::updateTime() const
     MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
     d_rep_->importFromVector(d, true); 
     this->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_->dt_, d_rep_, c_rep_ );    
+
+    this->problemTimeChem_->updateTime(timeSteppingTool_->t_);
+    this->problemTimeStructure_->updateTime(timeSteppingTool_->t_);
 
    // if(couplingType_ == "explicit")
    //     this->problemTimeStructure_->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_->dt_, d_rep_, c_rep_ );   
@@ -1124,7 +1114,7 @@ void SCI<SC,LO,GO,NO>::initializeCE(){
 template<class SC,class LO,class GO,class NO>
 void SCI<SC,LO,GO,NO>::updateChemInTime() const
 {
-    int nmbBDF = timeSteppingTool_->getBDFNumber();
+    int nmbBDF = 1; //timeSteppingTool_->getBDFNumber();
 
     if(nmbBDF<2 && !this->parameterList_->sublist("General").get("Linearization","FixedPoint").compare("Extrapolation")) {
         if (timeSteppingTool_->currentTime()!=0.){
@@ -1273,6 +1263,96 @@ template<class SC,class LO,class GO,class NO>
 vec_string_Type SCI<SC,LO,GO,NO>::getPostprocessingNames()
 {
     return postProcessingnames_;
+}
+
+template<class SC,class LO,class GO,class NO>
+void SCI<SC,LO,GO,NO>::getValuesOfInterest(BlockMultiVectorPtr_Type& historyMultiVector)
+{
+    //vec_string_Type historyNames = {"LambdaBarC1", "LambdaBarC2", "nA1", "nA2", "nB1", "nB2", "nC1", "nC2", "nD1", "nD2", "LambdaA1", "LambdaA2", "k251", "k252", "LambdaBarP1", "LambdaBarP2", "Theta1", "Theta2", "Theta3", "Ag11", "Ag12", "Ag13", "Ag21", "Ag22", "Ag23", "Ag31", "Ag32", "Ag33", "a11", "a12", "a13", "a21", "a22", "a23"};
+    historyMultiVector = this->feFactory_->getHistoryValues();
+
+}
+
+template<class SC,class LO,class GO,class NO>
+void SCI<SC,LO,GO,NO>::exportValuesOfInterest()
+{
+    bool exportHistory = this->parameterList_->sublist("Timestepping Parameter").get("Export history", false);
+
+    if(exportHistory)
+    {
+
+        BlockMultiVectorPtr_Type historyValues;
+        this->getValuesOfInterest(historyValues);
+
+        vec_string_Type historyNames = {"LambdaBarC1", "LambdaBarC2", "nA1", "nA2", "nB1", "nB2", "nC1", 
+                                        "nC2", "nD1", "nD2", "LambdaA1", "LambdaA2", "k251", "k252", "LambdaBarP1", 
+                                        "LambdaBarP2", "Theta1", "Theta2", "Theta3", "Ag11", "Ag12", "Ag13", "Ag21",
+                                        "Ag22", "Ag23", "Ag31", "Ag32", "Ag33", "a11", "a12", "a13", "a21", "a22", "a23"};
+
+        Teuchos::RCP<HDF5Export<SC,LO,GO,NO>> exporter =Teuchos::rcp(new HDF5Export<SC,LO,GO,NO>(this->getDomain(0)->getElementMap(),"History"+std::to_string(timeSteppingTool_->t_)));
+
+        // The history is only dependent on the checkpoint, not the blocks
+        // We asume the number of gauss points (gp) is constant to 4.
+        for(int gp =0; gp<4; gp++){
+            for(int k=0; k < historyNames.size(); k++){
+                //cout << " Export value " << k << " history name " << historyNames[k] << " of gausspoint " << gp << " checkpointtupel " << j << endl; 
+                string varName = historyNames[k]+"_"+std::to_string(gp);
+                exporter->writeVariablesHDF5(varName,historyValues->getBlock(gp)->getVector(k)); 
+            }
+        } 
+    }
+}
+
+template<class SC,class LO,class GO,class NO>
+void SCI<SC,LO,GO,NO>::importValuesOfInterest()
+{
+
+    bool importHistory = this->parameterList_->sublist("Timestepping Parameter").get("Import history", false);
+
+    if(importHistory)
+    {
+        // BlockMultiVectorPtr_Type historyValues;
+        // problem_->getValuesOfInterest(historyValues);
+
+        vec_string_Type historyNames = {"LambdaBarC1", "LambdaBarC2", "nA1", "nA2", "nB1", "nB2", "nC1", 
+                                        "nC2", "nD1", "nD2", "LambdaA1", "LambdaA2", "k251", "k252", "LambdaBarP1", 
+                                        "LambdaBarP2", "Theta1", "Theta2", "Theta3", "Ag11", "Ag12", "Ag13", "Ag21",
+                                        "Ag22", "Ag23", "Ag31", "Ag32", "Ag33", "a11", "a12", "a13", "a21", "a22", "a23"};
+
+        MapConstPtr_Type elementMap = this->getDomain(0)->getElementMap();
+        std::cout <<    timeSteppingTool_->t_ << std::endl;
+        Teuchos::RCP<HDF5Import<SC,LO,GO,NO>> importer =Teuchos::rcp(new HDF5Import<SC,LO,GO,NO>(this->getDomain(0)->getElementMap(),"History"+std::to_string(timeSteppingTool_->t_)));
+
+        // The history is only dependent on the checkpoint, not the blocks
+        // We asume the number of gauss points (gp) is constant to 4.
+        vec2D_dbl_Type myHistory (elementMap->getNodeNumElements(),vec_dbl_Type(historyNames.size()*4,-1.));
+        
+        for(int gp =0; gp<4; gp++){
+            for(int k=0; k < historyNames.size(); k++){
+                //cout << " Export value " << k << " history name " << historyNames[k] << " of gausspoint " << gp << " checkpointtupel " << j << endl; 
+                string varName = historyNames[k]+"_"+std::to_string(gp);
+                MultiVectorConstPtr_Type history  = importer->readVariablesHDF5(varName); 
+                Teuchos::ArrayRCP<SC>  historyArray = history->getDataNonConst(0);
+                for(int T =0;T<historyArray.size(); T++){
+                   myHistory[T][k+gp*historyNames.size()] = historyArray[T];      
+                }
+            }
+        } 
+
+        for(int T=0; T< elementMap->getNodeNumElements() ; T++ ){
+            this->feFactory_->setHistoryValues(T,myHistory[T]);
+        }
+
+    }
+    MultiVectorConstPtr_Type c; 
+    if(chemistryExplicit_)
+        c= this->problemTimeChem_->getSolution()->getBlock(0);
+    else
+        c = this->solution_->getBlock(1);
+
+    MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
+    d_rep_->importFromVector(d, true); 
+    this->feFactory_->updateSolutionAssemblyFEElements(d_rep_, c_rep_ );    
 }
 
 }

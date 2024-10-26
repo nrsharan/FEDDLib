@@ -75,7 +75,6 @@ void FSCI<SC,LO,GO,NO>::assemble( std::string type ) const
         }
 
     //    P_.reset(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), 10 ) );
-        
         this->problemFluid_->assemble();
         
         this->problemSCI_->assemble();
@@ -311,8 +310,7 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
         if(this->verbose_)
             std::cout << "-- Reassembly (UpdateTime)" << '\n';
 
-        this->updateTime();
-        this->problemSCI_->reAssemble("UpdateTime");
+        updateTime();
 
         return;
     }
@@ -540,6 +538,16 @@ void FSCI<SC,LO,GO,NO>::reAssemble(std::string type) const
         this->system_->addBlock(  this->problemSCI_->getSystem()->getBlock(1,0), 4, 2 );
     }
 }
+// Damit die richtige timeSteppingTool_->currentTime() genommen wird.
+template<class SC,class LO,class GO,class NO>
+void FSCI<SC,LO,GO,NO>::updateTime() const
+{
+    this->timeSteppingTool_->t_ = this->timeSteppingTool_->t_ + this->timeSteppingTool_->dt_prev_;
+    this->problemTimeFluid_->updateTime(this->timeSteppingTool_->t_);
+    this->problemSCI_->reAssemble("UpdateTime");
+
+}
+
 template<class SC,class LO,class GO,class NO>
 void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time) const
 {
@@ -590,6 +598,7 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
     if ( this->verbose_ )
         std::cout << "Warning: Wrong consideration of temporal discretization for multi-stage RK methods!" << std::endl;
     
+
     this->problemFluid_->calculateNonLinResidualVecWithMeshVelo( "reverse", time, this->u_minus_w_rep_, this->P_ );
     this->system_->addBlock( this->problemFluid_->getSystem()->getBlock( 0, 0 ), 0, 0 );
     
@@ -638,7 +647,6 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
         
     }*/
     // might also be called in the sub calculateNonLinResidualVec() methods which where used above
-    
     if (type == "reverse"){
         this->bcFactory_->setBCMinusVector( this->residualVec_, this->solution_, time );
     }
@@ -646,9 +654,8 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
         this->residualVec_->scale(-1.);
         this->bcFactory_->setVectorMinusBC( this->residualVec_, this->solution_, time );
     } 
-
     this->setBoundariesRHS(this->timeSteppingTool_->currentTime());
-
+    // this->rhs_->getBlock(0)->print();
     /*bool plotResVector = this->getParameterList()->sublist("General").get("Plot Residual Vector",true);
     double range1 = this->getParameterList()->sublist("General").get("Plot Residual Vector Start",0.0);
     double range2 = this->getParameterList()->sublist("General").get("Plot Residual Vector End",1.0);
@@ -659,13 +666,8 @@ void FSCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time
 
 }
 
-// Muss derzeit nur am Anfang jeder Zeititeration aufgerufen werden, damit
-// problemTimeFluid_ und problemTimeStructure_ die aktuelle Loesung haben.
-// ACHTUNG: Wenn wir irgendwann einmal anfangen reAssemble() auf problemFluid_ und
-// problemStructure_ aufzurufen, dann muessen wir in jeder nichtlinearen Iteration
-// diese setPartialSolutions() aufrufen, damit problemFluid_ und problemStructure_
-// den korrekten nichtlinearen Term ausrechnen koennen.
-// CH: Ist das noch relevant?
+// This connects the here computed 'solution_' to the solutions of the subproblems. This way the subproblems have
+// the correct solution when computing residual and co
 // We need to build FSCI so this method is not needed anymore
 template<class SC,class LO,class GO,class NO>
 void FSCI<SC,LO,GO,NO>::setFromPartialVectorsInit() const
@@ -674,7 +676,7 @@ void FSCI<SC,LO,GO,NO>::setFromPartialVectorsInit() const
     //Fluid velocity
     this->solution_->addBlock( this->problemFluid_->getSolution()->getBlockNonConst(0), 0 );
     this->residualVec_->addBlock( this->problemFluid_->getResidualVector()->getBlockNonConst(0), 0 );
-    this->residualVec_->addBlock( this->problemFluid_->getResidualVector()->getBlockNonConst(0), 0 );
+    this->previousSolution_->addBlock( this->problemFluid_->getPreviousSolution()->getBlockNonConst(0), 0 );
     this->rhs_->addBlock( this->problemFluid_->getRhs()->getBlockNonConst(0), 0 );
     this->sourceTerm_->addBlock( this->problemFluid_->getSourceTerm()->getBlockNonConst(0), 0 );
     
@@ -721,7 +723,6 @@ void FSCI<SC,LO,GO,NO>::setFromPartialVectorsInit() const
     }*/
 
 }
-
 template<class SC,class LO,class GO,class NO>
 void FSCI<SC,LO,GO,NO>::setupSubTimeProblems(ParameterListPtr_Type parameterListFluid, ParameterListPtr_Type parameterListStructure,ParameterListPtr_Type parameterListChem ) const
 {
@@ -958,6 +959,23 @@ void FSCI<SC,LO,GO,NO>::initializeGE(){
         }
         this->initVectorSpaces();  //reinitialize NOX vector spaces
     }
+}
+
+template<class SC,class LO,class GO,class NO>
+void FSCI<SC,LO,GO,NO>::exportValuesOfInterest()
+{
+    problemSCI_->exportValuesOfInterest();   
+    if(this->geometryExplicit_)
+    {
+        cout << " Export geometry " << endl;
+        string varName = std::to_string(this->timeSteppingTool_->currentTime());
+        this->exporterGeometry_->writeVariablesHDF5(varName,this->problemGeometry_->getSolution()->getBlock(0)); 
+    }}
+
+template<class SC,class LO,class GO,class NO>
+void FSCI<SC,LO,GO,NO>::importValuesOfInterest()
+{
+    problemSCI_->importValuesOfInterest();   
 }
 
 }

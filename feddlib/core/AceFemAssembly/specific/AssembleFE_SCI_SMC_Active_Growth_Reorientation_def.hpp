@@ -101,7 +101,7 @@ namespace FEDD
 
 		// historyGP: Vector of history variables [Order: LambdaBarC1, LambdaBarC2, nA1, nA2, nB1, nB2, nC1, nC2, nD1, nD2, LambdaA1, LambdaA2, k251, k252, LambdaBarP1, LambdaBarP2, Theta1, Theta2, Theta3, Ag11, Ag12, Ag13, Ag21, Ag22, Ag23, Ag31, Ag32, Ag33, a11, a12, a13, a21, a22, a23] (The length must be equal to number of history variables per gauss point(34) * number of gauss points)
 		std::vector<double> historyGP = {1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.82758, 1.82758, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
-
+		
 		this->history_ = historyGP;
 
 		this->history_.reserve(this->historyLength_);
@@ -191,7 +191,9 @@ namespace FEDD
 			timeParametersVecReorientation_.push_back(segment);
 			// cout << " Reorientation Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
 		}
-
+		// if(this->globalElementID_<10)
+		// 	cout << " Element initialized with timestep " << this->timeStep_ << endl;
+		// We check this here also in case we do a restart.
 #endif
 	}
 
@@ -225,22 +227,10 @@ namespace FEDD
 		this->jacobian_ = elementMatrix;
 	}
 	template <class SC, class LO, class GO, class NO>
-	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::advanceInTime(double dt)
+	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::checkingReorientationActiveGrowth()
 	{
-
-		// If we have a time segment setting we switch to the demanded time increment
-		/*for(int i=0; i<numSegments_ ; i++){
-			if(this->timeStep_+1.0e-12 > timeParametersVec_[i][0])
-				this->timeIncrement_=timeParametersVec_[i][1];
-		}*/
-		if (this->timeStep_ - 1.e-13 < 0) // only in this one instance T=0 we set the dt beforehand, as the initial dt is set through the paramterlist and this is error prone
-			this->timeIncrement_ = dt;
-
-		this->timeStep_ = this->timeStep_ + this->timeIncrement_;
-
-		this->timeIncrement_ = dt;
-
-		// Checking for Active Response
+		bool restart = this->params_->sublist("Timestepping Parameter").get("Restart",false);
+		double timeStepRestart = this->params_->sublist("Timestepping Parameter").get("Time step",0.0);
 		bool found = false;
 		for (int i = 0; i < timeParametersVecActive_.size(); i++)
 		{
@@ -249,8 +239,16 @@ namespace FEDD
 				this->activeBool_ = 1;
 				if (!this->activeInitialized_)
 				{
-					this->initializeActiveResponse();
-					this->initializeGrowth();
+					// We need to ensure that in case of restart the is not initialized multiple times
+					if (restart && timeStepRestart > timeParametersVecActive_[0][0] + 1.0e-10){  // only if the start of Active intervall coincides with the restart time
+						this->activeInitialized_=true;
+						this->growthInitialized_=true;
+					}
+					else{// Otherwise we know it was already previously initiated
+						this->initializeActiveResponse();
+						this->initializeGrowth();
+					}
+
 				}
 				found = true;
 			}
@@ -265,8 +263,15 @@ namespace FEDD
 			if (this->timeStep_ + 1.0e-12 > timeParametersVecGrowth_[i][0] && this->timeStep_ - 1.0e-12 < timeParametersVecGrowth_[i][1])
 			{
 				this->growthBool_ = 1;
-				if (!growthInitialized_)
-					this->initializeGrowth();
+				if (!growthInitialized_){
+					// We need to ensure that in case of restart the is not initialized multiple times
+					if (restart && timeStepRestart > timeParametersVecActive_[0][0] + 1.0e-10){  // only if the start of Active intervall coincides with the restart time
+						this->growthInitialized_=true;
+					}
+					else{ // Otherwise we know it was already previously initiated
+						this->initializeGrowth();
+					}
+				}
 				found = true;
 			}
 			else if (!found)
@@ -278,6 +283,7 @@ namespace FEDD
 		{
 			if (this->timeStep_ + 1.0e-12 > timeParametersVecReorientation_[i][0] && this->timeStep_ - 1.0e-12 < timeParametersVecReorientation_[i][1])
 			{
+
 				this->reorientationBool_ = 1;
 				found = true;
 			}
@@ -295,11 +301,38 @@ namespace FEDD
 		if (this->globalElementID_ == 0)
 		{
 			cout << " ---------------------------------------------- " << endl;
-			cout << " AssembleFE_SCI_SMC: Advancing time in elements" << endl;
-			cout << " Timestep: " << this->timeStep_ << " \t timeincrement: " << this->timeIncrement_ << " \t Current time: " << this->timeIncrement_ + this->timeStep_ << endl;
+			cout << " CheckingReorientationActiveGrowth in elements" << endl;
 			cout << " Growth " << growthBool_ << endl;
 			cout << " Active " << activeBool_ << endl;
 			cout << " Reorientation " << reorientationBool_ << endl;
+			cout << " ---------------------------------------------- " << endl;
+		}
+	}
+	template <class SC, class LO, class GO, class NO>
+	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::advanceInTime(double dt)
+	{
+		
+		// If we have a time segment setting we switch to the demanded time increment
+		/*for(int i=0; i<numSegments_ ; i++){
+			if(this->timeStep_+1.0e-12 > timeParametersVec_[i][0])
+				this->timeIncrement_=timeParametersVec_[i][1];
+		}*/
+		if (this->timeStep_ - 1.e-13 < 0) // only in this one instance T=0 we set the dt beforehand, as the initial dt is set through the paramterlist and this is error prone
+			this->timeIncrement_ = dt;
+
+
+		this->timeStep_ = this->timeStep_ + this->timeIncrement_;
+
+		this->timeIncrement_ = dt;
+
+		// Checking for Active Response Reorientation and Growth
+		checkingReorientationActiveGrowth();
+		
+		if (this->globalElementID_ == 0)
+		{
+			cout << " ---------------------------------------------- " << endl;
+			cout << " AssembleFE_SCI_SMC: Advancing time in elements" << endl;
+			cout << " Timestep: " << this->timeStep_ << " \t timeincrement: " << this->timeIncrement_ << " \t to be computed time: " << this->timeIncrement_ + this->timeStep_ << endl;
 			cout << " ---------------------------------------------- " << endl;
 		}
 		// cout << " Update:: History " ;
@@ -307,7 +340,7 @@ namespace FEDD
 		{
 			// if(this->timeStep_  > activeStartTime_ +dt )
 			this->history_[i] = this->historyUpdated_[i];
-			// cout << " | " << this->history_[i] ;
+			//  cout << " | " << this->history_[i] ;
 		}
 		// cout << endl;
 		for (int i = 0; i < 10; i++)
@@ -322,7 +355,6 @@ namespace FEDD
 	{
 
 		this->rhsVec_.reset(new vec_dbl_Type(this->dofsElement_, 0.));
-
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
 		assemble_SCI_SMC_Active_Growth_Reorientation(false);
@@ -340,6 +372,17 @@ namespace FEDD
 	{
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
+		// We check this in case of restart. Then the history parameters are already set or we are already in a state of reorientation etc. Then the history does not need to be explicitly updated again.
+		bool restart = this->params_->sublist("Timestepping Parameter").get("Restart",false);
+	  	if(restart){
+		  	double timeStepRestart = this->params_->sublist("Timestepping Parameter").get("Time step", 0.0) ;//- timeIncrement_;
+			// we need to look for the correct first time increment
+			if(this->timeStep_ -1.e-10 < timeStepRestart && this->historyImported_)
+				checkingReorientationActiveGrowth();		
+   		}
+
+		
+		
 		double deltaT = this->getTimeIncrement();
 		// this->element_.setTimeIncrement(deltaT);
 

@@ -8,6 +8,8 @@
 #include "NonLinearProblem.hpp"
 //#include "LinearProblem.hpp"
 #include "Thyra_StateFuncModelEvaluatorBase.hpp"
+#include "feddlib/core/General/HDF5Export.hpp"
+
 /*!
  Declaration of TimeProblem
 
@@ -227,9 +229,21 @@ public:
     mutable double timeStep_ =0;
     mutable double newtonStep_=0;
     
+    void exportSolutionHDF5();
+
     ProblemPtr_Type problem_;
     CommConstPtr_Type comm_;
     
+    // Exporter for various parts of the solution or vectors that are needed for restarts
+    Teuchos::RCP <HDF5Export<SC,LO,GO,NO>> HDF5exporterDsVelocity_; // Verlocity for Newmark
+    Teuchos::RCP <HDF5Export<SC,LO,GO,NO>> HDF5exporterDsAcceleration_; // Acceleration for Newmark
+    Teuchos::RCP <HDF5Export<SC,LO,GO,NO>> HDF5exporterSolutionNewmark_; // Acceleration for Newmark
+    
+    std::vector<Teuchos::RCP <HDF5Export<SC,LO,GO,NO>>> HDF5exporterRhs_; // Acceleration for Newmark
+    std::vector<Teuchos::RCP <HDF5Export<SC,LO,GO,NO>>> HDF5exporterHistory_; // Solution displacement
+    std::vector<Teuchos::RCP <HDF5Export<SC,LO,GO,NO>>> HDF5exporterSolution_; // Solution displacement
+
+
     mutable BlockMatrixPtr_Type systemCombined_;
     mutable BlockMatrixPtr_Type systemMass_;
     mutable SmallMatrix<double> timeParameters_;
@@ -256,6 +270,9 @@ public:
     // Fuer FSI
     // ###########################
     BlockMatrixPtrArray_Type systemMassPreviousTimeSteps_;
+    //#################
+    void checkForExportAndExport(BlockMultiVectorPtrArray_Type solutionVec, string fileName);
+
 
     double time_;
 protected:
@@ -308,6 +325,13 @@ private:
                             const ::Thyra::ModelEvaluatorBase::OutArgs<SC> &outArgs) const;
     
     mutable bool precInitOnly_; //Help variable to signal that we constructed the initial preconditioner for NOX with the Stokes system and we do not need to compute it if fill_W_prec is called for the first time. However, the preconditioner is only correct if a Stokes system is solved in the first nonlinear iteration. This only affects the block preconditioners of Teko
+
+    void initExporter(string fileName  );
+    void initCheckPoints();
+    double getPreviousTimeIncrement(double timeStep =-1.0);
+    Teuchos::RCP<HDF5Export<SC, LO, GO, NO>> getExporter(string fileName, int i);
+
+    std::vector<std::tuple<double,bool>> checkPointTupel_;
 
 };
 }

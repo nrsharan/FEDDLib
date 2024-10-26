@@ -4,6 +4,8 @@
 #include "feddlib/problems/abstract/NonLinearProblem.hpp"
 #include "feddlib/problems/abstract/TimeProblem.hpp"
 #include "feddlib/core/General/ExporterTxt.hpp"
+#include "feddlib/core/General/HDF5Export.hpp"
+#include "feddlib/core/General/HDF5Import.hpp"
 #ifdef FEDD_HAVE_NOX
 #include "NOX.H"
 #include "NOX_Thyra.H"
@@ -32,7 +34,13 @@ public:
     
     typedef typename Problem_Type::Matrix_Type Matrix_Type;
     typedef typename Problem_Type::MatrixPtr_Type MatrixPtr_Type;
-    
+
+    typedef typename Problem_Type::MultiVectorConstPtr_Type MultiVectorConstPtr_Type;
+    typedef typename Problem_Type::BlockMultiVector_Type BlockMultiVector_Type;
+
+    typedef typename Problem_Type::BlockMultiVectorPtr_Type BlockMultiVectorPtr_Type;
+    typedef Teuchos::Array<BlockMultiVectorPtr_Type> BlockMultiVectorPtrArray_Type;
+
     typedef Teuchos::RCP<ExporterTxt> ExporterTxtPtr_Type;
     
     NonLinearSolver();

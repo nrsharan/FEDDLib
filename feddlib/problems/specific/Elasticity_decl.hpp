@@ -48,8 +48,13 @@ public:
         
     virtual void getValuesOfInterest( vec_dbl_Type& values ){};
     
+    virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values ){} ;
+
     virtual void computeValuesOfInterestAndExport() {};
     
+    virtual void exportValuesOfInterest(){};    
+
+    virtual void importValuesOfInterest(){};
 //    virtual void assembleExternal( std::string type ){};
 
     Teuchos::RCP< Thyra::LinearOpBase<SC> > create_W_op() const;

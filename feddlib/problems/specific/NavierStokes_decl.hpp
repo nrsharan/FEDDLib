@@ -91,9 +91,12 @@ public:
 //    virtual int ComputeDragLift(vec_dbl_ptr_Type &values);
 
     virtual void getValuesOfInterest( vec_dbl_Type& values ){};
+    virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values ) {} ;
     
     virtual void computeValuesOfInterestAndExport() {};
+    virtual void exportValuesOfInterest(){};    
 
+    virtual void importValuesOfInterest(){};
 //    virtual void assembleExternal( std::string type ){};
     /*####################*/
 

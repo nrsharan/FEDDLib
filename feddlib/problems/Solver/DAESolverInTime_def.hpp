@@ -129,6 +129,14 @@ void DAESolverInTime<SC,LO,GO,NO>::defineTimeStepping(SmallMatrix<int> &timeStep
     timeSteppingTool_.reset(new TimeSteppingTools(sublist(parameterList_,"Timestepping Parameter") , comm_));
     isTimeSteppingDefined_ = true;
 
+    // Now we will check if we perform a restart and set the time accordingly.
+    // bool restart = parameterList_->sublist("Timestepping Parameter").get("Restart",false);
+    // // If we restart we also need to change the starting time
+    // if(restart)
+    // {
+    //     timeSteppingTool_->t_ = parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0);
+    // }
+
 
 }
 
@@ -426,6 +434,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinear(){
     SmallMatrix<double> problemCoeff(size);
     double dt = 0.0;
     int timeit = 0;
+    NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
     while (timeSteppingTool_->continueTimeStepping()) {
         
         dt = timeSteppingTool_->get_dt();
@@ -481,7 +490,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinear(){
                                                        
             problemTime_->setTimeParameters(massCoeff, problemCoeff);
 
-            NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
             nlSolver.solve(*problemTime_,time);
             
             if (correctPressure) {
@@ -691,6 +699,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinearNewmark()
     // ######################
     // Time loop
     // ######################
+    NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","Newton"));
     while(timeSteppingTool_->continueTimeStepping())
     {
         cout << "  ############## Timeloop Newmark ##########" << endl;
@@ -725,7 +734,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinearNewmark()
         // Uebergabeparameter fuer BC noch hinzu nehmen!
 //        problemTime_->setBoundaries(time);
         
-        NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","Newton"));
+       
         nlSolver.solve( *problemTime_, time, its );
         
         timeSteppingTool_->advanceTime(true/*output info*/);
@@ -753,7 +762,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     // problemCoeff vor A (= komplettes steady-System)
     // massCoeff vor M (= Massematrix)
     // coeffSourceTerm vor f (= rechte Seite der DGL)
-    
+    timeSteppingTool_->printInfo();
+
     SCIProblemPtr_Type sci = Teuchos::rcp_dynamic_cast<SCIProblem_Type>( this->problemTime_->getUnderlyingProblem() );
     
     bool print = parameterList_->sublist("General").get("ParaViewExport",false);
@@ -845,14 +855,12 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         TEUCHOS_TEST_FOR_EXCEPTION( loadStepSize != timeSteppingTool_->dt_, std::runtime_error, "Load Step Size and dt appear different" );
     }
     double dt;
-    for(int i=0; i<numSegments ; i++){
-        if(timeSteppingTool_->currentTime()+1.0e-12 > timeParametersVec[i][0]){
+    for(int i=0; i<numSegments-1 ; i++){
+        if(timeSteppingTool_->currentTime() < timeParametersVec[i+1][0] && timeSteppingTool_->currentTime()+1.0e-12 > timeParametersVec[i][0] ){
             dt=timeParametersVec[i][1];
             timeSteppingTool_->dt_ = dt;
         }
-
     }
-    
     // Notwendige Parameter
     int sizeSCI = timeStepDef_.size();
 
@@ -994,6 +1002,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     std::string structureModel = parameterList_->sublist("Parameter").get("Structure Model","SCI_NH");
     std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
 
+    bool restart = this->parameterList_->sublist("Timestepping Parameter").get("Restart", false);
+    double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0);
     double timeStep = 0;
 
     while(timeSteppingTool_->continueTimeStepping())
@@ -1004,19 +1014,29 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         }
         timeSteppingTool_->dt_= dt;
         sci->timeSteppingTool_->dt_ = dt;
-        if(timeSteppingTool_->currentTime() <= 0. + 1e-12){
-            timeSteppingTool_->dt_prev_= dt;        
-            sci->timeSteppingTool_->dt_prev_= dt;        
+        if(restart){
+            if(timeSteppingTool_->currentTime() <= timeStepRestart + 1e-12){
+                timeSteppingTool_->dt_prev_= dt;        
+                sci->timeSteppingTool_->dt_prev_= dt;        
+            }
+            else{
+                timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
+                this->problemTime_->assemble("UpdateTime"); // Updates to next timestep
+                sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
+            }
+
         }
         else{
-            timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
-
-            this->problemTime_->assemble("UpdateTime"); // Updates to next timestep
-
-            sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
-
+            if(timeSteppingTool_->currentTime() <= 0. + 1e-12){
+                timeSteppingTool_->dt_prev_= dt;        
+                sci->timeSteppingTool_->dt_prev_= dt;        
+            }
+            else{
+                timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
+                this->problemTime_->assemble("UpdateTime"); // Updates to next timestep
+                sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
+            }
         }
-
         
 
         timeSteppingTool_->printInfo();
@@ -1087,7 +1107,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             // Hier wird auch direkt ein Update der Loesung bei der Struktur gemacht.
             // Aehnlich zu "UpdateFluidInTime".
             
-            if(timeSteppingTool_->currentTime() == 0.0)
+            if(timeSteppingTool_->currentTime() == 0.0 || (restart &&  timeSteppingTool_->currentTime() -1.e-5 < timeStepRestart ))
             {
                 // We extract the underlying FSI problem
                 MatrixPtr_Type massmatrix;
@@ -1184,8 +1204,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
         if (printData) {
             exporterTimeTxt->exportData( timeSteppingTool_->currentTime() );
-            exporterIterations->exportData( (*its)[0] );
-            exporterNewtonIterations->exportData( (*its)[1] );
+            exporterIterations->exportData(timeSteppingTool_->currentTime(), (*its)[0] );
+            exporterNewtonIterations->exportData(timeSteppingTool_->currentTime(), (*its)[1] );
 
             vec_dbl_Type d_s(0);
             double norm=0.;
@@ -1639,7 +1659,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 
     // Notwendige Parameter
     bool geometryExplicit = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
-    bool chemistryExplicit_ =    parameterList_->sublist("Parameter").get("Chemistry Explicit",false);
+    bool chemistryExplicit_ = this->parameterList_->sublist("Parameter").get("Chemistry Explicit",false);
 
     //std::string couplingType = parameterList_->sublist("Parameter").get("Coupling Type","explicit");
 
@@ -1666,6 +1686,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
     }
 
     NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
+    bool restart = this->parameterList_->sublist("Timestepping Parameter").get("Restart", false);
 
 
 //    {
@@ -1692,7 +1713,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
         timeSteppingTool_->dt_= dt;
         fsci->timeSteppingTool_->dt_ = dt;
         fsci->problemSCI_->timeSteppingTool_->dt_ = dt;
-        if(timeSteppingTool_->currentTime() <= 0. + 1e-12){
+
+        if(timeSteppingTool_->currentTime() <= 0. + 1e-12 ||( restart &&  timeSteppingTool_->currentTime() <= this->parameterList_->sublist("Timestepping Parameter").get("Time step",0.0) + 1e-12 )){
             timeSteppingTool_->dt_prev_= dt;        
             fsci->timeSteppingTool_->dt_prev_= dt;  
             fsci->problemSCI_->timeSteppingTool_->dt_prev_ = dt; 
@@ -1952,7 +1974,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
             // Hier wird auch direkt ein Update der Loesung bei der Struktur gemacht.
             // Aehnlich zu "UpdateFluidInTime".
             
-            if(timeSteppingTool_->currentTime() == 0.0)
+            double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0); 
+        
+            if(timeSteppingTool_->currentTime() == 0.0 || (restart &&  timeSteppingTool_->currentTime() -1.e-5 < timeStepRestart ))
             {
                 // We extract the underlying FSI problem
                 MatrixPtr_Type massmatrix;
@@ -2052,8 +2076,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 
         if (printData) {
             exporterTimeTxt->exportData( timeSteppingTool_->currentTime() );
-            exporterIterations->exportData( (*its)[0] );
-            exporterNewtonIterations->exportData( (*its)[1] );
+            exporterIterations->exportData(timeSteppingTool_->currentTime(), (*its)[0] );
+            exporterNewtonIterations->exportData(timeSteppingTool_->currentTime(), (*its)[1] );
+
         }
         if(printFlowRate){
             FE<SC,LO,GO,NO> fe;
@@ -2408,6 +2433,10 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
 //        fsi->setSolidMassmatrix( massmatrix );
 ////        this->problemTime_->assemble( massmatrix, "GetFluidMassmatrix" );
 //    }
+
+    bool restart = this->parameterList_->sublist("Timestepping Parameter").get("Restart", false);
+    double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0); 
+        
     // ######################
     // Time loop
     // ######################
@@ -2423,7 +2452,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
         }
         timeSteppingTool_->dt_= dt;
         fsi->timeSteppingTool_->dt_ = dt;
-        if(timeSteppingTool_->currentTime() <= 0. + 1e-12){
+        if(timeSteppingTool_->currentTime() <= 0. + 1e-12 ||( restart &&  timeSteppingTool_->currentTime() -1e-10 <= timeStepRestart)){
             timeSteppingTool_->dt_prev_= dt;        
             fsi->timeSteppingTool_->dt_prev_= dt;  
             //fsci->problemFluid_->timeSteppingTool_->dt_prev_= dt; 
@@ -2627,7 +2656,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
             // Hier wird auch direkt ein Update der Loesung bei der Struktur gemacht.
             // Aehnlich zu "UpdateFluidInTime".
             
-            if(timeSteppingTool_->currentTime() == 0.0)
+            
+            if(timeSteppingTool_->currentTime() == 0.0 || (restart &&  timeSteppingTool_->currentTime() -1.e-5 < timeStepRestart ))
             {
                 // We extract the underlying FSI problem
                 MatrixPtr_Type massmatrix;
@@ -2693,7 +2723,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
         }
             
         double time = timeSteppingTool_->currentTime() +  timeSteppingTool_->dt_;
-        problemTime_->updateTime ( time );            
+        problemTime_->updateTime ( time );     
+        cout << " ----> Time updated <-----" << endl;       
         NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
 
         nlSolver.solve(*this->problemTime_, time, its);
@@ -2716,8 +2747,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
 
         if (printData) {
             exporterTimeTxt->exportData( timeSteppingTool_->currentTime() );
-            exporterIterations->exportData( (*its)[0] );
-            exporterNewtonIterations->exportData( (*its)[1] );
+            exporterIterations->exportData(timeSteppingTool_->currentTime(), (*its)[0] );
+            exporterNewtonIterations->exportData(timeSteppingTool_->currentTime(), (*its)[1] );
         }
         if(printFlowRate){
             FE<SC,LO,GO,NO> fe;
@@ -2909,6 +2940,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinearMultistep(){
     //#########
     //time loop
     //#########
+    NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
+
     while (timeSteppingTool_->continueTimeStepping()) {
 
         // For the first time step we use BDF1
@@ -2968,8 +3001,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinearMultistep(){
 //                AddSourceTermToRHS(coeffSourceTerm); //ACHTUNG
 //            }
         }
-
-        NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
+        //NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
         nlSolver.solve(*problemTime_,time);
 
         // After the first time step we can use the desired BDF Parameters

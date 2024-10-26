@@ -11,6 +11,10 @@
 #include "Xpetra_CrsMatrixWrap.hpp"
 #include <Thyra_PreconditionerBase.hpp>
 #include <Thyra_ModelEvaluatorBase_decl.hpp>
+#include "feddlib/core/General/HDF5Export.hpp"
+#include "feddlib/core/General/HDF5Import.hpp"
+    
+    
 namespace FEDD{
 
 template <class SC , class LO , class GO , class NO >
@@ -37,6 +41,7 @@ public:
     typedef typename Problem_Type::MultiVectorConstPtr_Type MultiVectorConstPtr_Type;
     typedef typename Problem_Type::BlockMultiVector_Type BlockMultiVector_Type;
     typedef typename Problem_Type::BlockMultiVectorPtr_Type BlockMultiVectorPtr_Type;
+    // typedef Teuchos::Array<BlockMultiVectorPtr_Type> BlockMultiVectorPtrArray_Type;
 
     typedef typename Problem_Type::Domain_Type Domain_Type;
     typedef Teuchos::RCP<Domain_Type > DomainPtr_Type;
@@ -158,6 +163,11 @@ public:
     
     virtual void getValuesOfInterest( vec_dbl_Type& values ) {}  ;
 
+    virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values );
+
+    virtual void exportValuesOfInterest();
+    virtual void importValuesOfInterest();
+
     virtual void computeValuesOfInterestAndExport() {} ;
 
     virtual void reAssemble( BlockMultiVectorPtr_Type previousSolution ) const{};
@@ -171,6 +181,8 @@ public:
     BlockMultiVectorPtr_Type getPostProcessingData() const;
 
     vec_string_Type getPostprocessingNames();
+
+    MultiVectorPtr_Type getHistoryData();
     /*####################*/
 
     // Alternativ wie in reAssembleExtrapolation() in NS?

@@ -838,6 +838,50 @@ void FE<SC, LO, GO, NO>::postProcessing(int type, MultiVectorPtr_Type &postProce
             arrayUni[i]  =0.;    
 }
 
+template <class SC, class LO, class GO, class NO>
+typename FE<SC, LO, GO, NO>::BlockMultiVectorPtr_Type FE<SC, LO, GO, NO>::getHistoryValues()
+{
+    // We are only concerned with element information. We dont need any communication for that
+    MapConstPtr_Type elementMap = this->domainVec_[0]->getElementMap();
+
+    UN numHistoryValues;
+    if(assemblyFEElements_.size()>0)
+        numHistoryValues = 34; //assemblyFEElements_[0]->getHistoryLength()/4; // 34*4 
+
+    cout << " Num History Values " << numHistoryValues << endl;
+    // Multiplicity of nodes (nodes being in more then one element) with weights from interpolation between gausspoints an node points
+    BlockMultiVectorPtr_Type historyElements =  Teuchos::rcp( new BlockMultiVector_Type(4) );
+    MultiVectorPtr_Type historyElements_1 = Teuchos::rcp( new MultiVector_Type(elementMap,numHistoryValues) );
+    MultiVectorPtr_Type historyElements_2 = Teuchos::rcp( new MultiVector_Type(elementMap,numHistoryValues) );
+    MultiVectorPtr_Type historyElements_3 = Teuchos::rcp( new MultiVector_Type(elementMap,numHistoryValues) );
+    MultiVectorPtr_Type historyElements_4 = Teuchos::rcp( new MultiVector_Type(elementMap,numHistoryValues) );
+
+    historyElements->addBlock(historyElements_1,0);
+    historyElements->addBlock(historyElements_2,1);
+    historyElements->addBlock(historyElements_3,2);
+    historyElements->addBlock(historyElements_4,3);
+
+    // Iterating over all elements
+    for (UN T=0; T<assemblyFEElements_.size(); T++) {
+        vec_dbl_Type historyElement = assemblyFEElements_[T]->getLocalHistory();  
+        for(int gp =0; gp<4; gp++){
+            for(int i=0; i< numHistoryValues ; i++){
+                Teuchos::ArrayRCP<SC>  arrayMultiRep = historyElements->getBlock(gp)->getDataNonConst(i);
+                arrayMultiRep[T] = historyElement[i+gp*numHistoryValues];
+
+            }
+        }
+
+    }
+    return historyElements;
+}
+template <class SC, class LO, class GO, class NO>
+void FE<SC, LO, GO, NO>::setHistoryValues(LO T, vec_dbl_Type history)
+{
+    assemblyFEElements_[T]->setLocalHistory(history);
+    assemblyFEElements_[T]->setLocalHistoryUpdated(history);
+
+}
 
 // Check the order of chemistry and solid in system matrix
 template <class SC, class LO, class GO, class NO>
@@ -8312,26 +8356,28 @@ int FE<SC,LO,GO,NO>::assemblyFlowRate(int dim,
                     
                     Teuchos::Array<SC> value(0);
                     value.resize(  numNodes_T, 0. ); // Volumetric flow rate over one surface is a skalar value
-                    //cout << " Velocity over node ";
-                    for (int w=0; w<phi->size(); w++){ //quads points
-                        for (int d=0; d<dim; d++) {
-                            uLoc[d][w] = 0.;
-                            for (int i=0; i < phi->at(0).size(); i++) {
-                                LO index = dim * nodeList[i] + d;
-                                uLoc[d][w] += uArray[index] * phi->at(w).at(i);
-                            }
-                        }
-                    }
+                    // //cout << " Velocity over node ";
+                    // for (int w=0; w<phi->size(); w++){ //quads points
+                    //     for (int d=0; d<dim; d++) {
+                    //         uLoc[d][w] = 0.;
+                    //         for (int i=0; i < phi->at(0).size(); i++) {
+                    //             LO index = dim * nodeList[i] + d;
+                    //             uLoc[d][w] += uArray[index] * phi->at(w).at(i);
+                    //         }
+                    //     }
+                    // }
 
                     for (UN i=0; i < numNodes_T; i++) {
                         // loop over basis functions quadrature points
                         for (UN w=0; w<phi->size(); w++) {
                             for (int j=0; j<dim; j++){
                                 if(dofs==1){
-                                    value[i] += weights->at(w) *v_E[j]/norm_v_E *uLoc[j][w]*(*phi)[w][i]; // valueFunc[0]* = 1.0
+                                    value[i] += weights->at(w) *v_E[j]/norm_v_E *solution_u[i]*(*phi)[w][i]; // valueFunc[0]* = 1.0
                                 }
                                 else{
-                                    value[i] += weights->at(w) *v_E[j]/norm_v_E *uLoc[j][w]*(*phi)[w][i]; // valueFunc[0]* = 1.0
+                                     
+                                    LO index = dim * i + j;
+                                    value[i] += weights->at(w) *v_E[j]/norm_v_E *solution_u[index]*(*phi)[w][i]; // valueFunc[0]* = 1.0
                                 }
 
                             }

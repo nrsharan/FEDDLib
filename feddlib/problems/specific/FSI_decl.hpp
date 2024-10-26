@@ -125,6 +125,11 @@ public:
     
     virtual void getValuesOfInterest( vec_dbl_Type& values );
     
+    virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values ) {} ;
+
+    virtual void exportValuesOfInterest();    
+
+    virtual void importValuesOfInterest(){};
     // init FSI vectors from partial problems
     void setFromPartialVectorsInit() const;
     
@@ -243,12 +248,14 @@ public:
 
     bool geometryExplicit_;
     mutable ExporterPtr_Type exporterGeo_;
+    Teuchos::RCP<HDF5Export<SC,LO,GO,NO>> exporterGeometry_; 
 
 private:
     std::string materialModel_;
     vec_dbl_Type valuesForExport_;
     ExporterTxtPtr_Type exporterTxtDrag_;
     ExporterTxtPtr_Type exporterTxtLift_;
+    ExporterTxtPtr_Type exporterBoundaryCondition_; // Values for absorbing boundary condition
     mutable double areaInlet_init_=0.;
     mutable double areaOutlet_init_ =0.;
     mutable double areaOutlet_T_ =0.;

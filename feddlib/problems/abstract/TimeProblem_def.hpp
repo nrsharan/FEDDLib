@@ -101,7 +101,7 @@ void TimeProblem<SC,LO,GO,NO>::reAssembleAndFill( BlockMatrixPtr_Type bMat, std:
 
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::combineSystems() const{
-    //std::cout << "combineSystems is called" << std::endl;
+    // std::cout << "combineSystems is called for time " << time_ << std::endl;
     //std::cout << "combineSystems is called" << std::endl;
     BlockMatrixPtr_Type tmpSystem = problem_->getSystem();
     int size = tmpSystem->size();
@@ -127,15 +127,16 @@ void TimeProblem<SC,LO,GO,NO>::combineSystems() const{
     }
     SmallMatrix<SC> ones( size , Teuchos::ScalarTraits<SC>::one());
     SmallMatrix<SC> zeros( size , Teuchos::ScalarTraits<SC>::zero());
-   /* cout << "massparameters " << endl;
-    for (int i=0; i<size; i++) {
-        for (int j=0; j<size; j++) {
-            cout<< massParameters_[i][j] << " " ;
-        }
-        cout << endl;
-    }*/
+    // cout << "massparameters " << endl;
+    // for (int i=0; i<size; i++) {
+    //     for (int j=0; j<size; j++) {
+    //         cout<< massParameters_[i][j] << " " ;
+    //     }
+    //     cout << endl;
+    // }
 
     systemMass_->addMatrix( massParameters_, systemCombined_, zeros );
+
     tmpSystem->addMatrix( timeParameters_, systemCombined_, ones );
     
     for (int i=0; i<size; i++) {
@@ -198,22 +199,55 @@ void TimeProblem<SC,LO,GO,NO>::updateMultistepRhsFSI(vec_dbl_Type& coeff, int nm
 
     int size = massParameters_.size();
 
-    for (int i=0; i<nmbToUse; i++) {
-        SmallMatrix<SC> tmpMassParameter(size);
-        for (int r=0; r<size; r++) {
-            for (int s=0; s<size; s++) {
-                if (massParameters_[r][s]!=0.) {
-                    tmpMassParameter[r][s] = coeff[i];
-                }
+    BlockMultiVectorPtrArray_Type rhsPreviousTimesteps(nmbToUse);
 
-            }
+    bool restart = this->parameterList_->sublist("Timestepping Parameter").get("Restart", false);
+    double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0); 
+        
+    
+    // ######################
+    // Time loop
+    // ######################
+    if(restart &&  time_ -1e-10 <= timeStepRestart)
+    {
+        BlockMultiVectorPtr_Type tmpVector = Teuchos::rcp( new BlockMultiVector_Type( problem_->getRhs() ) );
+        for (UN i = 0; i < size; i++)
+        {
+            MapConstPtr_Type map = problem_->getSolution()->getBlock(i)->getMap();
+            HDF5Import<SC,LO,GO,NO> importer(map,"Rhs"+problem_->getVariableName(i));
+            std::string varName = std::to_string(timeStepRestart);
+
+            MultiVectorPtr_Type aImported = importer.readVariablesHDF5(varName);
+
+            tmpVector->addBlock(aImported,i);
+            
         }
-        BlockMultiVectorPtr_Type tmpVector
-            = Teuchos::rcp( new BlockMultiVector_Type( problem_->getRhs() ) );
-        BlockMultiVectorPtr_Type tmpBlockVector = solutionPreviousTimesteps_[i];
-        systemMassPreviousTimeSteps_[i]->apply( *tmpBlockVector, *tmpVector, tmpMassParameter );
+
         problem_->getRhs()->update( 1., tmpVector, 1. );
+
     }
+    else{
+        for (int i=0; i<nmbToUse; i++) {
+            SmallMatrix<SC> tmpMassParameter(size);
+            for (int r=0; r<size; r++) {
+                for (int s=0; s<size; s++) {
+                    if (massParameters_[r][s]!=0.) {
+                        tmpMassParameter[r][s] = coeff[i];
+                    }
+
+                }
+            }
+            BlockMultiVectorPtr_Type tmpVector
+                = Teuchos::rcp( new BlockMultiVector_Type( problem_->getRhs() ) );
+            BlockMultiVectorPtr_Type tmpBlockVector = solutionPreviousTimesteps_[i];
+            systemMassPreviousTimeSteps_[i]->apply( *tmpBlockVector, *tmpVector, tmpMassParameter );
+            problem_->getRhs()->update( 1., tmpVector, 1. );
+
+            rhsPreviousTimesteps[i] = tmpVector;
+        }
+    }
+
+    checkForExportAndExport(rhsPreviousTimesteps,"Rhs");
 
 }
 
@@ -274,6 +308,8 @@ void TimeProblem<SC,LO,GO,NO>::updateNewmarkRhs(double dt, double beta, double g
 
     // RHS = 0*RHS + 1.0*tempVector2
     problem_->getRhs()->update(1.0, *(tempVector2.at(0)), .0);
+
+    
 
 }
 
@@ -360,7 +396,7 @@ void TimeProblem<SC,LO,GO,NO>::assembleMassSystem( ) const {
     double density = parameterList_->sublist("Parameter").get("Density",1.);
 
 
-    //cout << " TimeProblem:: assembleMassSystem() with prescribed density " << density << endl;
+    // cout << " TimeProblem:: assembleMassSystem() for time t " << time_ << endl;
 
     int size = problem_->getSystem()->size();
     systemMass_->resize( size );
@@ -489,6 +525,7 @@ void TimeProblem<SC,LO,GO,NO>::calculateNonLinResidualVec( std::string type, dou
                 FSIPtr_Type fsi = Teuchos::rcp_dynamic_cast<FSI_Type>( this->problem_ );
                 fsi->setFluidMassmatrix( massmatrix );
                 this->systemMass_->addBlock( massmatrix, 0, 0 );
+                
             }
         }
         // we need to add M/dt*u_(t+1)^k (the last results of the nonlinear method) to the residualVec_
@@ -741,33 +778,119 @@ int TimeProblem<SC,LO,GO,NO>::solve( BlockMultiVectorPtr_Type rhs ){
     return its;
 }
 
+// For a restart we also need to update the previous solutions. 
+// We saved all previous solutions.
+// Here we update the solution from the previous step with the current solution
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::updateSolutionPreviousStep(){
 
-    if (solutionPreviousTimesteps_.size()==0)
-        solutionPreviousTimesteps_.resize(1);
+    // cout << "updateSolutionPreviousStep" << endl;
 
+    if (solutionPreviousTimesteps_.size()==0) // the case where this is not initialized
+    {   
+        solutionPreviousTimesteps_.resize(1);
+        bool restart = parameterList_->sublist("Timestepping Parameter").get("Restart",false);
+        if(restart)
+        {
+            std::string fileName = "Solution"; // The name of the solution need here always this
+            double timeStep = parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0);
+            double dt = getPreviousTimeIncrement(timeStep); //parameterList_->sublist("Timestepping Parameter").get("dt", 0.01);
+            double extract = timeStep - dt;
+            int size = problem_->getSolution()->size();
+            
+            solutionPreviousTimesteps_[0] = Teuchos::rcp( new BlockMultiVector_Type( problem_->getSolution()->getMap() ) );
+
+            if(extract>0.){
+                std::string varName = std::to_string(extract);
+                for (UN i = 0; i < size; i++)
+                {
+                    if(problem_->getVariableName(i) != "d_f")
+                    {
+                        MapConstPtr_Type map = problem_->getSolution()->getBlock(i)->getMap();
+                        HDF5Import<SC,LO,GO,NO> importer(map,fileName+problem_->getVariableName(i));
+                        MultiVectorPtr_Type aImported = importer.readVariablesHDF5(varName);
+
+                        solutionPreviousTimesteps_[0]->addBlock(aImported,i);
+                    }
+                    
+                }
+            }
+            else{
+                TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,"You are trying to restart from a time with no previous time.");
+            }
+            problem_->importValuesOfInterest();
+
+        }
+    }
     solutionPreviousTimesteps_[0] = Teuchos::rcp( new BlockMultiVector_Type( problem_->getSolution() ) );
-    
+
+
+    // #######
+    // Check for export for restart
+    // ######
+    checkForExportAndExport( solutionPreviousTimesteps_,"Solution" );
 }
 
+// Depending on the number of required steps we need to initialize the solutions
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::updateSolutionMultiPreviousStep(int nmbSteps){
 
+    // cout << "updateSolutionMultiPreviousStep(" << nmbSteps << ")" << endl;
     int size = solutionPreviousTimesteps_.size();
     if (size<nmbSteps &&  size > 0) {
         BlockMultiVectorPtr_Type toAddMVreset = Teuchos::rcp( new BlockMultiVector_Type( solutionPreviousTimesteps_[size-1] ) );
         solutionPreviousTimesteps_.push_back( toAddMVreset );
     }
     else if(size == 0)
+    { // No previous solution was initialized
         solutionPreviousTimesteps_.resize(1);
+        bool restart = parameterList_->sublist("Timestepping Parameter").get("Restart",false);
+        if(restart)
+        {
+            solutionPreviousTimesteps_.resize(nmbSteps);
+
+            std::string fileName ="Solution";
+            double timeStep = parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0);
+            double dt = getPreviousTimeIncrement(timeStep); //parameterList_->sublist("Timestepping Parameter").get("dt", 0.01);
+            int size = problem_->getSolution()->size();
+
+            for(int j=0 ; j< nmbSteps ; j++)
+            {
+                double extract = timeStep - j*dt;
+                solutionPreviousTimesteps_[j] = Teuchos::rcp( new BlockMultiVector_Type( problem_->getSolution()->getMap() ) );
+
+                if(extract>0.)
+                {
+                    std::string varName = std::to_string(extract);
+                    for (UN i = 0; i < size; i++)
+                    {
+                        if(problem_->getVariableName(i) != "d_f")
+                        {
+                            MapConstPtr_Type map = problem_->getSolution()->getBlock(i)->getMap();
+                            HDF5Import<SC,LO,GO,NO> importer(map,fileName+problem_->getVariableName(i));
+                            MultiVectorPtr_Type aImported = importer.readVariablesHDF5(varName);
+                            solutionPreviousTimesteps_[j]->addBlock(aImported,i);
+                        }
+                    }
+                }
+                else{
+                    TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,"You are trying to restart from a time with no previous exported time.");
+                }
+            }
+           
+            problem_->importValuesOfInterest();
+        }
+
+    }
     else{
         for (int i=size-1; i>0; i--)
             solutionPreviousTimesteps_[i] = Teuchos::rcp( new BlockMultiVector_Type( solutionPreviousTimesteps_[i-1] ) );
     }
-    
-    solutionPreviousTimesteps_[0] = Teuchos::rcp( new BlockMultiVector_Type( problem_->getSolution() ) );
-    
+    solutionPreviousTimesteps_[0] = Teuchos::rcp( new BlockMultiVector_Type( problem_->getSolution() ) ); //  Newest solution always in 'first'place
+    // #######
+    // Check for export for restart
+    // ######
+    checkForExportAndExport( solutionPreviousTimesteps_,"Solution" );
 }
 
 
@@ -788,7 +911,6 @@ void TimeProblem<SC,LO,GO,NO>::updateSystemMassMultiPreviousStep(int nmbSteps){
     }
 
     systemMassPreviousTimeSteps_[0] = Teuchos::rcp( new BlockMatrix_Type( systemMass_ ) );
-    
 }
 
 
@@ -802,6 +924,9 @@ void TimeProblem<SC,LO,GO,NO>::updateSolutionNewmarkPreviousStep(double dt, doub
     // Zur Berechnung von u'_{n+1} und u''_{n+1} wird die letzte Loesung u_{n+1} und die Vorherige u_n gebraucht.
     // Da wir aber bereits im neuen Zeitschritt sind (vgl. Zeitpunkt des Aufrufs der Funktion), ist u_n = u_{n+1} und u_{n-1} = u_n.
     // Wir benoetigen solutionPreviousTimesteps_ mit zwei Eintraegen.
+
+    // cout << " updateSolutionNewmarkPreviousStep " << endl;
+
     int size = solutionPreviousTimesteps_.size();
 
     if(size < 2 &&  size > 0) // Sofern der Vektor solutionPreviousTimesteps_ noch nicht komplett belegt ist (bei Newmark benoetigen wir als vergangene Loesung noch u_n)
@@ -813,6 +938,40 @@ void TimeProblem<SC,LO,GO,NO>::updateSolutionNewmarkPreviousStep(double dt, doub
     else if(size == 0) // Falls noch keine alte Loesung vorhanden ist
     {
         solutionPreviousTimesteps_.resize(1);
+        bool restart = parameterList_->sublist("Timestepping Parameter").get("Restart",false);
+        if(restart)
+        {
+            solutionPreviousTimesteps_.resize(2);
+
+            // cout << " RESTART in updateSolutionNewmarkPreviousStep " << endl;
+
+            std::string fileName = "SolutionNewmark"; //parameterList_->sublist("Timestepping Parameter").get("File name import", "solution");
+            double timeStep = parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0);
+            double dt = getPreviousTimeIncrement(timeStep); //parameterList_->sublist("Timestepping Parameter").get("dt", 0.01);
+
+            int size = problem_->getSolution()->size();
+
+            for(int j=0 ; j< 2 ; j++)
+            {
+                double extract = timeStep - j*dt;
+                solutionPreviousTimesteps_[j] = Teuchos::rcp( new BlockMultiVector_Type( problem_->getSolution()->getMap() ) );
+
+                if(extract>0.)
+                {
+                    std::string varName = std::to_string(extract);
+                    for (UN i = 0; i < size; i++)
+                    {
+                        MapConstPtr_Type map = problem_->getSolution()->getBlock(i)->getMap();
+                        HDF5Import<SC,LO,GO,NO> importer(map,fileName+problem_->getVariableName(i));
+                        MultiVectorPtr_Type aImported = importer.readVariablesHDF5(varName);
+                        solutionPreviousTimesteps_[j]->addBlock(aImported,i);
+                    }
+                }
+                else{
+                    TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,"You are trying to restart from a time with no previous exported time.");
+                }
+            }
+        }
     }
     else // Verschiebe alle vergangenen Loesungen
     {
@@ -845,6 +1004,39 @@ void TimeProblem<SC,LO,GO,NO>::updateSolutionNewmarkPreviousStep(double dt, doub
         accelerationPreviousTimesteps_.at(0) = Teuchos::rcp(new BlockMultiVector_Type(problem_->getSolution()));
         velocityPreviousTimesteps_.at(0)->putScalar(0.0);
         accelerationPreviousTimesteps_.at(0)->putScalar(0.0);
+
+        // If we restarted from a previous solution we can also compute the corresponding velocity and acceleration. We will compute this based on finite differences with the displacement of the previous steps
+        bool restart = parameterList_->sublist("Timestepping Parameter").get("Restart",false);
+        if(restart)
+        {
+            double timeStep = parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0);
+            double dt = getPreviousTimeIncrement(timeStep); // parameterList_->sublist("Timestepping Parameter").get("dt", 0.01);
+            int size = problem_->getSolution()->size();
+          
+            double extract = timeStep;//-dt; // We only need the previous time step
+            //solutionPreviousTimesteps_[0] = Teuchos::rcp( new BlockMultiVector_Type( problem_->getSolution()->getMap() ) );
+
+            if(extract + 1.e-10 > 0.)
+            {
+                std::string varName = std::to_string(extract);
+
+                MapConstPtr_Type map = problem_->getSolution()->getBlock(0)->getMap();
+
+                HDF5Import<SC,LO,GO,NO> importerVelocity(map,"ds_Velocity");
+                MultiVectorPtr_Type aImportedVelocity = importerVelocity.readVariablesHDF5(varName);
+                velocityPreviousTimesteps_.at(0)->addBlock(aImportedVelocity,0);
+
+                HDF5Import<SC,LO,GO,NO> importerAcceleration(map,"ds_Acceleration");
+                MultiVectorPtr_Type aImportedAcceleration = importerAcceleration.readVariablesHDF5(varName);
+                accelerationPreviousTimesteps_.at(0)->addBlock(aImportedAcceleration,0);
+
+            }
+            else{
+                TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error,"You are trying to restart from a time with no previous exported time.");
+            }
+
+        }
+
     }
     else
     {
@@ -899,8 +1091,22 @@ void TimeProblem<SC,LO,GO,NO>::updateSolutionNewmarkPreviousStep(double dt, doub
         // Addiere noch \tmpVector2 - \frac{1}{dt*beta})*u'_n HINZU
         // Funktionsaufruf: Update(ScalarA, A, ScalarB, B, ScalarThis) => this = ScalarThis*this + ScalarA*A + ScalarB*B
         accelerationPreviousTimesteps_.at(0)->update(1.0, *(tmpVector2.at(0)), -1.0/(dt*beta), *(velocityOld.at(0)), 1.0);
+
+        // --------------
+        // checkForExport();
+        // --------------
     }
+     // #######
+    // Check for export for restart
+    // ######
+    checkForExportAndExport( velocityPreviousTimesteps_,"ds_Velocity" );
+    checkForExportAndExport( accelerationPreviousTimesteps_,"ds_Acceleration" );
+    checkForExportAndExport( solutionPreviousTimesteps_,"SolutionNewmark" );
+
+    
 }
+
+
 template<class SC,class LO,class GO,class NO>
 void TimeProblem<SC,LO,GO,NO>::assembleSourceTerm( double time ){
     
@@ -1363,5 +1569,269 @@ std::string TimeProblem<SC,LO,GO,NO>::description() const{ //reimplement descrip
     TEUCHOS_TEST_FOR_EXCEPTION(nonLinProb.is_null(), std::runtime_error, "Nonlinear problem is null.");
     return nonLinProb->description();
 }
+
+
+// Restart functions
+template<class SC,class LO,class GO,class NO>
+void TimeProblem<SC,LO,GO,NO>::checkForExportAndExport( BlockMultiVectorPtrArray_Type solutionVec, string fileName){
+
+    //-----------
+    // Parameter
+    // ----------
+    bool safeAllSolution = problem_->getParameterList()->sublist("General").get("Safe all solution", false);
+
+    bool checkPointing = problem_->getParameterList()->sublist("Timestepping Parameter").get("Checkpointing", false);
+    // --------
+    int size = this->getSolution()->size();
+
+    if(safeAllSolution || checkPointing){
+
+        // cout << " CHECKPOINTING IS ON " << time_ << endl;
+        if(safeAllSolution){
+            for (UN i = 0; i < size; i++)
+            {
+                std::string varName =  std::to_string(time_); 
+                this->getExporter(fileName, i)->writeVariablesHDF5(varName,solutionVec[0]->getBlock(i)); 
+                // For time dependet problems, the different VarNames are the time. 
+            }
+        }
+        else if(checkPointing){
+            // We Only export one specific time step. (For BDF 2 we also include the two previous time steps)
+
+            if(checkPointTupel_.size()==0)
+                initCheckPoints();
+
+
+            for(int j = 0; j< checkPointTupel_.size() ; j++){
+                double dt = getPreviousTimeIncrement(); 
+                // We previously defined the checkpoints. If a checkpoint is reached, the second value of the checkpoint row turns to true.
+                if(time_ >= std::get<0>(checkPointTupel_[j])-1.e-10 && time_ - dt < std::get<0>(checkPointTupel_[j])-1.e-10)  //&& std::get<1>(checkPointTupel_[j]) == false ) 
+                { 
+
+
+                    std::get<1>(checkPointTupel_[j])=true; // We export the checkpoint now
+                    for (UN i = 0; i < size; i++)
+                    {
+                        LO idVarname = i;
+                        if(problem_->getParameterList()->sublist("Parameter").get("FSCI", false) == true && i == 4 && 
+                          !problem_->getParameterList()->sublist("Parameter").get("Chemistry Explicit", false) && 
+                           problem_->getParameterList()->sublist("Parameter").get("Geometry Explicit", true))
+                            idVarname = 5;
+                        cout << " Export for filename " << fileName << " and " <<  problem_->getVariableName(idVarname) << " with i=" << i << endl;
+                        std::string varName =  std::to_string(time_); 
+                        this->getExporter(fileName, i)->writeVariablesHDF5(varName,solutionVec[0]->getBlock(i));  // We use 0, because it was not updated yet with the newest solution
+
+                        if(solutionVec.size() >1 && time_-dt > 0){
+                            varName = std::to_string(time_-dt); // n-1
+                            this->getExporter(fileName, i)->writeVariablesHDF5(varName,solutionVec[1]->getBlock(i)); 
+                        }
+                        if(solutionVec.size() >2 && time_-2*dt > 0){
+                            varName = std::to_string(time_-2*dt); // n-2
+                            this->getExporter(fileName, i)->writeVariablesHDF5(varName,solutionVec[2]->getBlock(i)); 
+                        }
+                        // if(this->comm_->getRank() == 0)
+                        //     cout << " ---- Exporting specific time " << time_ << " and " <<  time_-dt << " and " <<  time_-2*dt << " --- " << endl;
+                        // For time dependet problems, the different VarNames are the time. 
+                    }
+                     // Here, we additionally want to consider history variables. 
+                    // We introduce a boolean, that will export history variable of the underlying problem,
+                    // if that is possible with the specific problem. Currently that only concerns SCI
+                    if(fileName == "Solution")
+                        problem_->exportValuesOfInterest();                     
+                }
+                
+            }
+           
+
+
+        }
+            
+        
+    }
+
+}
+template<class SC,class LO,class GO,class NO>
+double TimeProblem<SC,LO,GO,NO>::getPreviousTimeIncrement(double timeStep){
+    double dt = parameterList_->sublist("Timestepping Parameter").get("dt", 0.0);
+    
+    int numSegments = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);
+
+    double time=time_; // Generally this is set to the current time. 
+
+    if(timeStep > 0.)
+        time=timeStep; // In cases of restart, we can add the current timeStep or the to be imported timestep
+
+ 	for(int i=1; i <= numSegments; i++){
+
+        double startTime = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("Start Time",0.);
+        if(time_-1.0e-12 > startTime){
+            dt = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("dt",0.1);
+        }        
+    }
+
+    return dt;
+
+}
+
+template<class SC,class LO,class GO,class NO>
+void TimeProblem<SC,LO,GO,NO>::initCheckPoints(){
+    int numberCheckpoints = parameterList_->sublist("Timestepping Parameter").get("Number Checkpoints", -1);
+    for( int i=0; i< numberCheckpoints; i++ ){
+        double startTime = parameterList_->sublist("Timestepping Parameter").sublist("Checkpoints").get(std::to_string(i+1),0.);
+        bool checkpointReached = false;
+        if(startTime < time_) // We already reached that checkpoint because we are restarting
+            checkpointReached=true;
+
+   	    std::tuple<double,bool> tupel (startTime,checkpointReached);
+
+        checkPointTupel_.push_back(tupel);
+    }
+
+}
+template<class SC,class LO,class GO,class NO>
+Teuchos::RCP <HDF5Export<SC,LO,GO,NO>> TimeProblem<SC,LO,GO,NO>::getExporter(string fileName, int i){
+    if(fileName == "ds_Velocity"){
+        if(HDF5exporterDsVelocity_.is_null())
+            initExporter(fileName);
+           
+        return HDF5exporterDsVelocity_;
+    }
+    else if(fileName =="ds_Acceleration"){
+        if(HDF5exporterDsAcceleration_.is_null())
+            initExporter(fileName);
+           
+        return HDF5exporterDsAcceleration_;
+    }
+    else if(fileName =="Rhs"){
+        if(HDF5exporterRhs_.size()<1)
+            initExporter(fileName);
+           
+        return HDF5exporterRhs_.at(i); 
+    }
+    else if(fileName =="Solution"){
+        if(HDF5exporterSolution_.size() <1)
+            initExporter(fileName);
+
+        return HDF5exporterSolution_.at(i); 
+    }
+    else if(fileName =="SolutionNewmark"){
+        if(HDF5exporterSolutionNewmark_.is_null())
+            initExporter(fileName);
+
+        return HDF5exporterSolutionNewmark_; 
+    }
+    // else if(fileName =="History"){
+    //     if(HDF5exporterHistory_.size() <1)
+    //         initExporter(fileName);
+
+    //     return HDF5exporterHistory_.at(i); 
+    // }
+    else 
+        TEUCHOS_TEST_FOR_EXCEPTION( true, std::runtime_error,"TimeProblem:: Get Exporter - no exporter for file name");
+
+
+}
+template<class SC,class LO,class GO,class NO>
+void TimeProblem<SC,LO,GO,NO>::initExporter(string fileName  ){
+
+    if(fileName == "ds_Velocity")
+        HDF5exporterDsVelocity_.reset(new HDF5Export<SC,LO,GO,NO>(problem_->getSolution()->getBlock(0)->getMap(),fileName)); // This happens for structure subproblems
+
+    else if(fileName =="ds_Acceleration")
+        HDF5exporterDsAcceleration_.reset(new HDF5Export<SC,LO,GO,NO>(problem_->getSolution()->getBlock(0)->getMap(),fileName)); // This happens for structure subproblems
+    
+    // This exporter is only used in FS(C)I simulations
+    else if(fileName =="Rhs"){
+        int size = this->getSolution()->size();
+        for (UN i = 0; i < size; i++)
+        {
+            Teuchos::RCP<HDF5Export<SC,LO,GO,NO>> exporter =Teuchos::RCP(new HDF5Export<SC,LO,GO,NO>(this->getSolution()->getBlock(i)->getMap(),fileName+problem_->getVariableName(i)));
+            HDF5exporterRhs_.push_back(exporter);
+        }
+    }
+
+    else if(fileName =="Solution"){
+        int size = this->getSolution()->size();
+        for (UN i = 0; i < size; i++)
+        {
+            LO idVarname = i;
+            if(problem_->getParameterList()->sublist("Parameter").get("FSCI", false) == true && i == 4 && 
+              !problem_->getParameterList()->sublist("Parameter").get("Chemistry Explicit", false) && 
+               problem_->getParameterList()->sublist("Parameter").get("Geometry Explicit", true))
+                idVarname = 5;
+            Teuchos::RCP<HDF5Export<SC,LO,GO,NO>> exporter =Teuchos::RCP(new HDF5Export<SC,LO,GO,NO>(this->getSolution()->getBlock(i)->getMap(),fileName+problem_->getVariableName(idVarname)));
+            HDF5exporterSolution_.push_back(exporter);
+        }
+    }
+    else if(fileName =="SolutionNewmark"){
+        HDF5exporterSolutionNewmark_.reset(new HDF5Export<SC,LO,GO,NO>(this->getSolution()->getBlock(0)->getMap(),fileName+problem_->getVariableName(0)));    
+    }
+    // else if(fileName =="History"){
+    //     // Compared to the other exporters, we build the history export based on the checkpoints. 
+    //     // Also, the history components are element wise, so we use the element map
+    //     for(int j = 0; j< checkPointTupel_.size() ; j++)
+    //     {
+    //         Teuchos::RCP<HDF5Export<SC,LO,GO,NO>> exporter =Teuchos::RCP(new HDF5Export<SC,LO,GO,NO>(this->getDomain(0)->getElementMap(),fileName+std::to_string(std::get<0>(checkPointTupel_[j]))));
+    //         HDF5exporterHistory_.push_back(exporter);
+    //     }
+    // }
+    else 
+        TEUCHOS_TEST_FOR_EXCEPTION( true, std::runtime_error,"TimeProblem:: Init Exporter - no exporter for file name");
+}
+    
+// --------------------------------------------------------
+
+
+
 }
 #endif
+
+ // Inserting read from HDF file
+
+            // Computing Velocity and Acceleration Component from displacement alone. Currently not working 
+            // For central difference we also need the n-2 solution, which we also have.
+            /*std::string fileName = parameterList_->sublist("Timestepping Parameter").get("File name import", "solution");
+            double timeStep = parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0);
+            double dt = parameterList_->sublist("Timestepping Parameter").get("dt", 0.01);
+            std::string varName = std::to_string(timeStep - 2*dt);
+
+            MapConstPtr_Type map = problem_->getSolution()->getBlock(0)->getMap();
+            HDF5Import<SC,LO,GO,NO> importer(map,fileName+std::to_string(0));
+            MultiVectorConstPtr_Type u_n_m1 = importer.readVariablesHDF5(varName);
+
+            MultiVectorConstPtr_Type u_n_p1 = Teuchos::rcp( new MultiVector_Type( problem_->getSolution()->getBlock(0)->getMap() ) );
+            // tmpVector1 = u_{n+1} is the same as the current solution
+            u_n_p1 = solutionPreviousTimesteps_.at(1)->getBlock(0); // We just read that from input u_(n-1)
+
+
+            MultiVectorPtr_Type u_n_difference = Teuchos::rcp( new MultiVector_Type( problem_->getSolution()->getBlock(0)->getMap() ) );
+            u_n_difference->update(-1,u_n_m1,1,u_n_p1,0); // u_n_difference = u_n+1 - u_n-1
+
+            MultiVectorConstPtr_Type u_n_differenceConst = u_n_difference;
+            MultiVectorPtr_Type velocityCompute = Teuchos::rcp( new MultiVector_Type( problem_->getSolution()->getBlock(0)->getMap() ) );
+            velocityCompute->putScalar(0.0);
+
+            velocityCompute->update(1./(2.*dt),u_n_differenceConst,1); // we can leave the 1 at the end, because we initialized it with zero before
+            velocityPreviousTimesteps_.at(0)->addBlock(velocityCompute,0);
+
+            BlockMultiVectorPtrArray_Type velocityOld;
+            velocityOld.resize(1);
+            velocityOld.at(0) = Teuchos::rcp(new BlockMultiVector_Type(velocityPreviousTimesteps_.at(0)));
+
+            //velocityPreviousTimesteps_.at(0)->getBlock(0)->print();
+
+            // Computing Acceleration
+            MultiVectorConstPtr_Type u_n = Teuchos::rcp( new MultiVector_Type( problem_->getSolution()->getBlock(0)->getMap() ) );
+            u_n = solutionPreviousTimesteps_.at(1)->getBlock(0); // We just read that from input u_(n)
+            u_n_difference->update(1,u_n_m1,1,u_n_p1,0); // u_n_difference = u_n+1 + u_n-1 
+            u_n_difference->update(-2,u_n,1); // u_n_difference = u_n_difference - 2u_n
+            u_n_differenceConst = u_n_difference;
+
+            MultiVectorPtr_Type accelerationCompute = Teuchos::rcp( new MultiVector_Type( problem_->getSolution()->getBlock(0)->getMap() ) );
+            accelerationCompute->putScalar(0.0);
+            accelerationCompute->update(1./(dt*dt),u_n_differenceConst,1);
+
+            accelerationPreviousTimesteps_.at(0)->addBlock(accelerationCompute,0);
+
+            //accelerationPreviousTimesteps_.at(0)->getBlock(0)->print();
+            */

@@ -75,6 +75,8 @@ valuesForExport_(0),
 exporterTxtDrag_(),
 exporterGeo_()
 {
+    cout << " Init FSI Problem " << endl;
+
     this->nonLinearTolerance_ = this->parameterList_->sublist("Parameter").get("relNonLinTol",1.0e-6);
     geometryExplicit_ = this->parameterList_->sublist("Parameter").get("Geometry Explicit",true);
 
@@ -94,7 +96,6 @@ exporterGeo_()
     
     problemFluid_ = Teuchos::rcp( new FluidProblem_Type( domainVelocity, FETypeVelocity, domainPressure, FETypePressure, parameterListFluid ) );
     problemFluid_->initializeProblem();
-
     /*if(parameterListFSI->sublist("General").get("Use steady fluid solution",true)){
         problemSteadyFluid_ = Teuchos::rcp( new FluidProblem_Type( domainVelocity, FETypeVelocity, domainPressure, FETypePressure, parameterListFluid ) );
     }*/
@@ -114,6 +115,23 @@ exporterGeo_()
     
     meshDisplacementNew_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(4)->getMapVecFieldRepeated() ) );
     meshDisplacementOld_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(4)->getMapVecFieldRepeated() ) );
+    
+    // If we restart we need to initialize the old/previous geometry solution in meshDisplacementOld to correctly
+    // compute the mesh velocity
+    if(this->parameterList_->sublist("Timestepping Parameter").get("Checkpointing", false))
+        exporterGeometry_.reset(new HDF5Export<SC,LO,GO,NO>(this->getDomain(4)->getMapVecFieldUnique(),"Solutiond_f"));
+
+    if(this->parameterList_->sublist("Timestepping Parameter").get("Restart", false))
+    {
+      Teuchos::RCP<HDF5Import<SC,LO,GO,NO>> importer =Teuchos::rcp(new HDF5Import<SC,LO,GO,NO>(this->getDomain(4)->getMapVecFieldUnique(),"Solutiond_f"));
+      double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0);
+      string varName = std::to_string(timeStepRestart);
+
+      MultiVectorConstPtr_Type meshDisplacementOld  = importer->readVariablesHDF5(varName); 
+      meshDisplacementOld_rep_->importFromVector(meshDisplacementOld, true);
+      meshDisplacementNew_rep_->importFromVector(meshDisplacementOld, true);
+    }
+
     u_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
     w_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
     u_minus_w_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(0)->getMapVecFieldRepeated() ) );
@@ -133,6 +151,10 @@ exporterGeo_()
     }
     p_rep_ = Teuchos::rcp( new MultiVector_Type( this->getDomain(1)->getMapRepeated() ) );
     
+    if ( this->parameterList_->sublist("Timestepping Parameter").get("Checkpointing", false)){
+        exporterBoundaryCondition_ = Teuchos::rcp(new ExporterTxt () );
+        exporterBoundaryCondition_->setup( "boundaryConditionFluid", this->comm_ );
+    }
 }
 
 template<class SC,class LO,class GO,class NO>
@@ -468,6 +490,7 @@ void FSI<SC,LO,GO,NO>::reAssemble(std::string type) const
     {
         geometrySolution = this->solution_->getBlock(4);
     }
+    
     meshDisplacementNew_rep_->importFromVector(geometrySolution, true);
 
     *w_rep_ = *meshDisplacementNew_rep_;
@@ -475,11 +498,9 @@ void FSI<SC,LO,GO,NO>::reAssemble(std::string type) const
     w_rep_->scale( 1.0/dt );
 
     u_minus_w_rep_->update( -1.0, *w_rep_, 1.0 );
-
     // Selbiges fuer den Druck
     MultiVectorConstPtr_Type pressureSolution = this->solution_->getBlock(1);
     p_rep_->importFromVector(pressureSolution, true);
-
 
     // ###############
     // Neu-Assemblierung zu Beginn der neuen Zeititeration im Falle von geometrisch explizit,
@@ -496,9 +517,7 @@ void FSI<SC,LO,GO,NO>::reAssemble(std::string type) const
         {
             // ACHTUNG: Fluid-Loesung wird hier auf Null gesetzt, wegen initializeVectors().
             // Somit dann auch die problemTimeFluid_ wodurch eine falsche BDF2-RHS entsteht.
-            // Rufe im DAESolverInTime deswegen erneut setPartialSolutions() auf.
-            
-            
+            // Rufe im DAESolverInTime deswegen erneut setPartialSolutions() auf.            
             this->problemFluid_->assembleConstantMatrices(); // Die Steifikeitsmatrix wird weiter unten erst genutzt
             
             // Es ist P = P_
@@ -811,7 +830,7 @@ void FSI<SC,LO,GO,NO>::setFromPartialVectorsInit() const
     //Fluid velocity
     this->solution_->addBlock( this->problemFluid_->getSolution()->getBlockNonConst(0), 0 );
     this->residualVec_->addBlock( this->problemFluid_->getResidualVector()->getBlockNonConst(0), 0 );
-    this->residualVec_->addBlock( this->problemFluid_->getResidualVector()->getBlockNonConst(0), 0 );
+    this->previousSolution_->addBlock( this->problemFluid_->getPreviousSolution()->getBlockNonConst(0), 0 );
     this->rhs_->addBlock( this->problemFluid_->getRhs()->getBlockNonConst(0), 0 );
     this->sourceTerm_->addBlock( this->problemFluid_->getSourceTerm()->getBlockNonConst(0), 0 );
     
@@ -955,7 +974,6 @@ void FSI<SC,LO,GO,NO>::solveGeometryProblem() const
         if (!this->exporterGeo_.is_null())
             this->exporterGeo_->save( this->timeSteppingTool_->currentTime() );
         
-
     }
     
     
@@ -1089,6 +1107,7 @@ void FSI<SC,LO,GO,NO>::setFluidMassmatrix( MatrixPtr_Type& massmatrix ) const
 {
     //######################
     // Massematrix fuer FSI combineSystems(), ggf nichtlinear.
+    cout << " --------- Assembly Fluid Mass Matrix --------- " << endl;
     //######################
     double density = this->problemTimeFluid_->getParameterList()->sublist("Parameter").get("Density",1.e-0);
     int size = this->problemTimeFluid_->getSystem()->size();
@@ -1115,6 +1134,15 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
     //######################
     // RHS nach BDF2
     //######################
+    // #####################
+    // We consider Restarts here now.
+    // Unfortunatelly the previous mass matrix would be necessary if we use a BDF 2 Scheme with restarts.
+    // We will ignore that for now, and when we compute the rhs for now just use BDF-1 for the first time step
+    // later we can think about saving the RHS to be completely accurate
+    bool restart = this->parameterList_->sublist("Timestepping Parameter").get("Restart", false);
+    double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0); 
+    //###############################
+
     int sizeFluid = this->problemFluid_->getSystem()->size();
     double dt = timeSteppingTool_->get_dt();
     int nmbBDF = timeSteppingTool_->getBDFNumber();
@@ -1150,14 +1178,13 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
         }
         this->problemTimeFluid_->setTimeParameters(tmpmassCoeff, tmpproblemCoeff);
     }
-    if (timeSteppingTool_->currentTime()==0.) {
+    if (timeSteppingTool_->currentTime()==0. || (restart && timeStepRestart + 1.e-10 > timeSteppingTool_->currentTime())) {
         vec_dbl_Type tmpcoeffPrevSteps(1, 1. / dt);
         this->problemTimeFluid_->updateMultistepRhsFSI(tmpcoeffPrevSteps,1);/*apply (mass matrix_t / dt) to u_t*/
     }
     else{
         this->problemTimeFluid_->updateMultistepRhsFSI(coeffPrevSteps,nmbBDF);/*apply (mass matrix_t / dt) to u_t and more*/
     }
-
     // TODO
     /*if (this->problemTimeFluid_->hasSourceTerm()) {
         TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Check sourceterm.");
@@ -1274,7 +1301,10 @@ void FSI<SC,LO,GO,NO>::setSolidMassmatrix( MatrixPtr_Type& massmatrix ) const
     double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter").get("Density",1.0);
     int size = this->problemTimeStructure_->getSystem()->size();
 
-    if(timeSteppingTool_->currentTime() == 0.0)
+    bool restart = this->parameterList_->sublist("Timestepping Parameter").get("Restart", false);
+    double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0); 
+ 
+    if(timeSteppingTool_->currentTime() == 0.0 || (restart &&  timeSteppingTool_->currentTime() -1.e-5 < timeStepRestart ))
     {
         this->problemTimeStructure_->systemMass_.reset(new BlockMatrix_Type(size));
         {
@@ -1297,8 +1327,8 @@ template<class SC,class LO,class GO,class NO>
 void FSI<SC,LO,GO,NO>::updateTime() const
 {
     timeSteppingTool_->t_ = timeSteppingTool_->t_ + timeSteppingTool_->dt_prev_;
-    
-
+    this->problemTimeFluid_->updateTime(timeSteppingTool_->t_);
+    this->problemTimeStructure_->updateTime(timeSteppingTool_->t_);
 }
 
 
@@ -1488,6 +1518,8 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
 
     string pressureRB = this->parameterList_->sublist("Parameter Fluid").get("Pressure Boundary Condition","None");
 
+    bool restart = this->parameterList_->sublist("Timestepping Parameter").get("Restart", false);
+    double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0); 
     if (pressureRB == "Resistance")
     {
         if(this->verbose_)
@@ -1510,6 +1542,16 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
             this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n_1, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
             flowRateOutlet_n_1_ = flowRateInlet_n_1; 
         }  
+        else if(restart && timeStepRestart +1e-8 > timeSteppingTool_->currentTime() )
+        {
+            if(this->verbose_)
+                cout << " WARNING: Absorbing boundary condition is computed but the initial values usally corresponding to T=0 now correspond to the restart time " << endl;
+            
+            double flowRateInlet_n_1 = 0.;
+            this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n_1, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
+            flowRateOutlet_n_1_ = flowRateInlet_n_1; 
+
+        }
         double flowRateInlet_n = 0.;
         this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
         flowRateOutlet_n_ = flowRateInlet_n; 
@@ -1580,8 +1622,29 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
             double flowRateInlet_n_1 = 0.;
             this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n_1, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
             flowRateOutlet_n_1_ = flowRateInlet_n_1; 
+
+            if ( this->parameterList_->sublist("Timestepping Parameter").get("Checkpointing", false)){
+                exporterBoundaryCondition_->exportData( "Area_Inlet ", areaInlet_init );
+                exporterBoundaryCondition_->exportData( "Area_Outlet ", areaInlet_init );
+            }
         } 
-        
+        else if(restart && timeStepRestart +1e-8 > timeSteppingTool_->currentTime() )
+        {
+            if(this->verbose_)
+                cout << " WARNING: Absorbing boundary condition is computed but the initial values usally corresponding to T=0 now correspond to the restart time " << endl;
+            double areaInlet_init = 0.;
+            double areaOutlet_init = 0.;
+
+            this->feFactory_->assemblyArea(this->dim_,areaInlet_init, flagInlet);
+            this->feFactory_->assemblyArea(this->dim_, areaOutlet_init, flagOutlet);
+
+            areaInlet_init_ = 0.0253605;//areaInlet_init;
+            areaOutlet_init_ = 0.025605; //areaOutlet_init;
+
+            double flowRateInlet_n_1 = 0.;
+            this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n_1, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
+            flowRateOutlet_n_1_ = flowRateInlet_n_1;  
+        }
         double flowRateInlet_n = 0.;
         this->feFactory_->assemblyFlowRate(this->dim_, flowRateInlet_n, this->getDomain(0)->getFEType() , this->dim_, flagOutlet , u_rep_);  
         flowRateOutlet_n_ = flowRateInlet_n; 
@@ -1619,8 +1682,10 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
        
         }
         this->sourceTerm_->getBlockNonConst(0)->exportFromVector( FERhs, false, "Add" );
-
         flowRateOutlet_n_1_ = flowRateOutlet_n_;
+        if ( this->parameterList_->sublist("Timestepping Parameter").get("Checkpointing", false)){
+            exporterBoundaryCondition_->exportData( "FlowrateOutlet_Previous_Timestep", flowRateOutlet_n_1_ );
+        }
         // addSourceTermToRHS() aus DAESolverInTime
         double coeffSourceTermStructure = 1.0;
        
@@ -1634,6 +1699,17 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
     
     }    
   
+}
+template<class SC,class LO,class GO,class NO>
+void FSI<SC,LO,GO,NO>::exportValuesOfInterest()
+{
+    
+    if(geometryExplicit_)
+    {
+        cout << " Export geometry " << endl;
+        string varName = std::to_string(this->timeSteppingTool_->currentTime());
+        exporterGeometry_->writeVariablesHDF5(varName,problemGeometry_->getSolution()->getBlock(0)); 
+    }
 }
 
 }

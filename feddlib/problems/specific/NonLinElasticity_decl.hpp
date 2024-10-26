@@ -73,6 +73,10 @@ public:
     virtual void calculateNonLinResidualVec(std::string type, double time=0.) const;
     
     virtual void getValuesOfInterest( vec_dbl_Type& values ){};
+    virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values ) {} ;
+    
+    virtual void exportValuesOfInterest(){};    
+    virtual void importValuesOfInterest(){};
     
     virtual void computeValuesOfInterestAndExport() {};
     

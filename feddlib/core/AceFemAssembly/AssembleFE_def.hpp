@@ -5,32 +5,43 @@
 
 namespace FEDD {
 
-
 template <class SC, class LO, class GO, class NO>
-AssembleFE<SC,LO,GO,NO>::AssembleFE(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params,tuple_disk_vec_ptr_Type tuple):
-rhsVec_(0),
-jacobian_(0),
-solution_(0)
-{
-	flag_=flag;
-	nodesRefConfig_ = nodesRefConfig;
+AssembleFE<SC, LO, GO, NO>::AssembleFE(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params, tuple_disk_vec_ptr_Type tuple) : rhsVec_(0), jacobian_(0), solution_(0) {
+    flag_ = flag;
+    nodesRefConfig_ = nodesRefConfig;
 
-	timeStep_ =0. ;
-	newtonStep_ =0 ;
-	globalElementID_=-1; // First not set
+    timeStep_ = 0.;
+    newtonStep_ = 0;
+    globalElementID_ = -1; // First not set
 
+    params_ = params;
 
-	params_=params;
+    // Reading through parameterlist
+    dim_ = params_->sublist("Parameter").get("Dimension", -1);
 
-	// Reading through parameterlist
-	dim_= params_->sublist("Parameter").get("Dimension",-1);
+    timeIncrement_ = params_->sublist("Timestepping Parameter").get("dt", 0.1);
 
-	timeIncrement_= params_->sublist("Timestepping Parameter").get("dt",0.1);
+    diskTuple_ = tuple;
 
-	diskTuple_= tuple;
+    checkParameters();
+
+    // Checking for restart. In case of restart we need to adjust the current time step.
+    bool restart = params_->sublist("Timestepping Parameter").get("Restart",false);
+	  if(restart){
+		  timeStep_ = params_->sublist("Timestepping Parameter").get("Time step", 0.0) ;//- timeIncrement_;
+      // we need to look for the correct first time increment
+      int numSegments = params_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);
+
+      for(int i=1; i <= numSegments; i++){
+
+            double startTime = params_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("Start Time",0.);
+            
+            if(startTime-1e-10 < timeStep_)
+              timeIncrement_ = params_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("dt",0.1);
+      }
 	
-	checkParameters();
-	
+    }
+    historyImported_=false; // If we restart from a previous solution, we also ne to import the history values.
 
 /// Element Numbering for triangular elements:
 /*!
@@ -59,7 +70,6 @@ solution_(0)
 ------------------------------------------------------------------------------------
 */
 }
-
 
 template <class SC, class LO, class GO, class NO>
 void AssembleFE<SC,LO,GO,NO>::checkParameters( ){
@@ -105,9 +115,12 @@ void AssembleFE<SC,LO,GO,NO>::updateSolution( vec_dbl_Type solution){
 	//TEUCHOS_TEST_FOR_EXCEPTION(solution_.size() != solution.size(), std::runtime_error, "Dofs of solutions is not the same");
 	this->solution_.reset( new vec_dbl_Type (solution.size(),0.) );
 
+  //cout << " Solution " ;
 	for(int i=0; i< solution.size();i++){
 		(*this->solution_)[i] = solution[i];
+   //cout << (*this->solution_)[i] << " " ;
 	}
+  //cout << endl;
 
 };
 
@@ -146,6 +159,19 @@ template <class SC, class LO, class GO, class NO>
 vec2D_dbl_Type AssembleFE<SC,LO,GO,NO>::getNodesRefConfig( ){
 	return nodesRefConfig_;
 
+};
+
+template <class SC, class LO, class GO, class NO>
+void AssembleFE<SC, LO, GO, NO>::setLocalHistory(vec_dbl_Type history) {
+	  TEUCHOS_TEST_FOR_EXCEPTION(history.size() != history_.size(), std::runtime_error, "Input history and current history have different length. History input " << history.size() << " history current " <<history_.size() );
+    this->history_ = history;
+    historyImported_=true;
+};
+template <class SC, class LO, class GO, class NO>
+void AssembleFE<SC, LO, GO, NO>::setLocalHistoryUpdated(vec_dbl_Type history) {
+	  TEUCHOS_TEST_FOR_EXCEPTION(history.size() != historyUpdated_.size(), std::runtime_error, "Input history and current history have different length. History input " << history.size() << " history current " <<historyUpdated_.size() );
+    this->historyUpdated_ = history;
+  
 };
 
 

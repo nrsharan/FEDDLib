@@ -192,7 +192,6 @@ int LinearSolver<SC,LO,GO,NO>::solveMonolithic(TimeProblem_Type* timeProblem, Bl
     // Printing the stiffness matrix for the first newton iteration
     // timeProblem->getSystemCombined()->writeMM("stiffnessMatrixWihtDirichlet");
     // timeProblem->getSystem()->writeMM("stiffnessMatrixFull");
-    
     if ( !pListThyraSolver->get("Linear Solver Type","Belos").compare("Belos") ) {
         ThyraPrecPtr_Type thyraPrec = problem->getPreconditioner()->getThyraPrec();
         Thyra::initializePreconditionedOp<SC>(*lowsFactory, thyraMatrix, thyraPrec.getConst(), solver.ptr());
@@ -524,8 +523,15 @@ int LinearSolver<SC,LO,GO,NO>::solveBlock(TimeProblem_Type* timeProblem, BlockMu
 //            }
 //        }
 //    }
+
     ThyraLinOpConstPtr_Type thyraMatrix = timeProblem->getSystemCombined()->getThyraLinBlockOp();
+    // rhs->getBlock(0)->writeMM("rhsFluid_"+std::to_string(timeProblem->time_));
+    // // //timeProblem->getSystemCombined()->getBlock(2,2)->writeMM("systemCombinedStructure_"+std::to_string(timeProblem->time_));
+    // timeProblem->getSystem()->getBlock(0,0)->writeMM("systemFluid_"+std::to_string(timeProblem->time_));
+    // //timeProblem->getSystem()->getBlock(2,2)->writeMM("systemStructure_"+std::to_string(timeProblem->time_));
+
 //    ThyraLinOpBlockConstPtr_Type thyraMatrixBlock = timeProblem->getSystemCombined()->getThyraLinBlockOp();
+
     Thyra::initializePreconditionedOp<SC>(*lowsFactory, thyraMatrix, thyraPrec.getConst(), solver.ptr());
     {
         

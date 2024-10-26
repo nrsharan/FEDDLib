@@ -119,7 +119,8 @@ public:
     // type = FixedPoint, Newton, ForTime, UpdateMeshDisplacement, SetPartialSolutions, SolveGeometryProblem,
     // UpdateTime, UpdateFluidInTime
 //    virtual void reAssemble(std::string type="FixedPoint") const;
-
+     // Hier wird timeSteppingTool_->t_ inkrementiert
+    void updateTime() const;
     // type = FluidMassmatrixAndRHS, StructureMassmatrixAndRHS
     // In der Funktion wird massmatrix und rhs resetet.
 
@@ -131,6 +132,12 @@ public:
     
     virtual void getValuesOfInterest( vec_dbl_Type& values );
     
+    virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values ) {} ;
+
+    virtual void exportValuesOfInterest();    
+
+    virtual void importValuesOfInterest();
+
     // init FSCI vectors from partial problems
     void setFromPartialVectorsInit() const;
     
@@ -243,8 +250,6 @@ private:
     vec_dbl_Type valuesForExport_;
     bool chemistryExplicit_;
     //bool geometryExplicit_;
-    ExporterTxtPtr_Type exporterTxtDrag_;
-    ExporterTxtPtr_Type exporterTxtLift_;
     /*####################*/
 
 public:

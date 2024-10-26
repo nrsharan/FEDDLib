@@ -88,10 +88,14 @@ public:
 
     virtual void calculateNonLinResidualVec(std::string type="standard", double time=0.) const; //standard or reverse
     
+    virtual void exportValuesOfInterest(){};    
+    virtual void importValuesOfInterest(){};
+    
     void calculateNonLinResidualVecWithMeshVelo(std::string type, double time, MultiVectorPtr_Type u_minus_w, MatrixPtr_Type P) const;
 //    virtual int ComputeDragLift(vec_dbl_ptr_Type &values);
 
     virtual void getValuesOfInterest( vec_dbl_Type& values ){};
+    virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values ) {} ;
     
     virtual void computeValuesOfInterestAndExport() {};
 
