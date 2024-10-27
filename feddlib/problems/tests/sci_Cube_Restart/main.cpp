@@ -636,7 +636,7 @@ int main(int argc, char *argv[])
 
         daeTimeSolver.advanceInTime();
 
-        MultiVectorPtr_Type solutionChem ;
+        MultiVectorConstPtr_Type solutionChem ;
 
         if(chemistryExplicit_ )
             solutionChem = sci.getChemProblem()->getSolution()->getBlock(0);
