@@ -1297,7 +1297,7 @@ void SCI<SC,LO,GO,NO>::exportValuesOfInterest()
             for(int k=0; k < historyNames.size(); k++){
                 //cout << " Export value " << k << " history name " << historyNames[k] << " of gausspoint " << gp << " checkpointtupel " << j << endl; 
                 string varName = historyNames[k]+"_"+std::to_string(gp);
-                exporter->writeVariablesHDF5(varName,historyValues->getBlock(gp)->getVector(k)); 
+                exporter->writeVariablesHDF5(varName,Teuchos::rcp_const_cast<BlockMultiVectorPtr_Type>(historyValues->getBlock(gp)->getVector(k))); 
             }
         } 
     }
