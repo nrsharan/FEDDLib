@@ -59,6 +59,7 @@ public:
     
     typedef MultiVector<SC,LO,GO,NO> MultiVector_Type;
     typedef Teuchos::RCP<MultiVector_Type> MultiVectorPtr_Type;
+    typedef Teuchos::RCP<const MultiVector_Type> MultiVectorConstPtr_Type;
     
     typedef Teuchos::RCP<ExporterTxt> ExporterTxtPtr_Type;
 
@@ -70,7 +71,7 @@ public:
     /// @brief Exporting MultiVector writeVector as HDF5 File with the variable name varName
     /// @param varName Variable name of MultiVector
     /// @param writeVector Vector to be exported, corresponding to writeMap_ 
-    void writeVariablesHDF5(string varName,MultiVectorPtr_Type writeVector);
+    void writeVariablesHDF5(string varName,MultiVectorConstPtr_Type writeVector);
 
      /// @brief Closing Exporter
     void closeExporter();
