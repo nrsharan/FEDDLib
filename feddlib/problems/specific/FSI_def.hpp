@@ -1708,7 +1708,7 @@ void FSI<SC,LO,GO,NO>::exportValuesOfInterest()
     {
         cout << " Export geometry " << endl;
         string varName = std::to_string(this->timeSteppingTool_->currentTime());
-        exporterGeometry_->writeVariablesHDF5(varName,problemGeometry_->getSolution()->getBlock(0)); 
+        exporterGeometry_->writeVariablesHDF5(varName,problemGeometry_->getSolution()->getBlockNonConst(0)); 
     }
 }
 
