@@ -372,7 +372,7 @@
       <Parameter name="Beta1" type="double" value="0.001006" />
       <Parameter name="MuA" type="double" value="0.0" />
       <Parameter name="Beta2" type="double" value="26.68" />
-      <Parameter name="Alpha2" type="double" value="2000.0" />
+      <Parameter name="Alpha2" type="double" value="500.0" />
       <Parameter name="Alpha3" type="double" value="2.75662" />
       <Parameter name="Alpha1" type="double" value="1.3" />
       <Parameter name="Alpha4" type="double" value="0." />
@@ -451,7 +451,7 @@
       <Parameter name="Beta1" type="double" value="0.001006" />
       <Parameter name="MuA" type="double" value="0.0" />
       <Parameter name="Beta2" type="double" value="26.68" />
-      <Parameter name="Alpha2" type="double" value="2000.0" />
+      <Parameter name="Alpha2" type="double" value="500.0" />
       <Parameter name="Alpha3" type="double" value="2.75662" />
       <Parameter name="Alpha1" type="double" value="11525.07" />
       <Parameter name="Alpha4" type="double" value="0." />
@@ -530,7 +530,7 @@
       <Parameter name="Beta1" type="double" value="0.001006" />
       <Parameter name="MuA" type="double" value="0.0" />
       <Parameter name="Beta2" type="double" value="26.68" />
-      <Parameter name="Alpha2" type="double" value="2000.0" />
+      <Parameter name="Alpha2" type="double" value="500.0" />
       <Parameter name="Alpha3" type="double" value="2.75662" />
       <Parameter name="Alpha1" type="double" value="11525.07" />
       <Parameter name="Alpha4" type="double" value="0." />

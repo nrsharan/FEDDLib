@@ -98,40 +98,41 @@ if __name__ == "__main__":
 
     # Define the modification sets
     modification_sets = [
-        {
-            'param_list_numbers': ['1'], # Adventitia
-            'modifications': {
-                'MuA': '0.0',
-                'Alpha2': '198.654',
-                'Alpha1': '15.084',
-                'Alpha4': '6.807',
-                'KMin': '0.015'
-            }
-        },
+        # {
+        #     'param_list_numbers': ['1'], # Adventitia
+        #     'modifications': {
+        #         'MuA': '0.0',
+        #         'Alpha2': '198.654',
+        #         'Alpha1': '15.084',
+        #         'Alpha4': '6.807',
+        #         'KMin': '0.015'
+        #     }
+        # },
         {
             'param_list_numbers': ['4'], # Lipid
             'modifications': {
-                'MuA': '0.0',
-                'Alpha2': '2000.0',
-                'Alpha1': '1.3'
+                # 'MuA': '0.0',
+                'Alpha2': '500.0'
+                # ,
+                # 'Alpha1': '1.3'
             }
         },
         {
             'param_list_numbers': ['5','6','7'], # Calc1, Calc2, Calc3
             'modifications': {
-                'MuA': '0.0',
-                'Alpha2': '2000.0'
+                # 'MuA': '0.0',
+                'Alpha2': '500.0'
             }
         },
-        {
-            'param_list_numbers': ['8'], # FibCap
-            'modifications': {
-                'MuA': '2.94',
-                'Alpha2': '82.773',
-                'Alpha1': '6.285',
-                'Alpha4': '7.445'
-            }
-        }
+        # {
+        #     'param_list_numbers': ['8'], # FibCap
+        #     'modifications': {
+        #         'MuA': '2.94',
+        #         'Alpha2': '82.773',
+        #         'Alpha1': '6.285',
+        #         'Alpha4': '7.445'
+        #     }
+        # }
     ]
 
     # Call the function with the provided arguments
