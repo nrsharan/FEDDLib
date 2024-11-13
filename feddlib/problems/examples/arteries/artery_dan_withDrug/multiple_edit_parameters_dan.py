@@ -107,20 +107,20 @@ if __name__ == "__main__":
         #         'KMin': '0.015'
         #     }
         # },
-        {
-            'param_list_numbers': ['4'], # Lipid
-            'modifications': {
-                # 'MuA': '0.0',
-                'Alpha2': '500.0'
-                # ,
-                # 'Alpha1': '1.3'
-            }
-        },
+        # {
+        #     'param_list_numbers': ['4'], # Lipid
+        #     'modifications': {
+        #         # 'MuA': '0.0',
+        #         'Alpha2': '500.0'
+        #         # ,
+        #         # 'Alpha1': '1.3'
+        #     }
+        # },
         {
             'param_list_numbers': ['5','6'], # Calc1, Calc2
             'modifications': {
                 # 'MuA': '0.0',
-                'Alpha2': '500.0'
+                'Alpha2': '151.73775'
             }
         },
         # {

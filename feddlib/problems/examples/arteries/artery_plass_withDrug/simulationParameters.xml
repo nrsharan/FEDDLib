@@ -100,7 +100,7 @@
             <Parameter name="Number of Segments" type="int" value="13"/>
             <ParameterList name="1">
                 <Parameter name="Start Time" type="double" value="0."/>
-                <Parameter name="dt" type="double" value="0.02"/>
+                <Parameter name="dt" type="double" value="0.01"/>
             </ParameterList>
              <ParameterList name="2">
                 <Parameter name="Start Time" type="double" value="1."/>
@@ -108,19 +108,19 @@
             </ParameterList>
              <ParameterList name="3">
                 <Parameter name="Start Time" type="double" value="20."/>
-                <Parameter name="dt" type="double" value="0.1"/>
+                <Parameter name="dt" type="double" value="0.15"/>
             </ParameterList>
              <ParameterList name="4">
                 <Parameter name="Start Time" type="double" value="50."/>
-                <Parameter name="dt" type="double" value="0.15"/>
+                <Parameter name="dt" type="double" value="0.2"/>
             </ParameterList>
             <ParameterList name="5">
                 <Parameter name="Start Time" type="double" value="80."/>
-                <Parameter name="dt" type="double" value="0.2"/>
+                <Parameter name="dt" type="double" value="0.25"/>
             </ParameterList>
             <ParameterList name="6">
                 <Parameter name="Start Time" type="double" value="110."/>
-                <Parameter name="dt" type="double" value="0.25"/>
+                <Parameter name="dt" type="double" value="0.35"/>
             </ParameterList>
             <ParameterList name="7">
                 <Parameter name="Start Time" type="double" value="220."/>
@@ -128,7 +128,7 @@
             </ParameterList>
             <ParameterList name="8">
                 <Parameter name="Start Time" type="double" value="240."/>
-                <Parameter name="dt" type="double" value="0.2"/>
+                <Parameter name="dt" type="double" value="0.25"/>
             </ParameterList>
             <ParameterList name="9">
                 <Parameter name="Start Time" type="double" value="540."/>
@@ -148,7 +148,7 @@
             </ParameterList>
             <ParameterList name="13">
                 <Parameter name="Start Time" type="double" value="860."/>
-                <Parameter name="dt" type="double" value="0.2"/>
+                <Parameter name="dt" type="double" value="0.25"/>
             </ParameterList>
          </ParameterList> 
     </ParameterList>
