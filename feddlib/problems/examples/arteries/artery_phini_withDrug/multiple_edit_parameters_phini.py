@@ -108,22 +108,22 @@ if __name__ == "__main__":
         #         'KMin': '0.015'
         #     }
         # },
-        # {
-        #     'param_list_numbers': ['4'], # Lipid
-        #     'modifications': {
-        #         # 'MuA': '0.0',
-        #         'Alpha2': '500.0'
-        #         # ,
-        #         # 'Alpha1': '1.3'
-        #     }
-        # },
         {
-            'param_list_numbers': ['5','6','7'], # Calc1, Calc2, Calc3
+            'param_list_numbers': ['4'], # Lipid
             'modifications': {
                 # 'MuA': '0.0',
-                'Alpha2': '151.73775'
+                'Alpha2': '300.0'
+                # ,
+                # 'Alpha1': '1.3'
             }
         },
+        # {
+        #     'param_list_numbers': ['5','6','7'], # Calc1, Calc2, Calc3
+        #     'modifications': {
+        #         # 'MuA': '0.0',
+        #         'Alpha2': '151.73775'
+        #     }
+        # },
         # {
         #     'param_list_numbers': ['8'], # FibCap
         #     'modifications': {
