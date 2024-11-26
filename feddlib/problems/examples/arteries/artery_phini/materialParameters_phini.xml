@@ -36,7 +36,7 @@
       <Parameter name="Beta1" type="double" value="0.001006" /> <!-- s^-1 -->
       <Parameter name="MuA" type="double" value="0.0" /> <!-- Kg/(s^2 mm) or kPa-->
       <Parameter name="Beta2" type="double" value="26.68" /> <!-- Kg/(s^2 mm) or kPa-->
-      <Parameter name="Alpha2" type="double" value="151.73775" /> <!-- Kg/(s^2 mm) or kPa-->
+      <Parameter name="Alpha2" type="double" value="100.0" /> <!-- Kg/(s^2 mm) or kPa-->
       <Parameter name="Alpha3" type="double" value="2.75662" />
       <Parameter name="Alpha1" type="double" value="15.084" /> <!-- Kg/(s^2 mm) or kPa-->
       <Parameter name="Alpha4" type="double" value="6.807" /> <!-- Kg/(s^2 mm) or kPa-->
@@ -372,7 +372,7 @@
       <Parameter name="Beta1" type="double" value="0.001006" />
       <Parameter name="MuA" type="double" value="0.0" />
       <Parameter name="Beta2" type="double" value="26.68" />
-      <Parameter name="Alpha2" type="double" value="151.73775" />
+      <Parameter name="Alpha2" type="double" value="80.0" />
       <Parameter name="Alpha3" type="double" value="2.75662" />
       <Parameter name="Alpha1" type="double" value="1.3" />
       <Parameter name="Alpha4" type="double" value="0." />
