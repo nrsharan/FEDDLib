@@ -102,7 +102,7 @@ if __name__ == "__main__":
             'param_list_numbers': ['1'], # Adventitia
             'modifications': {
                 # 'MuA': '0.0',
-                'Alpha2': '100.0',
+                'Alpha2': '70.0',
                 # 'Alpha1': '15.084',
                 # 'Alpha4': '6.807',
                 # 'KMin': '0.015'
@@ -112,7 +112,7 @@ if __name__ == "__main__":
             'param_list_numbers': ['4'], # Lipid
             'modifications': {
                 # 'MuA': '0.0',
-                'Alpha2': '80.0'
+                'Alpha2': '60.0'
                 # ,
                 # 'Alpha1': '1.3'
             }
