@@ -112,7 +112,7 @@ if __name__ == "__main__":
             'param_list_numbers': ['4'], # Lipid
             'modifications': {
                 # 'MuA': '0.0',
-                'Alpha2': '60.0'
+                'Alpha2': '45.0'
                 # ,
                 # 'Alpha1': '1.3'
             }
