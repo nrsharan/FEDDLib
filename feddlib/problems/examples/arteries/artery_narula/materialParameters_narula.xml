@@ -20,11 +20,11 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." /> <!-- degrees -->
       <Parameter name="LambdaC50" type="double" value="1.2" /> 
-      <Parameter name="Gamma3" type="double" value="0.9" />  <!-- microMoles -->
+      <Parameter name="Gamma3Max" type="double" value="0.9" />  <!-- microMoles -->
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" /> <!-- s^-1 -->
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" /> <!-- s^-1 -->
       <Parameter name="Gamma2" type="double" value="50.0" /> <!-- microMoles^-1 -->
-      <Parameter name="Gamma1" type="double" value="0.5131" /> <!-- microMoles -->
+      <Parameter name="Gamma1Max" type="double" value="0.5131" /> <!-- microMoles -->
       <Parameter name="Eta" type="double" value="0.1624" /> <!-- s^-1 -->
       <Parameter name="Ca50" type="double" value="0.4" /> <!-- microMoles -->
       <Parameter name="K3" type="double" value="0.134" /> <!-- s^-1 -->
@@ -118,11 +118,11 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
       <Parameter name="K3" type="double" value="0.134" />
@@ -231,11 +231,11 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
       <Parameter name="K3" type="double" value="0.134" />
@@ -344,11 +344,11 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
       <Parameter name="K3" type="double" value="0.134" />
@@ -419,11 +419,11 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
       <Parameter name="K3" type="double" value="0.134" />
@@ -494,11 +494,11 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
       <Parameter name="K3" type="double" value="0.134" />
@@ -569,11 +569,11 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
       <Parameter name="K3" type="double" value="0.134" />
