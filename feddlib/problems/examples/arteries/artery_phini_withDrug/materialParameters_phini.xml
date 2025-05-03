@@ -20,15 +20,15 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." /> <!-- degrees -->
       <Parameter name="LambdaC50" type="double" value="1.2" /> 
-      <Parameter name="Gamma3" type="double" value="0.9" />  <!-- microMoles -->
+      <Parameter name="Gamma3Max" type="double" value="0.9" />  <!-- microMoles -->
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" /> <!-- s^-1 -->
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" /> <!-- s^-1 -->
       <Parameter name="Gamma2" type="double" value="50.0" /> <!-- microMoles^-1 -->
-      <Parameter name="Gamma1" type="double" value="0.5131" /> <!-- microMoles -->
+      <Parameter name="Gamma1Max" type="double" value="0.5131" /> <!-- microMoles -->
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641" />
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072" />
       <Parameter name="Eta" type="double" value="0.1624" /> <!-- s^-1 -->
       <Parameter name="Ca50" type="double" value="0.4" /> <!-- microMoles -->
-      <Parameter name="K2" type="double" value="0.2e0"/> 
-      <Parameter name="K5" type="double" value="0.2e0"/>     
       <Parameter name="K3" type="double" value="0.134" /> <!-- s^-1 -->
       <Parameter name="K4" type="double" value="0.00166" /> <!-- s^-1 -->
       <Parameter name="K7" type="double" value="0.66e-4" /> <!-- s^-1 -->
@@ -52,18 +52,12 @@
       <Parameter name="Gamma5" type="double" value="50." /> <!-- s -->
       <Parameter name="Zeta2" type="double" value="100." /> <!-- s -->
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
-      <Parameter name="P1" type="double" value="0.6" />
-      <Parameter name="P3" type="double" value="0.6" />
-      <Parameter name="C50" type="double" value="0.5" />
+      <Parameter name="C50" type="double" value="0.6673453235597163" />
       <Parameter name="D0" type="double" value="6.e-3" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="growthStartTime" type="double" value="0.0" />
-      <Parameter name="reorientationStartTime" type="double" value="0.0" />
-      <Parameter name="growthEndTime" type="double" value="0.0" />
-      <Parameter name="reorientationEndTime" type="double" value="0.0" />
       <Parameter name="KThetaPlus" type="double" value="0.0001" />
       <Parameter name="KThetaMinus" type="double" value="0.0001" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
@@ -80,6 +74,8 @@
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
       <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
+      <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="1." />
@@ -122,15 +118,15 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641" />
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
-       <Parameter name="K2" type="double" value="0.2e0"/>
-       <Parameter name="K5" type="double" value="0.2e0"/>
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
@@ -154,18 +150,12 @@
       <Parameter name="Gamma5" type="double" value="50." />
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
-      <Parameter name="P1" type="double" value="0.6" />
-      <Parameter name="P3" type="double" value="0.6" />
-      <Parameter name="C50" type="double" value="0.5" />
+      <Parameter name="C50" type="double" value="0.6673453235597163" />
       <Parameter name="D0" type="double" value="6.e-3" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="20.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="growthStartTime" type="double" value="0.0" />
-      <Parameter name="reorientationStartTime" type="double" value="0.0" />
-      <Parameter name="growthEndTime" type="double" value="0.0" />
-      <Parameter name="reorientationEndTime" type="double" value="0.0" />
       <Parameter name="KThetaPlus" type="double" value="0.0001" />
       <Parameter name="KThetaMinus" type="double" value="0.0001" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
@@ -182,6 +172,8 @@
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
       <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
+      <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="1." />
@@ -239,15 +231,15 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641" />
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
-      <Parameter name="K2" type="double" value="0.2e0"/>
-      <Parameter name="K5" type="double" value="0.2e0"/>
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
@@ -271,18 +263,12 @@
       <Parameter name="Gamma5" type="double" value="50." />
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
-      <Parameter name="P1" type="double" value="0.6" />
-      <Parameter name="P3" type="double" value="0.6" />
-      <Parameter name="C50" type="double" value="0.5" />
+      <Parameter name="C50" type="double" value="0.6673453235597163" />
       <Parameter name="D0" type="double" value="3.e-3" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="20.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="growthStartTime" type="double" value="0.0" />
-      <Parameter name="reorientationStartTime" type="double" value="0.0" />
-      <Parameter name="growthEndTime" type="double" value="0.0" />
-      <Parameter name="reorientationEndTime" type="double" value="0.0" />
       <Parameter name="KThetaPlus" type="double" value="0.0001" />
       <Parameter name="KThetaMinus" type="double" value="0.0001" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
@@ -299,6 +285,8 @@
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
       <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
+      <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="1." />
@@ -356,15 +344,15 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641" />
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
-       <Parameter name="K2" type="double" value="0.2e0"/>
-       <Parameter name="K5" type="double" value="0.2e0"/>
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
@@ -388,18 +376,12 @@
       <Parameter name="Gamma5" type="double" value="50." />
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
-      <Parameter name="P1" type="double" value="0.6" />
-      <Parameter name="P3" type="double" value="0.6" />
-      <Parameter name="C50" type="double" value="0.5" />
+      <Parameter name="C50" type="double" value="0.6673453235597163" />
       <Parameter name="D0" type="double" value="6.e-4" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="growthStartTime" type="double" value="0.0" />
-      <Parameter name="reorientationStartTime" type="double" value="0.0" />
-      <Parameter name="growthEndTime" type="double" value="0.0" />
-      <Parameter name="reorientationEndTime" type="double" value="0.0" />
       <Parameter name="KThetaPlus" type="double" value="0.0001" />
       <Parameter name="KThetaMinus" type="double" value="0.0001" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
@@ -416,6 +398,8 @@
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
       <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
+      <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="1." />
@@ -435,15 +419,15 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641" />
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
-       <Parameter name="K2" type="double" value="0.2e0"/>
-       <Parameter name="K5" type="double" value="0.2e0"/>
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
@@ -467,18 +451,12 @@
       <Parameter name="Gamma5" type="double" value="50." />
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
-      <Parameter name="P1" type="double" value="0.6" />
-      <Parameter name="P3" type="double" value="0.6" />
-      <Parameter name="C50" type="double" value="0.5" />
+      <Parameter name="C50" type="double" value="0.6673453235597163" />
       <Parameter name="D0" type="double" value="6.e-6" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="growthStartTime" type="double" value="0.0" />
-      <Parameter name="reorientationStartTime" type="double" value="0.0" />
-      <Parameter name="growthEndTime" type="double" value="0.0" />
-      <Parameter name="reorientationEndTime" type="double" value="0.0" />
       <Parameter name="KThetaPlus" type="double" value="0.0001" />
       <Parameter name="KThetaMinus" type="double" value="0.0001" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
@@ -495,6 +473,8 @@
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
       <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
+      <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="1." />
@@ -514,15 +494,15 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641" />
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
-       <Parameter name="K2" type="double" value="0.2e0"/>
-       <Parameter name="K5" type="double" value="0.2e0"/>
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
@@ -546,18 +526,12 @@
       <Parameter name="Gamma5" type="double" value="50." />
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
-      <Parameter name="P1" type="double" value="0.6" />
-      <Parameter name="P3" type="double" value="0.6" />
-      <Parameter name="C50" type="double" value="0.5" />
+      <Parameter name="C50" type="double" value="0.6673453235597163" />
       <Parameter name="D0" type="double" value="6.e-6" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="growthStartTime" type="double" value="0.0" />
-      <Parameter name="reorientationStartTime" type="double" value="0.0" />
-      <Parameter name="growthEndTime" type="double" value="0.0" />
-      <Parameter name="reorientationEndTime" type="double" value="0.0" />
       <Parameter name="KThetaPlus" type="double" value="0.0001" />
       <Parameter name="KThetaMinus" type="double" value="0.0001" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
@@ -574,6 +548,8 @@
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
       <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
+      <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="1." />
@@ -593,15 +569,15 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641" />
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
-       <Parameter name="K2" type="double" value="0.2e0"/>
-       <Parameter name="K5" type="double" value="0.2e0"/>
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
@@ -625,18 +601,12 @@
       <Parameter name="Gamma5" type="double" value="50." />
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
-      <Parameter name="P1" type="double" value="0.6" />
-      <Parameter name="P3" type="double" value="0.6" />
-      <Parameter name="C50" type="double" value="0.5" />
+      <Parameter name="C50" type="double" value="0.6673453235597163" />
       <Parameter name="D0" type="double" value="6.e-6" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="growthStartTime" type="double" value="0.0" />
-      <Parameter name="reorientationStartTime" type="double" value="0.0" />
-      <Parameter name="growthEndTime" type="double" value="0.0" />
-      <Parameter name="reorientationEndTime" type="double" value="0.0" />
       <Parameter name="KThetaPlus" type="double" value="0.0001" />
       <Parameter name="KThetaMinus" type="double" value="0.0001" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
@@ -653,6 +623,8 @@
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
       <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
+      <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="1." />
@@ -672,15 +644,15 @@
       <!-- ######################################## -->
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
-      <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma3Max" type="double" value="0.9" />
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
-      <Parameter name="Gamma1" type="double" value="0.5131" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131" />
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641" />
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072" />
       <Parameter name="Eta" type="double" value="0.1624" />
       <Parameter name="Ca50" type="double" value="0.4" />
-       <Parameter name="K2" type="double" value="0.2e0"/>
-       <Parameter name="K5" type="double" value="0.2e0"/>
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
@@ -704,18 +676,12 @@
       <Parameter name="Gamma5" type="double" value="50." />
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
-      <Parameter name="P1" type="double" value="0.6" />
-      <Parameter name="P3" type="double" value="0.6" />
-      <Parameter name="C50" type="double" value="0.5" />
+      <Parameter name="C50" type="double" value="0.6673453235597163" />
       <Parameter name="D0" type="double" value="6.e-6" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="growthStartTime" type="double" value="0.0" />
-      <Parameter name="reorientationStartTime" type="double" value="0.0" />
-      <Parameter name="growthEndTime" type="double" value="0.0" />
-      <Parameter name="reorientationEndTime" type="double" value="0.0" />
       <Parameter name="KThetaPlus" type="double" value="0.0001" />
       <Parameter name="KThetaMinus" type="double" value="0.0001" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
@@ -732,6 +698,8 @@
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
       <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
+      <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
       <Parameter name="PostProcessingType" type="double" value="1." />
       <Parameter name="PostProcessingPower" type="double" value="1." />
