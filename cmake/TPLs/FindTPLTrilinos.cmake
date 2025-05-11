@@ -22,6 +22,41 @@ if (NOT Trilinos_FOUND)
   message (FATAL_ERROR "Could not find Trilinos!")
 endif ()
 
+# Echo trilinos build info just for fun
+MESSAGE("\nFound Trilinos!  Here are the details: ")
+MESSAGE("   Trilinos_DIR = ${Trilinos_DIR}")
+MESSAGE("   Trilinos_VERSION = ${Trilinos_VERSION}")
+MESSAGE("   Trilinos_PACKAGE_LIST = ${Trilinos_PACKAGE_LIST}")
+MESSAGE("   Trilinos_LIBRARIES = ${Trilinos_LIBRARIES}")
+MESSAGE("   Trilinos_INCLUDE_DIRS = ${Trilinos_INCLUDE_DIRS}")
+MESSAGE("   Trilinos_LIBRARY_DIRS = ${Trilinos_LIBRARY_DIRS}")
+MESSAGE("   Trilinos_TPL_LIST = ${Trilinos_TPL_LIST}")
+MESSAGE("   Trilinos_TPL_INCLUDE_DIRS = ${Trilinos_TPL_INCLUDE_DIRS}")
+MESSAGE("   Trilinos_TPL_LIBRARIES = ${Trilinos_TPL_LIBRARIES}")
+MESSAGE("   Trilinos_TPL_LIBRARY_DIRS = ${Trilinos_TPL_LIBRARY_DIRS}")
+MESSAGE("   Trilinos_BUILD_SHARED_LIBS = ${Trilinos_BUILD_SHARED_LIBS}")
+MESSAGE("End of Trilinos details\n")
+
+# Attempt to determine Trilinos library directories if not set by TrilinosConfig.cmake
+set(FEDD_Trilinos_LIBRARY_DIRS "")
+if(DEFINED Trilinos_LIBRARY_DIRS AND NOT "${Trilinos_LIBRARY_DIRS}" STREQUAL "")
+  set(FEDD_Trilinos_LIBRARY_DIRS ${Trilinos_LIBRARY_DIRS})
+  message(STATUS "FindTPLTrilinos.cmake: Using Trilinos_LIBRARY_DIRS from TrilinosConfig.cmake: ${FEDD_Trilinos_LIBRARY_DIRS}")
+else()
+  if(DEFINED Trilinos_INSTALL_DIR AND NOT "${Trilinos_INSTALL_DIR}" STREQUAL "")
+    set(potential_lib_dir "${Trilinos_INSTALL_DIR}/lib")
+    if(EXISTS "${potential_lib_dir}")
+      set(FEDD_Trilinos_LIBRARY_DIRS "${potential_lib_dir}")
+      message(STATUS "FindTPLTrilinos.cmake: Trilinos_LIBRARY_DIRS not set by TrilinosConfig.cmake. Inferred as: ${FEDD_Trilinos_LIBRARY_DIRS}")
+    else()
+      message(WARNING "FindTPLTrilinos.cmake: Trilinos_LIBRARY_DIRS not set and inferred path ${potential_lib_dir} does not exist. Library paths might be missing.")
+    endif()
+  else()
+    message(WARNING "FindTPLTrilinos.cmake: Trilinos_LIBRARY_DIRS not set and Trilinos_INSTALL_DIR not available to infer. Library paths might be missing.")
+  endif()
+endif()
+
+
 # if("${Trilinos_VERSION_MAJOR}" GREATER 10)
 #   set (HAVE_TRILINOS_GT_10_6 TRUE)
 #   message (STATUS "Using Trilinos > 10.6 : " ${Trilinos_VERSION_MAJOR} "." ${Trilinos_VERSION_MINOR})
@@ -105,13 +140,23 @@ list (REMOVE_DUPLICATES XLib_Trilinos_TPL_INCLUDE_DIRS)
 list (APPEND XLib_Trilinos_INCLUDE_DIRS
   ${Trilinos_INCLUDE_DIRS}
   ${XLib_Trilinos_TPL_INCLUDE_DIRS})
-# I think there's a better way to handle this ... CMake
-# should take care of -L or -l or -rpath ...
-set (XLib_Trilinos_LIBS "-L${Trilinos_LIBRARY_DIRS}")
-foreach (LIB IN LISTS XLib_Trilinos_LIBRARIES)
-  set (XLib_Trilinos_LIBS "${XLib_Trilinos_LIBS} -l${LIB}")
+
+# Construct XLib_Trilinos_LIBS carefully
+set(XLib_Trilinos_LIBS "")
+if(NOT "${FEDD_Trilinos_LIBRARY_DIRS}" STREQUAL "")
+  foreach(lib_dir IN LISTS FEDD_Trilinos_LIBRARY_DIRS) # Handle if it's a list
+    list(APPEND XLib_Trilinos_LIBS "-L${lib_dir}")
+  endforeach()
+endif()
+
+foreach (LIB IN LISTS XLib_Trilinos_LIBRARIES) # XLib_Trilinos_LIBRARIES are package library names
+  list(APPEND XLib_Trilinos_LIBS "-l${LIB}")
 endforeach (LIB)
-set (XLib_Trilinos_LIBS ${XLib_Trilinos_LIBS} ${XLib_Trilinos_TPL_LIBRARIES})
+# XLib_Trilinos_TPL_LIBRARIES is set from Trilinos_TPL_LIBRARIES earlier.
+# These are assumed to be linker arguments already (e.g. from TPLs *of* Trilinos)
+if(XLib_Trilinos_TPL_LIBRARIES)
+  list(APPEND XLib_Trilinos_LIBS ${XLib_Trilinos_TPL_LIBRARIES})
+endif()
 
 # TPLs
 foreach (TPL IN ITEMS "ParMETIS" "Boost" "LAPACK" "BLAS" "UMFPACK" "SuperLU" "SuperLUDist" "HDF5")
@@ -124,8 +169,8 @@ endforeach (TPL)
 
 # Filling variables needed by the TriBITS system
 set (TPL_Trilinos_INCLUDE_DIRS ${XLib_Trilinos_INCLUDE_DIRS})
-set (TPL_Trilinos_LIBRARY_DIRS Trilinos::all_selected_libs) 
-set (TPL_Trilinos_LIBRARIES Trilinos::all_selected_libs) 
+set (TPL_Trilinos_LIBRARY_DIRS ${FEDD_Trilinos_LIBRARY_DIRS}) # Use the determined path; will be "" if not found, satisfying AssertDefined
+set (TPL_Trilinos_LIBRARIES Trilinos::all_selected_libs)
 
 
 
