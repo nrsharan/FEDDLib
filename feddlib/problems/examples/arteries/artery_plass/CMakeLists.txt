@@ -12,9 +12,9 @@ TRIBITS_ADD_TEST(
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(data_artery_plass
 	SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-	SOURCE_FILES materialParameters_plasschaert_heeneman_daemem.xml preconditionerParameters_Chemistry.xml preconditionerParameters_Structure.xml simulationParameters.xml solverParameters.xml slurm-script.sh
+	SOURCE_FILES materialParameters_plasschaert_heeneman_daemem.xml preconditionerParameters_Chemistry.xml preconditionerParameters_Structure.xml simulationParameters.xml solverParameters.xml slurm-script.sh slurm-script_elysium.sh
 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	DEST_FILES materialParameters_plasschaert_heeneman_daemem.xml preconditionerParameters_Chemistry.xml preconditionerParameters_Structure.xml simulationParameters.xml solverParameters.xml slurm-script.sh
+	DEST_FILES materialParameters_plasschaert_heeneman_daemem.xml preconditionerParameters_Chemistry.xml preconditionerParameters_Structure.xml simulationParameters.xml solverParameters.xml slurm-script.sh slurm-script_elysium.sh
 	EXEDEPS artery_plass
 )
 
