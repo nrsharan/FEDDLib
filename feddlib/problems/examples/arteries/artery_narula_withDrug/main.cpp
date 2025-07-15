@@ -292,7 +292,7 @@ void zeroDirichlet3D(double *x, double *res, double t, const double *parameters)
 void inflowChem(double *x, double *res, double t, const double *parameters)
 {
     if (t >= parameters[0])
-        res[0] = 2.;
+        res[0] = 2.0;
     else
         res[0] = 0.;
 }

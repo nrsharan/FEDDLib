@@ -116,22 +116,22 @@ if __name__ == "__main__":
         #         # 'Alpha1': '1.3'
         #     }
         # },
-        {
-            'param_list_numbers': ['5','6'], # Calc1, Calc2
-            'modifications': {
-                # 'MuA': '0.0',
-                'Alpha2': '151.73775'
-            }
-        },
         # {
-        #     'param_list_numbers': ['7'], # FibCap
+        #     'param_list_numbers': ['5','6'], # Calc1, Calc2
         #     'modifications': {
-        #         'MuA': '2.94',
-        #         'Alpha2': '82.773',
-        #         'Alpha1': '6.285',
-        #         'Alpha4': '7.445'
+        #         # 'MuA': '0.0',
+        #         'Alpha2': '151.73775'
         #     }
-        # }
+        # },
+        {
+            'param_list_numbers': ['7'], # FibCap
+            'modifications': {
+                'MuA': '6.85942',
+                'Alpha2': '165.528',
+                'Alpha1': '2.09547',
+                'Alpha4': '6.38155'
+            }
+        }
     ]
 
     # Call the function with the provided arguments

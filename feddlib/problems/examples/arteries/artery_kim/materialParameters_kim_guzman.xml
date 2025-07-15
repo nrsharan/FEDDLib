@@ -658,12 +658,12 @@
       <Parameter name="K7" type="double" value="0.66e-4" />
       <Parameter name="Kappa" type="double" value="148.262" />
       <Parameter name="Beta1" type="double" value="0.001006" />
-      <Parameter name="MuA" type="double" value="2.94" />
+      <Parameter name="MuA" type="double" value="6.85942" />
       <Parameter name="Beta2" type="double" value="26.68" />
-      <Parameter name="Alpha2" type="double" value="82.773" />
+      <Parameter name="Alpha2" type="double" value="165.528" />
       <Parameter name="Alpha3" type="double" value="2.75662" />
-      <Parameter name="Alpha1" type="double" value="6.285" />
-      <Parameter name="Alpha4" type="double" value="7.445" />
+      <Parameter name="Alpha1" type="double" value="2.09547" />
+      <Parameter name="Alpha4" type="double" value="6.38155" />
       <Parameter name="Alpha5" type="double" value="3.08798" />
       <Parameter name="Gamma6" type="double" value="1.5" />
       <Parameter name="LambdaP50" type="double" value="1.0" />

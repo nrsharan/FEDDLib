@@ -98,25 +98,25 @@ if __name__ == "__main__":
 
     # Define the modification sets
     modification_sets = [
-        {
-            'param_list_numbers': ['1'], # Adventitia
-            'modifications': {
-                # 'MuA': '0.0',
-                'Alpha2': '60.0',
-                # 'Alpha1': '15.084',
-                # 'Alpha4': '6.807',
-                # 'KMin': '0.015'
-            }
-        },
-        {
-            'param_list_numbers': ['4'], # Lipid
-            'modifications': {
-                # 'MuA': '0.0',
-                'Alpha2': '37.5'
-                # ,
-                # 'Alpha1': '1.3'
-            }
-        },
+        # {
+        #     'param_list_numbers': ['1'], # Adventitia
+        #     'modifications': {
+        #         # 'MuA': '0.0',
+        #         'Alpha2': '60.0',
+        #         # 'Alpha1': '15.084',
+        #         # 'Alpha4': '6.807',
+        #         # 'KMin': '0.015'
+        #     }
+        # },
+        # {
+        #     'param_list_numbers': ['4'], # Lipid
+        #     'modifications': {
+        #         # 'MuA': '0.0',
+        #         'Alpha2': '37.5'
+        #         # ,
+        #         # 'Alpha1': '1.3'
+        #     }
+        # },
         # {
         #     'param_list_numbers': ['5','6','7'], # Calc1, Calc2, Calc3
         #     'modifications': {
@@ -124,15 +124,15 @@ if __name__ == "__main__":
         #         'Alpha2': '151.73775'
         #     }
         # },
-        # {
-        #     'param_list_numbers': ['8'], # FibCap
-        #     'modifications': {
-        #         # 'MuA': '2.94',
-        #         'Alpha2': '50.0',
-        #         # 'Alpha1': '6.285',
-        #         # 'Alpha4': '7.445'
-        #     }
-        # }
+        {
+            'param_list_numbers': ['8'], # FibCap
+            'modifications': {
+                'MuA': '6.85942',
+                'Alpha2': '165.528',
+                'Alpha1': '2.09547',
+                'Alpha4': '6.38155'
+            }
+        }
     ]
 
     # Call the function with the provided arguments
