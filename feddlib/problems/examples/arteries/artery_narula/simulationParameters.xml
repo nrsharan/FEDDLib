@@ -25,6 +25,7 @@
         <Parameter name="Accelerated Active Until" type="double" value="220.0"/>
         <Parameter name="Active Acceleration Multiplier" type="double" value="20.0"/>
 
+        <Parameter name="Post Processing Fields" type="Array(string)" value="{vonMisesStress, SCirc, W, Growth1}"/>
        
         <Parameter name="relNonLinTol" type="double" value="1.0e-7"/>
         <Parameter name="absNonLinTol" type="double" value="1.0e-7"/>

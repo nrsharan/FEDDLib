@@ -42,7 +42,7 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
         problemStructure_ = Teuchos::rcp( new StructureProblem_Type( domainStructure, FETypeStructure, parameterListStructure ) );
         problemStructure_->initializeProblem();
     }
-    else{
+    else {
         problemStructureNonLin_ = Teuchos::rcp( new StructureNonLinProblem_Type( domainStructure, FETypeStructure, parameterListStructure) );
         problemStructureNonLin_->initializeProblem();
     }
@@ -70,8 +70,9 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
         exporterIterationsChem_->setup( "linearIterations_chem", this->comm_ );
     }
 
-    postProcessingnames_.resize(23);
-    postProcessingnames_ = {"vonMisesStress", "SCirc","SAxial","SRadial","W","Growth1","Growth2","Growth3","Strech1","Strech2","nC1","nC2","nD1","nD2","Agn11","Agn12","Agn13","Agn21","Agn22","Agn23","Agn31","Agn32","Agn33"};
+    postProcessingnames_ = this->feFactory_->getPostDataNames();
+    // postProcessingnames_.resize(23);
+    // postProcessingnames_ = {"vonMisesStress", "SCirc","SAxial","SRadial","W","Growth1","Growth2","Growth3","Strech1","Strech2","nC1","nC2","nD1","nD2","Agn11","Agn12","Agn13","Agn21","Agn22","Agn23","Agn31","Agn32","Agn33"};
 
 }
 
@@ -186,7 +187,7 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
             this->system_->addBlock(systemTmp->getBlock(0,0),0,0);
             this->systemC_->addBlock(systemTmp->getBlock(1,1),0,0);
         }
-        else{
+        else {
             this->system_->addBlock(systemTmp->getBlock(0,0),0,0);
             this->system_->addBlock(systemTmp->getBlock(0,1),0,1);
             this->system_->addBlock(systemTmp->getBlock(1,0),1,0);
@@ -1134,128 +1135,176 @@ void SCI<SC,LO,GO,NO>::updateChemInTime() const
 template<class SC,class LO,class GO,class NO>
 typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostProcessingData() const
 {
-    BlockMultiVectorPtr_Type postProcess =Teuchos::rcp(new BlockMultiVector_Type(10)) ;
+    // BlockMultiVectorPtr_Type postProcess =Teuchos::rcp(new BlockMultiVector_Type(10)) ;
         
-    /*
-    0 -- "Volume","
-    1 -- Sxx",
-    2 -- "Sxy"
-    3 -- "Sxz" 
-    4 -- "Syx"
-    5 -- "Syy"
-    6 -- "Syz" 
-    7 -- "Szx" 
-    8 -- "Szy" 
-    9 -- "Szz" 
-    10 -- "MisesStress" 
-    11 -- "SCirc"
-    12 -- "SAxial",
-    13 -- "SRadial"
-    14 -- "Exx"
-    15 -- "Exy"
-    16 -- "Exz" 
-    17 -- "Eyx"
-    18 -- "Eyy"
-    19 -- "Eyz" 
-    20 -- "Ezx"
-    21 -- "Ezy"
-    22 -- "Ezz"
-    23 -- "W"
-    24 -- "Growth1"
-    25 -- "Growth2" 
-    26 -- "Growth3"
-    27 -- "Stretch1"
-    28 -- "Stretch2"
-    29 -- "DetF",
-    30 - 38      "Ag1n1","Ag1n2","Ag1n3","Ag2n1","Ag2n2","Ag2n3",
-                       "Ag3n1","Ag3n2","Ag3n3"
-    39 -- "a11"
-    40 -- "a12"
-    41 -- "a13"
-    42 -- "a21"
-    43 -- "a22"
-    44 -- "a23"
-    45 -- "nC1" <----- !!
-    46 -- "nC2" <----- !!
-    47 -- "nD1" <----- !! 
-    48 -- "nD2" <----- !!
-    49 -- "ScDir1"
-    50 -- "ScDir2" 
-    51 -- "ScDir3" 
-    52 -- "SaDir1"
-    53 -- "SaDir2"
-    54 -- "SaDir3"
-    55 -- "SrDir1"
-    56 -- "SrDir2"
-    57 -- "SrDir3"*/
+    // /*
+    // 0 -- "Volume","
+    // 1 -- Sxx",
+    // 2 -- "Sxy"
+    // 3 -- "Sxz" 
+    // 4 -- "Syx"
+    // 5 -- "Syy"
+    // 6 -- "Syz" 
+    // 7 -- "Szx" 
+    // 8 -- "Szy" 
+    // 9 -- "Szz" 
+    // 10 -- "MisesStress" 
+    // 11 -- "SCirc"
+    // 12 -- "SAxial",
+    // 13 -- "SRadial"
+    // 14 -- "Exx"
+    // 15 -- "Exy"
+    // 16 -- "Exz" 
+    // 17 -- "Eyx"
+    // 18 -- "Eyy"
+    // 19 -- "Eyz" 
+    // 20 -- "Ezx"
+    // 21 -- "Ezy"
+    // 22 -- "Ezz"
+    // 23 -- "W"
+    // 24 -- "Growth1"
+    // 25 -- "Growth2" 
+    // 26 -- "Growth3"
+    // 27 -- "Stretch1"
+    // 28 -- "Stretch2"
+    // 29 -- "DetF",
+    // 30 - 38      "Ag1n1","Ag1n2","Ag1n3","Ag2n1","Ag2n2","Ag2n3",
+    //                    "Ag3n1","Ag3n2","Ag3n3"
+    // 39 -- "a11"
+    // 40 -- "a12"
+    // 41 -- "a13"
+    // 42 -- "a21"
+    // 43 -- "a22"
+    // 44 -- "a23"
+    // 45 -- "nC1" <----- !!
+    // 46 -- "nC2" <----- !!
+    // 47 -- "nD1" <----- !! 
+    // 48 -- "nD2" <----- !!
+    // 49 -- "ScDir1"
+    // 50 -- "ScDir2" 
+    // 51 -- "ScDir3" 
+    // 52 -- "SaDir1"
+    // 53 -- "SaDir2"
+    // 54 -- "SaDir3"
+    // 55 -- "SrDir1"
+    // 56 -- "SrDir2"
+    // 57 -- "SrDir3"*/
 
-    MultiVectorPtr_Type vonMisesStress = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(10, vonMisesStress);
+    // MultiVectorPtr_Type vonMisesStress = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(10, vonMisesStress);
 
-    MultiVectorPtr_Type SCirc = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(11, SCirc);
+    // MultiVectorPtr_Type SCirc = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(11, SCirc);
 
-    MultiVectorPtr_Type SAxial = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(12, SAxial);
+    // MultiVectorPtr_Type SAxial = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(12, SAxial);
 
-    MultiVectorPtr_Type SRadial = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(13, SRadial);
+    // MultiVectorPtr_Type SRadial = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(13, SRadial);
 
-    MultiVectorPtr_Type W = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(23, W);
+    // MultiVectorPtr_Type W = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(23, W);
 
-    MultiVectorPtr_Type Growth1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(24, Growth1);
+    // MultiVectorPtr_Type Growth1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(24, Growth1);
 
-    MultiVectorPtr_Type Growth2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(25, Growth2);
+    // MultiVectorPtr_Type Growth2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(25, Growth2);
 
-    MultiVectorPtr_Type Growth3 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(26, Growth3);
+    // MultiVectorPtr_Type Growth3 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(26, Growth3);
 
-    MultiVectorPtr_Type Strech1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(27, Strech1);
+    // MultiVectorPtr_Type Strech1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(27, Strech1);
 
-    MultiVectorPtr_Type Strech2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(28, Strech2);
+    // MultiVectorPtr_Type Strech2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(28, Strech2);
 
-    std::vector<MultiVectorPtr_Type> Ag1n;
+    // std::vector<MultiVectorPtr_Type> Ag1n;
 
-    for(int i=30;i<39;i++)
-    {
-        Ag1n.push_back(Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() )));
-        this->feFactory_->postProcessing(i, Ag1n[i-30]);
+    // for(int i=30;i<39;i++)
+    // {
+    //     Ag1n.push_back(Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() )));
+    //     this->feFactory_->postProcessing(i, Ag1n[i-30]);
+    // }
+
+    // MultiVectorPtr_Type nC1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(45, nC1);
+
+    // MultiVectorPtr_Type nC2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(46, nC2);
+
+    // MultiVectorPtr_Type nD1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(47, nD1);
+
+    // MultiVectorPtr_Type nD2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
+    // this->feFactory_->postProcessing(48, nD2);
+
+    // postProcess->addBlock(vonMisesStress,0);
+    // postProcess->addBlock(SCirc,1);
+    // postProcess->addBlock(SAxial,2);
+    // postProcess->addBlock(SRadial,3);
+    // postProcess->addBlock(W,4);
+    // postProcess->addBlock(Growth1,5);
+    // postProcess->addBlock(Growth2,6);
+    // postProcess->addBlock(Growth3,7);
+    // postProcess->addBlock(Strech1,8);
+    // postProcess->addBlock(Strech2,9);
+    // postProcess->addBlock(nC1,10);
+    // postProcess->addBlock(nC2,11);
+    // postProcess->addBlock(nD1,12);
+    // postProcess->addBlock(nD2,13);
+    // for(int i=0;i<Ag1n.size();i++)
+    //     postProcess->addBlock(Ag1n[i],14+i);
+    
+    // return postProcess;
+
+
+
+    // Read the desired post-processing fields from the parameter list
+    Teuchos::Array<std::string> requestedFields;
+    if (this->parameterList_->sublist("Parameter").isParameter("Post Processing Fields")) {
+        requestedFields = this->parameterList_->sublist("Parameter").get("Post Processing Fields", 
+                                                                        Teuchos::Array<std::string>());
+    } else {
+        // Fallback to all available fields if not specified
+        requestedFields.resize(postProcessingnames_.size());
+        for (int i = 0; i < postProcessingnames_.size(); i++) {
+            requestedFields[i] = postProcessingnames_[i];
+        }
     }
 
-    MultiVectorPtr_Type nC1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(45, nC1);
+    // Create BlockMultiVector with the number of requested fields
+    BlockMultiVectorPtr_Type postProcess = Teuchos::rcp(new BlockMultiVector_Type(requestedFields.size()));
 
-    MultiVectorPtr_Type nC2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(46, nC2);
+    // Create map from field name to position in postProcessingnames_
+    std::map<std::string, int> fieldNameToPosition;
+    for (int i = 0; i < postProcessingnames_.size(); i++) {
+        fieldNameToPosition[postProcessingnames_[i]] = i;
+    }
 
-    MultiVectorPtr_Type nD1 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(47, nD1);
+    // Populate the BlockMultiVector with the requested fields
+    for(int i = 0; i < requestedFields.size(); i++) {
+        MultiVectorPtr_Type fieldData = Teuchos::rcp(new MultiVector_Type(this->getDomain(0)->getMapUnique()));
+        // Check if the requested field is available in the postProcessingnames_
+        auto it = fieldNameToPosition.find(requestedFields[i]);
+        if (it != fieldNameToPosition.end()) {
+            this->feFactory_->postProcessing(it->second, fieldData);
+            postProcess->addBlock(fieldData, i);
+        }
+        else{
+            // Log warning or throw error for unknown field
+            std::string availableFields = "";
+            for (size_t j = 0; j < postProcessingnames_.size(); ++j) {
+                if (j > 0) availableFields += ", ";
+                availableFields += postProcessingnames_[j];
+            }
+            TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, 
+                "Unknown post-processing field requested: " + requestedFields[i] + 
+                ". Available fields are: " + availableFields);
+        }
+    }
 
-    MultiVectorPtr_Type nD2 = Teuchos::rcp(new MultiVector_Type( this->getDomain(0)->getMapUnique() ));
-    this->feFactory_->postProcessing(48, nD2);
-
-    postProcess->addBlock(vonMisesStress,0);
-    postProcess->addBlock(SCirc,1);
-    postProcess->addBlock(SAxial,2);
-    postProcess->addBlock(SRadial,3);
-    postProcess->addBlock(W,4);
-    postProcess->addBlock(Growth1,5);
-    postProcess->addBlock(Growth2,6);
-    postProcess->addBlock(Growth3,7);
-    postProcess->addBlock(Strech1,8);
-    postProcess->addBlock(Strech2,9);
-    postProcess->addBlock(nC1,10);
-    postProcess->addBlock(nC2,11);
-    postProcess->addBlock(nD1,12);
-    postProcess->addBlock(nD2,13);
-    for(int i=0;i<Ag1n.size();i++)
-        postProcess->addBlock(Ag1n[i],14+i);
-    
     return postProcess;
 }
 

@@ -839,6 +839,12 @@ void FE<SC, LO, GO, NO>::postProcessing(int type, MultiVectorPtr_Type &postProce
 }
 
 template <class SC, class LO, class GO, class NO>
+std::vector<std::string> FE<SC, LO, GO, NO>::getPostDataNames()
+{
+    return assemblyFEElements_[0]->getPostDataNames();
+}
+
+template <class SC, class LO, class GO, class NO>
 typename FE<SC, LO, GO, NO>::BlockMultiVectorPtr_Type FE<SC, LO, GO, NO>::getHistoryValues()
 {
     // We are only concerned with element information. We dont need any communication for that

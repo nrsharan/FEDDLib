@@ -741,6 +741,7 @@ class FE {
 
     BlockMultiVectorPtr_Type getHistoryValues();
     void setHistoryValues(LO T,vec_dbl_Type history);
+    std::vector<std::string> getPostDataNames();
 
 
 /* ----------------------------------------------------------------------------------------*/
