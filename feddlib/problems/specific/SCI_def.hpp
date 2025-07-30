@@ -1265,6 +1265,13 @@ typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostPro
         postProcessingnames_ = this->feFactory_->getPostDataNames();
     }
 
+    // Print out the post-processing names for debugging
+    std::cout << "Post-processing names: ";
+    for (const auto& name : postProcessingnames_) {
+        std::cout << name << " ";
+    }
+    std::cout << std::endl;
+
     // Read the desired post-processing fields from the parameter list
     Teuchos::Array<std::string> requestedField;
     if (this->parameterList_->sublist("Parameter").isParameter("Post Processing Fields")) {
