@@ -66,7 +66,6 @@ namespace FEDD
 		for (int i = 0; i < this->postDataLength_; i++)
 		{
 			this->postDataNames_[i] = std::string(postDataNames[i]);
-			std::cout << " Post Data Names " << i << " " << this->postDataNames_[i] << std::endl;
 		}
 
 		// Create map from field name to position in postDataNames_

@@ -1297,13 +1297,18 @@ typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostPro
         postProcess->addBlock(fieldData, i);
     }
 
+    // This runs after the above block because it ensures that the requested field is available in the postprocessing data
+    if(requestedFields_.empty()) {
+        requestedFields_ = vec_string_Type(requestedField.begin(), requestedField.end());
+    }
+
     return postProcess;
 }
 
 template<class SC,class LO,class GO,class NO>
 vec_string_Type SCI<SC,LO,GO,NO>::getPostprocessingNames()
 {
-    return postProcessingnames_;
+    return requestedFields_;
 }
 
 template<class SC,class LO,class GO,class NO>
