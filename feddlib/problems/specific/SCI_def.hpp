@@ -291,7 +291,7 @@ void SCI<SC,LO,GO,NO>::reAssemble(std::string type) const
     }
 
     else if (type == "ComputeSolidRHSInTime"){
-        if(this->verbose_)
+        if (this->verbose_)
             std::cout << "-- Assembly (ComputeSolidRHSInTime)" << '\n';
           
         computeSolidRHSInTime();
@@ -1262,16 +1262,10 @@ typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostPro
     // Initialize the post-processing names if not already done
 
     if (postProcessingnames_.empty()) {
-        std::cout << "Initializing post-processing names..." << std::endl;
+        if(this->verbose_)
+            std::cout << "Initializing post-processing names..." << std::endl;
         postProcessingnames_ = this->feFactory_->getPostDataNames();
     }
-
-    // Print out the post-processing names for debugging
-    std::cout << "Post-processing names: ";
-    for (const auto& name : postProcessingnames_) {
-        std::cout << name << " ";
-    }
-    std::cout << std::endl;
 
     // Read the desired post-processing fields from the parameter list
     Teuchos::Array<std::string> requestedField;
