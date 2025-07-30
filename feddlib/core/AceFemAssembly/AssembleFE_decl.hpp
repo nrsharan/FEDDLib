@@ -233,10 +233,6 @@ namespace FEDD {
 
         vec_dbl_Type getLocalHistoryUpdated() {return historyUpdated_;};
 
-        std::vector<std::string> getPostDataNames()  { return postDataNames_; }
-
-        std::map<std::string, int> getFieldNameToPosition()  { return fieldNameToPosition_; }
-
          /*!
          \brief Set history values of element
          \return values
@@ -290,8 +286,6 @@ namespace FEDD {
         double timeIncrement_;
         GO globalElementID_;
         vec2D_dbl_ptr_Type postProcessingData_;
-        std::vector<std::string> postDataNames_;
-        std::map<std::string, int> fieldNameToPosition_;
 
         vec_dbl_Type historyUpdated_;
 		vec_dbl_Type history_;
