@@ -291,6 +291,7 @@ namespace FEDD {
         GO globalElementID_;
         vec2D_dbl_ptr_Type postProcessingData_;
         std::vector<std::string> postDataNames_;
+        std::map<std::string, int> fieldNameToPosition_;
 
         vec_dbl_Type historyUpdated_;
 		vec_dbl_Type history_;
