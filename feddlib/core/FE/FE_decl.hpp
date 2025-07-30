@@ -673,7 +673,7 @@ class FE {
                         bool callFillComplete=true,
                         int FELocExternal=-1);
 
-    void postProcessing(int type, MultiVectorPtr_Type &postProcessingVec);
+    void postProcessing(std::string type, MultiVectorPtr_Type &postProcessingVec);
     
 
     void assemblyLaplaceAssFE(int dim,

@@ -1277,12 +1277,6 @@ typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostPro
     // Create BlockMultiVector with the number of requested fields
     BlockMultiVectorPtr_Type postProcess = Teuchos::rcp(new BlockMultiVector_Type(requestedFields.size()));
 
-    // Create map from field name to position in postProcessingnames_
-    std::map<std::string, int> fieldNameToPosition;
-    for (int i = 0; i < postProcessingnames_.size(); i++) {
-        fieldNameToPosition[postProcessingnames_[i]] = i;
-    }
-
     // Populate the BlockMultiVector with the requested fields
     for(int i = 0; i < requestedFields.size(); i++) {
         MultiVectorPtr_Type fieldData = Teuchos::rcp(new MultiVector_Type(this->getDomain(0)->getMapUnique()));

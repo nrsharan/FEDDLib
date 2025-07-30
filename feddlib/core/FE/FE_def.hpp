@@ -784,7 +784,7 @@ void FE<SC,LO,GO,NO>::addFeBlockMv(BlockMultiVectorPtr_Type &res, vec_dbl_ptr_Ty
     56 -- "SrDir2"
     57 -- "SrDir3"*/
 template <class SC, class LO, class GO, class NO>
-void FE<SC, LO, GO, NO>::postProcessing(int type, MultiVectorPtr_Type &postProcessingVec)
+void FE<SC, LO, GO, NO>::postProcessing(std::string type, MultiVectorPtr_Type &postProcessingVec)
 {
     // Map for temporary vectors for import and export
     MapConstPtr_Type mapRep = this->domainVec_[0]->getMapRepeated();
@@ -803,6 +803,10 @@ void FE<SC, LO, GO, NO>::postProcessing(int type, MultiVectorPtr_Type &postProce
     resRep->putScalar(0.);
     Teuchos::ArrayRCP<SC>  arrayRep = resRep->getDataNonConst(0);
 
+    auto fieldNameToPosition = assemblyFEElements_[0]->getFieldNameToPosition();
+
+    TEUCHOS_TEST_FOR_EXCEPTION(fieldNameToPosition.count(type) == 0, std::logic_error, "Unknown post-processing field type: '" + type + "'");
+    int position = fieldNameToPosition.at(type);
     // Iterating over all elements
     for (UN T=0; T<assemblyFEElements_.size(); T++) {
 
