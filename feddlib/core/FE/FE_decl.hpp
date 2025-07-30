@@ -674,6 +674,8 @@ class FE {
                         int FELocExternal=-1);
 
     void postProcessing(std::string type, MultiVectorPtr_Type &postProcessingVec);
+
+    std::vector<std::string> getPostDataNames();
     
 
     void assemblyLaplaceAssFE(int dim,
@@ -741,7 +743,6 @@ class FE {
 
     BlockMultiVectorPtr_Type getHistoryValues();
     void setHistoryValues(LO T,vec_dbl_Type history);
-    std::vector<std::string> getPostDataNames();
 
 
 /* ----------------------------------------------------------------------------------------*/

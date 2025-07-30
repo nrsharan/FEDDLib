@@ -70,7 +70,7 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
         exporterIterationsChem_->setup( "linearIterations_chem", this->comm_ );
     }
 
-    postProcessingnames_ = this->feFactory_->getPostDataNames();
+    // postProcessingnames_ = this->feFactory_->getPostDataNames();
     // postProcessingnames_.resize(23);
     // postProcessingnames_ = {"vonMisesStress", "SCirc","SAxial","SRadial","W","Growth1","Growth2","Growth3","Strech1","Strech2","nC1","nC2","nD1","nD2","Agn11","Agn12","Agn13","Agn21","Agn22","Agn23","Agn31","Agn32","Agn33"};
 
@@ -1259,44 +1259,34 @@ typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostPro
     
     // return postProcess;
 
+    // Initialize the post-processing names if not already done
 
+    if (postProcessingnames_.empty()) {
+        postProcessingnames_ = this->feFactory_->getPostDataNames();
+    }
 
     // Read the desired post-processing fields from the parameter list
-    Teuchos::Array<std::string> requestedFields;
+    Teuchos::Array<std::string> requestedField;
     if (this->parameterList_->sublist("Parameter").isParameter("Post Processing Fields")) {
-        requestedFields = this->parameterList_->sublist("Parameter").get("Post Processing Fields", 
+        requestedField = this->parameterList_->sublist("Parameter").get("Post Processing Fields", 
                                                                         Teuchos::Array<std::string>());
     } else {
         // Fallback to all available fields if not specified
-        requestedFields.resize(postProcessingnames_.size());
+        requestedField.resize(postProcessingnames_.size());
         for (int i = 0; i < postProcessingnames_.size(); i++) {
-            requestedFields[i] = postProcessingnames_[i];
+            requestedField[i] = postProcessingnames_[i];
         }
     }
 
+
     // Create BlockMultiVector with the number of requested fields
-    BlockMultiVectorPtr_Type postProcess = Teuchos::rcp(new BlockMultiVector_Type(requestedFields.size()));
+    BlockMultiVectorPtr_Type postProcess = Teuchos::rcp(new BlockMultiVector_Type(requestedField.size()));
 
     // Populate the BlockMultiVector with the requested fields
-    for(int i = 0; i < requestedFields.size(); i++) {
+    for(int i = 0; i < requestedField.size(); i++) {
         MultiVectorPtr_Type fieldData = Teuchos::rcp(new MultiVector_Type(this->getDomain(0)->getMapUnique()));
-        // Check if the requested field is available in the postProcessingnames_
-        auto it = fieldNameToPosition.find(requestedFields[i]);
-        if (it != fieldNameToPosition.end()) {
-            this->feFactory_->postProcessing(it->second, fieldData);
-            postProcess->addBlock(fieldData, i);
-        }
-        else{
-            // Log warning or throw error for unknown field
-            std::string availableFields = "";
-            for (size_t j = 0; j < postProcessingnames_.size(); ++j) {
-                if (j > 0) availableFields += ", ";
-                availableFields += postProcessingnames_[j];
-            }
-            TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, 
-                "Unknown post-processing field requested: " + requestedFields[i] + 
-                ". Available fields are: " + availableFields);
-        }
+        this->feFactory_->postProcessing(requestedField[i], fieldData);
+        postProcess->addBlock(fieldData, i);
     }
 
     return postProcess;

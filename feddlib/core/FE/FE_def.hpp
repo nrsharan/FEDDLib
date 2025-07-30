@@ -816,7 +816,7 @@ void FE<SC, LO, GO, NO>::postProcessing(std::string type, MultiVectorPtr_Type &p
         
         for(int i=0; i< 10; i++){
             arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0]; // this column of the postprocessing data contains some sort of scaling.
-            arrayRep[nodeList[i]] +=  (*postProcessingData)[i][type]; //*(*postProcessingData)[i][0]; // per node the index 'type' stands for a different post processing value
+            arrayRep[nodeList[i]] +=  (*postProcessingData)[i][position]; //*(*postProcessingData)[i][0]; // per node the index 'type' stands for a different post processing value
         }
     }
     
