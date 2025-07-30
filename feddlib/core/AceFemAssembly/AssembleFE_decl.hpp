@@ -243,8 +243,8 @@ namespace FEDD {
 
         int getHistoryLength() {return historyLength_;};
 
-        virtual std::vector<std::string> getPostDataNames();
-        virtual std::map<std::string, int> getFieldNameToPosition();
+        virtual std::vector<std::string> getPostDataNames(){return {};};
+        virtual std::map<std::string, int> getFieldNameToPosition(){return {};};
     protected:
 
         /*!
