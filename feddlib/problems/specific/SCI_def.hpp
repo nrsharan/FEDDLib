@@ -1133,7 +1133,7 @@ void SCI<SC,LO,GO,NO>::updateChemInTime() const
     }
 }
 template<class SC,class LO,class GO,class NO>
-typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostProcessingData() const
+typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostProcessingData()
 {
     // BlockMultiVectorPtr_Type postProcess =Teuchos::rcp(new BlockMultiVector_Type(10)) ;
         
@@ -1262,8 +1262,7 @@ typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostPro
     // Initialize the post-processing names if not already done
 
     if (postProcessingnames_.empty()) {
-        auto tmp = this->feFactory_->getPostDataNames();
-        postProcessingnames_ = std::vector<std::string>(tmp.begin(), tmp.end());
+        postProcessingnames_ = this->feFactory_->getPostDataNames();
     }
 
     // Read the desired post-processing fields from the parameter list

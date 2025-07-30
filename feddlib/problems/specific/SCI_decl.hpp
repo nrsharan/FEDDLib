@@ -178,7 +178,7 @@ public:
 
     virtual void calculateNonLinResidualVec(std::string type="standard", double time=0.) const; //standard or reverse    
     
-    BlockMultiVectorPtr_Type getPostProcessingData() const;
+    BlockMultiVectorPtr_Type getPostProcessingData();
 
     vec_string_Type getPostprocessingNames();
 
