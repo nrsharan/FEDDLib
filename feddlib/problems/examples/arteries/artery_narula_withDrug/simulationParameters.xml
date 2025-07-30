@@ -24,7 +24,18 @@
         <Parameter name="Coupling Type" type="string" value="implicit"/>
         <Parameter name="Accelerated Active Until" type="double" value="220.0"/>
         <Parameter name="Active Acceleration Multiplier" type="double" value="20.0"/>
-
+        
+        <Parameter name="Post Processing Fields" type="Array(string)" value="{MisesStress, SCirc, SAxial, SRadial, W, Growth1, Growth2, Growth3, Stretch1, Stretch2, nC1, nD1, nC2, nD2, DetF, DetFe, DetFg}"/> <!-- Choose from 
+                       {"Volume","Sxx","Sxy","Sxz","Syx","Syy",
+                       "Syz","Szx","Szy","Szz","MisesStress","SCirc",
+                       "SAxial","SRadial","Exx","Exy","Exz","Eyx",
+                       "Eyy","Eyz","Ezx","Ezy","Ezz","W",
+                       "Growth1","Growth2","Growth3","Stretch1","Stretch2","DetF",
+                       "Ag1n1","Ag1n2","Ag1n3","Ag2n1","Ag2n2","Ag2n3",
+                       "Ag3n1","Ag3n2","Ag3n3","a11","a12","a13",
+                       "a21","a22","a23","nC1","nC2","nD1",
+                       "nD2","ScDir1","ScDir2","ScDir3","SaDir1","SaDir2",
+                       "SaDir3","SrDir1","SrDir2","SrDir3","DetFg","DetFe"}-->
        
         <Parameter name="relNonLinTol" type="double" value="1.0e-7"/>
         <Parameter name="absNonLinTol" type="double" value="1.0e-7"/>
