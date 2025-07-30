@@ -233,7 +233,9 @@ namespace FEDD {
 
         vec_dbl_Type getLocalHistoryUpdated() {return historyUpdated_;};
 
-        const std::vector<std::string>& getPostDataNames() const { return postDataNames_; }
+        std::vector<std::string> getPostDataNames()  { return postDataNames_; }
+
+        std::map<std::string, int> getFieldNameToPosition()  { return fieldNameToPosition_; }
 
          /*!
          \brief Set history values of element
