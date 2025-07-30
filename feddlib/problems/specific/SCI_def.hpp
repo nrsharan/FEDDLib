@@ -1262,7 +1262,8 @@ typename SCI<SC,LO,GO,NO>::BlockMultiVectorPtr_Type SCI<SC,LO,GO,NO>::getPostPro
     // Initialize the post-processing names if not already done
 
     if (postProcessingnames_.empty()) {
-        postProcessingnames_ = this->feFactory_->getPostDataNames();
+        auto tmp = this->feFactory_->getPostDataNames();
+        postProcessingnames_ = std::vector<std::string>(tmp.begin(), tmp.end());
     }
 
     // Read the desired post-processing fields from the parameter list
