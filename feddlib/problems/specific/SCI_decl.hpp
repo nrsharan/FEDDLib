@@ -178,7 +178,7 @@ public:
 
     virtual void calculateNonLinResidualVec(std::string type="standard", double time=0.) const; //standard or reverse    
     
-    BlockMultiVectorPtr_Type getPostProcessingData() const;
+    BlockMultiVectorPtr_Type getPostProcessingData();
 
     vec_string_Type getPostprocessingNames();
 
@@ -208,6 +208,7 @@ private:
     std::string materialModel_;
     vec_dbl_Type valuesForExport_;
     vec_string_Type postProcessingnames_;
+    std::vector<std::string> requestedFields_; // The post processing fields that are requested as per the parameters file
     bool geometryExplicit_;
     mutable BlockMatrixPtr_Type systemC_;
     ExporterTxtPtr_Type exporterIterationsChem_;

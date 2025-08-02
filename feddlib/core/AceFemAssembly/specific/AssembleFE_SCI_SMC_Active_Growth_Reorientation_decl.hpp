@@ -73,6 +73,9 @@ namespace FEDD
 
 		void updateDomainData(std::string dataName, double dataValue);
 
+                std::vector<std::string> getPostDataNames() { return postDataNames_; }
+                std::map<std::string, int> getFieldNameToPosition() { return fieldNameToPosition_; }
+
 	protected:
 		AssembleFE_SCI_SMC_Active_Growth_Reorientation(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params, tuple_disk_vec_ptr_Type tuple);
 
@@ -121,6 +124,7 @@ namespace FEDD
 
           std::vector<std::string> domainDataNames_;
           std::vector<std::string> postDataNames_;
+          std::map<std::string, int> fieldNameToPosition_;
 
           vec_dbl_Type residuumRint_;
           vec_dbl_Type residuumRdyn_;

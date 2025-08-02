@@ -242,6 +242,9 @@ namespace FEDD {
         void setLocalHistoryUpdated(vec_dbl_Type historyUpdated);
 
         int getHistoryLength() {return historyLength_;};
+
+        virtual std::vector<std::string> getPostDataNames(){return {};};
+        virtual std::map<std::string, int> getFieldNameToPosition(){return {};};
     protected:
 
         /*!

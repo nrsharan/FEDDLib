@@ -784,7 +784,7 @@ void FE<SC,LO,GO,NO>::addFeBlockMv(BlockMultiVectorPtr_Type &res, vec_dbl_ptr_Ty
     56 -- "SrDir2"
     57 -- "SrDir3"*/
 template <class SC, class LO, class GO, class NO>
-void FE<SC, LO, GO, NO>::postProcessing(int type, MultiVectorPtr_Type &postProcessingVec)
+void FE<SC, LO, GO, NO>::postProcessing(std::string type, MultiVectorPtr_Type &postProcessingVec)
 {
     // Map for temporary vectors for import and export
     MapConstPtr_Type mapRep = this->domainVec_[0]->getMapRepeated();
@@ -803,7 +803,18 @@ void FE<SC, LO, GO, NO>::postProcessing(int type, MultiVectorPtr_Type &postProce
     resRep->putScalar(0.);
     Teuchos::ArrayRCP<SC>  arrayRep = resRep->getDataNonConst(0);
 
-    // Iterating over all elements
+    auto fieldNameToPosition = assemblyFEElements_[0]->getFieldNameToPosition();
+    auto postDataNames = assemblyFEElements_[0]->getPostDataNames();
+    if (fieldNameToPosition.count(type) == 0) {
+        std::string availableTypes;
+        for (size_t i = 0; i < postDataNames.size(); ++i) {
+            if (i > 0) availableTypes += ", ";
+            availableTypes += postDataNames[i];
+        }
+        TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Unknown post-processing field type: '" + type +
+        "', available types: " + availableTypes);
+    }
+    int position = fieldNameToPosition.at(type);
     for (UN T=0; T<assemblyFEElements_.size(); T++) {
 
         vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
@@ -812,7 +823,7 @@ void FE<SC, LO, GO, NO>::postProcessing(int type, MultiVectorPtr_Type &postProce
         
         for(int i=0; i< 10; i++){
             arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0]; // this column of the postprocessing data contains some sort of scaling.
-            arrayRep[nodeList[i]] +=  (*postProcessingData)[i][type]; //*(*postProcessingData)[i][0]; // per node the index 'type' stands for a different post processing value
+            arrayRep[nodeList[i]] +=  (*postProcessingData)[i][position]; //*(*postProcessingData)[i][0]; // per node the index 'type' stands for a different post processing value
         }
     }
     
@@ -836,6 +847,12 @@ void FE<SC, LO, GO, NO>::postProcessing(int type, MultiVectorPtr_Type &postProce
             arrayUni[i]  = arrayUni[i]/ (arrayMultiUni[i]); 
         else
             arrayUni[i]  =0.;    
+}
+
+template <class SC, class LO, class GO, class NO>
+std::vector<std::string> FE<SC, LO, GO, NO>::getPostDataNames()
+{
+    return assemblyFEElements_[0]->getPostDataNames();
 }
 
 template <class SC, class LO, class GO, class NO>
