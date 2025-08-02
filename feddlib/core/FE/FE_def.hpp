@@ -814,6 +814,7 @@ void FE<SC, LO, GO, NO>::postProcessing(std::string type, MultiVectorPtr_Type &p
         TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Unknown post-processing field type: '" + type +
         "', available types: " + availableTypes);
     }
+    int position = fieldNameToPosition.at(type);
     for (UN T=0; T<assemblyFEElements_.size(); T++) {
 
         vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
