@@ -804,10 +804,16 @@ void FE<SC, LO, GO, NO>::postProcessing(std::string type, MultiVectorPtr_Type &p
     Teuchos::ArrayRCP<SC>  arrayRep = resRep->getDataNonConst(0);
 
     auto fieldNameToPosition = assemblyFEElements_[0]->getFieldNameToPosition();
-
-    TEUCHOS_TEST_FOR_EXCEPTION(fieldNameToPosition.count(type) == 0, std::logic_error, "Unknown post-processing field type: '" + type + "'");
-    int position = fieldNameToPosition.at(type);
-    // Iterating over all elements
+    auto postDataNames = assemblyFEElements_[0]->getPostDataNames();
+    if (fieldNameToPosition.count(type) == 0) {
+        std::string availableTypes;
+        for (size_t i = 0; i < postDataNames.size(); ++i) {
+            if (i > 0) availableTypes += ", ";
+            availableTypes += postDataNames[i];
+        }
+        TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Unknown post-processing field type: '" + type +
+        "', available types: " + availableTypes);
+    }
     for (UN T=0; T<assemblyFEElements_.size(); T++) {
 
         vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
