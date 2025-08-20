@@ -8,7 +8,13 @@
 		<Parameter name="Mesh Type" type="string" value="unstructured"/> <!--  structured, unstructured -->
         <Parameter name="H/h" type="int" value="1"/> <!-- only relevant for structured meshes -->
     
-        <Parameter name="Pressure" type="double" value="12.95131763460572"/> <!-- Load applied on interior wall. Equates to 97.14 mmHg and hence results in 85mmHg(0.875 times) -->
+        <!-- <Parameter name="Pressure" type="double" value="12.95131763460572"/> Load applied on interior wall. Equates to 97.14 mmHg and hence results in 85mmHg(0.875 times) -->
+        <!-- Replace the existing pressure parameter with these mmHg-based parameters -->
+        <Parameter name="Max Pressure mmHg" type="double" value="97.14"/> <!-- Maximum pressure in mmHg -->
+        <Parameter name="Target Pressure mmHg" type="double" value="85.0"/> <!-- Target pressure in mmHg -->
+        <Parameter name="Pressure Reduction Start Time" type="double" value="30.0"/>
+        <Parameter name="Pressure Reduction End Time" type="double" value="40.0"/>
+        <Parameter name="Pressure Reduction Amount mmHg" type="double" value="10.0"/> <!-- Pressure reduction in mmHg -->
         <Parameter name="Source Type" type="string"   value="surface"/>
         <Parameter name="Model Geometry" type="string" value="Laplace"/>
         
@@ -24,7 +30,7 @@
         <Parameter name="Coupling Type" type="string" value="implicit"/>
         <Parameter name="Accelerated Active Until" type="double" value="220.0"/>
         <Parameter name="Active Acceleration Multiplier" type="double" value="20.0"/>
-        
+
         <Parameter name="Post Processing Fields" type="Array(string)" value="{MisesStress, SCirc, SAxial, SRadial, W, Growth1, Growth2, Growth3, Stretch1, Stretch2, nC1, nD1, nC2, nD2, DetF, DetFe, DetFg}"/> <!-- Choose from 
                        {"Volume","Sxx","Sxy","Sxz","Syx","Syy",
                        "Syz","Szx","Szy","Szz","MisesStress","SCirc",

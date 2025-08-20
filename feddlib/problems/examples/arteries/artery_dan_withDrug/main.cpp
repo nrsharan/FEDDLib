@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         Teuchos::RCP<Teuchos::ParameterList> allStructureParameters = Teuchos::rcp(new Teuchos::ParameterList(*structurePreconditionerParameters));
         Teuchos::sublist(allStructureParameters, "Parameter")->setParameters(simulationParameters->sublist("Parameter Solid"));
         allStructureParameters->setParameters(*materialParameters); // Adding Material Parameters
-        allStructureParameters->setParameters(*solverParameters); // Adding Material Parameters
+        allStructureParameters->setParameters(*solverParameters); // Adding Solver Parameters
 
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Diffusion;
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Structure;
@@ -166,14 +166,35 @@ int main(int argc, char *argv[])
         Teuchos::RCP<FEDD::BCBuilder<SC, LO, GO, NO>> bcFactoryStructure(new FEDD::BCBuilder<SC, LO, GO, NO>());
 
         // Getting the surface load parameters
-        double pressure = -allParameters->sublist("Parameter").get("Pressure", 0.016);
         double rampTimeStep = allParameters->sublist("Parameter").get("Load Step Size", 0.05);
         double timeRampEnd = allParameters->sublist("Parameter").get("Ramp End Time", 1.0);
+        
+        // Get pressure parameters in mmHg and calculate pressure in kPa
+        double maxPressureMmHg = allParameters->sublist("Parameter").get("Max Pressure mmHg", 97.14);
+        double targetPressureMmHg = allParameters->sublist("Parameter").get("Target Pressure mmHg", 85.0);
+        double pressureReductionStartTime = allParameters->sublist("Parameter").get("Pressure Reduction Start Time", 1000000.0);
+        double pressureReductionEndTime = allParameters->sublist("Parameter").get("Pressure Reduction End Time", 1000000.0);
+        double pressureReductionAmountMmHg = allParameters->sublist("Parameter").get("Pressure Reduction Amount mmHg", 0.0);
+        
+        // Convert max pressure from mmHg to kPa: 1 mmHg = 0.133322 kPa
+        double pressure = -maxPressureMmHg * 0.133322;
+        
+        // Calculate the initial lambda value based on target pressure
+        double initialLambda = targetPressureMmHg / maxPressureMmHg;
+        
+        // Calculate lambda reduction based on mmHg reduction
+        double lambdaReduction = pressureReductionAmountMmHg / maxPressureMmHg;
 
         // Setting the surface load parameters
-        sci.problemStructureNonLin_->addParemeterRhs(pressure);
+        sci.problemStructureNonLin_->addParemeterRhs(pressure); // calculated from mmHg
         sci.problemStructureNonLin_->addParemeterRhs(rampTimeStep);
         sci.problemStructureNonLin_->addParemeterRhs(timeRampEnd);
+        
+        // Add the new parameters to the parameter list
+        sci.problemStructureNonLin_->addParemeterRhs(initialLambda);
+        sci.problemStructureNonLin_->addParemeterRhs(pressureReductionStartTime);
+        sci.problemStructureNonLin_->addParemeterRhs(pressureReductionEndTime);
+        sci.problemStructureNonLin_->addParemeterRhs(lambdaReduction);
 
         // Set load function (the second parameter is the block index)
         sci.problemStructureNonLin_->addRhsFunction(loadFunction, 0);
@@ -259,8 +280,19 @@ void reactionTerm(double *x, double *res, double *parameters)
 
 /* The values of parameters are set in feddlib/core/FE/FE_def.hpp assemblySurfaceIntegralExternal()
  * x* for some reason gives the middle point of the surface element
- * parameters[0] is always the time, but all others depend on the order in which they *are added using the addParametersRhs() (which is in Problem_decl.hpp) in the main function
+ * parameters[0] is always the time, but all others depend on the order in which they are added using the addParametersRhs() (which is in Problem_decl.hpp) in the main function
  * Note that the time starts from 0, i.e. the first time step is 0
+ * 
+ * Parameter order:
+ * parameters[0]: current time
+ * parameters[1]: pressure (kPa, calculated from Max Pressure mmHg)
+ * parameters[2]: rampTimeStep
+ * parameters[3]: timeRampEnd
+ * parameters[4]: initialLambda (calculated from target pressure)
+ * parameters[5]: pressureReductionStartTime
+ * parameters[6]: pressureReductionEndTime
+ * parameters[7]: lambdaReduction
+ * parameters[8]: surface flag
  */
 void loadFunction(double *x, double *res, double *parameters)
 {
@@ -270,14 +302,40 @@ void loadFunction(double *x, double *res, double *parameters)
     double pressure = parameters[1];
     double rampTimeStep = parameters[2];
     double timeRampEnd = parameters[3];
+    double initialLambda = parameters[4];
+    double pressureReductionStartTime = parameters[5];
+    double pressureReductionEndTime = parameters[6];
+    double lambdaReduction = parameters[7];
+    double surfaceFlag = parameters[8];
+    
     double lambda = 0.0;
+    double currentLambdaReduction = 0.0;
 
+    // Initial pressure ramp-up phase using the calculated initial lambda
     if (currentTime < timeRampEnd)
-        lambda = 0.875 * (currentTime + rampTimeStep);
+        lambda = initialLambda * (currentTime + rampTimeStep);
     else
-        lambda = 0.875;
+        lambda = initialLambda;
 
-    if (parameters[4] == 5) // If the surface flag is 5
+    // Calculate lambda reduction if we're in the reduction time window
+    if (currentTime >= pressureReductionStartTime && currentTime <= pressureReductionEndTime) {
+        // Linear reduction over the specified time period
+        double reductionProgress = (currentTime - pressureReductionStartTime) / 
+                                 (pressureReductionEndTime - pressureReductionStartTime);
+        currentLambdaReduction = lambdaReduction * reductionProgress;
+    } else if (currentTime > pressureReductionEndTime) {
+        // Full reduction after the end time
+        currentLambdaReduction = lambdaReduction;
+    }
+    // No reduction before the start time (currentLambdaReduction remains 0.0)
+
+    // Apply the lambda reduction
+    lambda = lambda - currentLambdaReduction;
+    
+    // Ensure lambda doesn't go negative
+    if (lambda < 0.0) lambda = 0.0;
+
+    if (surfaceFlag == 5) // If the surface flag is 5
         res[0] = pressure * lambda;
 }
 

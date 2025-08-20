@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
         Teuchos::RCP<Teuchos::ParameterList> allStructureParameters = Teuchos::rcp(new Teuchos::ParameterList(*structurePreconditionerParameters));
         Teuchos::sublist(allStructureParameters, "Parameter")->setParameters(simulationParameters->sublist("Parameter Solid"));
         allStructureParameters->setParameters(*materialParameters); // Adding Material Parameters
-        allStructureParameters->setParameters(*solverParameters); // Adding Material Parameters
+        allStructureParameters->setParameters(*solverParameters); // Adding Solver Parameters
 
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Diffusion;
         Teuchos::RCP<FEDD::Domain<SC, LO, GO, NO>> domainP1Structure;
