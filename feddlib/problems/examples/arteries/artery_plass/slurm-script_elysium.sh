@@ -2,7 +2,7 @@
 #
 #SBATCH --job-name=plass_artery
 #SBATCH --comment="Plass_artery"
-#SBATCH --time=36:00:00         ### time the job will appr. run
+#SBATCH --time=20:00:00         ### time the job will appr. run
 #SBATCH --nodes=2               ### Node count required for the job
 #SBATCH --output=/home/nurans63/slurm/outputs/%x-%j.out              ### output file for console output
 #SBATCH --error=/home/nurans63/slurm/outputs/%x-%j.err               ### output file for console error
