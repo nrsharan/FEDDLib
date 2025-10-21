@@ -97,16 +97,32 @@ if __name__ == "__main__":
 
     # Define the modification sets
     modification_sets = [
-        # {
-        #     'param_list_numbers': ['1'], # Adventitia
-        #     'modifications': {
-        #         'MuA': '0.0',
-        #         'Alpha2': '198.654',
-        #         'Alpha1': '15.084',
-        #         'Alpha4': '6.807',
-        #         'KMin': '0.015'
-        #     }
-        # },
+        {
+            'param_list_numbers': ['1'], # Adventitia
+            'modifications': {
+                'MuA': '0.0',
+                # 'Alpha2': '198.654',
+                'Alpha1': '13.155228393575765',
+                'Alpha4': '18.734822992047267',
+                'Alpha5': '4.0',
+                # 'KMin': '0.015'
+            }
+        },
+
+        {
+            'param_list_numbers': ['2'], # Media
+            'modifications': {
+                'Kappa': '74.131'
+            }
+        },
+
+        {
+            'param_list_numbers': ['3'], # DegenMedia
+            'modifications': {
+                'Kappa': '49.6678'
+            }
+        },
+        
         # {
         #     'param_list_numbers': ['4'], # Lipid
         #     'modifications': {
@@ -126,10 +142,11 @@ if __name__ == "__main__":
         {
             'param_list_numbers': ['7'], # FibCap
             'modifications': {
-                'MuA': '6.85942',
-                'Alpha2': '165.528',
-                'Alpha1': '2.09547',
-                'Alpha4': '6.38155'
+                'MuA': '0.0',
+                # 'Alpha2': '165.528',
+                'Alpha1': '4.644701724529037',
+                'Alpha4': '247631.7521090954',
+                'Alpha5': '4.0'
             }
         }
     ]

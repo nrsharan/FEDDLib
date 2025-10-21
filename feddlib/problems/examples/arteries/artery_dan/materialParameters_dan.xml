@@ -38,9 +38,9 @@
       <Parameter name="Beta2" type="double" value="26.68" /> <!-- Kg/(s^2 mm) or kPa-->
       <Parameter name="Alpha2" type="double" value="198.654" /> <!-- Kg/(s^2 mm) or kPa-->
       <Parameter name="Alpha3" type="double" value="2.75662" />
-      <Parameter name="Alpha1" type="double" value="15.084" /> <!-- Kg/(s^2 mm) or kPa-->
-      <Parameter name="Alpha4" type="double" value="6.807" /> <!-- Kg/(s^2 mm) or kPa-->
-      <Parameter name="Alpha5" type="double" value="3.08798" />
+      <Parameter name="Alpha1" type="double" value="13.155228393575765" /> <!-- Kg/(s^2 mm) or kPa-->
+      <Parameter name="Alpha4" type="double" value="18.734822992047267" /> <!-- Kg/(s^2 mm) or kPa-->
+      <Parameter name="Alpha5" type="double" value="4.0" />
       <Parameter name="Gamma6" type="double" value="1.5" /> <!-- s^-1 -->
       <Parameter name="LambdaP50" type="double" value="1.0" />
       <Parameter name="KDotMin" type="double" value="-0.0010694" /> <!-- s^-2 -->
@@ -129,7 +129,7 @@
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
-      <Parameter name="Kappa" type="double" value="75.0" />
+      <Parameter name="Kappa" type="double" value="74.131" />
       <Parameter name="Beta1" type="double" value="0.00100" />
       <Parameter name="MuA" type="double" value="11.857" />
       <Parameter name="Beta2" type="double" value="26.68" />
@@ -241,7 +241,7 @@
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
-      <Parameter name="Kappa" type="double" value="50.0" />
+      <Parameter name="Kappa" type="double" value="49.6678" />
       <Parameter name="Beta1" type="double" value="0.001006" />
       <Parameter name="MuA" type="double" value="9.4856" />
       <Parameter name="Beta2" type="double" value="26.68" />
@@ -577,13 +577,13 @@
       <Parameter name="K7" type="double" value="0.66e-4" />
       <Parameter name="Kappa" type="double" value="148.262" />
       <Parameter name="Beta1" type="double" value="0.001006" />
-      <Parameter name="MuA" type="double" value="6.85942" />
+      <Parameter name="MuA" type="double" value="0.0" />
       <Parameter name="Beta2" type="double" value="26.68" />
       <Parameter name="Alpha2" type="double" value="165.528" />
       <Parameter name="Alpha3" type="double" value="2.75662" />
-      <Parameter name="Alpha1" type="double" value="2.09547" />
-      <Parameter name="Alpha4" type="double" value="6.38155" />
-      <Parameter name="Alpha5" type="double" value="3.08798" />
+      <Parameter name="Alpha1" type="double" value="4.644701724529037" />
+      <Parameter name="Alpha4" type="double" value="247631.7521090954" />
+      <Parameter name="Alpha5" type="double" value="4.0" />
       <Parameter name="Gamma6" type="double" value="1.5" />
       <Parameter name="LambdaP50" type="double" value="1.0" />
       <Parameter name="KDotMin" type="double" value="-0.0010694" />
