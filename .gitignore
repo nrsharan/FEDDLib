@@ -7,3 +7,4 @@
 Doygen/html/
 Doygen/latex/
 *.bak
+.DS_Store
