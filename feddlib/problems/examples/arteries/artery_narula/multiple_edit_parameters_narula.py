@@ -97,39 +97,62 @@ if __name__ == "__main__":
 
     # Define the modification sets
     modification_sets = [
-        # {
-        #     'param_list_numbers': ['1'], # Adventitia
-        #     'modifications': {
-        #         'MuA': '0.0',
-        #         'Alpha2': '198.654',
-        #         'Alpha1': '15.084',
-        #         'Alpha4': '6.807',
-        #         'KMin': '0.015'
-        #     }
-        # },
-        # {
-        #     'param_list_numbers': ['4'], # Lipid
-        #     'modifications': {
-        #         # 'MuA': '0.0',
-        #         'Alpha2': '500.0'
-        #         # ,
-        #         # 'Alpha1': '1.3'
-        #     }
-        # },
-        # {
-        #     'param_list_numbers': ['5','6'], # Calc1, Calc2
-        #     'modifications': {
-        #         # 'MuA': '0.0',
-        #         'Alpha2': '500.0'
-        #     }
-        # },
+        {
+            'param_list_numbers': ['1'], # Adventitia
+            'modifications': {
+                'MuA': '0.0',
+                # 'Alpha2': '198.654',
+                'Alpha1': '11.125089414955605',
+                'Alpha4': '370.4226454637631',
+                'Alpha5': '4.0',
+                'D0': '7.e-3'
+                # 'KMin': '0.015'
+            }
+        },
+
+        {
+            'param_list_numbers': ['2'], # Media
+            'modifications': {
+                'Kappa': '103.783',
+                'D0': '7.e-3'
+            }
+        },
+
+        {
+            'param_list_numbers': ['3'], # DegenMedia
+            'modifications': {
+                'Kappa': '69.5349',
+                'D0': '3.5e-3',
+                'MuA': '7.25139',
+                'Alpha1': '13.8301',
+                'Alpha4': '3.19078',
+            }
+        },
+        
+        {
+            'param_list_numbers': ['4'], # Lipid
+            'modifications': {
+                # 'MuA': '0.0',
+                'D0': '1.45e-6'
+                # ,
+                # 'Alpha1': '1.3'
+            }
+        },
+        {
+            'param_list_numbers': ['5','6'], # Calc1, Calc2
+            'modifications': {
+                'D0': '1.45e-6'
+            }
+        },
         {
             'param_list_numbers': ['7'], # FibCap
             'modifications': {
-                'MuA': '6.85942',
-                'Alpha2': '165.528',
-                'Alpha1': '2.09547',
-                'Alpha4': '6.38155'
+                'MuA': '0.0',
+                # 'Alpha2': '165.528',
+                'Alpha1': '4.644702916770202',
+                'Alpha4': '247631.64487624477',
+                'Alpha5': '4.0',
+                'D0': '6.23e-4'
             }
         }
     ]

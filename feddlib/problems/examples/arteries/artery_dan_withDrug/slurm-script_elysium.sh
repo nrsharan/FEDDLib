@@ -1,12 +1,12 @@
 #!/bin/bash -l
 #
-#SBATCH --job-name=dan_artery_wd
-#SBATCH --comment="Dan_artery_withDrug"
-#SBATCH --time=24:00:00         ### time the job will appr. run
-#SBATCH --nodes=2               ### Node count required for the job
+#SBATCH --job-name=danWD
+#SBATCH --comment="DanWD"
+#SBATCH --time=72:00:00         ### time the job will appr. run
+#SBATCH --nodes=1               ### Node count required for the job
 #SBATCH --output=/home/nurans63/slurm/outputs/%x-%j.out              ### output file for console output
 #SBATCH --error=/home/nurans63/slurm/outputs/%x-%j.err               ### output file for console error
-#SBATCH --ntasks=96              ### Number of tasks per job    (or next line, should one of them)
+#SBATCH --ntasks=48              ### Number of tasks per job    (or next line, should one of them)
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=sharan.nuraniramesh@rub.de
 #SBATCH --account=balzadlb_0000

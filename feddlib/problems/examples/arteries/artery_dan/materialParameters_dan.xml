@@ -38,8 +38,8 @@
       <Parameter name="Beta2" type="double" value="26.68" /> <!-- Kg/(s^2 mm) or kPa-->
       <Parameter name="Alpha2" type="double" value="198.654" /> <!-- Kg/(s^2 mm) or kPa-->
       <Parameter name="Alpha3" type="double" value="2.75662" />
-      <Parameter name="Alpha1" type="double" value="13.155228393575765" /> <!-- Kg/(s^2 mm) or kPa-->
-      <Parameter name="Alpha4" type="double" value="18.734822992047267" /> <!-- Kg/(s^2 mm) or kPa-->
+      <Parameter name="Alpha1" type="double" value="11.125089414955605" /> <!-- Kg/(s^2 mm) or kPa-->
+      <Parameter name="Alpha4" type="double" value="370.4226454637631" /> <!-- Kg/(s^2 mm) or kPa-->
       <Parameter name="Alpha5" type="double" value="4.0" />
       <Parameter name="Gamma6" type="double" value="1.5" /> <!-- s^-1 -->
       <Parameter name="LambdaP50" type="double" value="1.0" />
@@ -53,7 +53,7 @@
       <Parameter name="Zeta2" type="double" value="100." /> <!-- s -->
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
       <Parameter name="C50" type="double" value="0.6673453235597163" />
-      <Parameter name="D0" type="double" value="6.e-3" />
+      <Parameter name="D0" type="double" value="7.e-3" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -129,7 +129,7 @@
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
-      <Parameter name="Kappa" type="double" value="74.131" />
+      <Parameter name="Kappa" type="double" value="103.783" />
       <Parameter name="Beta1" type="double" value="0.00100" />
       <Parameter name="MuA" type="double" value="11.857" />
       <Parameter name="Beta2" type="double" value="26.68" />
@@ -150,7 +150,7 @@
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
       <Parameter name="C50" type="double" value="0.6673453235597163" />
-      <Parameter name="D0" type="double" value="6.e-3" />
+      <Parameter name="D0" type="double" value="7.e-3" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="20.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -241,14 +241,14 @@
       <Parameter name="K3" type="double" value="0.134" />
       <Parameter name="K4" type="double" value="0.00166" />
       <Parameter name="K7" type="double" value="0.66e-4" />
-      <Parameter name="Kappa" type="double" value="49.6678" />
+      <Parameter name="Kappa" type="double" value="69.5349" />
       <Parameter name="Beta1" type="double" value="0.001006" />
-      <Parameter name="MuA" type="double" value="9.4856" />
+      <Parameter name="MuA" type="double" value="7.25139" />
       <Parameter name="Beta2" type="double" value="26.68" />
       <Parameter name="Alpha2" type="double" value="151.73775" />
       <Parameter name="Alpha3" type="double" value="2.75662" />
-      <Parameter name="Alpha1" type="double" value="9.220056" />
-      <Parameter name="Alpha4" type="double" value="1.021048" />
+      <Parameter name="Alpha1" type="double" value="13.8301" />
+      <Parameter name="Alpha4" type="double" value="3.19078" />
       <Parameter name="Alpha5" type="double" value="3.08798" />
       <Parameter name="Gamma6" type="double" value="1.5" />
       <Parameter name="LambdaP50" type="double" value="1.0" />
@@ -262,7 +262,7 @@
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
       <Parameter name="C50" type="double" value="0.6673453235597163" />
-      <Parameter name="D0" type="double" value="3.e-3" />
+      <Parameter name="D0" type="double" value="3.5e-3" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="20.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -374,7 +374,7 @@
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
       <Parameter name="C50" type="double" value="0.6673453235597163" />
-      <Parameter name="D0" type="double" value="6.e-4" />
+      <Parameter name="D0" type="double" value="1.45e-6" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -448,7 +448,7 @@
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
       <Parameter name="C50" type="double" value="0.6673453235597163" />
-      <Parameter name="D0" type="double" value="6.e-6" />
+      <Parameter name="D0" type="double" value="1.45e-6" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -522,7 +522,7 @@
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
       <Parameter name="C50" type="double" value="0.6673453235597163" />
-      <Parameter name="D0" type="double" value="6.e-6" />
+      <Parameter name="D0" type="double" value="1.45e-6" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
@@ -581,8 +581,8 @@
       <Parameter name="Beta2" type="double" value="26.68" />
       <Parameter name="Alpha2" type="double" value="165.528" />
       <Parameter name="Alpha3" type="double" value="2.75662" />
-      <Parameter name="Alpha1" type="double" value="4.644701724529037" />
-      <Parameter name="Alpha4" type="double" value="247631.7521090954" />
+      <Parameter name="Alpha1" type="double" value="4.644702916770202" />
+      <Parameter name="Alpha4" type="double" value="247631.64487624477" />
       <Parameter name="Alpha5" type="double" value="4.0" />
       <Parameter name="Gamma6" type="double" value="1.5" />
       <Parameter name="LambdaP50" type="double" value="1.0" />
@@ -596,7 +596,7 @@
       <Parameter name="Zeta2" type="double" value="100." />
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
       <Parameter name="C50" type="double" value="0.6673453235597163" />
-      <Parameter name="D0" type="double" value="6.e-6" />
+      <Parameter name="D0" type="double" value="6.23e-4" />
       <Parameter name="M" type="double" value="0." />
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
