@@ -153,15 +153,15 @@
             </ParameterList>
             <ParameterList name="10">
                 <Parameter name="Start Time" type="double" value="560."/>
-                <Parameter name="dt" type="double" value="0.15"/>
+                <Parameter name="dt" type="double" value="0.1"/>
             </ParameterList>
             <ParameterList name="11">
                 <Parameter name="Start Time" type="double" value="580."/>
-                <Parameter name="dt" type="double" value="0.2"/>
+                <Parameter name="dt" type="double" value="0.1"/>
             </ParameterList>
             <ParameterList name="12">
                 <Parameter name="Start Time" type="double" value="840."/>
-                <Parameter name="dt" type="double" value="0.5"/>
+                <Parameter name="dt" type="double" value="0.2"/>
             </ParameterList>
             <ParameterList name="13">
                 <Parameter name="Start Time" type="double" value="860."/>
