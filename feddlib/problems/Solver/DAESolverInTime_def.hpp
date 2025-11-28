@@ -840,10 +840,11 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
  	for(int i=1; i <= numSegments; i++){
 
-        double startTime = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("Start Time",-1000);
-        TEUCHOS_TEST_FOR_EXCEPTION(startTime == -1000, std::logic_error, "Start Time for time segment " + std::to_string(i) + " received default value and was not set properly!");
-        double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("dt",-3586);
-        TEUCHOS_TEST_FOR_EXCEPTION(dtTmp == -3586, std::logic_error, "dt for time segment " + std::to_string(i) + " received default value and was not set properly!");
+        inline bool approxEqual(double a, double b, double eps = 1e-3) {return std::abs(a - b) < eps;}
+        double startTime = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("Start Time",-1000.0);
+        TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(startTime, -1000.0), std::runtime_error, "Start Time for time segment " + std::to_string(i) + " received default value and was not set properly!");
+        double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("dt",-3586.0);
+        TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(dtTmp, -3586.0), std::runtime_error, "dt for time segment " + std::to_string(i) + " received default value and was not set properly!");
         
         vec_dbl_Type segment = {startTime,dtTmp};
         timeParametersVec.push_back(segment);
