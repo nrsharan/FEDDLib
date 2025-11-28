@@ -840,8 +840,10 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
  	for(int i=1; i <= numSegments; i++){
 
-        double startTime = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("Start Time",0.);
-        double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("dt",0.1);
+        double startTime = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("Start Time",-1000);
+        TEUCHOS_TEST_FOR_EXCEPTION(startTime == -1000, std::logic_error, "Start Time for time segment " + std::to_string(i) + " received default value and was not set properly!");
+        double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("dt",-3586);
+        TEUCHOS_TEST_FOR_EXCEPTION(dtTmp == -3586, std::logic_error, "dt for time segment " + std::to_string(i) + " received default value and was not set properly!");
         
         vec_dbl_Type segment = {startTime,dtTmp};
         timeParametersVec.push_back(segment);
