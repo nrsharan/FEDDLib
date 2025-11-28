@@ -178,7 +178,7 @@ public:
     std::vector<ExporterPtr_Type> exporter_vector_;
     MultiVectorConstPtrArray_Type export_solution_vector_;
     bool boolExporterSetup_;
-    inline bool approxEqual(double a, double b, double eps = 1e-3) {return std::abs(a - b) < eps;}
+    
     std::vector<ExporterPtr_Type> exporter_vector_postprocess_;
     //MultiVectorConstPtrArray_Type export_stress_vector_;
     bool boolExporterSetupPostprocess_;
