@@ -150,9 +150,9 @@ namespace FEDD
           bool activeInitialized_ = false;
           bool growthInitialized_ = false;
 
-          // #ifdef FEDD_HAVE_ACEGENINTERFACE
-          //		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element_;
-          // #endif
+#ifdef FEDD_HAVE_ACEGENINTERFACE
+          AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 aceElement_;
+#endif
 
           /*
           fA -Fibre angle_1

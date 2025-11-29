@@ -34,8 +34,9 @@ namespace FEDD
 
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
-		// this->element_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->iCode_);
-		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 tempElem = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->iCode_);
+		// Initialize the persistent AceGen element once
+		aceElement_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->iCode_);
+		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10& tempElem = aceElement_;
 		this->historyLength_ = tempElem.getHistoryLength();
 		this->numberOfIntegrationPoints_ = tempElem.getNumberOfGaussPoints();
 		this->postDataLength_ = tempElem.getNumberOfPostData();
@@ -425,11 +426,12 @@ namespace FEDD
 				domainDataModified[i] = this->domainData_[i];
 		}
 
-		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		// Update the persistent element with new data using assignment operator
+		aceElement_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
 		// std::cout << "elem.compute starts" << std::endl;
 
-		int errorCode = elem.compute(computeTangent);
+		int errorCode = aceElement_.compute(computeTangent);
 
 		// std::cout << "elem.compute ends" << std::endl;
 
@@ -443,20 +445,20 @@ namespace FEDD
 		// vec2D_dbl_Type stiffnessMatrixKcc_;
 		// vec2D_dbl_Type massMatrixMc_;
 
-		double *residuumRint = elem.getResiduumVectorRint();
+		double *residuumRint = aceElement_.getResiduumVectorRint();
 		for (int i = 0; i < 30; i++)
 			this->residuumRint_[i] = residuumRint[i];
 
-		double *residuumRdyn = elem.getResiduumVectorRdyn();
+		double *residuumRdyn = aceElement_.getResiduumVectorRdyn();
 		for (int i = 0; i < 30; i++)
 			this->residuumRdyn_[i] = residuumRdyn[i];
 
-		double *residuumRc = elem.getResiduumVectorRc();
+		double *residuumRc = aceElement_.getResiduumVectorRc();
 		for (int i = 0; i < 10; i++)
 			this->residuumRc_[i] = residuumRc[i];
 
 		if(computeTangent){
-		double **stiffnessMatrixKuu = elem.getStiffnessMatrixKuu();
+		double **stiffnessMatrixKuu = aceElement_.getStiffnessMatrixKuu();
 		for (int i = 0; i < 30; i++)
 			for (int j = 0; j < 30; j++)
 			{
@@ -465,27 +467,27 @@ namespace FEDD
 				// cout << " StiffnessMatrixEntry " << stiffnessMatrixKuu[i][j] << endl;
 			}
 
-		double **stiffnessMatrixKuc = elem.getStiffnessMatrixKuc();
+		double **stiffnessMatrixKuc = aceElement_.getStiffnessMatrixKuc();
 		for (int i = 0; i < 30; i++)
 			for (int j = 0; j < 10; j++)
 				this->stiffnessMatrixKuc_[i][j] = stiffnessMatrixKuc[i][j];
 
-		double **stiffnessMatrixKcu = elem.getStiffnessMatrixKcu();
+		double **stiffnessMatrixKcu = aceElement_.getStiffnessMatrixKcu();
 		for (int i = 0; i < 10; i++)
 			for (int j = 0; j < 30; j++)
 				this->stiffnessMatrixKcu_[i][j] = stiffnessMatrixKcu[i][j];
 
-		double **massMatrixMc = elem.getMassMatrixMc();
+		double **massMatrixMc = aceElement_.getMassMatrixMc();
 		for (int i = 0; i < 10; i++)
 			for (int j = 0; j < 10; j++)
 				this->massMatrixMc_[i][j] = massMatrixMc[i][j];
 
-		double **stiffnessMatrixKcc = elem.getStiffnessMatrixKcc();
+		double **stiffnessMatrixKcc = aceElement_.getStiffnessMatrixKcc();
 		for (int i = 0; i < 10; i++)
 			for (int j = 0; j < 10; j++)
 				this->stiffnessMatrixKcc_[i][j] = stiffnessMatrixKcc[i][j];
 
-		double *historyUpdated = elem.getHistoryUpdated();
+		double *historyUpdated = aceElement_.getHistoryUpdated();
 		for (int i = 0; i < this->historyLength_; i++)
 			this->historyUpdated_[i] = historyUpdated[i];
 		}
@@ -527,7 +529,8 @@ namespace FEDD
 		// 	std::cout << std::endl;
 		// } -- This seems to be okay
 
-		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		// Update the persistent element with new data using assignment operator
+		aceElement_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
 		// std::cout << "History values going into PP: " << std::endl;
 		// std::cout << "Agn1: { " << this->history_[19] << ", " << this->history_[20] << ", " << this->history_[21] << " }" << std::endl;
@@ -536,7 +539,7 @@ namespace FEDD
 
 		// elem.compute(); --THis shit right here could be the problem
 
-		double **postProcessingResults = elem.postProcess(&displacements[0], &concentrations[0], this->history_.data(), &rates[0], &accelerations[0]); //Inside this the values are 0
+		double **postProcessingResults = aceElement_.postProcess(&displacements[0], &concentrations[0], this->history_.data(), &rates[0], &accelerations[0]); //Inside this the values are 0
 
 		for (int i = 0; i < 10; i++)
 		{
@@ -605,9 +608,10 @@ namespace FEDD
 
 		double time = this->getTimeStep() + deltaT;
 
-		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		// Update the persistent element with new data using assignment operator
+		aceElement_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
-		std::vector<double> historyNew = elem.initializeGrowthOrientationVectors();
+		std::vector<double> historyNew = aceElement_.initializeGrowthOrientationVectors();
 		// std::cout << "Growth Orientation Vectors being set! \n HistoryOld: \n";
 		// for (int i = 0; i < this->historyLength_; i++)
 		// 	std::cout << this->history_[i] << " ";
@@ -629,9 +633,10 @@ namespace FEDD
 		cout << " Initialize active Response " << endl;
 		double time = this->getTimeStep() + deltaT;
 #ifdef FEDD_HAVE_ACEGENINTERFACE
-		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		// Update the persistent element with new data using assignment operator
+		aceElement_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
-		std::vector<double> stretches = elem.getGaussPointStretches();
+		std::vector<double> stretches = aceElement_.getGaussPointStretches();
 		cout << " Streches: ";
 		for (int i = 0; i < stretches.size(); i++)
 			cout << stretches[i] << " ";
