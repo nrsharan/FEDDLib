@@ -446,7 +446,6 @@ namespace FEDD
 
 		// Create element with full constructor (optimized: pre-computed indices eliminate string searches)
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element(
-			this->iCode_,
 			this->positions_.data(),
 			this->displacements_.data(),
 			this->concentrations_.data(),
@@ -457,6 +456,7 @@ namespace FEDD
 			this->subiterationTolerance_,
 			deltaT,
 			time,
+			this->iCode_,
 			this->getGlobalElementID());
 
 		// std::cout << "elem.compute starts" << std::endl;
@@ -561,7 +561,6 @@ double *residuumRint = element.getResiduumVectorRint();
 
 		// Create element for postprocessing
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element(
-			this->iCode_,
 			this->positions_.data(),
 			&displacements[0],
 			&concentrations[0],
@@ -572,6 +571,7 @@ double *residuumRint = element.getResiduumVectorRint();
 			this->subiterationTolerance_,
 			deltaT,
 			time,
+			this->iCode_,
 			this->getGlobalElementID());
 
 		// std::cout << "History values going into PP: " << std::endl;
@@ -652,7 +652,6 @@ double *residuumRint = element.getResiduumVectorRint();
 
 	// Create element for initialization
 	AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element(
-		this->iCode_,
 		this->positions_.data(),
 		&displacements[0],
 		&concentrations[0],
@@ -663,6 +662,7 @@ double *residuumRint = element.getResiduumVectorRint();
 		this->subiterationTolerance_,
 		deltaT,
 		time,
+		this->iCode_,
 		this->getGlobalElementID());
 
 	std::vector<double> historyNew = element.initializeGrowthOrientationVectors();
@@ -689,7 +689,6 @@ double *residuumRint = element.getResiduumVectorRint();
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 	// Create element for initialization
 	AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element(
-		this->iCode_,
 		this->positions_.data(),
 		this->displacements_.data(),
 		this->concentrations_.data(),
@@ -700,6 +699,7 @@ double *residuumRint = element.getResiduumVectorRint();
 		this->subiterationTolerance_,
 		deltaT,
 		time,
+		this->iCode_,
 		this->getGlobalElementID());
 
 	std::vector<double> stretches = element.getGaussPointStretches();
