@@ -1,0 +1,4 @@
+INCLUDE(TribitsCopyFilesToBinaryDir)
+INCLUDE(TribitsAddExecutableAndTest)
+INCLUDE(AddSubdirectories)
+ADD_SUBDIRECTORIES(diffusion_variation kappa_variation pressure_drop_variation reaction_variation)

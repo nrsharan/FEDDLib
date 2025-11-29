@@ -1,0 +1,5 @@
+INCLUDE(TribitsCopyFilesToBinaryDir)
+INCLUDE(TribitsAddExecutableAndTest)
+INCLUDE(AddSubdirectories)
+ADD_SUBDIRECTORIES(artery_dan artery_dan_withDrug artery_kim artery_kim_withDrug artery_narula artery_narula_withDrug artery_phini artery_phini_withDrug artery_plass artery_plass_withDrug)
+

@@ -113,7 +113,7 @@ template <class SC, class LO, class GO, class NO>
 void AssembleFE<SC,LO,GO,NO>::updateSolution( vec_dbl_Type solution){
 
 	//TEUCHOS_TEST_FOR_EXCEPTION(solution_.size() != solution.size(), std::runtime_error, "Dofs of solutions is not the same");
-	this->solution_.reset( new vec_dbl_Type (solution.size(),0.) );
+	// this->solution_.reset( new vec_dbl_Type (solution.size(),0.) );
 
   //cout << " Solution " ;
 	for(int i=0; i< solution.size();i++){
