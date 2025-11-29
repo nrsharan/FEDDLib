@@ -426,8 +426,18 @@ namespace FEDD
 				domainDataModified[i] = this->domainData_[i];
 		}
 
-		// Update the persistent element with new data using assignment operator
-		aceElement_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		// Update the persistent element using setters (no object reconstruction!)
+		aceElement_.setPositions(this->positions_.data());
+		aceElement_.setDisplacements(this->displacements_.data());
+		aceElement_.setConcentrations(this->concentrations_.data());
+		aceElement_.setAccelerations(this->accelerations_.data());
+		aceElement_.setRates(this->rates_.data());
+		aceElement_.setDomainData(domainDataModified.data());
+		aceElement_.setHistoryVector(this->history_.data());
+		aceElement_.setSubIterationTolerance(this->subiterationTolerance_);
+		aceElement_.setTimeIncrement(deltaT);
+		aceElement_.setTime(time);
+		aceElement_.setElementID(this->getGlobalElementID());
 
 		// std::cout << "elem.compute starts" << std::endl;
 
@@ -529,8 +539,18 @@ namespace FEDD
 		// 	std::cout << std::endl;
 		// } -- This seems to be okay
 
-		// Update the persistent element with new data using assignment operator
-		aceElement_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		// Update the persistent element using setters (no object reconstruction!)
+		aceElement_.setPositions(this->positions_.data());
+		aceElement_.setDisplacements(&displacements[0]);
+		aceElement_.setConcentrations(&concentrations[0]);
+		aceElement_.setAccelerations(&accelerations[0]);
+		aceElement_.setRates(&rates[0]);
+		aceElement_.setDomainData(this->domainData_.data());
+		aceElement_.setHistoryVector(this->history_.data());
+		aceElement_.setSubIterationTolerance(this->subiterationTolerance_);
+		aceElement_.setTimeIncrement(deltaT);
+		aceElement_.setTime(time);
+		aceElement_.setElementID(this->getGlobalElementID());
 
 		// std::cout << "History values going into PP: " << std::endl;
 		// std::cout << "Agn1: { " << this->history_[19] << ", " << this->history_[20] << ", " << this->history_[21] << " }" << std::endl;
@@ -608,8 +628,18 @@ namespace FEDD
 
 		double time = this->getTimeStep() + deltaT;
 
-		// Update the persistent element with new data using assignment operator
-		aceElement_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		// Update the persistent element using setters (no object reconstruction!)
+		aceElement_.setPositions(this->positions_.data());
+		aceElement_.setDisplacements(&displacements[0]);
+		aceElement_.setConcentrations(&concentrations[0]);
+		aceElement_.setAccelerations(&accelerations[0]);
+		aceElement_.setRates(&rates[0]);
+		aceElement_.setDomainData(this->domainData_.data());
+		aceElement_.setHistoryVector(this->history_.data());
+		aceElement_.setSubIterationTolerance(this->subiterationTolerance_);
+		aceElement_.setTimeIncrement(deltaT);
+		aceElement_.setTime(time);
+		aceElement_.setElementID(this->getGlobalElementID());
 
 		std::vector<double> historyNew = aceElement_.initializeGrowthOrientationVectors();
 		// std::cout << "Growth Orientation Vectors being set! \n HistoryOld: \n";
@@ -633,8 +663,18 @@ namespace FEDD
 		cout << " Initialize active Response " << endl;
 		double time = this->getTimeStep() + deltaT;
 #ifdef FEDD_HAVE_ACEGENINTERFACE
-		// Update the persistent element with new data using assignment operator
-		aceElement_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		// Update the persistent element using setters (no object reconstruction!)
+		aceElement_.setPositions(this->positions_.data());
+		aceElement_.setDisplacements(this->displacements_.data());
+		aceElement_.setConcentrations(this->concentrations_.data());
+		aceElement_.setAccelerations(this->accelerations_.data());
+		aceElement_.setRates(this->rates_.data());
+		aceElement_.setDomainData(this->domainData_.data());
+		aceElement_.setHistoryVector(this->history_.data());
+		aceElement_.setSubIterationTolerance(this->subiterationTolerance_);
+		aceElement_.setTimeIncrement(deltaT);
+		aceElement_.setTime(time);
+		aceElement_.setElementID(this->getGlobalElementID());
 
 		std::vector<double> stretches = aceElement_.getGaussPointStretches();
 		cout << " Streches: ";
