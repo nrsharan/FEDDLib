@@ -34,9 +34,7 @@ namespace FEDD
 
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
-		// Initialize the persistent AceGen element once
-		aceElement_ = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->iCode_);
-		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10& tempElem = aceElement_;
+		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 tempElem(this->iCode_);
 		this->historyLength_ = tempElem.getHistoryLength();
 		this->numberOfIntegrationPoints_ = tempElem.getNumberOfGaussPoints();
 		this->postDataLength_ = tempElem.getNumberOfPostData();
@@ -62,6 +60,26 @@ namespace FEDD
 			// cout << " DomainDataNames_ " << i << " "  << this->domainDataNames_[i] << " with value " << this->domainData_[i] << endl;
 
 			TEUCHOS_TEST_FOR_EXCEPTION(this->domainData_[i] > 1.e12, std::logic_error, " Parameter not set correctly. Parameter " << this->domainDataNames_[i] << " received default value!!");
+			
+			// Pre-compute which parameters need acceleration/deceleration (optimization)
+			if (domainDataNames_[i].find("LambdaBarCDotMax") != string::npos || 
+			    domainDataNames_[i].find("LambdaBarCDotMin") != string::npos || 
+			    domainDataNames_[i].find("Eta") != string::npos || 
+			    domainDataNames_[i].find("K3") != string::npos || 
+			    domainDataNames_[i].find("K4") != string::npos || 
+			    domainDataNames_[i].find("K7") != string::npos || 
+			    domainDataNames_[i].find("Beta1") != string::npos || 
+			    domainDataNames_[i].find("Gamma6") != string::npos || 
+			    domainDataNames_[i].find("KDotMin") != string::npos || 
+			    domainDataNames_[i].find("KDotMax") != string::npos || 
+			    domainDataNames_[i].find("LambdaBarDotPMin") != string::npos || 
+			    domainDataNames_[i].find("LambdaBarDotPMax") != string::npos) {
+				acceleratedParamIndices_.push_back(i);
+			}
+			else if (domainDataNames_[i].find("Gamma5") != string::npos || 
+			         domainDataNames_[i].find("Gamma2") != string::npos) {
+				deceleratedParamIndices_.push_back(i);
+			}
 		}
 
 		for (int i = 0; i < this->postDataLength_; i++)
@@ -413,35 +431,37 @@ namespace FEDD
 		// this->element_.setHistoryVector(this->history_.data());
 		std::vector<double> domainDataModified(this->domainDataLength_);
 
-		for(int i=0;i<this->domainDataLength_;i++)
-		{	
-			bool isFound = (this->domainDataNames_[i].find("LambdaBarCDotMax") != string::npos) || (this->domainDataNames_[i].find("LambdaBarCDotMin") != string::npos) || (this->domainDataNames_[i].find("Eta") != string::npos) || (this->domainDataNames_[i].find("K3") != string::npos) || (this->domainDataNames_[i].find("K4") != string::npos) || (this->domainDataNames_[i].find("K7") != string::npos) || (this->domainDataNames_[i].find("Beta1") != string::npos) || (this->domainDataNames_[i].find("Gamma6") != string::npos) || (this->domainDataNames_[i].find("KDotMin") != string::npos) || (this->domainDataNames_[i].find("KDotMax") != string::npos) || (this->domainDataNames_[i].find("LambdaBarDotPMin") != string::npos) || (this->domainDataNames_[i].find("LambdaBarDotPMax") != string::npos);
-			// if((this->domainDataNames_[i].contains("LambdaBarCDotMax") || this->domainDataNames_[i].contains("LambdaBarCDotMin") || this->domainDataNames_[i].contains("Eta") || this->domainDataNames_[i].contains("K3") || this->domainDataNames_[i].contains("K4") || this->domainDataNames_[i].contains("K7") || this->domainDataNames_[i].contains("Beta1") || this->domainDataNames_[i].contains("Gamma6") || this->domainDataNames_[i].contains("KDotMin") || this->domainDataNames_[i].contains("KDotMax") || this->domainDataNames_[i].contains("LambdaBarDotPMin") || this->domainDataNames_[i].contains("LambdaBarDotPMax")) && (time < this->activeAcceleratedEndTime_))
-			if(isFound && (time < this->activeAcceleratedEndTime_))
-				domainDataModified[i] = this->domainData_[i] * this->activeAcceleratedMultiplier_;
-			// else if((this->domainDataNames_[i].contains("Gamma5") || this->domainDataNames_[i].contains("Gamma2")) && (time < this->activeAcceleratedEndTime_))
-			else if((this->domainDataNames_[i].find("Gamma5") != string::npos) || (this->domainDataNames_[i].find("Gamma2") != string::npos) && (time < this->activeAcceleratedEndTime_))
-				domainDataModified[i] = this->domainData_[i] / this->activeAcceleratedMultiplier_;
-			else
-				domainDataModified[i] = this->domainData_[i];
+		// Copy base domain data
+		std::copy(this->domainData_.begin(), this->domainData_.end(), domainDataModified.begin());
+		
+		// Apply modifications only if needed (using pre-computed indices - much faster!)
+		if(time < this->activeAcceleratedEndTime_) {
+			for(int idx : acceleratedParamIndices_) {
+				domainDataModified[idx] = this->domainData_[idx] * this->activeAcceleratedMultiplier_;
+			}
+			for(int idx : deceleratedParamIndices_) {
+				domainDataModified[idx] = this->domainData_[idx] / this->activeAcceleratedMultiplier_;
+			}
 		}
 
-		// Update the persistent element using setters (no object reconstruction!)
-		aceElement_.setPositions(this->positions_.data());
-		aceElement_.setDisplacements(this->displacements_.data());
-		aceElement_.setConcentrations(this->concentrations_.data());
-		aceElement_.setAccelerations(this->accelerations_.data());
-		aceElement_.setRates(this->rates_.data());
-		aceElement_.setDomainData(domainDataModified.data());
-		aceElement_.setHistoryVector(this->history_.data());
-		aceElement_.setSubIterationTolerance(this->subiterationTolerance_);
-		aceElement_.setTimeIncrement(deltaT);
-		aceElement_.setTime(time);
-		aceElement_.setElementID(this->getGlobalElementID());
+		// Create element with full constructor (optimized: pre-computed indices eliminate string searches)
+		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element(
+			this->iCode_,
+			this->positions_.data(),
+			this->displacements_.data(),
+			this->concentrations_.data(),
+			this->accelerations_.data(),
+			this->rates_.data(),
+			domainDataModified.data(),
+			this->history_.data(),
+			this->subiterationTolerance_,
+			deltaT,
+			time,
+			this->getGlobalElementID());
 
 		// std::cout << "elem.compute starts" << std::endl;
 
-		int errorCode = aceElement_.compute(computeTangent);
+		int errorCode = element.compute(computeTangent);
 
 		// std::cout << "elem.compute ends" << std::endl;
 
@@ -455,20 +475,20 @@ namespace FEDD
 		// vec2D_dbl_Type stiffnessMatrixKcc_;
 		// vec2D_dbl_Type massMatrixMc_;
 
-		double *residuumRint = aceElement_.getResiduumVectorRint();
+double *residuumRint = element.getResiduumVectorRint();
 		for (int i = 0; i < 30; i++)
 			this->residuumRint_[i] = residuumRint[i];
 
-		double *residuumRdyn = aceElement_.getResiduumVectorRdyn();
+		double *residuumRdyn = element.getResiduumVectorRdyn();
 		for (int i = 0; i < 30; i++)
 			this->residuumRdyn_[i] = residuumRdyn[i];
 
-		double *residuumRc = aceElement_.getResiduumVectorRc();
+		double *residuumRc = element.getResiduumVectorRc();
 		for (int i = 0; i < 10; i++)
 			this->residuumRc_[i] = residuumRc[i];
 
 		if(computeTangent){
-		double **stiffnessMatrixKuu = aceElement_.getStiffnessMatrixKuu();
+		double **stiffnessMatrixKuu = element.getStiffnessMatrixKuu();
 		for (int i = 0; i < 30; i++)
 			for (int j = 0; j < 30; j++)
 			{
@@ -477,27 +497,27 @@ namespace FEDD
 				// cout << " StiffnessMatrixEntry " << stiffnessMatrixKuu[i][j] << endl;
 			}
 
-		double **stiffnessMatrixKuc = aceElement_.getStiffnessMatrixKuc();
+		double **stiffnessMatrixKuc = element.getStiffnessMatrixKuc();
 		for (int i = 0; i < 30; i++)
 			for (int j = 0; j < 10; j++)
 				this->stiffnessMatrixKuc_[i][j] = stiffnessMatrixKuc[i][j];
 
-		double **stiffnessMatrixKcu = aceElement_.getStiffnessMatrixKcu();
+		double **stiffnessMatrixKcu = element.getStiffnessMatrixKcu();
 		for (int i = 0; i < 10; i++)
 			for (int j = 0; j < 30; j++)
 				this->stiffnessMatrixKcu_[i][j] = stiffnessMatrixKcu[i][j];
 
-		double **massMatrixMc = aceElement_.getMassMatrixMc();
+		double **massMatrixMc = element.getMassMatrixMc();
 		for (int i = 0; i < 10; i++)
 			for (int j = 0; j < 10; j++)
 				this->massMatrixMc_[i][j] = massMatrixMc[i][j];
 
-		double **stiffnessMatrixKcc = aceElement_.getStiffnessMatrixKcc();
+		double **stiffnessMatrixKcc = element.getStiffnessMatrixKcc();
 		for (int i = 0; i < 10; i++)
 			for (int j = 0; j < 10; j++)
 				this->stiffnessMatrixKcc_[i][j] = stiffnessMatrixKcc[i][j];
 
-		double *historyUpdated = aceElement_.getHistoryUpdated();
+		double *historyUpdated = element.getHistoryUpdated();
 		for (int i = 0; i < this->historyLength_; i++)
 			this->historyUpdated_[i] = historyUpdated[i];
 		}
@@ -539,18 +559,20 @@ namespace FEDD
 		// 	std::cout << std::endl;
 		// } -- This seems to be okay
 
-		// Update the persistent element using setters (no object reconstruction!)
-		aceElement_.setPositions(this->positions_.data());
-		aceElement_.setDisplacements(&displacements[0]);
-		aceElement_.setConcentrations(&concentrations[0]);
-		aceElement_.setAccelerations(&accelerations[0]);
-		aceElement_.setRates(&rates[0]);
-		aceElement_.setDomainData(this->domainData_.data());
-		aceElement_.setHistoryVector(this->history_.data());
-		aceElement_.setSubIterationTolerance(this->subiterationTolerance_);
-		aceElement_.setTimeIncrement(deltaT);
-		aceElement_.setTime(time);
-		aceElement_.setElementID(this->getGlobalElementID());
+		// Create element for postprocessing
+		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element(
+			this->iCode_,
+			this->positions_.data(),
+			&displacements[0],
+			&concentrations[0],
+			&accelerations[0],
+			&rates[0],
+			this->domainData_.data(),
+			this->history_.data(),
+			this->subiterationTolerance_,
+			deltaT,
+			time,
+			this->getGlobalElementID());
 
 		// std::cout << "History values going into PP: " << std::endl;
 		// std::cout << "Agn1: { " << this->history_[19] << ", " << this->history_[20] << ", " << this->history_[21] << " }" << std::endl;
@@ -559,7 +581,7 @@ namespace FEDD
 
 		// elem.compute(); --THis shit right here could be the problem
 
-		double **postProcessingResults = aceElement_.postProcess(&displacements[0], &concentrations[0], this->history_.data(), &rates[0], &accelerations[0]); //Inside this the values are 0
+		double **postProcessingResults = element.postProcess(&displacements[0], &concentrations[0], this->history_.data(), &rates[0], &accelerations[0]); //Inside this the values are 0
 
 		for (int i = 0; i < 10; i++)
 		{
@@ -628,20 +650,22 @@ namespace FEDD
 
 		double time = this->getTimeStep() + deltaT;
 
-		// Update the persistent element using setters (no object reconstruction!)
-		aceElement_.setPositions(this->positions_.data());
-		aceElement_.setDisplacements(&displacements[0]);
-		aceElement_.setConcentrations(&concentrations[0]);
-		aceElement_.setAccelerations(&accelerations[0]);
-		aceElement_.setRates(&rates[0]);
-		aceElement_.setDomainData(this->domainData_.data());
-		aceElement_.setHistoryVector(this->history_.data());
-		aceElement_.setSubIterationTolerance(this->subiterationTolerance_);
-		aceElement_.setTimeIncrement(deltaT);
-		aceElement_.setTime(time);
-		aceElement_.setElementID(this->getGlobalElementID());
+	// Create element for initialization
+	AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element(
+		this->iCode_,
+		this->positions_.data(),
+		&displacements[0],
+		&concentrations[0],
+		&accelerations[0],
+		&rates[0],
+		this->domainData_.data(),
+		this->history_.data(),
+		this->subiterationTolerance_,
+		deltaT,
+		time,
+		this->getGlobalElementID());
 
-		std::vector<double> historyNew = aceElement_.initializeGrowthOrientationVectors();
+	std::vector<double> historyNew = element.initializeGrowthOrientationVectors();
 		// std::cout << "Growth Orientation Vectors being set! \n HistoryOld: \n";
 		// for (int i = 0; i < this->historyLength_; i++)
 		// 	std::cout << this->history_[i] << " ";
@@ -663,20 +687,22 @@ namespace FEDD
 		cout << " Initialize active Response " << endl;
 		double time = this->getTimeStep() + deltaT;
 #ifdef FEDD_HAVE_ACEGENINTERFACE
-		// Update the persistent element using setters (no object reconstruction!)
-		aceElement_.setPositions(this->positions_.data());
-		aceElement_.setDisplacements(this->displacements_.data());
-		aceElement_.setConcentrations(this->concentrations_.data());
-		aceElement_.setAccelerations(this->accelerations_.data());
-		aceElement_.setRates(this->rates_.data());
-		aceElement_.setDomainData(this->domainData_.data());
-		aceElement_.setHistoryVector(this->history_.data());
-		aceElement_.setSubIterationTolerance(this->subiterationTolerance_);
-		aceElement_.setTimeIncrement(deltaT);
-		aceElement_.setTime(time);
-		aceElement_.setElementID(this->getGlobalElementID());
+	// Create element for initialization
+	AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element(
+		this->iCode_,
+		this->positions_.data(),
+		this->displacements_.data(),
+		this->concentrations_.data(),
+		this->accelerations_.data(),
+		this->rates_.data(),
+		this->domainData_.data(),
+		this->history_.data(),
+		this->subiterationTolerance_,
+		deltaT,
+		time,
+		this->getGlobalElementID());
 
-		std::vector<double> stretches = aceElement_.getGaussPointStretches();
+	std::vector<double> stretches = element.getGaussPointStretches();
 		cout << " Streches: ";
 		for (int i = 0; i < stretches.size(); i++)
 			cout << stretches[i] << " ";
