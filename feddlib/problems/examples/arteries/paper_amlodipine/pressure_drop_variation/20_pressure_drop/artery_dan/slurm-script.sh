@@ -13,4 +13,4 @@
 unset SLURM_EXPORT_ENV
 
 module load intel/2023.2.1 intelmpi/2021.10.0 mkl/2023.2.0
-srun ./problems_artery_dan.exe
+srun ./problems_artery_dan_pd_20.exe

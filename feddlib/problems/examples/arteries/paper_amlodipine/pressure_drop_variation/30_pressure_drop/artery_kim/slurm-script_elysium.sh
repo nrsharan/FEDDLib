@@ -18,4 +18,4 @@ unset SLURM_EXPORT_ENV
 
 module load intel-oneapi-mkl
 module load intel-oneapi-mpi/2021.12.1-qdmj2yh
-srun --mpi=pmi2 ./problems_artery_kim.exe
+srun --mpi=pmi2 ./problems_artery_kim_pd_30.exe
