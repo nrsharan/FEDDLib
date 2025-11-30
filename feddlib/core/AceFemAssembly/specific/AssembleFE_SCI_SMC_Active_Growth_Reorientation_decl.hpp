@@ -150,6 +150,10 @@ namespace FEDD
           bool activeInitialized_ = false;
           bool growthInitialized_ = false;
 
+          // Pre-computed indices for domain data modification (optimization)
+          std::vector<int> acceleratedParamIndices_;  // Parameters to multiply
+          std::vector<int> deceleratedParamIndices_;  // Parameters to divide
+
           // #ifdef FEDD_HAVE_ACEGENINTERFACE
           //		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 element_;
           // #endif
