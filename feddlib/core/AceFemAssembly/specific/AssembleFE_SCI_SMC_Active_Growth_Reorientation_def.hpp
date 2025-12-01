@@ -61,6 +61,26 @@ namespace FEDD
 			// cout << " DomainDataNames_ " << i << " "  << this->domainDataNames_[i] << " with value " << this->domainData_[i] << endl;
 
 			TEUCHOS_TEST_FOR_EXCEPTION(this->domainData_[i] > 1.e12, std::logic_error, " Parameter not set correctly. Parameter " << this->domainDataNames_[i] << " received default value!!");
+
+			// Pre-compute which parameters need acceleration/deceleration (optimization)
+			if (domainDataNames_[i].find("LambdaBarCDotMax") != string::npos || 
+			    domainDataNames_[i].find("LambdaBarCDotMin") != string::npos || 
+			    domainDataNames_[i].find("Eta") != string::npos || 
+			    domainDataNames_[i].find("K3") != string::npos || 
+			    domainDataNames_[i].find("K4") != string::npos || 
+			    domainDataNames_[i].find("K7") != string::npos || 
+			    domainDataNames_[i].find("Beta1") != string::npos || 
+			    domainDataNames_[i].find("Gamma6") != string::npos || 
+			    domainDataNames_[i].find("KDotMin") != string::npos || 
+			    domainDataNames_[i].find("KDotMax") != string::npos || 
+			    domainDataNames_[i].find("LambdaBarDotPMin") != string::npos || 
+			    domainDataNames_[i].find("LambdaBarDotPMax") != string::npos) {
+				acceleratedParamIndices_.push_back(i);
+			}
+			else if (domainDataNames_[i].find("Gamma5") != string::npos || 
+			         domainDataNames_[i].find("Gamma2") != string::npos) {
+				deceleratedParamIndices_.push_back(i);
+			}
 		}
 
 		for (int i = 0; i < this->postDataLength_; i++)
@@ -412,17 +432,17 @@ namespace FEDD
 		// this->element_.setHistoryVector(this->history_.data());
 		std::vector<double> domainDataModified(this->domainDataLength_);
 
-		for(int i=0;i<this->domainDataLength_;i++)
-		{	
-			bool isFound = (this->domainDataNames_[i].find("LambdaBarCDotMax") != string::npos) || (this->domainDataNames_[i].find("LambdaBarCDotMin") != string::npos) || (this->domainDataNames_[i].find("Eta") != string::npos) || (this->domainDataNames_[i].find("K3") != string::npos) || (this->domainDataNames_[i].find("K4") != string::npos) || (this->domainDataNames_[i].find("K7") != string::npos) || (this->domainDataNames_[i].find("Beta1") != string::npos) || (this->domainDataNames_[i].find("Gamma6") != string::npos) || (this->domainDataNames_[i].find("KDotMin") != string::npos) || (this->domainDataNames_[i].find("KDotMax") != string::npos) || (this->domainDataNames_[i].find("LambdaBarDotPMin") != string::npos) || (this->domainDataNames_[i].find("LambdaBarDotPMax") != string::npos);
-			// if((this->domainDataNames_[i].contains("LambdaBarCDotMax") || this->domainDataNames_[i].contains("LambdaBarCDotMin") || this->domainDataNames_[i].contains("Eta") || this->domainDataNames_[i].contains("K3") || this->domainDataNames_[i].contains("K4") || this->domainDataNames_[i].contains("K7") || this->domainDataNames_[i].contains("Beta1") || this->domainDataNames_[i].contains("Gamma6") || this->domainDataNames_[i].contains("KDotMin") || this->domainDataNames_[i].contains("KDotMax") || this->domainDataNames_[i].contains("LambdaBarDotPMin") || this->domainDataNames_[i].contains("LambdaBarDotPMax")) && (time < this->activeAcceleratedEndTime_))
-			if(isFound && (time < this->activeAcceleratedEndTime_))
-				domainDataModified[i] = this->domainData_[i] * this->activeAcceleratedMultiplier_;
-			// else if((this->domainDataNames_[i].contains("Gamma5") || this->domainDataNames_[i].contains("Gamma2")) && (time < this->activeAcceleratedEndTime_))
-			else if((this->domainDataNames_[i].find("Gamma5") != string::npos) || (this->domainDataNames_[i].find("Gamma2") != string::npos) && (time < this->activeAcceleratedEndTime_))
-				domainDataModified[i] = this->domainData_[i] / this->activeAcceleratedMultiplier_;
-			else
-				domainDataModified[i] = this->domainData_[i];
+		// Copy base domain data
+		std::copy(this->domainData_.begin(), this->domainData_.end(), domainDataModified.begin());
+
+		// Apply modifications only if needed (using pre-computed indices - much faster!)
+		if(time < this->activeAcceleratedEndTime_) {
+			for(int idx : acceleratedParamIndices_) {
+				domainDataModified[idx] = this->domainData_[idx] * this->activeAcceleratedMultiplier_;
+			}
+			for(int idx : deceleratedParamIndices_) {
+				domainDataModified[idx] = this->domainData_[idx] / this->activeAcceleratedMultiplier_;
+			}
 		}
 
 		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem = AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
@@ -527,7 +547,22 @@ namespace FEDD
 		// 	std::cout << std::endl;
 		// } -- This seems to be okay
 
-		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		std::vector<double> domainDataModified(this->domainDataLength_);
+		
+		// Copy base domain data
+		std::copy(this->domainData_.begin(), this->domainData_.end(), domainDataModified.begin());
+
+		// Apply modifications only if needed (using pre-computed indices - much faster!)
+		if(time < this->activeAcceleratedEndTime_) {
+			for(int idx : acceleratedParamIndices_) {
+				domainDataModified[idx] = this->domainData_[idx] * this->activeAcceleratedMultiplier_;
+			}
+			for(int idx : deceleratedParamIndices_) {
+				domainDataModified[idx] = this->domainData_[idx] / this->activeAcceleratedMultiplier_;
+			}
+		}
+
+		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
 		// std::cout << "History values going into PP: " << std::endl;
 		// std::cout << "Agn1: { " << this->history_[19] << ", " << this->history_[20] << ", " << this->history_[21] << " }" << std::endl;
@@ -605,7 +640,22 @@ namespace FEDD
 
 		double time = this->getTimeStep() + deltaT;
 
-		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		std::vector<double> domainDataModified(this->domainDataLength_);
+		
+		// Copy base domain data
+		std::copy(this->domainData_.begin(), this->domainData_.end(), domainDataModified.begin());
+
+		// Apply modifications only if needed (using pre-computed indices - much faster!)
+		if(time < this->activeAcceleratedEndTime_) {
+			for(int idx : acceleratedParamIndices_) {
+				domainDataModified[idx] = this->domainData_[idx] * this->activeAcceleratedMultiplier_;
+			}
+			for(int idx : deceleratedParamIndices_) {
+				domainDataModified[idx] = this->domainData_[idx] / this->activeAcceleratedMultiplier_;
+			}
+		}
+
+		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
 		std::vector<double> historyNew = elem.initializeGrowthOrientationVectors();
 		// std::cout << "Growth Orientation Vectors being set! \n HistoryOld: \n";
@@ -629,7 +679,22 @@ namespace FEDD
 		cout << " Initialize active Response " << endl;
 		double time = this->getTimeStep() + deltaT;
 #ifdef FEDD_HAVE_ACEGENINTERFACE
-		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), this->domainData_.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+		std::vector<double> domainDataModified(this->domainDataLength_);
+		
+		// Copy base domain data
+		std::copy(this->domainData_.begin(), this->domainData_.end(), domainDataModified.begin());
+
+		// Apply modifications only if needed (using pre-computed indices - much faster!)
+		if(time < this->activeAcceleratedEndTime_) {
+			for(int idx : acceleratedParamIndices_) {
+				domainDataModified[idx] = this->domainData_[idx] * this->activeAcceleratedMultiplier_;
+			}
+			for(int idx : deceleratedParamIndices_) {
+				domainDataModified[idx] = this->domainData_[idx] / this->activeAcceleratedMultiplier_;
+			}
+		}
+		
+		AceGenInterface::DeformationDiffusionSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
 
 		std::vector<double> stretches = elem.getGaussPointStretches();
 		cout << " Streches: ";
