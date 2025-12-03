@@ -151,13 +151,12 @@ namespace FEDD
 		// Nodal Positions in Reference Coordinates
 		int count = 0;
 		for (int i = 0; i < 10; i++)
-		{
 			for (int j = 0; j < 3; j++)
 			{
 				this->positions_[count] = this->getNodesRefConfig()[i][j];
 				count++;
 			}
-		}
+
 		// this->element_.setPositions(this->positions_.data());
 
 		// Domain Data
@@ -171,7 +170,7 @@ namespace FEDD
 		// this->element_.setComputeCompleted(false);
 
 		// -----------
-		// Active and Growth Time intervalls
+		// Active and Growth Time intervals
 		int numSegmentsActive = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Active").get("Number of Segments", 0);
 		int numSegmentsGrowth = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Growth").get("Number of Segments", 0);
 		int numSegmentsReorientation = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Reorientation").get("Number of Segments", 0);
@@ -205,7 +204,7 @@ namespace FEDD
 			// cout << " Growth Segment " << i << ":[" << startTime << "," << endTime << "]" << endl;
 		}
 
-		for (int i = 1; i <= numSegmentsGrowth; i++)
+		for (int i = 1; i <= numSegmentsReorientation; i++)
 		{
 
 			double startTime = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).sublist("Timestepping Intervalls Reorientation").sublist(std::to_string(i)).get("Start Time", 0.);
@@ -224,7 +223,6 @@ namespace FEDD
 	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::assembleJacobian()
 	{
-
 		SmallMatrixPtr_Type elementMatrix = Teuchos::rcp(new SmallMatrix_Type(this->dofsElement_, 0.));
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
@@ -250,6 +248,7 @@ namespace FEDD
 
 		this->jacobian_ = elementMatrix;
 	}
+
 	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::checkingReorientationActiveGrowth()
 	{
@@ -342,11 +341,11 @@ namespace FEDD
 				this->timeIncrement_=timeParametersVec_[i][1];
 		}*/
 		// if (this->timeStep_ - 1.e-13 < 0) // only in this one instance T=0 we set the dt beforehand, as the initial dt is set through the paramterlist and this is error prone
-		this->timeIncrement_ = dt;
+		// this->timeIncrement_ = dt;
 
 		this->timeStep_ = this->timeStep_ + this->timeIncrement_;
 
-		// this->timeIncrement_ = dt;
+		this->timeIncrement_ = dt;
 
 		// Checking for Active Response Reorientation and Growth
 		checkingReorientationActiveGrowth();

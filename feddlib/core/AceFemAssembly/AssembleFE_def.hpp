@@ -19,7 +19,8 @@ AssembleFE<SC, LO, GO, NO>::AssembleFE(int flag, vec2D_dbl_Type nodesRefConfig, 
     // Reading through parameterlist
     dim_ = params_->sublist("Parameter").get("Dimension", -1);
 
-    timeIncrement_ = params_->sublist("Timestepping Parameter").get("dt", 0.1);
+    timeIncrement_ = params_->sublist("Timestepping Parameter").get("dt", 34234.0);
+    TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(timeIncrement_, 34234.0), std::runtime_error, "Time increment dt not set in ParameterList under Timestepping Parameter.");
 
     diskTuple_ = tuple;
 

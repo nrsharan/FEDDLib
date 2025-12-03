@@ -851,18 +851,19 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     double loadStepSize = parameterList_->sublist("Parameter").get("Load Step Size",1.);
 
     if(numSegments > 0 ){
-        TEUCHOS_TEST_FOR_EXCEPTION( loadStepSize != timeParametersVec[0][1], std::runtime_error, "Load Step Size and First Time Interval Size appear different" );
+        TEUCHOS_TEST_FOR_EXCEPTION( loadStepSize != timeParametersVec[0][1], std::runtime_error, "Load step size and first time step size in the first interval are different!" );
     }
     else{
         TEUCHOS_TEST_FOR_EXCEPTION( loadStepSize != timeSteppingTool_->dt_, std::runtime_error, "Load Step Size and dt appear different" );
     }
     double dt;
-    for(int i=0; i<numSegments-1 ; i++){
-        if(timeSteppingTool_->currentTime() < timeParametersVec[i+1][0] && timeSteppingTool_->currentTime()+1.0e-12 > timeParametersVec[i][0] ){
-            dt=timeParametersVec[i][1];
-            timeSteppingTool_->dt_ = dt;
-        }
-    }
+    for(int i=0; i<numSegments; i++)
+        if(timeSteppingTool_->currentTime() + 1.0e-10 > timeParametersVec[i][0])
+            dt = timeParametersVec[i][1];
+
+    if(numSegments > 0)
+        timeSteppingTool_->dt_ = dt;
+
     // Notwendige Parameter
     int sizeSCI = timeStepDef_.size();
 
@@ -1010,12 +1011,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
     while(timeSteppingTool_->continueTimeStepping())
     {
+        // Determine dt for current time segement
         for(int i=0; i<numSegments ; i++){
             if(timeSteppingTool_->currentTime()+1.0e-12 > timeParametersVec[i][0])
                 dt=timeParametersVec[i][1];
         }
         timeSteppingTool_->dt_= dt;
-        sci->timeSteppingTool_->dt_ = dt;
+        sci->timeSteppingTool_->dt_ = dt; // TODO: Why is this necessary?
         if(restart){
             if(timeSteppingTool_->currentTime() <= timeStepRestart + 1e-12){
                 timeSteppingTool_->dt_prev_= dt;        
@@ -1059,7 +1061,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
                 this->problemTime_->setTimeParameters(massCoeffSCI, problemCoeffSCI);
             }
         }
-        problemTime_->updateTime ( timeSteppingTool_->currentTime() );
+        problemTime_->updateTime ( timeSteppingTool_->currentTime() ); // Synchronize timestep to the timeProblem timestepper
 
         //string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
 
@@ -1080,13 +1082,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         }
         else
         {
-          this->problemTime_->updateSolutionMultiPreviousStep(nmbBDF);
+          this->problemTime_->updateSolutionMultiPreviousStep(nmbBDF); //Sets BDF 
         }
         
 
         // Alte Gitterbewegung mit der Geometrieloesung ueberschreiben.
         // -- we can keep this as expicit update for the reaction-diffusion displacement
-        this->problemTime_->assemble("UpdateMeshDisplacement");   
+        this->problemTime_->assemble("UpdateMeshDisplacement"); // Used as precursor for moving mesh
        
         if(chemistryExplicit_)
         {
@@ -1112,13 +1114,14 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             if(timeSteppingTool_->currentTime() == 0.0 || (restart &&  timeSteppingTool_->currentTime() -1.e-5 < timeStepRestart ))
             {
                 // We extract the underlying FSI problem
+                // This here does nothing. It's only used for FSI problems.
                 MatrixPtr_Type massmatrix;
                 sci->setSolidMassmatrix( massmatrix );
                 this->problemTime_->systemMass_->addBlock( massmatrix, 0, 0 );
             }
             // this should be done automatically rhs will not be used here
             //  this->problemTime_->getRhs()->addBlock( Teuchos::rcp_const_cast<MultiVector_Type>(rhs->getBlock(0)), 2 );
-            this->problemTime_->assemble("ComputeSolidRHSInTime");
+            this->problemTime_->assemble("ComputeSolidRHSInTime"); // We get the forcing term here (due to external loads)
         }
 
         // ######################
@@ -1165,7 +1168,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
         
         double time = timeSteppingTool_->currentTime() +  timeSteppingTool_->dt_;
-        problemTime_->updateTime ( time );
+        problemTime_->updateTime ( time ); // Problem time timestepper is now ahead by one timestep
         
         NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
 
@@ -1198,7 +1201,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         
         //this->problemTime_->computeValuesOfInterestAndExport();
 
-        timeSteppingTool_->advanceTime(false);//output info);
+        timeSteppingTool_->advanceTime(false);//output info); // DAE Time stepper gets n+1 time step value
 
         // Should be some place else
         //if(couplingType=="explicit" )
@@ -1270,7 +1273,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
 
 
-            if(fabs(remainder(timeStep,modValue)) < 0. + 1.e-8 ){
+            if(fabs(remainder(timeStep,modValue)) < 0. + 1.e-8 ){// TODO: Update solutions before postprocessing
                 BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
                 stressVec = stressVecTmp;
                 this->exportPostprocess(stressVec,problemTime_->getDomain(0),sci->getPostprocessingNames()); 

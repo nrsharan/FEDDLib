@@ -157,7 +157,7 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
         systemTmp->addBlock(B,1,0);
         systemTmp->addBlock(C,1,1);
 
-        timeSteppingTool_ = Teuchos::rcp(new TimeSteppingTools(sublist(this->parameterList_,"Timestepping Parameter") , this->comm_));
+        timeSteppingTool_ = Teuchos::rcp(new TimeSteppingTools(sublist(this->parameterList_,"Timestepping Parameter") , this->comm_)); // Why is another time stepping tool declared here? Should there not be only one global time stepping tool?
 
         this->setupSubTimeProblems(this->problemChem_->getParameterList(), this->problemStructureNonLin_->getParameterList());
 
@@ -863,7 +863,7 @@ void SCI<SC,LO,GO,NO>::computeChemRHSInTime( ) const
 // This is equivalent to the FSI Structure part.
 // We add one additionale feature where we can distinguish between load or timestep
 template<class SC,class LO,class GO,class NO>
-void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const {
+void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const { // TODO: Rename because it computes only the forcing term and not the internal forces
     //######################
     // RHS nach Newmark
     //######################
@@ -1037,10 +1037,11 @@ void SCI<SC,LO,GO,NO>::updateTime() const
         c= this->problemTimeChem_->getSolution()->getBlock(0);
     else
         c = this->solution_->getBlock(1);
-
+    
     MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
+    c_rep_->importFromVector(c, true);
     d_rep_->importFromVector(d, true); 
-    this->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_->dt_, d_rep_, c_rep_ );    
+    this->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_->dt_, d_rep_, c_rep_ ); // TODO: c_rep_ is not set here, but is still being sent to advanceInTimeAssemblyFEElements!
 
     this->problemTimeChem_->updateTime(timeSteppingTool_->t_);
     this->problemTimeStructure_->updateTime(timeSteppingTool_->t_);

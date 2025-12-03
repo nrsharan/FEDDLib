@@ -556,7 +556,7 @@ class FE {
 								int FELocExternal=-1);
 
     
-    void advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep) 
+    void advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep) // TODO: Why is this in _decl?
     {
         //UN FElocChem = 1; //checkFE(dim,FETypeChem); // Checks for different domains which belongs to a certain fetype
         UN FElocSolid = 0; //checkFE(dim,FETypeSolid); // Checks for different domains which belongs to a certain fetype
@@ -582,7 +582,7 @@ class FE {
         }
         
     };
-    void updateSolutionAssemblyFEElements(MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep) 
+    void updateSolutionAssemblyFEElements(MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep) // TODO: Why is this in _decl?
     {
         ElementsPtr_Type elementsSolid = domainVec_.at(0)->getElementsC();
         
@@ -602,7 +602,7 @@ class FE {
         
     };
 
-    void advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep) 
+    void advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep) // TODO: Why is this in _decl?
     {
         //UN FElocChem = 1; //checkFE(dim,FETypeChem); // Checks for different domains which belongs to a certain fetype
         UN FElocSolid = 0; //checkFE(dim,FETypeSolid); // Checks for different domains which belongs to a certain fetype
