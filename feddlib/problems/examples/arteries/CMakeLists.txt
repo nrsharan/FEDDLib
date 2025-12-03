@@ -1,4 +1,4 @@
 INCLUDE(TribitsCopyFilesToBinaryDir)
 INCLUDE(TribitsAddExecutableAndTest)
 INCLUDE(AddSubdirectories)
-ADD_SUBDIRECTORIES(artery_6_region paper_amlodipine)
+ADD_SUBDIRECTORIES(artery_6_region paper_amlodipine simpleTest)
