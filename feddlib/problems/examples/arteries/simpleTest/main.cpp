@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     Teuchos::CommandLineProcessor commandLineProcessor;
     string underlyingLibrary = "Tpetra";
     string simulationParametersXML = "simulationParameters.xml";
-    string materialParametersXML = "materialParameters_dan.xml";
+    string materialParametersXML = "materialParameters.xml";
     string solverParametersXML = "solverParameters.xml";
     string structurePreconditionerParametersXML = "preconditionerParameters_Structure.xml";
     string chemistryPreconditionerParametersXML = "preconditionerParameters_Chemistry.xml";
