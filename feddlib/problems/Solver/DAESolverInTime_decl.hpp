@@ -185,10 +185,11 @@ public:
 
 private:
 
+    void getActiveTimeSegment(const vec2D_dbl_Type& timeSegments, const double& currentTime, int& activeSegmentNumber, double tolerance=1.0e-8);
+    void getTimeIncrementFromSegments(const vec2D_dbl_Type& timeSegments, const int& activeSegmentNumber, const double& currentTime, double& dt);
+
 #ifdef FEDD_TIMER
     TimePtr_Type solveProblemTimer_;
-#endif
-#ifdef FEDD_TIMER
     TimePtr_Type reassmbleAddInterfaceRHSTimer_;
     TimePtr_Type reassmbleUpdateMeshDisplacementTimer_;
     TimePtr_Type reassmbleSolveGeometryTimer_;

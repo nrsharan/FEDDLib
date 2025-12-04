@@ -5,6 +5,7 @@
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/LinearAlgebra/Matrix.hpp"
 #include "feddlib/core/FE/Helper.hpp"
+#include "feddlib/problems/Solver/TimeSteppingTools.hpp"
 
 namespace FEDD {
 
@@ -131,7 +132,12 @@ namespace FEDD {
          \brief This function is called every time the FEDDLib proceeds from one to the next time step. The size of the time step will always be provided as input.
          @param[in] dt Timestepping length
         */
-        virtual void advanceInTime(double dt);
+        virtual void advanceInTime(double dt) {};
+        /*!
+         \brief This function is called every time the FEDDLib proceeds from one to the next time step. The size of the time step will always be provided as input.
+         @param[in] timeSteppingTool Timestepping tool object
+        */
+        virtual void advanceInTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool) {};
         /*!
          \brief Get the time state of the object.
          \return the timestep

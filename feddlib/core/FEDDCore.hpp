@@ -132,6 +132,6 @@ typedef boost::function<void(double* x, double* res, double t, double* parameter
 typedef boost::function<void(double* x, double* res)>     								Func_Type;          
 typedef boost::function<void(double* x, double* res)>     								Func_Type;          
 
-inline bool approxEqual(double a, double b, double eps = 1e-3) {return std::abs(a - b) < eps;}
+inline bool approxEqual(double a, double b, double eps = 1e-8) {return std::abs(a - b) < eps;}
 }
 #endif

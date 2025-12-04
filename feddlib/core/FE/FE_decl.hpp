@@ -20,6 +20,7 @@
 #include "feddlib/core/AceFemAssembly/AssembleFE.hpp"
 #include "feddlib/core/AceFemAssembly/specific/AssembleFE_SCI_SMC_Active_Growth_Reorientation_decl.hpp"
 #include "feddlib/core/AceFemAssembly/specific/AssembleFENavierStokes_decl.hpp"
+#include "feddlib/problems/Solver/TimeSteppingTools.hpp"
 
 #include "feddlib/core/AceFemAssembly/AssembleFEFactory.hpp"
 
@@ -555,75 +556,11 @@ class FE {
 								bool callFillComplete = true,
 								int FELocExternal=-1);
 
-    
-    void advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep) // TODO: Why is this in _decl?
-    {
-        //UN FElocChem = 1; //checkFE(dim,FETypeChem); // Checks for different domains which belongs to a certain fetype
-        UN FElocSolid = 0; //checkFE(dim,FETypeSolid); // Checks for different domains which belongs to a certain fetype
+    void advanceInTimeAssemblyFEElements(Teuchos::RCP<TimeSteppingTools> timeSteppingTool, MultiVectorPtr_Type d_rep, MultiVectorPtr_Type c_rep);
 
-        //ElementsPtr_Type elementsChem= domainVec_.at(FElocChem)->getElementsC();
+    void updateSolutionAssemblyFEElements(MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep);
 
-        ElementsPtr_Type elementsSolid = domainVec_.at(FElocSolid)->getElementsC();
-        
-        vec_dbl_Type solution_c;
-	    vec_dbl_Type solution_d;
-        for (UN T=0; T<assemblyFEElements_.size(); T++) {
-		    vec_dbl_Type solution(0);
-
-            solution_c = getSolution(elementsSolid->getElement(T).getVectorNodeList(), c_rep,1);
-            solution_d = getSolution(elementsSolid->getElement(T).getVectorNodeList(), d_rep,3);
-            // First Solid, then Chemistry
-            solution.insert( solution.end(), solution_d.begin(), solution_d.end() );
-            solution.insert( solution.end(), solution_c.begin(), solution_c.end() );
-            
-            assemblyFEElements_[T]->updateSolution(solution);
-
-            assemblyFEElements_[T]->advanceInTime(dt);
-        }
-        
-    };
-    void updateSolutionAssemblyFEElements(MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep) // TODO: Why is this in _decl?
-    {
-        ElementsPtr_Type elementsSolid = domainVec_.at(0)->getElementsC();
-        
-        vec_dbl_Type solution_c;
-	    vec_dbl_Type solution_d;
-        for (UN T=0; T<assemblyFEElements_.size(); T++) {
-		    vec_dbl_Type solution(0);
-            
-            solution_d = getSolution(elementsSolid->getElement(T).getVectorNodeList(), d_rep,3);
-            solution_c = getSolution(elementsSolid->getElement(T).getVectorNodeList(), c_rep,1);
-            // First Solid, then Chemistry
-            solution.insert( solution.end(), solution_d.begin(), solution_d.end() );
-            solution.insert( solution.end(), solution_c.begin(), solution_c.end() );
-            
-            assemblyFEElements_[T]->updateSolution(solution);
-        }
-        
-    };
-
-    void advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep) // TODO: Why is this in _decl?
-    {
-        //UN FElocChem = 1; //checkFE(dim,FETypeChem); // Checks for different domains which belongs to a certain fetype
-        UN FElocSolid = 0; //checkFE(dim,FETypeSolid); // Checks for different domains which belongs to a certain fetype
-
-        //ElementsPtr_Type elementsChem= domainVec_.at(FElocChem)->getElementsC();
-        ElementsPtr_Type elementsSolid = domainVec_.at(FElocSolid)->getElementsC();
-        
-	    vec_dbl_Type solution_d;
-        for (UN T=0; T<assemblyFEElements_.size(); T++) {
-		    vec_dbl_Type solution(0);
-
-            solution_d = getSolution(elementsSolid->getElement(T).getVectorNodeList(), d_rep,3);
-            // First Solid, then Chemistry
-            solution.insert( solution.end(), solution_d.begin(), solution_d.end() );
-            
-            assemblyFEElements_[T]->updateSolution(solution);
-
-            assemblyFEElements_[T]->advanceInTime(dt);
-        }
-        
-    };
+    void advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep);
 
 	void assemblyLinearElasticity(int dim,
                                 string FEType,

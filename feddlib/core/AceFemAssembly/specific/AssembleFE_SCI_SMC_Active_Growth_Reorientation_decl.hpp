@@ -7,6 +7,7 @@
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/LinearAlgebra/Matrix.hpp"
 #include "feddlib/core/LinearAlgebra/MultiVector.hpp"
+#include "feddlib/problems/Solver/TimeSteppingTools.hpp"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
@@ -61,7 +62,7 @@ namespace FEDD
 		*/
 		virtual void assembleJacobianBlock(LO i){};
 
-		virtual void advanceInTime(double dt);
+		virtual void advanceInTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool);
 
 		virtual void postProcessing();
 

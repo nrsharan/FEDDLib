@@ -834,7 +834,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         
     }
 
-    vec2D_dbl_Type timeParametersVec(0,vec_dbl_Type(2));
+    vec2D_dbl_Type timeSegments(0,vec_dbl_Type(2));
     
     int numSegments = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);
 
@@ -846,23 +846,29 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(dtTmp, -3586.0), std::runtime_error, "dt for time segment " + std::to_string(i) + " received default value and was not set properly!");
         
         vec_dbl_Type segment = {startTime,dtTmp};
-        timeParametersVec.push_back(segment);
+        timeSegments.push_back(segment);
     }
     double loadStepSize = parameterList_->sublist("Parameter").get("Load Step Size",1.);
 
     if(numSegments > 0 ){
-        TEUCHOS_TEST_FOR_EXCEPTION( loadStepSize != timeParametersVec[0][1], std::runtime_error, "Load step size and first time step size in the first interval are different!" );
+        TEUCHOS_TEST_FOR_EXCEPTION( loadStepSize != timeSegments[0][1], std::runtime_error, "Load step size and time step size in the first interval are different!" );
     }
     else{
         TEUCHOS_TEST_FOR_EXCEPTION( loadStepSize != timeSteppingTool_->dt_, std::runtime_error, "Load Step Size and dt appear different" );
     }
-    double dt;
-    for(int i=0; i<numSegments; i++)
-        if(timeSteppingTool_->currentTime() + 1.0e-10 > timeParametersVec[i][0])
-            dt = timeParametersVec[i][1];
 
-    if(numSegments > 0)
-        timeSteppingTool_->dt_ = dt;
+    // Obtaining the active time segment based on time t_n
+    double dt;
+    int activeSegmentNumber = -1;
+    
+    getActiveTimeSegment(timeSegments, timeSteppingTool_->currentTime(), activeSegmentNumber);
+    
+    // dt is assigned an appropriate value based on the active time segment while ensuring that t_n+1 does not exceed the start time of the next segment
+    if(activeSegmentNumber != -1)
+        getTimeIncrementFromSegments(timeSegments, activeSegmentNumber, timeSteppingTool_->currentTime(), dt);
+    
+    if(numSegments > 0) // To ensure that in case timeSegments are not used dt_ is not overwritten
+        timeSteppingTool_->dt_ = dt; // At this point DAESolver time stepper has t_n and accurate dt value
 
     // Notwendige Parameter
     int sizeSCI = timeStepDef_.size();
@@ -1012,14 +1018,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     while(timeSteppingTool_->continueTimeStepping())
     {
         // Determine dt for current time segement
-        for(int i=0; i<numSegments ; i++){
-            if(timeSteppingTool_->currentTime()+1.0e-12 > timeParametersVec[i][0])
-                dt=timeParametersVec[i][1];
-        }
-        timeSteppingTool_->dt_= dt;
-        sci->timeSteppingTool_->dt_ = dt; // TODO: Why is this necessary?
+        getActiveTimeSegment(timeSegments, timeSteppingTool_->currentTime(), activeSegmentNumber);
+        if(activeSegmentNumber != -1)
+            getTimeIncrementFromSegments(timeSegments, activeSegmentNumber, timeSteppingTool_->currentTime(), dt);
+        timeSteppingTool_->dt_= dt; // At this point DAESolver time stepper has t_n and accurate dt value
+        sci->timeSteppingTool_->dt_ = dt; // At this point SCI time stepper has t_n and accurate dt value
         if(restart){
-            if(timeSteppingTool_->currentTime() <= timeStepRestart + 1e-12){
+            if(approxEqual(timeSteppingTool_->currentTime(), timeStepRestart)){
                 timeSteppingTool_->dt_prev_= dt;        
                 sci->timeSteppingTool_->dt_prev_= dt;        
             }
@@ -1027,17 +1032,18 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
                 timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
                 this->problemTime_->assemble("UpdateTime"); // Updates to next timestep
                 sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
+                timeSteppingTool_->advanceInTime();
             }
 
         }
         else{
-            if(timeSteppingTool_->currentTime() <= 0. + 1e-12){
+            if(approxEqual(timeSteppingTool_->currentTime(), 0.0)){
                 timeSteppingTool_->dt_prev_= dt;        
                 sci->timeSteppingTool_->dt_prev_= dt;        
             }
             else{
                 timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
-                this->problemTime_->assemble("UpdateTime"); // Updates to next timestep
+                this->problemTime_->assemble("UpdateTime"); // Updates to next timestep (SCI Now hast t_n+1)
                 sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
             }
         }
@@ -1061,7 +1067,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
                 this->problemTime_->setTimeParameters(massCoeffSCI, problemCoeffSCI);
             }
         }
-        problemTime_->updateTime ( timeSteppingTool_->currentTime() ); // Synchronize timestep to the timeProblem timestepper
+        problemTime_->updateTime ( timeSteppingTool_->currentTime() ); // Synchronize timestep to the timeProblem timestepper (t_n)
 
         //string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
 
@@ -1166,9 +1172,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             }
         }
 
-        
-        double time = timeSteppingTool_->currentTime() +  timeSteppingTool_->dt_;
-        problemTime_->updateTime ( time ); // Problem time timestepper is now ahead by one timestep
+        timeSteppingTool_->advanceTime(false); // DAE Solver has t_n+1 now
+        double time = timeSteppingTool_->currentTime();
+        problemTime_->updateTime ( time ); // Synchronize timestep to the timeProblem timestepper (t_n+1)
         
         NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
 
@@ -1201,7 +1207,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         
         //this->problemTime_->computeValuesOfInterestAndExport();
 
-        timeSteppingTool_->advanceTime(false);//output info); // DAE Time stepper gets n+1 time step value
+        // timeSteppingTool_->advanceTime(false);//output info); // DAE Time stepper gets n+1 time step value
 
         // Should be some place else
         //if(couplingType=="explicit" )
@@ -3427,5 +3433,21 @@ void DAESolverInTime<SC,LO,GO,NO>::checkTimeSteppingDef(){
 #endif
 
 }
+
+template<class SC,class LO,class GO,class NO>
+void DAESolverInTime<SC,LO,GO,NO>::getActiveTimeSegment(const vec2D_dbl_Type& timeSegments, const double& currentTime, int& activeSegmentNumber, double tolerance=1.0e-8){
+    for(int i=0; i < timeSegments.size(); i++)
+        if(timeSteppingTool_->currentTime() > timeSegments[i][0] || approxEqual(timeSteppingTool_->currentTime(), timeSegments[i][0]))
+            activeSegmentNumber = i;
+}
+
+template<class SC,class LO,class GO,class NO>
+void DAESolverInTime<SC,LO,GO,NO>::getTimeIncrementFromSegments(const vec2D_dbl_Type& timeSegments, const int& activeSegmentNumber, const double& currentTime, double& dt){
+    if(currentTime + timeSegments[activeSegmentNumber][1] > timeSegments[activeSegmentNumber+1][0])
+            dt = timeSegments[activeSegmentNumber+1][0] - currentTime;
+        else
+            dt = timeSegments[activeSegmentNumber][1];
+}
+
 }
 #endif

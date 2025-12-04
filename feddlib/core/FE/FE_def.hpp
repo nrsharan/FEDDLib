@@ -93,6 +93,76 @@ void FE<SC,LO,GO,NO>::doSetZeros(double eps){
 }
 
 template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::advanceInTimeAssemblyFEElements(Teuchos::RCP<TimeSteppingTools> timeSteppingTool, MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep){
+
+    //UN FElocChem = 1; //checkFE(dim,FETypeChem); // Checks for different domains which belongs to a certain fetype
+    UN FElocSolid = 0; //checkFE(dim,FETypeSolid); // Checks for different domains which belongs to a certain fetype
+
+    //ElementsPtr_Type elementsChem= domainVec_.at(FElocChem)->getElementsC();
+
+    ElementsPtr_Type elementsSolid = domainVec_.at(FElocSolid)->getElementsC();
+        
+    vec_dbl_Type solution_c;
+	vec_dbl_Type solution_d;
+    for (UN T=0; T<assemblyFEElements_.size(); T++){
+		vec_dbl_Type solution(0);
+
+        solution_c = getSolution(elementsSolid->getElement(T).getVectorNodeList(), c_rep,1);
+        solution_d = getSolution(elementsSolid->getElement(T).getVectorNodeList(), d_rep,3);
+        // First Solid, then Chemistry
+        solution.insert( solution.end(), solution_d.begin(), solution_d.end() );
+        solution.insert( solution.end(), solution_c.begin(), solution_c.end() );
+            
+        assemblyFEElements_[T]->updateSolution(solution);
+
+        assemblyFEElements_[T]->advanceInTime(timeSteppingTool);
+    }
+}
+
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep){
+    
+    //UN FElocChem = 1; //checkFE(dim,FETypeChem); // Checks for different domains which belongs to a certain fetype
+    UN FElocSolid = 0; //checkFE(dim,FETypeSolid); // Checks for different domains which belongs to a certain fetype
+
+    //ElementsPtr_Type elementsChem= domainVec_.at(FElocChem)->getElementsC();
+    ElementsPtr_Type elementsSolid = domainVec_.at(FElocSolid)->getElementsC();
+        
+	vec_dbl_Type solution_d;
+    for (UN T=0; T<assemblyFEElements_.size(); T++){
+		vec_dbl_Type solution(0);
+
+        solution_d = getSolution(elementsSolid->getElement(T).getVectorNodeList(), d_rep,3);
+        // First Solid, then Chemistry
+        solution.insert( solution.end(), solution_d.begin(), solution_d.end() );
+            
+        assemblyFEElements_[T]->updateSolution(solution);
+
+        assemblyFEElements_[T]->advanceInTime(dt);
+    }    
+}
+
+template <class SC, class LO, class GO, class NO>
+void FE<SC,LO,GO,NO>::updateSolutionAssemblyFEElements(MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep){
+    
+    ElementsPtr_Type elementsSolid = domainVec_.at(0)->getElementsC();
+        
+    vec_dbl_Type solution_c;
+	vec_dbl_Type solution_d;
+    for (UN T=0; T<assemblyFEElements_.size(); T++) {
+		vec_dbl_Type solution(0);
+            
+        solution_d = getSolution(elementsSolid->getElement(T).getVectorNodeList(), d_rep,3);
+        solution_c = getSolution(elementsSolid->getElement(T).getVectorNodeList(), c_rep,1);
+        // First Solid, then Chemistry
+        solution.insert( solution.end(), solution_d.begin(), solution_d.end() );
+        solution.insert( solution.end(), solution_c.begin(), solution_c.end() );
+            
+        assemblyFEElements_[T]->updateSolution(solution);
+    }        
+}
+
+template <class SC, class LO, class GO, class NO>
 void FE<SC,LO,GO,NO>::applyBTinv( vec3D_dbl_ptr_Type& dPhiIn,
                                     vec3D_dbl_Type& dPhiOut,
                                     SmallMatrix<SC>& Binv){

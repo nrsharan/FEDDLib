@@ -1028,7 +1028,8 @@ void SCI<SC,LO,GO,NO>::setBoundariesSubProblems( ) const
 template<class SC,class LO,class GO,class NO>
 void SCI<SC,LO,GO,NO>::updateTime() const
 {
-    timeSteppingTool_->t_ = timeSteppingTool_->t_ + timeSteppingTool_->dt_prev_;
+    // timeSteppingTool_->t_ = timeSteppingTool_->t_ + timeSteppingTool_->dt_;
+    timeSteppingTool_->advanceInTime(); // Now SCI time stepper has t_{n+1} and corresponding dt(already applied) 
 
    // cout << " ###### Timestep in SCI dt_prev" << timeSteppingTool_->dt_prev_ << " dt= " << timeSteppingTool_->dt_ <<" time= " << timeSteppingTool_->t_ << " ####### " << endl;
 
@@ -1041,10 +1042,10 @@ void SCI<SC,LO,GO,NO>::updateTime() const
     MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
     c_rep_->importFromVector(c, true);
     d_rep_->importFromVector(d, true); 
-    this->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_->dt_, d_rep_, c_rep_ ); // TODO: c_rep_ is not set here, but is still being sent to advanceInTimeAssemblyFEElements!
+    this->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_, d_rep_, c_rep_ ); // Syncs time t_{n+1} and dt to all AceGen elements
 
-    this->problemTimeChem_->updateTime(timeSteppingTool_->t_);
-    this->problemTimeStructure_->updateTime(timeSteppingTool_->t_);
+    this->problemTimeChem_->updateTime(timeSteppingTool_->t_); // ProblemChem has t_{n+1}
+    this->problemTimeStructure_->updateTime(timeSteppingTool_->t_); // ProblemStructure has t_{n+1}
 
    // if(couplingType_ == "explicit")
    //     this->problemTimeStructure_->feFactory_->advanceInTimeAssemblyFEElements(timeSteppingTool_->dt_, d_rep_, c_rep_ );   

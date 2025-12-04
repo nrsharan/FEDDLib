@@ -332,7 +332,7 @@ namespace FEDD
 		}
 	}
 	template <class SC, class LO, class GO, class NO>
-	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::advanceInTime(double dt)
+	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::advanceInTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool)
 	{
 		
 		// If we have a time segment setting we switch to the demanded time increment
@@ -343,9 +343,9 @@ namespace FEDD
 		// if (this->timeStep_ - 1.e-13 < 0) // only in this one instance T=0 we set the dt beforehand, as the initial dt is set through the paramterlist and this is error prone
 		// this->timeIncrement_ = dt;
 
-		this->timeStep_ = this->timeStep_ + this->timeIncrement_;
+		this->timeStep_ = timeSteppingTool->currentTime();
 
-		this->timeIncrement_ = dt;
+		this->timeIncrement_ = timeSteppingTool->get_dt();
 
 		// Checking for Active Response Reorientation and Growth
 		checkingReorientationActiveGrowth();
@@ -354,7 +354,7 @@ namespace FEDD
 		{
 			cout << " ---------------------------------------------- " << endl;
 			cout << " AssembleFE_SCI_SMC: Advancing time in elements" << endl;
-			cout << " Timestep: " << this->timeStep_ << " \t timeincrement: " << this->timeIncrement_ << " \t to be computed time: " << this->timeIncrement_ + this->timeStep_ << endl;
+			cout << " Timestep: " << this->timeStep_ << " \t timeincrement: " << this->timeIncrement_ << " \t to be computed time: " << this->timeStep_ << endl;
 			cout << " ---------------------------------------------- " << endl;
 		}
 		// cout << " Update:: History " ;
@@ -408,7 +408,7 @@ namespace FEDD
 		double deltaT = this->getTimeIncrement();
 		// this->element_.setTimeIncrement(deltaT);
 
-		double time = this->getTimeStep() + deltaT;
+		double time = this->getTimeStep();
 		// this->element_.setTime(time);
 
 		for (int i = 0; i < 30; i++)
@@ -537,7 +537,7 @@ namespace FEDD
 
 		double deltaT = this->getTimeIncrement();
 
-		double time = this->getTimeStep() + deltaT;
+		double time = this->getTimeStep();
 
 		// if(this->growthInitialized_==true)
 		// {
@@ -637,7 +637,7 @@ namespace FEDD
 
 		double deltaT = this->getTimeIncrement();
 
-		double time = this->getTimeStep() + deltaT;
+		double time = this->getTimeStep();
 
 		std::vector<double> domainDataModified(this->domainDataLength_);
 		
@@ -676,7 +676,7 @@ namespace FEDD
 	{
 		double deltaT = this->getTimeIncrement();
 		cout << " Initialize active Response " << endl;
-		double time = this->getTimeStep() + deltaT;
+		double time = this->getTimeStep();
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 		std::vector<double> domainDataModified(this->domainDataLength_);
 		
