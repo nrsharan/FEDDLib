@@ -1029,7 +1029,7 @@ template<class SC,class LO,class GO,class NO>
 void SCI<SC,LO,GO,NO>::updateTime() const
 {
     // timeSteppingTool_->t_ = timeSteppingTool_->t_ + timeSteppingTool_->dt_;
-    timeSteppingTool_->advanceInTime(); // Now SCI time stepper has t_{n+1} and corresponding dt(already applied) 
+    timeSteppingTool_->advanceTime(); // Now SCI time stepper has t_{n+1} and corresponding dt(already applied) 
 
    // cout << " ###### Timestep in SCI dt_prev" << timeSteppingTool_->dt_prev_ << " dt= " << timeSteppingTool_->dt_ <<" time= " << timeSteppingTool_->t_ << " ####### " << endl;
 
