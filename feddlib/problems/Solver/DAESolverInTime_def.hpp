@@ -1032,7 +1032,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
                 timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
                 this->problemTime_->assemble("UpdateTime"); // Updates to next timestep
                 sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
-                timeSteppingTool_->advanceInTime();
             }
 
         }
@@ -3435,9 +3434,9 @@ void DAESolverInTime<SC,LO,GO,NO>::checkTimeSteppingDef(){
 }
 
 template<class SC,class LO,class GO,class NO>
-void DAESolverInTime<SC,LO,GO,NO>::getActiveTimeSegment(const vec2D_dbl_Type& timeSegments, const double& currentTime, int& activeSegmentNumber, double tolerance=1.0e-8){
+void DAESolverInTime<SC,LO,GO,NO>::getActiveTimeSegment(const vec2D_dbl_Type& timeSegments, const double& currentTime, int& activeSegmentNumber, double tolerance){
     for(int i=0; i < timeSegments.size(); i++)
-        if(timeSteppingTool_->currentTime() > timeSegments[i][0] || approxEqual(timeSteppingTool_->currentTime(), timeSegments[i][0]))
+        if(timeSteppingTool_->currentTime() > timeSegments[i][0] || approxEqual(timeSteppingTool_->currentTime(), timeSegments[i][0], tolerance))
             activeSegmentNumber = i;
 }
 
