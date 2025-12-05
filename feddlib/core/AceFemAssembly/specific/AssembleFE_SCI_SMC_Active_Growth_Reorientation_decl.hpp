@@ -64,6 +64,8 @@ namespace FEDD
 
 		virtual void advanceInTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool);
 
+                virtual void synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool);
+
 		virtual void postProcessing();
 
 		void getMassMatrix(SmallMatrixPtr_Type &massMatrix) { massMatrix = massMatrix_; };

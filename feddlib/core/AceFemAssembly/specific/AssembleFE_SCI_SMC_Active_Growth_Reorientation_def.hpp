@@ -728,5 +728,12 @@ namespace FEDD
 		this->domainData_[position] = dataValue;
 	}
 
+	template <class SC, class LO, class GO, class NO>
+	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool)
+	{
+		this->timeStep_ = timeSteppingTool->t_;
+		this->timeIncrement_ = timeSteppingTool->get_dt();
+	}
+
 } // namespace FEDD
 #endif // AssembleFE_SCI_SMC_Active_Growth_Reorientation_DEF_hpp

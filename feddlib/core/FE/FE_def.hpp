@@ -1119,7 +1119,7 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
 
 			
 	}
-	if ( assembleMode == "Jacobian" || assembleMode == ""){
+	if ( assembleMode == "Jacobian"){
 		A->getBlock(0,0)->fillComplete();
 	    A->getBlock(1,0)->fillComplete(domainVec_.at(FElocSolid)->getMapVecFieldUnique(),domainVec_.at(FElocChem)->getMapUnique());
 	    A->getBlock(0,1)->fillComplete(domainVec_.at(FElocChem)->getMapUnique(),domainVec_.at(FElocSolid)->getMapVecFieldUnique());
@@ -11148,6 +11148,12 @@ int FE<SC,LO,GO,NO>::checkFE(int dim,
     TEUCHOS_TEST_FOR_EXCEPTION(!found, std::logic_error   ,"Combination of dimenson(2/3) and FE Type(P1/P2) not defined yet. Use addFE(domain)");
 
     return FEloc;
+}
+
+void FE<SC,LO,GO,NO>::synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool) {
+    for (UN T=0; T<assemblyFEElements_.size(); T++) {
+        assemblyFEElements_.at(T)->synchronizeTime(timeSteppingTool);
+    }
 }
 
 
