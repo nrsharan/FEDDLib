@@ -1086,7 +1086,6 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
         if(detB <=0.)
            cout << " Determinante Element: " << detB << endl;
         // ------------------------
-
 		if(assembleMode == "Jacobian"){
 			assemblyFEElements_[T]->assembleJacobian();
 
