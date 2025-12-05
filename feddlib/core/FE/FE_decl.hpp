@@ -623,6 +623,13 @@ class FE {
                             bool callFillComplete,
                             int FELocExternal=-1);
 
+    void initAssembleFEAceDeformDiffu(int dim,
+                        string FETypeChem,
+                        string FETypeSolid,
+                        int dofsChem,
+                        int dofsSolid,
+                        ParameterListPtr_Type params);
+
     void assemblyAceDeformDiffu(int dim,
 								string FETypeChem,
 								string FETypeSolid,
