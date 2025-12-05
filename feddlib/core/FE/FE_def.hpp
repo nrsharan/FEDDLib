@@ -1119,7 +1119,7 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
 
 			
 	}
-	if ( assembleMode == "Jacobian"){
+	if ( assembleMode == "Jacobian" || assembleMode == ""){
 		A->getBlock(0,0)->fillComplete();
 	    A->getBlock(1,0)->fillComplete(domainVec_.at(FElocSolid)->getMapVecFieldUnique(),domainVec_.at(FElocChem)->getMapUnique());
 	    A->getBlock(0,1)->fillComplete(domainVec_.at(FElocChem)->getMapUnique(),domainVec_.at(FElocSolid)->getMapVecFieldUnique());
