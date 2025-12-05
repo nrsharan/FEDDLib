@@ -1012,10 +1012,18 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     while(timeSteppingTool_->continueTimeStepping())
     {
         // Determine dt for current time segement
-        for(int i=0; i<numSegments ; i++){
-            if(timeSteppingTool_->currentTime()+1.0e-8 > timeParametersVec[i][0])
-                dt=timeParametersVec[i][1];
+        // for(int i=0; i<numSegments ; i++){
+        //     if(timeSteppingTool_->currentTime()+1.0e-8 > timeParametersVec[i][0])
+        //         dt=timeParametersVec[i][1];
+        // }
+        for(int i=0; i<numSegments; ++i) {
+            if(timeSteppingTool_->currentTime() >= timeParametersVec[i][0] - 1e-8  )
+            {
+                dt = timeParametersVec[i][1];
+                break;
+            }
         }
+
         timeSteppingTool_->dt_= dt;
         sci->timeSteppingTool_->dt_ = dt; // TODO: Why is this necessary?
         if(restart){
