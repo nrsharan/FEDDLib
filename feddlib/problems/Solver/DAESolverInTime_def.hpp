@@ -870,6 +870,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     if(numSegments > 0) // To ensure that in case timeSegments are not used dt_ is not overwritten
         timeSteppingTool_->dt_ = dt; // At this point DAESolver time stepper has t_n and accurate dt value
 
+    timeSteppingTool_->printInfo();
+    sci->timeSteppingTool_->printInfo();
     sci->timeSteppingTool_->dt_ = timeSteppingTool_->dt_; // Ensuring that SCI problem has the correct dt value
     sci->timeSteppingTool_->t_ = timeSteppingTool_->t_+ timeSteppingTool_->dt_; // Ensuring that SCI problem has the correct current time value (t_n+1) [Required for assembly]
     sci->assemble();
