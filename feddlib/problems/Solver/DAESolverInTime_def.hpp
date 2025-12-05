@@ -1042,7 +1042,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
         }
         else{
-            if(approxEqual(timeSteppingTool_->currentTime(), timeSteppingTool_->dt_)){ // First time step
+            if(approxEqual(timeSteppingTool_->currentTime(), 0.0)){ // First time step
                 timeSteppingTool_->dt_prev_= dt;        
                 sci->timeSteppingTool_->dt_prev_= dt;        
             }
@@ -1127,7 +1127,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             // Hier wird auch direkt ein Update der Loesung bei der Struktur gemacht.
             // Aehnlich zu "UpdateFluidInTime".
             std::cout << "Starting mass matrix computation in Time. \n";
-            if(timeSteppingTool_->currentTime() == 0.0 || (restart &&  timeSteppingTool_->currentTime() -1.e-5 < timeStepRestart ))
+            if(approxEqual(timeSteppingTool_->currentTime(), 0.0) || (restart &&  timeSteppingTool_->currentTime() -1.e-5 < timeStepRestart ))
             {
                 // We extract the underlying FSI problem
                 // This here does nothing. It's only used for FSI problems.
