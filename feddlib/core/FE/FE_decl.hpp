@@ -681,6 +681,7 @@ class FE {
     BlockMultiVectorPtr_Type getHistoryValues();
     void setHistoryValues(LO T,vec_dbl_Type history);
 
+    void synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool);
 
 /* ----------------------------------------------------------------------------------------*/
 private:
@@ -815,8 +816,6 @@ private:
 
     int checkFE(int Dimension,
                 std::string FEType);
-
-    void synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool);
 
     /*UN determineDegree(UN dim,
                        std::string FEType1,
