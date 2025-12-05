@@ -98,6 +98,12 @@ void AssembleFE<SC,LO,GO,NO>::advanceInTime( Teuchos::RCP<TimeSteppingTools> tim
 };
 
 template <class SC, class LO, class GO, class NO>
+void AssembleFE<SC,LO,GO,NO>::synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool){
+  timeIncrement_ = timeSteppingTool->get_dt();
+  timeStep_ = timeSteppingTool->currentTime();
+};
+
+template <class SC, class LO, class GO, class NO>
 void AssembleFE<SC,LO,GO,NO>::advanceNewtonStep(){
 	newtonStep_ = newtonStep_+1 ;
 

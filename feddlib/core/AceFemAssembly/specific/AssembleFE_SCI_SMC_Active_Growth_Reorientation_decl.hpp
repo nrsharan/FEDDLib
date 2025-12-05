@@ -62,9 +62,9 @@ namespace FEDD
 		*/
 		virtual void assembleJacobianBlock(LO i){};
 
-		virtual void advanceInTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool);
+		void advanceInTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool) override;
 
-                virtual void synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool);
+                void synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool) override;
 
 		virtual void postProcessing();
 
