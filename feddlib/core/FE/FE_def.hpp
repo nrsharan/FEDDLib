@@ -7053,7 +7053,8 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
                                               int FEloc) {
     
     // degree of function funcParameter[0]
-
+    
+    std::cout << "Entering assemblyNonlinearSurfaceIntegralExternal \n";
     ElementsPtr_Type elements = domainVec_.at(FEloc)->getElementsC();
 
     vec2D_dbl_ptr_Type pointsRep = domainVec_.at(FEloc)->getPointsRepeated();
@@ -7119,7 +7120,7 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
                     residuumVector = pt.getResiduum();
                     stiffMat = pt.getStiffnessMatrix();
                     #endif
-
+                    std::cout << "Compute completed external surface integral element " << T << "\n";
                     // getResiduumVectorRext(&positions[0], &solution_d[0], 1.0, valueFunc[0], 35, residuumVector);
                     // getStiffnessMatrixKuuExt(&positions[0], &solution_d[0], 1.0, valueFunc[0], 35, stiffMat); // 16, 35 
 
@@ -7180,6 +7181,7 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
             }
         }
     }
+    std::cout << "Completed element loop for assemblyNonlinearSurfaceIntegralExternal \n";
     f->scale(-1.); // CHECK
     Kext->fillComplete(domainVec_.at(FEloc)->getMapVecFieldUnique(),domainVec_.at(FEloc)->getMapVecFieldUnique());
     // Kext->writeMM("K_ext1");

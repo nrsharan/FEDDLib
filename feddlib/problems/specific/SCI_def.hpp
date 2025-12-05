@@ -870,7 +870,7 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const { // TODO: Rename because i
     double dt = timeSteppingTool_->get_dt();
     double beta = timeSteppingTool_->get_beta();
     double gamma = timeSteppingTool_->get_gamma();
-    
+    std::cout << "Entered computeSolidRHSInTime \n";
     //double density = this->problemTimeStructure_->getParameterList()->sublist("Parameter Solid").get("Density",1.e-0);
 
     // Temporaerer Koeffizienten fuer die Skalierung der Massematrix in der rechten Seite des Systems in UpdateNewmarkRhs()
@@ -928,9 +928,9 @@ void SCI<SC,LO,GO,NO>::computeSolidRHSInTime() const { // TODO: Rename because i
                 MatrixPtr_Type AKext(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );          
                 MatrixPtr_Type Kext(new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow()*2 ) );          
                 MultiVectorPtr_Type Kext_vec;
-                
+                std::cout << "Pre assembly of nonlinear external force \n";
                 this->feFactory_->assemblyNonlinearSurfaceIntegralExternal(this->dim_, this->getDomain(0)->getFEType(),FERhs, d_rep_,Kext, funcParameter, this->problemTimeStructure_->getUnderlyingProblem()->rhsFuncVec_[0],this->parameterList_);
-                    
+                std::cout << "Post assembly of nonlinear external force \n";
                 A->addMatrix(1.,AKext,0.);
                 // AKext = -1. * Kext + 1. *AKext;
                 Kext->addMatrix(1.,AKext,1.);
