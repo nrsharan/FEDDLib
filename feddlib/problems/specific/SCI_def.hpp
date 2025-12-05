@@ -70,6 +70,8 @@ materialModel_( parameterListSCI->sublist("Parameter").get("Structure Model","SC
         exporterIterationsChem_->setup( "linearIterations_chem", this->comm_ );
     }
 
+    timeSteppingTool_ = Teuchos::rcp(new TimeSteppingTools(sublist(this->parameterList_,"Timestepping Parameter") , this->comm_));
+
     // postProcessingnames_ = this->feFactory_->getPostDataNames();
     // postProcessingnames_.resize(23);
     // postProcessingnames_ = {"vonMisesStress", "SCirc","SAxial","SRadial","W","Growth1","Growth2","Growth3","Strech1","Strech2","nC1","nC2","nD1","nD2","Agn11","Agn12","Agn13","Agn21","Agn22","Agn23","Agn31","Agn32","Agn33"};
@@ -157,8 +159,6 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
         systemTmp->addBlock(B,1,0);
         systemTmp->addBlock(C,1,1);
 
-        timeSteppingTool_ = Teuchos::rcp(new TimeSteppingTools(sublist(this->parameterList_,"Timestepping Parameter") , this->comm_));
-
         this->setupSubTimeProblems(this->problemChem_->getParameterList(), this->problemStructureNonLin_->getParameterList());
 
         this->problemTimeStructure_->assembleSourceTerm( 0. );
@@ -180,7 +180,7 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
         BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
         blockSol->addBlock(d_rep_,0);
         blockSol->addBlock(c_rep_,1);
-        this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,systemTmp,this->residualVec_, this->parameterList_, "", true/*call fillComplete*/);
+        this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,systemTmp,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
         //this->feFactory_->globalAssembly(materialModel_, this->dim_, 2, blockSol, this->system_, this->residualVec_,this->parameterList_,"Jacobian",true);
 
         if(chemistryExplicit_){
@@ -1029,7 +1029,7 @@ template<class SC,class LO,class GO,class NO>
 void SCI<SC,LO,GO,NO>::updateTime() const
 {
     // timeSteppingTool_->t_ = timeSteppingTool_->t_ + timeSteppingTool_->dt_;
-    timeSteppingTool_->advanceTime(); // Now SCI time stepper has t_{n+1} and corresponding dt(already applied) 
+    timeSteppingTool_->advanceTime(); // Now SCI time stepper has t_{n+1} and corresponding dt(already applied)
 
    // cout << " ###### Timestep in SCI dt_prev" << timeSteppingTool_->dt_prev_ << " dt= " << timeSteppingTool_->dt_ <<" time= " << timeSteppingTool_->t_ << " ####### " << endl;
 

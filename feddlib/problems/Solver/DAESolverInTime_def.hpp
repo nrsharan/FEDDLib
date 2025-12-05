@@ -870,6 +870,9 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     if(numSegments > 0) // To ensure that in case timeSegments are not used dt_ is not overwritten
         timeSteppingTool_->dt_ = dt; // At this point DAESolver time stepper has t_n and accurate dt value
 
+    sci->timeSteppingTool_->dt_ = timeSteppingTool_->dt_; // Ensuring that SCI problem has the correct dt value
+    sci->timeSteppingTool_->currentTime_ = timeSteppingTool_->currentTime_+timeSteppingTool_->dt_; // Ensuring that SCI problem has the correct current time value (t_n+1) [Required for assembly]
+    sci->assemble();
     // Notwendige Parameter
     int sizeSCI = timeStepDef_.size();
 
@@ -1036,16 +1039,16 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
         }
         else{
-            // if(approxEqual(timeSteppingTool_->currentTime(), 0.0)){
-            //     timeSteppingTool_->dt_prev_= dt;        
-            //     sci->timeSteppingTool_->dt_prev_= dt;        
-            // }
-            // else{
+            if(approxEqual(timeSteppingTool_->currentTime(), timeSteppingTool_->dt_)){ // First time step
+                timeSteppingTool_->dt_prev_= dt;        
+                sci->timeSteppingTool_->dt_prev_= dt;        
+            }
+            else{
                 timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
                 this->problemTime_->assemble("UpdateTime"); // Updates to next timestep (SCI Now hast t_n+1)
                 sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
                 std::cout << "Update in time completed successfully! \n";
-            // }
+            }
         }
         
 

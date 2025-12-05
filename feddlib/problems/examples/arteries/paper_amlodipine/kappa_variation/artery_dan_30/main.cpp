@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
 
         sci.initializeCE();
 
-        sci.assemble();
+        // sci.assemble();
 
         FEDD::DAESolverInTime<SC, LO, GO, NO> daeTimeSolver(allParameters, comm);
 
