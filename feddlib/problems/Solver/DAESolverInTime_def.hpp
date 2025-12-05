@@ -1108,6 +1108,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             
         }
 
+        std::cout << "Finished chemistry update in Time. \n";
+
         // ######################
         // Struktur Zeitsystem
         // ######################
@@ -1118,7 +1120,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             
             // Hier wird auch direkt ein Update der Loesung bei der Struktur gemacht.
             // Aehnlich zu "UpdateFluidInTime".
-            
+            std::cout << "Starting mass matrix computation in Time. \n";
             if(timeSteppingTool_->currentTime() == 0.0 || (restart &&  timeSteppingTool_->currentTime() -1.e-5 < timeStepRestart ))
             {
                 // We extract the underlying FSI problem
