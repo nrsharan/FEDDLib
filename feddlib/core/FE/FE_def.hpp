@@ -11150,6 +11150,7 @@ int FE<SC,LO,GO,NO>::checkFE(int dim,
     return FEloc;
 }
 
+template <class SC, class LO, class GO, class NO>
 void FE<SC,LO,GO,NO>::synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool) {
     for (UN T=0; T<assemblyFEElements_.size(); T++) {
         assemblyFEElements_.at(T)->synchronizeTime(timeSteppingTool);
