@@ -871,7 +871,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         timeSteppingTool_->dt_ = dt; // At this point DAESolver time stepper has t_n and accurate dt value
 
     sci->timeSteppingTool_->dt_ = timeSteppingTool_->dt_; // Ensuring that SCI problem has the correct dt value
-    sci->timeSteppingTool_->currentTime_ = timeSteppingTool_->currentTime_+timeSteppingTool_->dt_; // Ensuring that SCI problem has the correct current time value (t_n+1) [Required for assembly]
+    sci->timeSteppingTool_->t_ = timeSteppingTool_->t_+ timeSteppingTool_->dt_; // Ensuring that SCI problem has the correct current time value (t_n+1) [Required for assembly]
     sci->assemble();
     // Notwendige Parameter
     int sizeSCI = timeStepDef_.size();
