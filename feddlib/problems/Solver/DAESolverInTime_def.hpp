@@ -1129,6 +1129,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
                 sci->setSolidMassmatrix( massmatrix );
                 this->problemTime_->systemMass_->addBlock( massmatrix, 0, 0 );
             }
+            std::cout << "Finished mass matrix computation in Time. \n";
             // this should be done automatically rhs will not be used here
             //  this->problemTime_->getRhs()->addBlock( Teuchos::rcp_const_cast<MultiVector_Type>(rhs->getBlock(0)), 2 );
             this->problemTime_->assemble("ComputeSolidRHSInTime"); // We get the forcing term here (due to external loads)
