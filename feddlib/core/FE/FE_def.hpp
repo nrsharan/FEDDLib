@@ -2550,6 +2550,8 @@ void FE<SC,LO,GO,NO>::assemblyMass(int dim,
                                      int FEloc, // 0 = Fluid, 2 = Struktur
                                      bool callFillComplete){
 
+    std::cout << "Entered assemblyMass with FEloc = " << FEloc << "\n";
+    
     TEUCHOS_TEST_FOR_EXCEPTION(FEType == "P0",std::logic_error, "Not implemented for P0");
 
     ElementsPtr_Type elements = domainVec_.at(FEloc)->getElementsC();
@@ -2572,6 +2574,7 @@ void FE<SC,LO,GO,NO>::assemblyMass(int dim,
     vec_dbl_Type v_i(dim);
     vec_dbl_Type v_j(dim);
 
+    std::cout << "Entering loop over elements for mass matrix assembly...\n";
     for (UN T=0; T<elements->numberElements(); T++) {
 
         Helper::buildTransformation(elements->getElement(T).getVectorNodeList(), pointsRep, B);
@@ -2607,7 +2610,7 @@ void FE<SC,LO,GO,NO>::assemblyMass(int dim,
             else
                 TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Specify valid vieldType for assembly of mass matrix.");
         }
-
+        std::cout << "Finished assembling mass matrix for element " << T << "\n";
 
     }
     if (callFillComplete)
