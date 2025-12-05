@@ -1036,15 +1036,15 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
         }
         else{
-            if(approxEqual(timeSteppingTool_->currentTime(), 0.0)){
-                timeSteppingTool_->dt_prev_= dt;        
-                sci->timeSteppingTool_->dt_prev_= dt;        
-            }
-            else{
+            // if(approxEqual(timeSteppingTool_->currentTime(), 0.0)){
+            //     timeSteppingTool_->dt_prev_= dt;        
+            //     sci->timeSteppingTool_->dt_prev_= dt;        
+            // }
+            // else{
                 timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
                 this->problemTime_->assemble("UpdateTime"); // Updates to next timestep (SCI Now hast t_n+1)
                 sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
-            }
+            // }
         }
         
 

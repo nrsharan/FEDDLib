@@ -126,16 +126,19 @@ namespace FEDD
 		// historyGP: Vector of history variables [Order: LambdaBarC1, LambdaBarC2, nA1, nA2, nB1, nB2, nC1, nC2, nD1, nD2, LambdaA1, LambdaA2, k251, k252, LambdaBarP1, LambdaBarP2, Theta1, Theta2, Theta3, Ag11, Ag12, Ag13, Ag21, Ag22, Ag23, Ag31, Ag32, Ag33, a11, a12, a13, a21, a22, a23] (The length must be equal to number of history variables per gauss point(34) * number of gauss points)
 		std::vector<double> historyGP = {1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 1., 1., 1.82758, 1.82758, 1., 1., 1., 1., 1., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.};
 		
-		this->history_ = historyGP;
+		this->history_.clear();
+		this->historyUpdated_.clear();
 
 		this->history_.reserve(this->historyLength_);
-		for (int i = 0; i < this->numberOfIntegrationPoints_ - 1; i++)
+		for (int i = 0; i < this->numberOfIntegrationPoints_; i++)
 			this->history_.insert(this->history_.end(), historyGP.begin(), historyGP.end());
 
 		// Error out if history length is inconsistent
-		TEUCHOS_TEST_FOR_EXCEPTION(this->history_.size() != this->historyLength_, std::logic_error, "History input length does not match history size of model! \n Hisory input length: " << this->history_.size() << "\n History size of model: " << this->historyLength_ << "\n");
+		TEUCHOS_TEST_FOR_EXCEPTION(this->history_.size() != this->historyLength_, std::logic_error, "History input length does not match history size of model! \n History input length: " << this->history_.size() << "\n History size of model: " << this->historyLength_ << "\n");
 
-		this->historyUpdated_.resize(this->historyLength_, 0.);
+		this->historyUpdated_.reserve(this->historyLength_);
+		for (int i = 0; i < this->numberOfIntegrationPoints_; i++)
+			this->historyUpdated_.insert(this->historyUpdated_.end(), historyGP.begin(), historyGP.end());
 
 		this->solutionC_n_.resize(10, 0.);
 		this->solutionC_n1_.resize(10, 0.);
@@ -365,6 +368,7 @@ namespace FEDD
 			//  cout << " | " << this->history_[i] ;
 		}
 		// cout << endl;
+		// TODO: Why is only the concentration history updated here? Why not displacements?
 		for (int i = 0; i < 10; i++)
 			this->solutionC_n_[i] = (*this->solution_)[i + 30]; // this is the LAST solution of newton iterations
 																// #ifdef FEDD_HAVE_ACEGENINTERFACE
