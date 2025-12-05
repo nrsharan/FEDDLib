@@ -1013,7 +1013,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     {
         // Determine dt for current time segement
         for(int i=0; i<numSegments ; i++){
-            if(timeSteppingTool_->currentTime()+1.0e-12 > timeParametersVec[i][0])
+            if(timeSteppingTool_->currentTime()+1.0e-8 > timeParametersVec[i][0])
                 dt=timeParametersVec[i][1];
         }
         timeSteppingTool_->dt_= dt;
