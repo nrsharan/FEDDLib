@@ -7,7 +7,7 @@
 #include "feddlib/problems/specific/NonLinElasticity.hpp"
 #include "feddlib/problems/specific/NonLinElasAssFE.hpp"
 #include "feddlib/problems/specific/Geometry.hpp"
-#include "feddlib/problems/Solver/TimeSteppingTools.hpp"
+#include "feddlib/core/General/TimeSteppingTools.hpp"
 #include "Xpetra_ThyraUtils.hpp"
 #include "Xpetra_CrsMatrixWrap.hpp"
 #include <Thyra_PreconditionerBase.hpp>

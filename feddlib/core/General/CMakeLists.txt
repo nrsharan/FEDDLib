@@ -19,7 +19,8 @@ SET(General_HEADERS
 	General/InputToOutputMappingClass_def.hpp
 	General/DifferentiableFuncClass.hpp
 	General/DifferentiableFuncClass_decl.hpp
-	General/DifferentiableFuncClass_def.hpp	
+	General/DifferentiableFuncClass_def.hpp
+	General/TimeSteppingTools.hpp
 CACHE INTERNAL "")
 
 SET(General_SOURCES
@@ -30,6 +31,7 @@ SET(General_SOURCES
 	General/DifferentiableFuncClass.cpp
 	General/HDF5Import.cpp
 	General/HDF5Export.cpp
+	General/TimeSteppingTools.cpp
 CACHE INTERNAL "")
 
 

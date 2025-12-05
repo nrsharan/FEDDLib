@@ -7,7 +7,7 @@
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/LinearAlgebra/Matrix.hpp"
 #include "feddlib/core/LinearAlgebra/MultiVector.hpp"
-#include "feddlib/problems/Solver/TimeSteppingTools.hpp"
+#include "feddlib/core/General/TimeSteppingTools.hpp"
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"

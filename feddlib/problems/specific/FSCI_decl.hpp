@@ -5,7 +5,7 @@
 #include "feddlib/problems/specific/LinElas.hpp"
 #include "feddlib/problems/specific/NonLinElasticity.hpp"
 #include "feddlib/problems/specific/Geometry.hpp"
-#include "feddlib/problems/Solver/TimeSteppingTools.hpp"
+#include "feddlib/core/General/TimeSteppingTools.hpp"
 #include "feddlib/problems/specific/SCI.hpp"
 #include "feddlib/problems/specific/FSI.hpp"
 #include "Xpetra_ThyraUtils.hpp"
