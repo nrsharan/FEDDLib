@@ -143,6 +143,11 @@ namespace FEDD {
          \return the timestep
         */
         double getTimeStep();
+        
+        /*!
+         \brief This function is called once at the start of the simulation.
+        */
+        virtual void synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool);
 
         /*!
          \brief This function is called every time the FEDDLib proceeds from one to the next newton step. The size of the time step will always be provided as input. 
