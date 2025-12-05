@@ -181,31 +181,6 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
         blockSol->addBlock(d_rep_,0);
         blockSol->addBlock(c_rep_,1);
 
-        //Ugly repetition of code - needs to be fixed later
-        int numChem=3;
-        if(FETypeChem == "P2"){
-        numChem=6;
-        }    
-	    if(dim==3){
-		    numChem=4;
-            if(FETypeChem == "P2")
-                numChem=10;
-	    }
-        int numSolid=3;
-        if(FETypeSolid == "P2")
-            numSolid=6;
-        
-	    if(dim==3){
-		numSolid=4;
-        if(FETypeSolid == "P2")
-            numSolid=10;
-        }
-	    tuple_disk_vec_ptr_Type problemDisk = Teuchos::rcp(new tuple_disk_vec_Type(0));
-	    tuple_ssii_Type chem ("Chemistry",FETypeChem,dofsChem,numChem);
-	    tuple_ssii_Type solid ("Solid",FETypeSolid,dofsSolid,numSolid);
-	    problemDisk->push_back(solid);
-	    problemDisk->push_back(chem);
-
         this->feFactory_->initAssembleFEAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 1,this->dim_,this->parameterList_);
         this->feFactory_->synchronizeTime(this->timeSteppingTool_);
         this->feFactory_->assemblyAceDeformDiffu(this->dim_, this->getDomain(1)->getFEType(), this->getDomain(0)->getFEType(), 2, 1,this->dim_,c_rep_,d_rep_,systemTmp,this->residualVec_, this->parameterList_, "Jacobian", true/*call fillComplete*/);
