@@ -561,7 +561,7 @@ void SCI<SC,LO,GO,NO>::updateMeshDisplacement() const
 {
 
      *meshDisplacementOld_rep_ = *meshDisplacementNew_rep_;
-
+    std::cout << "Done updateMeshDisplacement " << std::endl;
 }
 // Muss derzeit nur am Anfang jeder Zeititeration aufgerufen werden, damit
 // problemTimeFluid_ und problemTimeStructure_ die aktuelle Loesung haben.
