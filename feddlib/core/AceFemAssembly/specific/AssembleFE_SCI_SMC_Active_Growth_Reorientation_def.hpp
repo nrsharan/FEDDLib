@@ -374,6 +374,9 @@ namespace FEDD
 																// #ifdef FEDD_HAVE_ACEGENINTERFACE
 																//		this->element_.setComputeCompleted(false);
 																// #endif
+
+		if (this->globalElementID_ == 0)
+			std::cout << "Finished element advance in Time. \n";
 	}
 
 	template <class SC, class LO, class GO, class NO>

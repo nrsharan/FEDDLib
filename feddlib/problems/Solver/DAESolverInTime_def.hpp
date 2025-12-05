@@ -1044,6 +1044,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
                 timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
                 this->problemTime_->assemble("UpdateTime"); // Updates to next timestep (SCI Now hast t_n+1)
                 sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
+                std::cout << "Update in time completed successfully! \n";
             // }
         }
         
@@ -1089,11 +1090,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         {
           this->problemTime_->updateSolutionMultiPreviousStep(nmbBDF); //Sets BDF 
         }
+        std::cout << "Finished solution update in Time. \n";
         
 
         // Alte Gitterbewegung mit der Geometrieloesung ueberschreiben.
         // -- we can keep this as expicit update for the reaction-diffusion displacement
         this->problemTime_->assemble("UpdateMeshDisplacement"); // Used as precursor for moving mesh
+        std::cout << "Finished mesh displacement update in Time. \n";
        
         if(chemistryExplicit_)
         {
@@ -1127,6 +1130,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             // this should be done automatically rhs will not be used here
             //  this->problemTime_->getRhs()->addBlock( Teuchos::rcp_const_cast<MultiVector_Type>(rhs->getBlock(0)), 2 );
             this->problemTime_->assemble("ComputeSolidRHSInTime"); // We get the forcing term here (due to external loads)
+            std::cout << "Finished solid RHS computation in Time. \n";
         }
 
         // ######################
