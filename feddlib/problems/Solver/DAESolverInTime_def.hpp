@@ -1125,9 +1125,13 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             {
                 // We extract the underlying FSI problem
                 // This here does nothing. It's only used for FSI problems.
+                std::cout << "DAE Point1 \n";
                 MatrixPtr_Type massmatrix;
+                std::cout << "DAE Point2 \n";
                 sci->setSolidMassmatrix( massmatrix );
+                std::cout << "DAE Point3 \n";
                 this->problemTime_->systemMass_->addBlock( massmatrix, 0, 0 );
+                std::cout << "DAE Point4 \n";
             }
             std::cout << "Finished mass matrix computation in Time. \n";
             // this should be done automatically rhs will not be used here
