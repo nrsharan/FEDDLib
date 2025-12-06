@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
 
         daeTimeSolver.setProblem(sci);
 
-        daeTimeSolver.setupTimeStepping();
+        // daeTimeSolver.setupTimeStepping();
 
         daeTimeSolver.advanceInTime();
     }
