@@ -374,7 +374,9 @@ namespace FEDD
 																// #ifdef FEDD_HAVE_ACEGENINTERFACE
 																//		this->element_.setComputeCompleted(false);
 																// #endif
+	}
 
+	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::assembleRHS()
 	{
 
