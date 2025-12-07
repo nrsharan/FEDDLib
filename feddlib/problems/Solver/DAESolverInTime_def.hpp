@@ -128,8 +128,8 @@ void DAESolverInTime<SC,LO,GO,NO>::setProblem(Problem_Type& problem){
 
         if(numSegments>0)
         {
-            double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("dt",-3586.0);
-            TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(dtTmp, -3586.0), std::runtime_error, "dt for time segment " + std::to_string(i) + " received default value and was not set properly!");
+            double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(1)).get("dt",-3586.0);
+            TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(dtTmp, -3586.0), std::runtime_error, "dt for time segment " + std::to_string(1) + " received default value and was not set properly!");
             sci->timeSteppingTool_->dt_ = dtTmp; // Setting first time step size to SCI time stepping tool
             sci->timeSteppingTool_->t_ = dtTmp; // Setting initial time to first time step size (first time step)
         }
