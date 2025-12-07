@@ -1111,7 +1111,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         // Alte Gitterbewegung mit der Geometrieloesung ueberschreiben.
         // -- we can keep this as expicit update for the reaction-diffusion displacement
         this->problemTime_->assemble("UpdateMeshDisplacement"); // Used as precursor for moving mesh
-        std::cout << "Finished mesh displacement update in Time. \n";
        
         if(chemistryExplicit_)
         {
@@ -1122,8 +1121,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             this->problemTime_->assemble("SolveChemistryProblem");
             
         }
-
-        std::cout << "Finished chemistry update in Time. \n";
 
         // ######################
         // Struktur Zeitsystem

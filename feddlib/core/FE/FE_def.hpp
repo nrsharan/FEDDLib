@@ -2666,7 +2666,6 @@ void FE<SC,LO,GO,NO>::assemblyMass(int dim,
             else
                 TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Specify valid vieldType for assembly of mass matrix.");
         }
-        std::cout << "Finished assembling mass matrix for element " << T << "\n";
 
     }
     if (callFillComplete)
