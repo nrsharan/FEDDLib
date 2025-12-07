@@ -118,11 +118,14 @@ DAESolverInTime<SC,LO,GO,NO>::~DAESolverInTime(){
 template<class SC,class LO,class GO,class NO>
 void DAESolverInTime<SC,LO,GO,NO>::setProblem(Problem_Type& problem){
 
+    std::cout << "Setting problem in DAE Time Solver. \n";
     problem_ = Teuchos::rcpFromRef(problem); /*now a NON-OWNING TEUCHOS::RCP to the object which was probably constructed in main function */
-
+    std::cout << "Set problem_ rcp successful. \n";
     if(this->parameterList_->sublist("Parameter").get("SCI",false))
     {
+        std::cout << "Inside if SCI block of setProblem. \n";
         SCIProblemPtr_Type sci = Teuchos::rcp_dynamic_cast<SCIProblem_Type>( this->problemTime_->getUnderlyingProblem() );
+        std::cout << "Set problem successful. \n";
 
         sci->info();
 
