@@ -250,15 +250,27 @@ int main(int argc, char *argv[])
 
         sci.initializeCE();
 
+        std::cout << "Create DAE Time Solver \n";
+
         FEDD::DAESolverInTime<SC, LO, GO, NO> daeTimeSolver(allParameters, comm);
+
+        std::cout << "Begin Time Stepping \n";
 
         daeTimeSolver.defineTimeStepping(*defTS);
 
+        std::cout << "Begin Set Problem \n";
+
         daeTimeSolver.setProblem(sci);
+
+        std::cout << "Begin Assemble \n";
 
         sci.assemble();
 
+        std::cout << "Begin Setup Time Stepping \n";
+
         daeTimeSolver.setupTimeStepping();
+
+        std::cout << "Begin Advance In Time \n";
 
         daeTimeSolver.advanceInTime();
     }
