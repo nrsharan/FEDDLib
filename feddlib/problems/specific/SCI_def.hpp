@@ -176,6 +176,7 @@ void SCI<SC,LO,GO,NO>::assemble( std::string type ) const
 
         MultiVectorConstPtr_Type d = this->solution_->getBlock(0);
         d_rep_->importFromVector(d, true); 
+        c_rep_->importFromVector(c, true);
     
         BlockMultiVectorPtr_Type blockSol = Teuchos::rcp( new BlockMultiVector_Type(2) );
         blockSol->addBlock(d_rep_,0);

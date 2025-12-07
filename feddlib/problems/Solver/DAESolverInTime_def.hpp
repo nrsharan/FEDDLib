@@ -120,6 +120,22 @@ void DAESolverInTime<SC,LO,GO,NO>::setProblem(Problem_Type& problem){
 
     problem_ = Teuchos::rcpFromRef(problem); /*now a NON-OWNING TEUCHOS::RCP to the object which was probably constructed in main function */
 
+    if(this->parameterList_->sublist("Parameter").get("SCI",false))
+    {
+        SCIProblemPtr_Type sci = Teuchos::rcp_dynamic_cast<SCIProblem_Type>( this->problemTime_->getUnderlyingProblem() );
+
+        int numSegments = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);
+
+        if(numSegments>0)
+        {
+            double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(i)).get("dt",-3586.0);
+            TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(dtTmp, -3586.0), std::runtime_error, "dt for time segment " + std::to_string(i) + " received default value and was not set properly!");
+            sci->timeSteppingTool_->dt_ = dtTmp; // Setting first time step size to SCI time stepping tool
+            sci->timeSteppingTool_->t_ = dtTmp; // Setting initial time to first time step size (first time step)
+        }
+        
+    }
+
 }
 
 template<class SC,class LO,class GO,class NO>
@@ -870,13 +886,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     if(numSegments > 0) // To ensure that in case timeSegments are not used dt_ is not overwritten
         timeSteppingTool_->dt_ = dt; // At this point DAESolver time stepper has t_n and accurate dt value
 
-    timeSteppingTool_->printInfo();
-    sci->timeSteppingTool_->printInfo();
-    sci->timeSteppingTool_->dt_ = timeSteppingTool_->dt_; // Ensuring that SCI problem has the correct dt value
-    sci->timeSteppingTool_->t_ = timeSteppingTool_->t_+ timeSteppingTool_->dt_; // Ensuring that SCI problem has the correct current time value (t_n+1) [Required for assembly]
-    sci->timeSteppingTool_->printInfo();
-    sci->assemble();
-    this->setupTimeStepping();
     // Notwendige Parameter
     int sizeSCI = timeStepDef_.size();
 
@@ -1049,7 +1058,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             }
             else{
                 timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
-                this->problemTime_->assemble("UpdateTime"); // Updates to next timestep (SCI Now hast t_n+1)
+                this->problemTime_->assemble("UpdateTime"); // Updates to next timestep (SCI Now has t_n+1)
                 sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
                 std::cout << "Update in time completed successfully! \n";
             }
