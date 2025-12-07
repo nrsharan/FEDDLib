@@ -375,11 +375,6 @@ namespace FEDD
 																//		this->element_.setComputeCompleted(false);
 																// #endif
 
-		if (this->globalElementID_ == 0)
-			std::cout << "Finished element advance in Time. \n";
-	}
-
-	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::assembleRHS()
 	{
 

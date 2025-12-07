@@ -118,14 +118,10 @@ DAESolverInTime<SC,LO,GO,NO>::~DAESolverInTime(){
 template<class SC,class LO,class GO,class NO>
 void DAESolverInTime<SC,LO,GO,NO>::setProblem(Problem_Type& problem){
 
-    std::cout << "Setting problem in DAE Time Solver. \n";
     problem_ = Teuchos::rcpFromRef(problem); /*now a NON-OWNING TEUCHOS::RCP to the object which was probably constructed in main function */
-    std::cout << "Set problem_ rcp successful. \n";
     if(this->parameterList_->sublist("Parameter").get("SCI",false))
     {
-        std::cout << "Inside if SCI block of setProblem. \n";
         SCIProblemPtr_Type sci = Teuchos::rcp_dynamic_cast<SCIProblem_Type>(this->problem_);
-        std::cout << "Set problem successful. \n";
 
         sci->info();
 
@@ -135,10 +131,8 @@ void DAESolverInTime<SC,LO,GO,NO>::setProblem(Problem_Type& problem){
         {
             double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(1)).get("dt",-3586.0);
             TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(dtTmp, -3586.0), std::runtime_error, "dt for time segment " + std::to_string(1) + " received default value and was not set properly!");
-            std::cout << "Setting first time step size to " << dtTmp << " from time segment definition. \n";
             sci->timeSteppingTool_->dt_ = dtTmp; // Setting first time step size to SCI time stepping tool
             sci->timeSteppingTool_->t_ = dtTmp; // Setting initial time to first time step size (first time step)
-            std::cout << "Setting done. \n";
         }
         
     }
@@ -1067,7 +1061,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
                 timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
                 this->problemTime_->assemble("UpdateTime"); // Updates to next timestep (SCI Now has t_n+1)
                 sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
-                std::cout << "Update in time completed successfully! \n";
             }
         }
         
@@ -1111,9 +1104,8 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         }
         else
         {
-          this->problemTime_->updateSolutionMultiPreviousStep(nmbBDF); //Sets BDF 
+          this->problemTime_->updateSolutionMultiPreviousStep(nmbBDF); //Sets BDF
         }
-        std::cout << "Finished solution update in Time. \n";
         
 
         // Alte Gitterbewegung mit der Geometrieloesung ueberschreiben.
@@ -1143,24 +1135,17 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             
             // Hier wird auch direkt ein Update der Loesung bei der Struktur gemacht.
             // Aehnlich zu "UpdateFluidInTime".
-            std::cout << "Starting mass matrix computation in Time. \n";
             if(approxEqual(timeSteppingTool_->currentTime(), 0.0) || (restart &&  timeSteppingTool_->currentTime() -1.e-5 < timeStepRestart ))
             {
                 // We extract the underlying FSI problem
                 // This here does nothing. It's only used for FSI problems.
-                std::cout << "DAE Point1 \n";
                 MatrixPtr_Type massmatrix;
-                std::cout << "DAE Point2 \n";
                 sci->setSolidMassmatrix( massmatrix );
-                std::cout << "DAE Point3 \n";
                 this->problemTime_->systemMass_->addBlock( massmatrix, 0, 0 );
-                std::cout << "DAE Point4 \n";
             }
-            std::cout << "Finished mass matrix computation in Time. \n";
             // this should be done automatically rhs will not be used here
             //  this->problemTime_->getRhs()->addBlock( Teuchos::rcp_const_cast<MultiVector_Type>(rhs->getBlock(0)), 2 );
             this->problemTime_->assemble("ComputeSolidRHSInTime"); // We get the forcing term here (due to external loads)
-            std::cout << "Finished solid RHS computation in Time. \n";
         }
 
         // ######################

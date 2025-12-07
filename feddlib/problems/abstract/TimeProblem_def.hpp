@@ -82,12 +82,10 @@ void TimeProblem<SC,LO,GO,NO>::assemble( std::string type ) const{
     else{
         //we need to tell the problem about the last solution if we use extrapolation!
         problem_->assemble(type);
-        std::cout << "Reached TimeProblem assemble for type " << type << " \n";
         if (timestepping=="External") 
             this->systemCombined_ = problem_->getSystem();
         else
             this->combineSystems();
-        std::cout << "Reached the end of TimeProblem assemble for type " << type << " \n";
     }
 }
 
@@ -135,13 +133,6 @@ void TimeProblem<SC,LO,GO,NO>::combineSystems() const{
     //     }
     //     cout << endl;
     // }
-
-    if(comm_->getRank()==0){
-    std::cout << "DEBUG combineSystems: About to call systemMass_->addMatrix" << std::endl;
-    std::cout << "  systemMass_ size = " << systemMass_->size() << std::endl;
-    std::cout << "  massParameters_ size = " << massParameters_.size() << std::endl;
-    std::cout << "  systemCombined_ size = " << systemCombined_->size() << std::endl;
-    }
 
     systemMass_->addMatrix( massParameters_, systemCombined_, zeros );
 
