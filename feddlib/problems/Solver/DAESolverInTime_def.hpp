@@ -124,7 +124,7 @@ void DAESolverInTime<SC,LO,GO,NO>::setProblem(Problem_Type& problem){
     if(this->parameterList_->sublist("Parameter").get("SCI",false))
     {
         std::cout << "Inside if SCI block of setProblem. \n";
-        SCIProblemPtr_Type sci = Teuchos::rcp_dynamic_cast<SCIProblem_Type>( this->problemTime_->getUnderlyingProblem() );
+        SCIProblemPtr_Type sci = Teuchos::rcp_dynamic_cast<SCIProblem_Type>(this->problem_);
         std::cout << "Set problem successful. \n";
 
         sci->info();
