@@ -1020,7 +1020,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             if(timeSteppingTool_->currentTime() >= timeParametersVec[i][0] - 1e-8  )
             {
                 dt = timeParametersVec[i][1];
-                break;
             }
         }
 
