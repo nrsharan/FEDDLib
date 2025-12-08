@@ -3466,8 +3466,8 @@ void DAESolverInTime<SC,LO,GO,NO>::getTimeIncrementFromSegments(const vec2D_dbl_
     else{
         segmentEndTime = timeSegments[activeSegmentNumber+1][0];
     }
-    if(currentTime + timeSegments[activeSegmentNumber][1] > timeSegments[activeSegmentNumber+1][0])
-            dt = timeSegments[activeSegmentNumber+1][0] - currentTime;
+    if(currentTime + timeSegments[activeSegmentNumber][1] > segmentEndTime)
+            dt = segmentEndTime - currentTime;
         else
             dt = timeSegments[activeSegmentNumber][1];
 }
