@@ -3458,6 +3458,14 @@ void DAESolverInTime<SC,LO,GO,NO>::getActiveTimeSegment(const vec2D_dbl_Type& ti
 
 template<class SC,class LO,class GO,class NO>
 void DAESolverInTime<SC,LO,GO,NO>::getTimeIncrementFromSegments(const vec2D_dbl_Type& timeSegments, const int& activeSegmentNumber, const double& currentTime, double& dt){
+    double segmentEndTime = 0;
+    if(activeSegmentNumber == timeSegments.size() -1){
+        segmentEndTime = parameterList_->sublist("Timestepping Parameter").get("Final time",-1234.0);
+        TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(segmentEndTime, -1234.0), std::logic_error, "Final time not defined in timestepping parameters.");
+    }
+    else{
+        segmentEndTime = timeSegments[activeSegmentNumber+1][0];
+    }
     if(currentTime + timeSegments[activeSegmentNumber][1] > timeSegments[activeSegmentNumber+1][0])
             dt = timeSegments[activeSegmentNumber+1][0] - currentTime;
         else
