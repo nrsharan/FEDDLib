@@ -246,13 +246,13 @@ int main(int argc, char *argv[])
 
         sci.initializeCE();
 
-        sci.assemble();
-
         FEDD::DAESolverInTime<SC, LO, GO, NO> daeTimeSolver(allParameters, comm);
 
         daeTimeSolver.defineTimeStepping(*defTS);
 
         daeTimeSolver.setProblem(sci);
+
+        sci.assemble();
 
         daeTimeSolver.setupTimeStepping();
 
