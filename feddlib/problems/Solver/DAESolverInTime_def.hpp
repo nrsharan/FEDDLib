@@ -1282,7 +1282,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             double modValue = parameterList_->sublist("General").get("Every X Second",1.) ;
             double modValueHeartBeat = parameterList_->sublist("General").get("Every X Second Heartbeat",0.1) ;
 
-            double time = timeSteppingTool_->currentTime();
+            double time = timeSteppingTool_->currentTime(); // t_n+1
 
             if(time >= heartbeatStart1 && time <= heartbeatEnd1)
                 heartbeat=true;
@@ -1293,7 +1293,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
                 modValue= modValueHeartBeat; // smaller post Processing steps in heart beat phases
 
 
-
+            // This prints the solution every modValue time-steps! Not seconds. If modValue=1 every time-step!, modValue=10 every 10th time-step! etc...
             if(fabs(remainder(timeStep,modValue)) < 0. + 1.e-8 ){// TODO: Update solutions before postprocessing
                 BlockMultiVectorPtr_Type stressVecTmp= sci->getPostProcessingData();
                 stressVec = stressVecTmp;
