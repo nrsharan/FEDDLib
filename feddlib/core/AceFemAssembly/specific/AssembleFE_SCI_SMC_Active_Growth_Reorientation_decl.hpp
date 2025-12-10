@@ -16,11 +16,6 @@
 #include "aceinterface.hpp"
 #endif
 
-// #ifdef FEDD_HAVE_ACEGENINTERFACE
-// #include "aceinterface.h"
-// #include "ace2.h"
-// #endif
-
 /*!
 \class AssembleFE_SCI_SMC_Active_Growth_Reorientation
         Coupled deformation diffusion problem with smooth-muscle model with active response, growth and reorientation
@@ -99,10 +94,6 @@ class AssembleFE_SCI_SMC_Active_Growth_Reorientation : public AssembleFE<SC, LO,
     int numNodesChem_;   // Number of nodes of element
 
     int dofsElement_;  // "Dimension of return matrix"
-
-    int dofOrdering_;  // Order of DOFs:
-                       // dofOrdering = 1 -> 'u1 v1 w1 c1 u2 v2 w2 c2 ... un vn wn cn'
-                       // dofOrdering = 2 -> 'u1 v1 w1 u2 v2 w2 ... un vn wn c1 c2 c3 ... cn'
 
     int iCode_;                      // Integration Code
     int historyLength_;              // Length of history vector
