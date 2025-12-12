@@ -1,7 +1,7 @@
 #!/bin/bash -l
 #
-#SBATCH --job-name=kimWD
-#SBATCH --comment="KimWD"
+#SBATCH --job-name=kimWD20
+#SBATCH --comment="KimWD20"
 #SBATCH --time=7-00:00:00         ### time the job will appr. run
 #SBATCH --nodes=1               ### Node count required for the job
 #SBATCH --output=/home/nurans63/slurm/outputs/%x-%j.out              ### output file for console output
