@@ -2,7 +2,7 @@
 #
 #SBATCH --job-name=dan15
 #SBATCH --comment="Dan15"
-#SBATCH --time=72:00:00         ### time the job will appr. run
+#SBATCH --time=7-00:00:00         ### time the job will appr. run
 #SBATCH --nodes=1               ### Node count required for the job
 #SBATCH --output=/home/nurans63/slurm/outputs/%x-%j.out              ### output file for console output
 #SBATCH --error=/home/nurans63/slurm/outputs/%x-%j.err               ### output file for console error

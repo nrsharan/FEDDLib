@@ -60,8 +60,8 @@
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="KThetaPlus" type="double" value="0.0000001" />
-      <Parameter name="KThetaMinus" type="double" value="0.0000001" />
+      <Parameter name="KThetaPlus" type="double" value="1.e-5" />
+      <Parameter name="KThetaMinus" type="double" value="1.e-5" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
       <Parameter name="MThetaMinus" type="double" value="3.0" />
       <Parameter name="ThetaPlus1" type="double" value="1.00506" />
@@ -160,8 +160,8 @@
       <Parameter name="ActiveStartTime" type="double" value="20.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="KThetaPlus" type="double" value="0.0000001" />
-      <Parameter name="KThetaMinus" type="double" value="0.0000001" />
+      <Parameter name="KThetaPlus" type="double" value="1.e-5" />
+      <Parameter name="KThetaMinus" type="double" value="1.e-5" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
       <Parameter name="MThetaMinus" type="double" value="3.0" />
       <Parameter name="ThetaPlus1" type="double" value="1.00506" />
@@ -275,8 +275,8 @@
       <Parameter name="ActiveStartTime" type="double" value="20.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="KThetaPlus" type="double" value="0.0000001" />
-      <Parameter name="KThetaMinus" type="double" value="0.0000001" />
+      <Parameter name="KThetaPlus" type="double" value="1.e-5" />
+      <Parameter name="KThetaMinus" type="double" value="1.e-5" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
       <Parameter name="MThetaMinus" type="double" value="3.0" />
       <Parameter name="ThetaPlus1" type="double" value="1.00506" />
@@ -390,8 +390,8 @@
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="KThetaPlus" type="double" value="0.0000001" />
-      <Parameter name="KThetaMinus" type="double" value="0.0000001" />
+      <Parameter name="KThetaPlus" type="double" value="1.e-5" />
+      <Parameter name="KThetaMinus" type="double" value="1.e-5" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
       <Parameter name="MThetaMinus" type="double" value="3.0" />
       <Parameter name="ThetaPlus1" type="double" value="1.00506" />
@@ -467,8 +467,8 @@
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="KThetaPlus" type="double" value="0.0000001" />
-      <Parameter name="KThetaMinus" type="double" value="0.0000001" />
+      <Parameter name="KThetaPlus" type="double" value="1.e-5" />
+      <Parameter name="KThetaMinus" type="double" value="1.e-5" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
       <Parameter name="MThetaMinus" type="double" value="3.0" />
       <Parameter name="ThetaPlus1" type="double" value="1.00506" />
@@ -544,8 +544,8 @@
       <Parameter name="ActiveStartTime" type="double" value="100001" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
-      <Parameter name="KThetaPlus" type="double" value="0.0000001" />
-      <Parameter name="KThetaMinus" type="double" value="0.0000001" />
+      <Parameter name="KThetaPlus" type="double" value="1.e-5" />
+      <Parameter name="KThetaMinus" type="double" value="1.e-5" />
       <Parameter name="MThetaPlus" type="double" value="3.0" />
       <Parameter name="MThetaMinus" type="double" value="3.0" />
       <Parameter name="ThetaPlus1" type="double" value="1.00506" />
