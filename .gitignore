@@ -8,3 +8,7 @@ Doygen/html/
 Doygen/latex/
 *.bak
 .DS_Store
+
+# Python caches
+__pycache__/
+*.py[cod]

@@ -11,7 +11,7 @@ consecutive duplicate time value.
 Default behavior targets the common FEDDLib outputs: d_s.xmf and c.xmf.
 
 Usage:
-  python3 tools/dedup_xmf_times.py /path/to/results_dir
+    python3 dedup_xmf_times.py /path/to/results_dir
 
 This will:
   - create backups: d_s.xmf.bak, c.xmf.bak
@@ -23,7 +23,6 @@ Exit status is non-zero if any requested file exists but cannot be processed.
 from __future__ import annotations
 
 import argparse
-import os
 import re
 import shutil
 import sys

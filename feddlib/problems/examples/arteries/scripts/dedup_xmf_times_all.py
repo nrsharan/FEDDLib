@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """Run XMF time deduplication across all subdirectories.
 
-This is a convenience wrapper around tools/dedup_xmf_times.py.
+This is a convenience wrapper around the sibling script "dedup_xmf_times.py".
+
+The wrapper is location-agnostic:
+    - it does not assume a particular repo layout
+    - it can be run from any working directory
 
 Usage:
-  python3 tools/dedup_xmf_times_all.py /path/to/root_dir
+    python3 dedup_xmf_times_all.py /path/to/root_dir
 
 It will walk all subdirectories and, for every directory that contains at least
 one of the target files (default: d_s.xmf, c.xmf), it will apply the same
@@ -14,11 +18,11 @@ Backups:
   By default, creates .bak backups next to each rewritten XMF.
 
 Examples:
-  # Preview what would change
-  python3 tools/dedup_xmf_times_all.py --dry-run /scratch/simulations
+    # Preview what would change
+    python3 dedup_xmf_times_all.py --dry-run /scratch/simulations
 
-  # Actually fix everything
-  python3 tools/dedup_xmf_times_all.py /scratch/simulations
+    # Actually fix everything
+    python3 dedup_xmf_times_all.py /scratch/simulations
 """
 
 from __future__ import annotations
@@ -31,8 +35,8 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 
-def _load_dedup_module(repo_root: Path):
-    script = repo_root / "tools" / "dedup_xmf_times.py"
+def _load_dedup_module(script_dir: Path):
+    script = script_dir / "dedup_xmf_times.py"
     if not script.exists():
         raise FileNotFoundError(f"Missing {script}")
 
@@ -70,9 +74,9 @@ def main(argv: Optional[List[str]] = None) -> int:
         print(f"error: not a directory: {root_dir}", file=sys.stderr)
         return 2
 
-    # Assume this script lives in <repo>/tools; repo root is parent of tools.
-    repo_root = Path(__file__).resolve().parent.parent
-    dedup = _load_dedup_module(repo_root)
+    # Load the companion script from the same directory as this file.
+    script_dir = Path(__file__).resolve().parent
+    dedup = _load_dedup_module(script_dir)
 
     candidate_dirs = _find_candidate_dirs(root_dir, list(args.files))
     if not candidate_dirs:
