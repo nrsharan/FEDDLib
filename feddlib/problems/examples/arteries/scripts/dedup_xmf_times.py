@@ -214,7 +214,7 @@ def process_file(path: Path, *, make_backup: bool = True, dry_run: bool = False)
         tmp.write(new_text)
         tmp_path = Path(tmp.name)
 
-    tmp_path.replace(path)
+    shutil.move(str(tmp_path), str(path))
 
     return len(blocks), removed
 
