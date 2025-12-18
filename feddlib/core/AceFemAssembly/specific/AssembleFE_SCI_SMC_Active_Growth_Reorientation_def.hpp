@@ -331,7 +331,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::assemble_SC
 
     for (int i = 0; i < 10; i++) {
         this->concentrations_[i] = (*this->solution_)[i + 30];
-        solutionC_n1_[i] = (*this->solution_)[i + 30];  // in each newtonstep solution for n+1 is updated.
+        this->solutionC_n1_[i] = (*this->solution_)[i + 30];  // in each newtonstep solution for n+1 is updated.
     }
 
     for (int i = 0; i < 10; i++)

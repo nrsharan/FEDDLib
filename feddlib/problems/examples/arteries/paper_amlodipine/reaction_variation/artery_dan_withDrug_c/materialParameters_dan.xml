@@ -151,7 +151,7 @@
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
       <Parameter name="C50" type="double" value="0.6673453235597163" />
       <Parameter name="D0" type="double" value="7.e-3" />
-      <Parameter name="M" type="double" value="0." />
+      <Parameter name="M" type="double" value="-3.e-3" />
       <Parameter name="ActiveStartTime" type="double" value="20.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
@@ -263,7 +263,7 @@
       <Parameter name="DeltaLambdaBarPMin" type="double" value="-1.e-5" />
       <Parameter name="C50" type="double" value="0.6673453235597163" />
       <Parameter name="D0" type="double" value="3.5e-3" />
-      <Parameter name="M" type="double" value="0." />
+      <Parameter name="M" type="double" value="-1.5e-3" />
       <Parameter name="ActiveStartTime" type="double" value="20.0" />
       <Parameter name="kEtaPlus" type="double" value="0.001" />
       <Parameter name="mEtaPlus" type="double" value="5.0" />
