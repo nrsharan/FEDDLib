@@ -14,7 +14,7 @@
         <Parameter name="Target Pressure mmHg" type="double" value="85.0"/> <!-- Target pressure in mmHg -->
         <Parameter name="Pressure Reduction Start Time" type="double" value="1000.0"/>
         <Parameter name="Pressure Reduction End Time" type="double" value="1200.0"/>
-        <Parameter name="Pressure Reduction Amount mmHg" type="double" value="0.0"/> <!-- Pressure reduction in mmHg -->
+        <Parameter name="Pressure Reduction Amount mmHg" type="double" value="30.0"/> <!-- Pressure reduction in mmHg -->
         <Parameter name="Source Type" type="string"   value="surface"/>
         <Parameter name="Model Geometry" type="string" value="Laplace"/>
         
