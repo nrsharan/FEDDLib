@@ -20,7 +20,18 @@
     <ParameterList name="Parameter">
         <Parameter name="Dimension" type="int" value="3"/>
         <Parameter name="Discretization" type="string" value="P2"/>
-        <Parameter name="BC Type" type="string" value="HollowCylinder"/>
+        <!-- Not read anywhere in this test's main.cpp (grep confirms
+             neither ccb_hollow_cylinder's nor artery_dan_withDrug_a's
+             main.cpp calls .get("BC Type", ...)); the actual Dirichlet
+             and Neumann BCs are applied explicitly in main.cpp via
+             bcFactoryStructure/bcFactory against the mesh's own vertex
+             and face flags (2/3/4/5/13/14/16, see main.cpp's header
+             comment). Kept only to match the simulationParameters.xml
+             template's documented options (Artery, Artery Full, Plaque,
+             Cube); "Cube" is the closest of those to a simple enclosed
+             volume geometry with no valid "HollowCylinder" option
+             defined anywhere in FEDDLib. -->
+        <Parameter name="BC Type" type="string" value="Cube"/>
         <Parameter name="RHS Type" type="string" value="Constant"/>
 
         <Parameter name="Mesh Type" type="string" value="unstructured"/>
