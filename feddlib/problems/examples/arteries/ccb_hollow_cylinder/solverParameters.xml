@@ -15,7 +15,7 @@
                         <Parameter name="Flexible Gmres" type="bool" value="false"/>
                         <Parameter name="Orthogonalization" type="string" value="DGKS"/>
                         <Parameter name="Output Frequency" type="int" value="1"/>
-                        <!-- Left commented out as in simpleTest -- the exact Belos::MsgType
+                        <!-- Left commented out as in simpleTest; the exact Belos::MsgType
                              bitmask wasn't worth guessing at here. "Output Frequency"=1 plus
                              NOX's own "Linear Solver Details"/"Inner Iteration" below should
                              already surface per-GMRES-iteration residual norms; bump this
