@@ -280,7 +280,6 @@ void loadFunction(double *x, double *res, double *parameters)
 
     double currentTime = parameters[0];
     double pressure = parameters[1];
-    double rampTimeStep = parameters[2];
     double timeRampEnd = parameters[3];
     double initialLambda = parameters[4];
     double pressureReductionStartTime = parameters[5];
@@ -291,8 +290,10 @@ void loadFunction(double *x, double *res, double *parameters)
     double lambda = 0.0;
     double currentLambdaReduction = 0.0;
 
+    // currentTime is already t_{n+1} (DAESolverInTime advances time before the solve), so
+    // adding rampTimeStep here would apply every load one step early.
     if (currentTime < timeRampEnd)
-        lambda = initialLambda * (currentTime + rampTimeStep);
+        lambda = initialLambda * currentTime / timeRampEnd;
     else
         lambda = initialLambda;
 

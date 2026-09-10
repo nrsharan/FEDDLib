@@ -7,15 +7,13 @@
       materialParameters.xml), same BC scheme (bottom/top axial fix, 3
       circumferential pins, ramped inner pressure to 20), all bools off
       (purely passive). svMultiPhysics's own equivalent test uses the CMM
-      (constrained-mixture) element, which does not exist in FEDDLib;
-      this uses the non-CMM sibling (SCI_SMC_Active_Growth_Reorientation)
-      instead, since that is what FEDDLib actually has a working,
-      previously-used implementation of. The two elements share most
+      (constrained-mixture) element; this uses the non-CMM sibling
+      (SCI_SMC_Active_Growth_Reorientation). The two elements share most
       material parameter names/roles but are not numerically identical
       models; this comparison is meant to check solver/convergence
-      *behavior* (does the same load-driven, near-equilibrium-prestretch
-      problem converge cleanly in FEDDLib's Trilinos/NOX/FROSch stack?),
-      not to reproduce identical numbers.
+      *behavior*, not to reproduce identical numbers. For the
+      element-identical comparison (CMM element, identical mesh, BCs and
+      parameters) see ../ccb_hollow_cylinder_cmm.
     -->
     <ParameterList name="Parameter">
         <Parameter name="Dimension" type="int" value="3"/>
@@ -40,8 +38,7 @@
         <!-- Plain pressure units matching svMultiPhysics's test (no mmHg
              conversion; Max Pressure is used directly as the target
              pressure in the same units as the Alpha1-5 stress
-             parameters). Ramped 0 -> 20 over 10 steps, same as
-             svMultiPhysics's load.dat. -->
+             parameters). -->
         <Parameter name="Max Pressure mmHg" type="double" value="20.0"/>
         <Parameter name="Target Pressure mmHg" type="double" value="20.0"/>
         <Parameter name="Pressure Reduction Start Time" type="double" value="1000000.0"/>
@@ -55,17 +52,13 @@
         <Parameter name="Load Stepping" type="bool" value="true"/>
         <Parameter name="Inflow Start Time" type="double" value="10000000.0"/>
         <Parameter name="Heart Beat Start" type="double" value="70000000.0"/>
-        <!-- Reduced from 0.1 to 0.02 to match artery_dan_withDrug_a's own
-             initial-ramp cadence (its first Timestepping Intervalls
-             segment: dt=0.02 over t=[0,1]). At Load Step Size=0.1, the
-             very first Newton problem's applied load (lambda=0.1 *
-             pressure=-20 = -2.0) was ~9x larger than the reference's own
-             first-step load (lambda=0.0175 * pressure=-12.95 = -0.227),
-             which is consistent with the observed first-Newton-step blow
-             up (dx=10.18, a displacement several times the whole domain
-             size) even after the mesh vertex-flag fix. -->
-        <Parameter name="Load Step Size" type="double" value="0.02"/>
-        <Parameter name="Ramp End Time" type="double" value="1.0"/>
+        <!-- The pressure is ramped linearly, lambda(t) = t / Ramp End Time,
+             evaluated at t_{n+1} (see main.cpp's loadFunction). With dt=0.2
+             over [0,10] this is exactly svMultiPhysics's load.dat ramp
+             (0 -> 20 over t=[0,10], 50 steps of 0.02*Pmax), and the same dt
+             also enters the concentration capacitance term Mc/dt. -->
+        <Parameter name="Load Step Size" type="double" value="0.2"/>
+        <Parameter name="Ramp End Time" type="double" value="10.0"/>
         <Parameter name="External Force" type="bool" value="true"/>
         <Parameter name="Nonlinear External Force" type="bool" value="true"/>
         <Parameter name="Coupling Type" type="string" value="implicit"/>
@@ -129,15 +122,15 @@
         <Parameter name="BDF" type="int" value="1"/>
         <Parameter name="Class" type="string" value="Multistep"/>
         <Parameter name="Timestepping type" type="string" value="non-adaptive"/>
-        <Parameter name="Final time" type="double" value="1.0"/>
-        <Parameter name="dt" type="double" value="0.02"/>
+        <Parameter name="Final time" type="double" value="10.0"/>
+        <Parameter name="dt" type="double" value="0.2"/>
         <Parameter name="beta" type="double" value="0.25"/>
         <Parameter name="gamma" type="double" value="0.5"/>
         <ParameterList name="Timestepping Intervalls">
             <Parameter name="Number of Segments" type="int" value="1"/>
             <ParameterList name="1">
                 <Parameter name="Start Time" type="double" value="0."/>
-                <Parameter name="dt" type="double" value="0.02"/>
+                <Parameter name="dt" type="double" value="0.2"/>
             </ParameterList>
         </ParameterList>
     </ParameterList>
