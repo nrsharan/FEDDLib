@@ -66,6 +66,11 @@ typename AssembleFEFactory<SC,LO,GO,NO>::AssembleFEPtr_Type AssembleFEFactory<SC
 		Teuchos::RCP<AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
 		assembleFE = assembleFESpecific;
 	}
+	// Constrained-mixture (CMM) variant of the model above
+	else if(problemType == "SCI_SMC_CMM_Active_Growth_Reorientation"){
+		Teuchos::RCP<AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
+		assembleFE = assembleFESpecific;
+	}
 	else
     		TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "No specific implementation for your request.");
 

@@ -101,6 +101,9 @@ class FE {
     typedef AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO> AssembleFE_SCI_SMC_Active_Growth_Reorientation_Type;
     typedef Teuchos::RCP<AssembleFE_SCI_SMC_Active_Growth_Reorientation_Type> AssembleFE_SCI_SMC_Active_Growth_Reorientation_Ptr_Type;
 
+    typedef AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC,LO,GO,NO> AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation_Type;
+    typedef Teuchos::RCP<AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation_Type> AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation_Ptr_Type;
+
     typedef std::vector<AssembleFEPtr_Type> AssembleFEPtr_vec_Type;	
 
     typedef BlockMatrix<SC,LO,GO,NO> BlockMatrix_Type ;

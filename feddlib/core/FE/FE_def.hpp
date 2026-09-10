@@ -1167,7 +1167,13 @@ void FE<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
             assemblyFEElements_[T]->assembleJacobian();
 
             AssembleFE_SCI_SMC_Active_Growth_Reorientation_Ptr_Type elTmp = Teuchos::rcp_dynamic_cast<AssembleFE_SCI_SMC_Active_Growth_Reorientation_Type>(assemblyFEElements_[T] );
-            elTmp->getMassMatrix(elementMatrix);
+            if (!elTmp.is_null())
+                elTmp->getMassMatrix(elementMatrix);
+            else {
+                AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation_Ptr_Type elTmpCMM = Teuchos::rcp_dynamic_cast<AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation_Type>(assemblyFEElements_[T] );
+                TEUCHOS_TEST_FOR_EXCEPTION(elTmpCMM.is_null(), std::logic_error, "MassMatrix assembly is only available for the SCI_SMC_Active_Growth_Reorientation and SCI_SMC_CMM_Active_Growth_Reorientation elements.");
+                elTmpCMM->getMassMatrix(elementMatrix);
+            }
             //elementMatrix->print();
    			addFeBlock(A, elementMatrix, elementsChem->getElement(T), mapChem, 0, 0, problemDiskChem);
 
