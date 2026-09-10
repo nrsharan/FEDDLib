@@ -199,10 +199,24 @@ AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::AssembleFE_S
     int numSegmentsReorientation = materialParams.sublist("Timestepping Intervalls Reorientation").get("Number of Segments", 0);
 
     // The CMM element has several growth-type switches (GroundGrowthBool, SMCGrowthBool,
-    // CollRemodelingBool); which of them a growth interval should turn on is a modeling
-    // decision, so growth intervals are rejected rather than guessed. Set those switches
-    // directly in the material parameters instead.
-    TEUCHOS_TEST_FOR_EXCEPTION(numSegmentsGrowth > 0, std::logic_error, "SCI_SMC_CMM_Active_Growth_Reorientation does not support \"Timestepping Intervalls Growth\"; set GroundGrowthBool/SMCGrowthBool/CollRemodelingBool in the material parameters instead.");
+    // CollRemodelingBool); growth intervals switch the ones named in their "Flags"
+    // parameter, e.g. {GroundGrowthBool, SMCGrowthBool}.
+    if (numSegmentsGrowth > 0) {
+        Teuchos::Array<std::string> flags = materialParams.sublist("Timestepping Intervalls Growth").get("Flags", Teuchos::Array<std::string>());
+        for (const auto& flag : flags) {
+            TEUCHOS_TEST_FOR_EXCEPTION(findPosition(flag, this->domainDataNames_) == -1, std::logic_error, "Timestepping Intervalls Growth: flag " << flag << " is not a domain data parameter.");
+            growthFlags_.push_back(flag);
+        }
+        TEUCHOS_TEST_FOR_EXCEPTION(growthFlags_.empty(), std::logic_error, "\"Timestepping Intervalls Growth\" requires a \"Flags\" parameter (Array(string)) naming the growth switches, e.g. {GroundGrowthBool, SMCGrowthBool}.");
+    }
+
+    for (int i = 1; i <= numSegmentsGrowth; i++) {
+        double startTime = materialParams.sublist("Timestepping Intervalls Growth").sublist(std::to_string(i)).get("Start Time", 0.);
+        double endTime = materialParams.sublist("Timestepping Intervalls Growth").sublist(std::to_string(i)).get("End Time", 0.);
+
+        vec_dbl_Type segment = {startTime, endTime};
+        segmentsGrowth_.push_back(segment);
+    }
 
     for (int i = 1; i <= numSegmentsActive; i++) {
         double startTime = materialParams.sublist("Timestepping Intervalls Active").sublist(std::to_string(i)).get("Start Time", 0.);
@@ -278,6 +292,26 @@ void AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::checkin
                 this->activeBool_ = 0;
         }
         this->updateDomainData("ActiveBool", activeBool_);
+    }
+
+    if (!segmentsGrowth_.empty()) {
+        for (int i = 0; i < segmentsGrowth_.size(); i++) {
+            // if (time >= startTime && time < endTime)
+            if ((this->timeStep_ > segmentsGrowth_[i][0] || approxEqual(this->timeStep_, segmentsGrowth_[i][0])) && (this->timeStep_ < segmentsGrowth_[i][1] && !approxEqual(this->timeStep_, segmentsGrowth_[i][1]))) {
+                this->growthBool_ = 1;
+                if (!this->growthInitialized_) {
+                    // if(restart and timeStepRestart > firstGrowthStartTime)
+                    if (restart && timeStepRestart > segmentsGrowth_[0][0] && !approxEqual(timeStepRestart, segmentsGrowth_[0][0]))
+                        this->growthInitialized_ = true;
+                    else
+                        this->initializeGrowth();
+                }
+                break;
+            } else
+                this->growthBool_ = 0;
+        }
+        for (const auto& flag : growthFlags_)
+            this->updateDomainData(flag, growthBool_);
     }
 
     if (!segmentsReorientation_.empty()) {

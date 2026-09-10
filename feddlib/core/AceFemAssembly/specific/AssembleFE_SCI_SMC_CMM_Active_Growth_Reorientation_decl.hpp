@@ -140,7 +140,12 @@ class AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation : public AssembleFE<SC,
     vec2D_dbl_Type segmentsReorientation_;
 
     int activeBool_ = 0;
+    int growthBool_ = 0;
     int reorientationBool_ = 0;
+
+    // Growth-type switches (e.g. GroundGrowthBool, SMCGrowthBool) driven by the
+    // "Timestepping Intervalls Growth" intervals ("Flags" parameter).
+    std::vector<std::string> growthFlags_;
     double activeAcceleratedEndTime_ = 0.;
     double activeAcceleratedMultiplier_ = 1.;
 

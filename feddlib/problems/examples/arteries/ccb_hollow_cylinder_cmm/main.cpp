@@ -53,6 +53,7 @@ typedef Tpetra::KokkosClassic::DefaultNode::DefaultNodeType NO;
 
 void reactionTerm(double *, double *, double *);
 void loadFunction(double *, double *, double *);
+void inflowChem(double *, double *, double, const double *);
 void zeroDirichlet3D(double *, double *, double, const double *);
 
 namespace {
@@ -104,7 +105,7 @@ std::vector<GeometryOverrideEntry> readGeometryOverride(const std::string &fileN
 std::array<int, 2> applyGeometryOverride(std::vector<std::vector<double>> &points, std::vector<int> &flags,
                                          const std::vector<GeometryOverrideEntry> &entries)
 {
-    const std::set<int> dirichletFlags = {2, 3, 13, 14, 16};
+    const std::set<int> dirichletFlags = {2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 16};
     const double tol2 = 1.e-16;
     std::vector<int> node(entries.size(), -1);
     for (size_t e = 0; e < entries.size(); e++)
@@ -356,6 +357,10 @@ int main(int argc, char *argv[])
         bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_Y", dimension);
         bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_X", dimension);
         bcFactoryStructure->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet_Y", dimension);
+        // End rings of the inner (7 bottom, 8 top) and outer (6 bottom, 9 top) walls
+        // belong to the bottom/top faces as well.
+        for (int ring : {6, 7, 8, 9})
+            bcFactoryStructure->addBC(zeroDirichlet3D, ring, 0, domainStructure, "Dirichlet_Z", dimension);
 
         if (!sci.problemStructure_.is_null())
             sci.problemStructure_->addBoundaries(bcFactoryStructure);
@@ -367,9 +372,18 @@ int main(int argc, char *argv[])
         bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_Y", dimension);
         bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_X", dimension);
         bcFactory->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet_Y", dimension);
+        for (int ring : {6, 7, 8, 9})
+            bcFactory->addBC(zeroDirichlet3D, ring, 0, domainStructure, "Dirichlet_Z", dimension);
 
-        // No diffusion Dirichlet BCs, matching svMultiPhysics's test (natural/zero-flux
-        // boundaries everywhere for the concentration).
+        // Concentration "Inflow Concentration" on the lumen and adventitial walls from
+        // "Inflow Start Time" on (as in the paper_amlodipine cases): inner wall 5 with
+        // its rings 7/8, outer wall 4 with its rings 6/9 and the pins 13/14/16.
+        std::vector<double> inflowParameters = {allParameters->sublist("Parameter").get("Inflow Start Time", 1.e7),
+                                                allParameters->sublist("Parameter").get("Inflow Concentration", 1.0)};
+        for (int wallFlag : {4, 5, 6, 7, 8, 9, 13, 14, 16}) {
+            bcFactoryDiffusion->addBC(inflowChem, wallFlag, 0, domainDiffusion, "Dirichlet", 1, inflowParameters);
+            bcFactory->addBC(inflowChem, wallFlag, 1, domainDiffusion, "Dirichlet", 1, inflowParameters);
+        }
         sci.problemChem_->addBoundaries(bcFactoryDiffusion);
 
         sci.addBoundaries(bcFactory);
@@ -449,6 +463,12 @@ void loadFunction(double *x, double *res, double *parameters)
 
     if (surfaceFlag == 5) // inner wall
         res[0] = pressure * lambda;
+}
+
+// parameters[0]: start time, parameters[1]: concentration from then on.
+void inflowChem(double *x, double *res, double t, const double *parameters)
+{
+    res[0] = (t >= parameters[0]) ? parameters[1] : 0.;
 }
 
 // Fix all degrees of freedom (BCBuilder picks out only the component(s) its BC type
