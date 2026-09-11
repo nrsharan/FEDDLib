@@ -39,9 +39,7 @@
 #include <Teuchos_StackedTimer.hpp>
 
 #include <array>
-#include <cstdlib>
 #include <fstream>
-#include <iomanip>
 #include <set>
 #include <sstream>
 
@@ -274,21 +272,6 @@ int main(int argc, char *argv[])
 
         domainStructure->setReferenceConfiguration();
         domainDiffusion->setReferenceConfiguration();
-
-        // TEMPORARY DIAGNOSTIC (see DUMP_LINEAR_SYSTEM_DIR in TimeProblem_def.hpp):
-        // alongside the linear-system dump, write each rank's unique P2 nodes as
-        // "globalID x y z" so the dump can be matched to svMultiPhysics's nodes
-        // without the HDF5 export.
-        if (std::getenv("DUMP_LINEAR_SYSTEM_CALL"))
-        {
-            std::string dir = std::getenv("DUMP_LINEAR_SYSTEM_DIR") ? std::getenv("DUMP_LINEAR_SYSTEM_DIR") : "/tmp";
-            std::ofstream out(dir + "/feddlib_points_rank" + std::to_string(comm->getRank()) + ".txt");
-            out << std::setprecision(17);
-            FEDD::vec2D_dbl_ptr_Type points = domainStructure->getPointsUnique();
-            for (int i = 0; i < points->size(); i++)
-                out << domainStructure->getMapUnique()->getGlobalElement(i) << " " << (*points)[i][0] << " "
-                    << (*points)[i][1] << " " << (*points)[i][2] << "\n";
-        }
 
         Teuchos::RCP<FEDD::SmallMatrix<int>> defTS;
         defTS.reset(new FEDD::SmallMatrix<int>(2));

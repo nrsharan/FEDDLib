@@ -1,7 +1,6 @@
 #ifndef TIMEPROBLEM_DEF_hpp
 #define TIMEPROBLEM_DEF_hpp
 #include "TimeProblem_decl.hpp"
-#include <cstdlib>
 /*!
  Definition of TimeProblem
 
@@ -1400,28 +1399,6 @@ void TimeProblem<SC,LO,GO,NO>::evalModelImplMonolithic( const Thyra::ModelEvalua
             BlockMultiVectorConstPtr_Type resConst = this->getResidualConst();
             BlockMultiVectorPtr_Type res = rcp_const_cast<BlockMultiVector_Type >(resConst);
 
-            // TEMPORARY DIAGNOSTIC (see DUMP_LINEAR_SYSTEM_DIR): dump the
-            // residual for a specific evaluation, to compare 1:1 against
-            // svMultiPhysics's own DUMP_LINEAR_SYSTEM_CALL dump of the same
-            // physical state (see FsilsLinearAlgebra.cpp::solve() in the
-            // svMultiPhysics repo, which uses the same env var names).
-            // Writes one MatrixMarket file per block (block 0 = structure,
-            // block 1 = chemistry, per BlockMultiVector::writeMM), gated by
-            // the same call-index/dir convention. Controlled by
-            // DUMP_LINEAR_SYSTEM_CALL (0-based call index to dump) and
-            // DUMP_LINEAR_SYSTEM_DIR (output directory).
-            if (const char* dumpCallEnv = std::getenv("DUMP_LINEAR_SYSTEM_CALL")) {
-                static int fCallCount = 0;
-                int dumpCall = std::atoi(dumpCallEnv);
-                if (fCallCount == dumpCall) {
-                    std::string dir = std::getenv("DUMP_LINEAR_SYSTEM_DIR") ? std::getenv("DUMP_LINEAR_SYSTEM_DIR") : "/tmp";
-                    resConst->writeMM(dir + "/feddlib_call" + std::to_string(fCallCount) + "_residual_block");
-                    std::cerr << "[DUMP_LINEAR_SYSTEM] wrote " << dir << "/feddlib_call" << fCallCount
-                              << "_residual_block*.mm (call " << fCallCount << ")\n";
-                }
-                fCallCount++;
-            }
-
             Teuchos::RCP<Thyra::MultiVectorBase<SC> > f_thyra = res->getThyraMultiVector();
             f_out->assign(*f_thyra);
         }
@@ -1432,23 +1409,6 @@ void TimeProblem<SC,LO,GO,NO>::evalModelImplMonolithic( const Thyra::ModelEvalua
             this->assemble("Newton");
 
             this->setBoundariesSystem();
-
-            // TEMPORARY DIAGNOSTIC: dump the assembled (merged, monolithic)
-            // Jacobian for the same call index as the residual dump above,
-            // for the svMultiPhysics 1:1 comparison. See the fill_f block's
-            // comment for the env var convention.
-            if (const char* dumpCallEnv = std::getenv("DUMP_LINEAR_SYSTEM_CALL")) {
-                static int wCallCount = 0;
-                int dumpCall = std::atoi(dumpCallEnv);
-                if (wCallCount == dumpCall) {
-                    std::string dir = std::getenv("DUMP_LINEAR_SYSTEM_DIR") ? std::getenv("DUMP_LINEAR_SYSTEM_DIR") : "/tmp";
-                    std::string fileName = dir + "/feddlib_call" + std::to_string(wCallCount) + "_jacobian.mtx";
-                    this->getSystemCombined()->getMergedMatrix()->writeMM(fileName);
-                    std::cerr << "[DUMP_LINEAR_SYSTEM] wrote " << fileName
-                              << " (call " << wCallCount << ")\n";
-                }
-                wCallCount++;
-            }
 
             Teuchos::RCP<TpetraOp_Type> W_tpetra = tpetra_extract::getTpetraOperator(W_out);
             Teuchos::RCP<TpetraMatrix_Type> W_tpetraMat = Teuchos::rcp_dynamic_cast<TpetraMatrix_Type>(W_tpetra);
