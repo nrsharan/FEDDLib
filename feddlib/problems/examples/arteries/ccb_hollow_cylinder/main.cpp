@@ -203,6 +203,7 @@ int main(int argc, char *argv[])
         sci.problemStructureNonLin_->addParemeterRhs(pressureReductionStartTime);
         sci.problemStructureNonLin_->addParemeterRhs(pressureReductionEndTime);
         sci.problemStructureNonLin_->addParemeterRhs(lambdaReduction);
+        sci.problemStructureNonLin_->addParemeterRhs( 0. ); // degree of the load function in space: develop's surface integral reads it from the last parameter
 
         sci.problemStructureNonLin_->addRhsFunction(loadFunction, 0);
 
@@ -273,7 +274,8 @@ void reactionTerm(double *x, double *res, double *parameters)
  * parameters[5]: pressureReductionStartTime
  * parameters[6]: pressureReductionEndTime
  * parameters[7]: lambdaReduction
- * parameters[8]: surface flag
+ * parameters[8]: degree of the load function in space (0)
+ * parameters[9]: surface flag
  */
 void loadFunction(double *x, double *res, double *parameters)
 {
@@ -286,7 +288,7 @@ void loadFunction(double *x, double *res, double *parameters)
     double pressureReductionStartTime = parameters[5];
     double pressureReductionEndTime = parameters[6];
     double lambdaReduction = parameters[7];
-    double surfaceFlag = parameters[8];
+    double surfaceFlag = parameters[9];
 
     double lambda = 0.0;
     double currentLambdaReduction = 0.0;

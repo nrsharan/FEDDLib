@@ -180,6 +180,7 @@ int main(int argc, char *argv[])
         sci.problemStructureNonLin_->addParemeterRhs(pressure);
         sci.problemStructureNonLin_->addParemeterRhs(rampTimeStep);
         sci.problemStructureNonLin_->addParemeterRhs(timeRampEnd);
+        sci.problemStructureNonLin_->addParemeterRhs( 0. ); // degree of the load function in space: develop's surface integral reads it from the last parameter
 
         // Set load function (the second parameter is the block index)
         sci.problemStructureNonLin_->addRhsFunction(loadFunction, 0);
@@ -325,7 +326,7 @@ void loadFunction(double *x, double *res, double *parameters)
     else
         lambda = 0.875;
 
-    if (parameters[4] == 5) // If the surface flag is 5
+    if (parameters[5] == 5) // If the surface flag is 5
         res[0] = pressure * lambda;
 }
 

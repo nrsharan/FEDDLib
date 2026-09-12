@@ -17,8 +17,7 @@ AssembleFE<SC, LO, GO, NO>::AssembleFE(int flag, vec2D_dbl_Type nodesRefConfig, 
     // Reading through parameterlist
     dim_ = params_->sublist("Parameter").get("Dimension", -1);
 
-    timeIncrement_ = params_->sublist("Timestepping Parameter").get("dt", 34234.0);
-    TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(timeIncrement_, 34234.0), std::runtime_error, "Time increment dt not set in ParameterList under Timestepping Parameter.");
+    timeIncrement_ = params_->sublist("Timestepping Parameter").get("dt", 0.1); // as develop: stationary problems set no dt
 
     diskTuple_ = tuple;
 
@@ -124,7 +123,7 @@ template <class SC, class LO, class GO, class NO>
 void AssembleFE<SC,LO,GO,NO>::updateSolution( vec_dbl_Type solution){
 
 	//TEUCHOS_TEST_FOR_EXCEPTION(solution_.size() != solution.size(), std::runtime_error, "Dofs of solutions is not the same");
-	// this->solution_.reset( new vec_dbl_Type (solution.size(),0.) );
+	this->solution_.reset( new vec_dbl_Type (solution.size(),0.) ); // as develop: elements need not allocate it
 
   //cout << " Solution " ;
 	for(int i=0; i< solution.size();i++){

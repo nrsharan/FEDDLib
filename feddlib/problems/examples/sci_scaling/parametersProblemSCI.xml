@@ -1,5 +1,8 @@
 <ParameterList name="SCI">
     <ParameterList name="Parameter">
+        <!-- Active response not accelerated (the SCI element requires both) -->
+        <Parameter name="Accelerated Active Until" type="double" value="0.0"/>
+        <Parameter name="Active Acceleration Multiplier" type="double" value="1.0"/>
         <Parameter name="Dimension" type="int" value="3"/>
         <Parameter name="Discretization" type="string" value="P2"/><!--P2-->
         <Parameter name="BC Type" type="string" value="Artery Plaque"/><!--Artery, Cube-->
