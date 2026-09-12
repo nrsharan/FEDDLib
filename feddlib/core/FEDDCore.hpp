@@ -78,6 +78,12 @@ typedef std::tuple<std::string,double> tuple_sd_Type;
 typedef std::vector<tuple_sd_Type> tuple_sd_vec_Type;
 typedef Teuchos::RCP<tuple_sd_vec_Type> tuple_sd_vec_ptr_Type;
 
+typedef std::tuple<std::string,std::string,int,int,int> tuple_ssiii_Type;
+
+typedef std::vector<tuple_ssiii_Type> tuple_disk_vec2_Type;
+typedef Teuchos::RCP<tuple_disk_vec2_Type> tuple_disk_vec2_ptr_Type;
+
+
 typedef std::vector<tuple_ssii_Type> tuple_disk_vec_Type;
 typedef Teuchos::RCP<tuple_disk_vec_Type> tuple_disk_vec_ptr_Type;
 
@@ -136,6 +142,8 @@ typedef boost::function<double(double* x, double* parameters)>                  
 typedef boost::function<void(double* x, double* res, double* parameters)>               RhsFunc_Type;
 typedef boost::function<void(double* x, double* res, double t, double* parameters)>     GeneralFunc_Type;        
 typedef boost::function<void(double* x, double* res)>                                   Func_Type;
+
+inline bool approxEqual(double a, double b, double eps = 1e-8) {return std::abs(a - b) < eps;}
 
 template <typename SC>
 struct ThyraTypedefs {

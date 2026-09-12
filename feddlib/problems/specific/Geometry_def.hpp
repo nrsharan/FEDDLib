@@ -60,7 +60,8 @@ void Geometry<SC,LO,GO,NO>::info(){
 template<class SC,class LO,class GO,class NO>
 void Geometry<SC,LO,GO,NO>::assemble( std::string type ) const
 {
-    
+
+
     MatrixPtr_Type H = Teuchos::rcp( new Matrix_Type( this->getDomain(0)->getMapVecFieldUnique(), this->getDomain(0)->getDimension() * this->getDomain(0)->getApproxEntriesPerRow() ) );
 
     if (this->parameterList_->sublist("Parameter").get("Model","Laplace")=="Laplace"){
@@ -97,8 +98,10 @@ void Geometry<SC,LO,GO,NO>::assemble( std::string type ) const
     
     this->assembleSourceTerm( 0./*time*/ );
 
+
     this->addToRhs( this->sourceTerm_ );
     
+
     if (this->verbose_)
         std::cout << "done -- " << std::endl;
 }

@@ -16,17 +16,26 @@ namespace FEDD {
 template<class SC,class LO,class GO,class NO>
 NonLinearSolver<SC,LO,GO,NO>::NonLinearSolver():
 type_("")
-{}
+{
+
+initExport_=false;
+
+}
 
 
 template<class SC,class LO,class GO,class NO>
 NonLinearSolver<SC,LO,GO,NO>::NonLinearSolver(std::string type):
 type_(type)
-{}
+{
+initExport_=false;
+}
 
 template<class SC,class LO,class GO,class NO>
 NonLinearSolver<SC,LO,GO,NO>::~NonLinearSolver(){
-
+    if(initExport_){
+        exporterRelRes_->closeExporter();
+        exporterAbsRes_->closeExporter();
+    }
 }
 
 template<class SC,class LO,class GO,class NO>
@@ -47,6 +56,10 @@ void NonLinearSolver<SC,LO,GO,NO>::solve(NonLinearProblem_Type &problem,vec_dbl_
 #endif
     }
 
+    // Option to export the newly computed solution via HDF5 file
+    bool safeSolution = problem.getParameterList()->sublist("General").get("Safe solution", false);
+    if(safeSolution)
+        problem.exportSolutionHDF5();
 }
 
 template<class SC,class LO,class GO,class NO>
@@ -66,6 +79,13 @@ void NonLinearSolver<SC,LO,GO,NO>::solve(TimeProblem_Type &problem, double time,
     else if(!type_.compare("Extrapolation")){
         solveExtrapolation(problem, time);
     }
+
+    // Option to export the newly computed solution via HDF5 file
+    // BlockMultiVectorPtrArray_Type solution;
+    // solution.resize(1);
+    // solution.at(0) = Teuchos::rcp(new BlockMultiVector_Type(problem.getSolution()));
+    // problem.checkForExportAndExport( solution, "Solution");
+    
 }
 
 #ifdef FEDD_HAVE_NOX
@@ -82,10 +102,25 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNOX(NonLinearProblem_Type &problem,vec_d
     Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problemPtr->getLinearSolverBuilder()->createLinearSolveStrategy("");
 
 	//problemPtr->set_W_factory(lowsFactory);
+	//problemPtr->set_W_factory(lowsFactory);
 
     // Create the initial guess
     Teuchos::RCP<Thyra::VectorBase<SC> > initial_guess = problemPtr->getNominalValues().get_x()->clone_v();
-    Thyra::V_S(initial_guess.ptr(),Teuchos::ScalarTraits<SC>::zero());
+    if(!problem.getParameterList()->get("Zero Initial Guess",true) || problem.getParameterList()->sublist("General").get("Initialize solution from external", false))
+    { 
+        Teuchos::RCP<Thyra::ProductVectorBase<SC> > initialGuessProd = Teuchos::rcp_dynamic_cast<Thyra::ProductVectorBase<SC> >(initial_guess);
+        Teuchos::RCP<Thyra::MultiVectorBase<SC> > solMV;
+            if (!initialGuessProd.is_null())
+                solMV = problemPtr->getSolution()->getProdThyraMultiVector();
+            else
+                solMV = problemPtr->getSolution()->getThyraMultiVector();
+        Thyra::assign(initial_guess.ptr(), *solMV->col(0));
+    }
+    else{
+        Thyra::V_S(initial_guess.ptr(),Teuchos::ScalarTraits<SC>::zero());
+    } 
+
+      
 
     Teuchos::RCP<Thyra::LinearOpBase<SC> > W_op = problemPtr->create_W_op();
     Teuchos::RCP<Thyra::PreconditionerBase<SC> > W_prec = problemPtr->create_W_prec();
@@ -178,17 +213,19 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNOX(TimeProblem_Type &problem, vec_dbl_p
 
     problemPtr->getLinearSolverBuilder()->setParameterList(p);
     
-    Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> >
-    lowsFactory = problemPtr->getLinearSolverBuilder()->createLinearSolveStrategy("");
+    Teuchos::RCP<Thyra::LinearOpWithSolveFactoryBase<SC> > lowsFactory = problemPtr->getLinearSolverBuilder()->createLinearSolveStrategy("");
     
     TEUCHOS_TEST_FOR_EXCEPTION(problemPtr->getSolution()->getNumVectors()>1, std::runtime_error, "With the current implementation NOX can only be used with 1 MultiVector column.");
+    
+    
     // Create the initial guess and fill with last solution
     Teuchos::RCP<Thyra::VectorBase<SC> > initialGuess = problemPtr->getNominalValues().get_x()->clone_v();
     // Try to convert to a ProductVB. If resulting pointer is not null we need to use the ProductMV below, otherwise it is a monolithic vector.
     Teuchos::RCP<Thyra::ProductVectorBase<SC> > initialGuessProd = Teuchos::rcp_dynamic_cast<Thyra::ProductVectorBase<SC> >(initialGuess);
     Teuchos::RCP<Thyra::MultiVectorBase<SC> > solMV;
-    if (!initialGuessProd.is_null())
+    if (!initialGuessProd.is_null()){
         solMV = problemPtr->getSolution()->getProdThyraMultiVector();
+    }
     else
         solMV = problemPtr->getSolution()->getThyraMultiVector();
 
@@ -293,6 +330,8 @@ void NonLinearSolver<SC,LO,GO,NO>::solveFixedPoint(NonLinearProblem_Type &proble
     
     double tol = problem.getParameterList()->sublist("Parameter").get("relNonLinTol",1.0e-6);
     int maxNonLinIts = problem.getParameterList()->sublist("Parameter").get("MaxNonLinIts",10);
+    bool displayResiduals = problem.getParameterList()->sublist("Parameter").get("Display Residuals",true);
+
     int nlIts=0;
 
     double criterionValue = 1.;
@@ -333,6 +372,7 @@ void NonLinearSolver<SC,LO,GO,NO>::solveFixedPoint(NonLinearProblem_Type &proble
             if ( criterionValue < tol )
                 break;
         }
+
         // ####### end FPI #######
     }
 
@@ -588,6 +628,8 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
     problem.setBoundariesRHS(time);
 
 
+ 
+
     TEUCHOS_TEST_FOR_EXCEPTION(problem.getRhs()->getNumVectors()!=1,std::logic_error,"We need to change the code for numVectors>1.")
     
     // -------
@@ -595,15 +637,39 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
     // -------
     double	gmresIts = 0.;
     double residual0 = 1.;
+    double residualInit = 1.;
     double residual = 1.;
     double tol = problem.getParameterList()->sublist("Parameter").get("relNonLinTol",1.0e-6);
     int nlIts=0;
     int maxNonLinIts = problem.getParameterList()->sublist("Parameter").get("MaxNonLinIts",10);
     double criterionValue = 1.;
+    vec_dbl_Type criterionValueVec(problem.getSolution()->size());
     std::string criterion = problem.getParameterList()->sublist("Parameter").get("Criterion","Residual");
     std::string timestepping = problem.getParameterList()->sublist("Timestepping Parameter").get("Class","Singlestep");
+    bool displayResiduals = problem.getParameterList()->sublist("Parameter").get("Display Residuals",true);
 
+    vec_dbl_Type residualInitV(4,1.);
+
+   // Adding exporter for Newton residual values
+    if(!initExport_ &&  displayResiduals){
+        exporterRelRes_ =Teuchos::rcp(new ExporterTxt());;
+        exporterRelRes_->setup( "relResidual", problem.getComm() );
+
+        exporterAbsRes_ =Teuchos::rcp(new ExporterTxt());;
+        exporterAbsRes_->setup( "absResidual", problem.getComm() );
+        initExport_=true;
+    }
+
+    // Export current Time Step
+    if(displayResiduals){
+        exporterRelRes_->exportData(  "Timestep:", time );
+        exporterAbsRes_->exportData(  "Timestep:", time);
+    }
     while ( nlIts < maxNonLinIts ) {
+        if(displayResiduals){
+            exporterRelRes_->exportData( "Newton iter.:", nlIts );
+            exporterAbsRes_->exportData( "Newton iter.:", nlIts );
+        }
         if (timestepping == "External")
             problem.calculateNonLinResidualVec("external", time);
         else
@@ -611,16 +677,20 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
         if (criterion=="Residual")
             residual = problem.calculateResidualNorm();
         
-        if (nlIts==0)
+        if (nlIts==0){
             residual0 = residual;
-        
+            residualInit = problem.calculateResidualNorm();
+        }
         if (criterion=="Residual"){
             criterionValue = residual/residual0;
 //            exporterTxt->exportData( criterionValue );
             if (verbose)
-                std::cout << "### Newton iteration : " << nlIts << "  relative nonlinear residual : " << criterionValue << std::endl;
-            if ( criterionValue < tol )
+                cout << "### Newton iteration : " << nlIts << "  relative nonlinear residual : " << criterionValue << endl;
+            if ( criterionValue < tol ){
+                exporterRelRes_->exportData(  "--Converged with value: " , criterionValue );
                 break;
+
+            }
         }
 
         // Systems are combined in timeProblem.assemble("Newton") and then combined
@@ -636,16 +706,49 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
             //problem.assembleExternal( "OnlyUpdate" );// update AceGEN internal variables
         }
         else
-            gmresIts += problem.solveAndUpdate( criterion, criterionValue );
-        
+            gmresIts += problem.solveAndUpdate( criterion,criterionValue,criterionValueVec );
+
+
+        if(displayResiduals){
+            vec_dbl_Type normVec = problem.calculateResidualNormVec();
+            int numNorms = normVec.size();
+            if (nlIts==0){
+                residualInitV[0] = normVec[0];
+                residualInitV[1] = normVec[1];
+                residualInitV[2] = normVec[2];
+                residualInitV[3] = normVec[3];
+
+            }
+            if (verbose){
+                cout << "############################################################ " << endl;
+                cout << "Initial relative residual (as sum over all partial res) r0 = " << residualInit << endl;
+                for(int i=0; i< numNorms; i++){
+
+                    cout << "### Residual of component: " << i << ": " << normVec[i]  << " relative residual: " << normVec[i]/residualInitV[i] << " \t with r_0_" << i << "= " << residualInitV[i] << endl;
+                    exporterRelRes_->exportData(  i ,normVec[i]/residualInitV[i] );
+
+                }
+                cout << "############################################################ " << endl;
+                for(int i=0; i< numNorms; i++){
+                    cout << "### Update of component: " << i << ": " << criterionValueVec[i] << endl;
+                    exporterAbsRes_->exportData(  i ,criterionValueVec[i]);
+
+                }
+                cout << "############################################################ " << endl;
+
+            }
+        }
         nlIts++;
+
 
         //problem.getSolution()->getBlock(0)->print();
         if(criterion=="Update"){
             if (verbose)
-                std::cout << "### Newton iteration : " << nlIts << "  residual of update : " << criterionValue << std::endl;
-            if ( criterionValue < tol )
+                cout << "### Newton iteration : " << nlIts << "  residual of update : " << criterionValue << endl;
+            if ( criterionValue < tol ){
+                exporterAbsRes_->exportData(  "--Converged with value: " , criterionValue );
                 break;
+            }
         }
 
         // ####### end FPI #######

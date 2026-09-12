@@ -5,6 +5,7 @@
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/LinearAlgebra/Matrix.hpp"
 #include "feddlib/core/FE/Helper.hpp"
+#include "feddlib/core/General/TimeSteppingTools.hpp"
 
 namespace FEDD {
 
@@ -133,10 +134,20 @@ namespace FEDD {
         */
         virtual void advanceInTime(double dt);
         /*!
+         \brief This function is called every time the FEDDLib proceeds from one to the next time step. The size of the time step will always be provided as input.
+         @param[in] timeSteppingTool Timestepping tool object
+        */
+        virtual void advanceInTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool);
+        /*!
          \brief Get the time state of the object.
          \return the timestep
         */
         double getTimeStep();
+        
+        /*!
+         \brief This function is called once at the start of the simulation.
+        */
+        virtual void synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool);
 
         /*!
          \brief This function is called every time the FEDDLib proceeds from one to the next newton step. The size of the time step will always be provided as input. 
@@ -167,10 +178,16 @@ namespace FEDD {
         void preProcessing();
 
         /*!
-         \brief This function is called at the end of each Newton step after updating the solution vector.
+         \brief This function is called at the end of each Newton step after updating the solution vector to calculate post processing data.
         */
-        void postProcessing();
-		/// TODO: PostProcessing: Teuchos::Array with values and one global Array with Strings and names
+        virtual void postProcessing();
+		/// @todo PostProcessing: Teuchos::Array with values and one global Array with Strings and names
+        
+        /*!
+         \brief This function is called at the end of each Newton step after updating the solution vector to return postprocessing data.
+         \return postProcessingData_
+        */
+       vec2D_dbl_ptr_Type getPostProcessingData() {return postProcessingData_;};
 
         /*!
          \brief Get the spatial dimension. (Typically 2 or 3)
@@ -217,12 +234,34 @@ namespace FEDD {
         */
         vec_dbl_Type getLocalconstOutputField() {return constOutputField_;}
 
+        /*!
+         \brief Obtain history values of element
+         \return values
+        */
+        vec_dbl_Type getLocalHistory() {return history_;};
+
+        vec_dbl_Type getLocalHistoryUpdated() {return historyUpdated_;};
+
+         /*!
+         \brief Set history values of element
+         \return values
+        */
+        void setLocalHistory(vec_dbl_Type history);
+
+        void setLocalHistoryUpdated(vec_dbl_Type historyUpdated);
 
          /*!
          \brief Switch e.g. from FixedPoint assembly to Newton method during runtime
             @param[in] linearization string defining the linearization type e.g. "FixedPoint
         */
         void changeLinearization(std::string linearization) {this->linearization_ = linearization;};
+        int getHistoryLength() {return historyLength_;};
+
+        /// Number of integration points the element keeps history at (0 if it keeps none).
+        virtual int getNumberOfIntegrationPoints() {return 0;};
+
+        virtual std::vector<std::string> getPostDataNames(){return {};};
+        virtual std::map<std::string, int> getFieldNameToPosition(){return {};};
     protected:
 
         /*!
@@ -249,6 +288,10 @@ namespace FEDD {
 
         int dim_;
 
+        // This can be any postprocessing output field ddefined inside an element using converged solution
+        vec_dbl_Type constOutputField_ ; // can be a vector with values on P1/ P2 nodes or just averaged element value
+
+
 		tuple_disk_vec_ptr_Type diskTuple_;
 		tuple_sd_vec_ptr_Type elementIntormation_;
         /// TODO: Why "Reference Configuration"? 
@@ -262,11 +305,13 @@ namespace FEDD {
         vec_dbl_ptr_Type solution_ ;
         double timeIncrement_;
         GO globalElementID_;
+        vec2D_dbl_ptr_Type postProcessingData_;
 
         std::string linearization_; // Store in here which linearization e.g. FixedPoint or Newton is used -> Relevant for assembleFEElement-Specific construction of Jacobian in NavierStokes
 
         // This can be any postprocessing output field ddefined inside an element using converged solution
         vec_dbl_Type constOutputField_ ; // can be a vector with values on P1/ P2 nodes or just averaged element value
+        bool historyImported_;
 
         friend class AssembleFEFactory<SC,LO,GO,NO>;
     };

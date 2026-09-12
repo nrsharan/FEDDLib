@@ -649,7 +649,7 @@ void FE_ElementAssembly<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
 		numSolid=4;
         if(FETypeSolid == "P2")
             numSolid=10;
-	}
+    }
 	tuple_disk_vec_ptr_Type problemDisk = Teuchos::rcp(new tuple_disk_vec_Type(0));
 	tuple_ssii_Type chem ("Chemistry",FETypeChem,dofsChem,numChem);
 	tuple_ssii_Type solid ("Solid",FETypeSolid,dofsSolid,numSolid);
@@ -659,12 +659,13 @@ void FE_ElementAssembly<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
 	tuple_disk_vec_ptr_Type problemDiskChem = Teuchos::rcp(new tuple_disk_vec_Type(0));
     problemDiskChem->push_back(chem);
 
-	std::string SCIModel = params->sublist("Parameter").get("Structure Model","SCI_simple");
+	std::string SCIModel = params->sublist("Parameter").get("Structure Model","SCI_NH");
 
-	if(assemblyFEElements_.size()== 0){
-       	initAssembleFEElements(SCIModel,problemDisk,elementsChem, params,pointsRep,domainVec_.at(FElocSolid)->getElementMap());
-    }
-	else if(assemblyFEElements_.size() != elementsChem->numberElements())
+	// if(assemblyFEElements_.size()== 0){
+    //    	initAssembleFEElements(SCIModel,problemDisk,elementsChem, params,pointsRep,domainVec_.at(FElocSolid)->getElementMap());
+    // }
+	// else 
+    if(assemblyFEElements_.size() != elementsChem->numberElements())
 	     TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "Number Elements not the same as number assembleFE elements." );
 
 	//SmallMatrixPtr_Type elementMatrix =Teuchos::rcp( new SmallMatrix_Type( dofsElement));
@@ -697,15 +698,12 @@ void FE_ElementAssembly<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
  		SmallMatrixPtr_Type elementMatrix;
 
         // ------------------------
-        /*buildTransformation(elementsSolid->getElement(T).getVectorNodeList(), pointsRep, B, FETypeSolid);
+        Helper::buildTransformation(elementsSolid->getElement(T).getVectorNodeList(), pointsRep, B, FETypeSolid);
         detB = B.computeInverse(Binv);
-        absDetB = std::fabs(detB);
-        std::cout << " Determinante " << detB << std::endl;*/
+        //absDetB = std::fabs(detB);
+        if(detB <=0.)
+           std::cout << " Determinante Element: " << detB << std::endl;
         // ------------------------
-
-
-
-
 		if(assembleMode == "Jacobian"){
 			assemblyFEElements_[T]->assembleJacobian();
 
@@ -713,7 +711,7 @@ void FE_ElementAssembly<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
            // elementMatrix->print();
 			assemblyFEElements_[T]->advanceNewtonStep(); // n genereal non linear solver step
 			
-			addFeBlockMatrix(A, elementMatrix, elementsSolid->getElement(T), elementsSolid->getElement(T), mapSolid, mapChem, problemDisk);
+			addFeBlockMatrix(A, elementMatrix, elementsSolid->getElement(T),  mapSolid, mapChem, problemDisk);
 
           
 
@@ -728,7 +726,13 @@ void FE_ElementAssembly<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
             assemblyFEElements_[T]->assembleJacobian();
 
             AssembleFE_SCI_SMC_Active_Growth_Reorientation_Ptr_Type elTmp = Teuchos::rcp_dynamic_cast<AssembleFE_SCI_SMC_Active_Growth_Reorientation_Type>(assemblyFEElements_[T] );
-            elTmp->getMassMatrix(elementMatrix);
+            if (!elTmp.is_null())
+                elTmp->getMassMatrix(elementMatrix);
+            else {
+                AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation_Ptr_Type elTmpCMM = Teuchos::rcp_dynamic_cast<AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation_Type>(assemblyFEElements_[T] );
+                TEUCHOS_TEST_FOR_EXCEPTION(elTmpCMM.is_null(), std::logic_error, "MassMatrix assembly is only available for the SCI_SMC_Active_Growth_Reorientation and SCI_SMC_CMM_Active_Growth_Reorientation elements.");
+                elTmpCMM->getMassMatrix(elementMatrix);
+            }
             //elementMatrix->print();
    			addFeBlock(A, elementMatrix, elementsChem->getElement(T), mapChem, 0, 0, problemDiskChem);
 
@@ -1626,6 +1630,234 @@ int FE_ElementAssembly<SC,LO,GO,NO>::checkFE(int dim,
     TEUCHOS_TEST_FOR_EXCEPTION(!found, std::logic_error   ,"Combination of dimenson(2/3) and FE Type(P1/P2) not defined yet. Use addFE(domain)");
 
     return FEloc;
+}
+
+// SCI element assembly (time, history, post-processing), from the nrsharan/FEDDLib fork
+template <class SC, class LO, class GO, class NO>
+void FE_ElementAssembly<SC,LO,GO,NO>::advanceInTimeAssemblyFEElements(Teuchos::RCP<TimeSteppingTools> timeSteppingTool, MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep){
+
+    //UN FElocChem = 1; //checkFE(dim,FETypeChem); // Checks for different domains which belongs to a certain fetype
+    UN FElocSolid = 0; //checkFE(dim,FETypeSolid); // Checks for different domains which belongs to a certain fetype
+
+    //ElementsPtr_Type elementsChem= domainVec_.at(FElocChem)->getElementsC();
+
+    ElementsPtr_Type elementsSolid = domainVec_.at(FElocSolid)->getElementsC();
+        
+    vec_dbl_Type solution_c;
+	vec_dbl_Type solution_d;
+    for (UN T=0; T<assemblyFEElements_.size(); T++){
+		vec_dbl_Type solution(0);
+
+        solution_c = getSolution(elementsSolid->getElement(T).getVectorNodeList(), c_rep,1);
+        solution_d = getSolution(elementsSolid->getElement(T).getVectorNodeList(), d_rep,3);
+        // First Solid, then Chemistry
+        solution.insert( solution.end(), solution_d.begin(), solution_d.end() );
+        solution.insert( solution.end(), solution_c.begin(), solution_c.end() );
+            
+        assemblyFEElements_[T]->updateSolution(solution);
+
+        assemblyFEElements_[T]->advanceInTime(timeSteppingTool);
+    }
+}
+
+template <class SC, class LO, class GO, class NO>
+void FE_ElementAssembly<SC,LO,GO,NO>::updateSolutionAssemblyFEElements(MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep){
+    
+    ElementsPtr_Type elementsSolid = domainVec_.at(0)->getElementsC();
+        
+    vec_dbl_Type solution_c;
+	vec_dbl_Type solution_d;
+    for (UN T=0; T<assemblyFEElements_.size(); T++) {
+		vec_dbl_Type solution(0);
+            
+        solution_d = getSolution(elementsSolid->getElement(T).getVectorNodeList(), d_rep,3);
+        solution_c = getSolution(elementsSolid->getElement(T).getVectorNodeList(), c_rep,1);
+        // First Solid, then Chemistry
+        solution.insert( solution.end(), solution_d.begin(), solution_d.end() );
+        solution.insert( solution.end(), solution_c.begin(), solution_c.end() );
+            
+        assemblyFEElements_[T]->updateSolution(solution);
+    }        
+}
+
+template <class SC, class LO, class GO, class NO>
+void FE_ElementAssembly<SC,LO,GO,NO>::postProcessing(std::string type, MultiVectorPtr_Type &postProcessingVec)
+{
+    // Map for temporary vectors for import and export
+    MapConstPtr_Type mapRep = this->domainVec_[0]->getMapRepeated();
+    MapConstPtr_Type mapUni = this->domainVec_[0]->getMapUnique();
+
+    // Elements
+    ElementsPtr_Type elements = this->domainVec_[0]->getElementsC();
+
+    // Multiplicity of nodes (nodes being in more then one element) with weights from interpolation between gausspoints an node points
+    MultiVectorPtr_Type multiRep = Teuchos::rcp( new MultiVector_Type(mapRep, 1 ) );
+    multiRep->putScalar(0.);
+    Teuchos::ArrayRCP<SC>  arrayMultiRep = multiRep->getDataNonConst(0);
+
+    // Resulting postProcess values
+    MultiVectorPtr_Type resRep = Teuchos::rcp( new MultiVector_Type(mapRep, 1 ) );
+    resRep->putScalar(0.);
+    Teuchos::ArrayRCP<SC>  arrayRep = resRep->getDataNonConst(0);
+
+    auto fieldNameToPosition = assemblyFEElements_[0]->getFieldNameToPosition();
+    auto postDataNames = assemblyFEElements_[0]->getPostDataNames();
+    if (fieldNameToPosition.count(type) == 0) {
+        std::string availableTypes;
+        for (size_t i = 0; i < postDataNames.size(); ++i) {
+            if (i > 0) availableTypes += ", ";
+            availableTypes += postDataNames[i];
+        }
+        TEUCHOS_TEST_FOR_EXCEPTION(true, std::logic_error, "Unknown post-processing field type: '" + type +
+        "', available types: " + availableTypes);
+    }
+    int position = fieldNameToPosition.at(type);
+    for (UN T=0; T<assemblyFEElements_.size(); T++) {
+
+        vec_LO_Type nodeList = elements->getElement(T).getVectorNodeList();
+        assemblyFEElements_[T]->postProcessing();
+        vec2D_dbl_ptr_Type postProcessingData = assemblyFEElements_[T]->getPostProcessingData();
+        
+        for(int i=0; i< 10; i++){
+            arrayMultiRep[nodeList[i]] += (*postProcessingData)[i][0]; // this column of the postprocessing data contains some sort of scaling.
+            arrayRep[nodeList[i]] +=  (*postProcessingData)[i][position]; //*(*postProcessingData)[i][0]; // per node the index 'type' stands for a different post processing value
+        }
+    }
+    
+    // Unique distribution. We export it with add so we get the sum over all repeated values in unique distribution
+    MultiVectorPtr_Type multiUni = Teuchos::rcp( new MultiVector_Type(mapUni, 1 ) );
+    multiUni->putScalar(0.);
+    multiUni->exportFromVector(multiRep,true, "Add");
+
+    // Same for postProcessingValues
+    postProcessingVec->putScalar(0.);
+    postProcessingVec->exportFromVector( resRep, true, "Add" );
+
+    Teuchos::ArrayRCP<SC>  arrayMultiUni = multiUni->getDataNonConst(0);
+    Teuchos::ArrayRCP<SC>  arrayUni = postProcessingVec->getDataNonConst(0);
+
+    //multiUni->print();
+    //res->getBlock(0)->print();
+    // Lastly the sum over all node post precessing values is devided by the sum ob weights.
+    for(int i= 0; i< arrayUni.size() ; i++)
+        if(fabs(arrayMultiUni[i]) > 0 && fabs(arrayUni[i]) > 0 )
+            arrayUni[i]  = arrayUni[i]/ (arrayMultiUni[i]); 
+        else
+            arrayUni[i]  =0.;    
+}
+
+template <class SC, class LO, class GO, class NO>
+std::vector<std::string> FE_ElementAssembly<SC,LO,GO,NO>::getPostDataNames()
+{
+    return assemblyFEElements_[0]->getPostDataNames();
+}
+
+template <class SC, class LO, class GO, class NO>
+typename FE_ElementAssembly<SC,LO,GO,NO>::BlockMultiVectorPtr_Type FE_ElementAssembly<SC,LO,GO,NO>::getHistoryValues()
+{
+    // We are only concerned with element information. We dont need any communication for that
+    MapConstPtr_Type elementMap = this->domainVec_[0]->getElementMap();
+
+    // One block per Gauss point, one vector per history value of a Gauss point:
+    // an element's history is stored Gauss point by Gauss point.
+    int numGaussPoints = 0;
+    int numHistoryValues = 0;
+    if(assemblyFEElements_.size()>0){
+        numGaussPoints = assemblyFEElements_[0]->getNumberOfIntegrationPoints();
+        TEUCHOS_TEST_FOR_EXCEPTION(numGaussPoints <= 0, std::logic_error, "getHistoryValues: the assembly elements do not report their number of integration points.");
+        numHistoryValues = assemblyFEElements_[0]->getHistoryLength() / numGaussPoints;
+    }
+
+    BlockMultiVectorPtr_Type historyElements =  Teuchos::rcp( new BlockMultiVector_Type(numGaussPoints) );
+    for(int gp = 0; gp < numGaussPoints; gp++)
+        historyElements->addBlock(Teuchos::rcp( new MultiVector_Type(elementMap,numHistoryValues) ), gp);
+
+    // Iterating over all elements
+    for (UN T=0; T<assemblyFEElements_.size(); T++) {
+        vec_dbl_Type historyElement = assemblyFEElements_[T]->getLocalHistory();
+        for(int gp =0; gp<numGaussPoints; gp++){
+            for(int i=0; i< numHistoryValues ; i++){
+                Teuchos::ArrayRCP<SC>  arrayMultiRep = historyElements->getBlock(gp)->getDataNonConst(i);
+                arrayMultiRep[T] = historyElement[i+gp*numHistoryValues];
+
+            }
+        }
+
+    }
+    return historyElements;
+}
+
+template <class SC, class LO, class GO, class NO>
+void FE_ElementAssembly<SC,LO,GO,NO>::setHistoryValues(LO T, vec_dbl_Type history)
+{
+    assemblyFEElements_[T]->setLocalHistory(history);
+    assemblyFEElements_[T]->setLocalHistoryUpdated(history);
+
+}
+
+template <class SC, class LO, class GO, class NO>
+void FE_ElementAssembly<SC,LO,GO,NO>::initAssembleFEAceDeformDiffu(int dim,
+                        std::string FETypeChem,
+                        std::string FETypeSolid,
+                        int dofsChem,
+                        int dofsSolid,
+                        ParameterListPtr_Type params){
+
+    if((FETypeChem != "P2") || (FETypeSolid != "P2") || dim != 3)
+    	TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "No AceGen Implementation available for Discretization and Dimension." );
+
+
+    UN FElocChem = 1; //checkFE(dim,FETypeChem); // Checks for different domains which belongs to a certain fetype
+    UN FElocSolid = 0; //checkFE(dim,FETypeSolid); // Checks for different domains which belongs to a certain fetype
+
+	ElementsPtr_Type elementsChem= domainVec_.at(FElocChem)->getElementsC();
+
+	ElementsPtr_Type elementsSolid = domainVec_.at(FElocSolid)->getElementsC();
+
+    //this->domainVec_.at(FElocChem)->info();
+    //this->domainVec_.at(FElocSolid)->info();
+	//int dofsElement = elements->getElement(0).getVectorNodeList().size();
+
+	vec2D_dbl_ptr_Type pointsRep = domainVec_.at(FElocSolid)->getPointsRepeated();
+
+	/// Tupel construction follows follwing pattern:
+	/// std::string: Physical Entity (i.e. Velocity) , std::string: Discretisation (i.e. "P2"), int: Degrees of Freedom per Node, int: Number of Nodes per element)
+	int numChem=3;
+    if(FETypeChem == "P2"){
+        numChem=6;
+    }    
+	if(dim==3){
+		numChem=4;
+        if(FETypeChem == "P2")
+            numChem=10;
+	}
+    int numSolid=3;
+    if(FETypeSolid == "P2")
+        numSolid=6;
+        
+	if(dim==3){
+		numSolid=4;
+        if(FETypeSolid == "P2")
+            numSolid=10;
+    }
+	tuple_disk_vec_ptr_Type problemDisk = Teuchos::rcp(new tuple_disk_vec_Type(0));
+	tuple_ssii_Type chem ("Chemistry",FETypeChem,dofsChem,numChem);
+	tuple_ssii_Type solid ("Solid",FETypeSolid,dofsSolid,numSolid);
+	problemDisk->push_back(solid);
+	problemDisk->push_back(chem);
+
+	tuple_disk_vec_ptr_Type problemDiskChem = Teuchos::rcp(new tuple_disk_vec_Type(0));
+    problemDiskChem->push_back(chem);
+
+	std::string SCIModel = params->sublist("Parameter").get("Structure Model","SCI_NH");
+    initAssembleFEElements(SCIModel, problemDisk, elementsChem, params, pointsRep, domainVec_.at(FElocSolid)->getElementMap());
+}
+
+template <class SC, class LO, class GO, class NO>
+void FE_ElementAssembly<SC,LO,GO,NO>::synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool) {
+    for (UN T=0; T<assemblyFEElements_.size(); T++) {
+        assemblyFEElements_.at(T)->synchronizeTime(timeSteppingTool);
+    }
 }
 
 }

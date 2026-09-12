@@ -15,13 +15,25 @@ namespace FEDD
 	AssembleFE_SCI_NH<SC, LO, GO, NO>::AssembleFE_SCI_NH(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params, tuple_disk_vec_ptr_Type tuple) : AssembleFE<SC, LO, GO, NO>(flag, nodesRefConfig, params, tuple)
 	{
 		// Extracting values from ParameterList
-		E0_ = this->params_->sublist("Parameter Solid").get("E", 379.95e-6);
-		E1_ = this->params_->sublist("Parameter Solid").get("E1", 300.0e-6);
-		poissonRatio_ = this->params_->sublist("Parameter Solid").get("Poisson Ratio", 0.49e-0);
-		c1_ = this->params_->sublist("Parameter Solid").get("c1", 0.25e-0);
-		D0_ = this->params_->sublist("Parameter Diffusion").get("D0", 6.0e-5);
-		m_ = this->params_->sublist("Parameter Diffusion").get("m", 0.0);
-		dofOrdering_ = this->params_->sublist("Parameter").get("Ordering", 2);
+		int numMaterials =  this->params_->sublist("Parameter Solid").get("Number of Materials", 1);
+		int materialID = 0;
+
+		for(int i=1; i<= numMaterials; i++)
+			if( this->params_->sublist("Parameter Solid").sublist(std::to_string(i)).get("Volume Flag", 15) == this->flag_)
+				materialID = i;
+		
+		if(materialID == 0)
+			cout << "!!! Warning: No corresponding parameterslist for the element flag="<< this->flag_ << ". Please Check volume flags of elements and Mesh Data !!! " << endl;
+
+
+		E0_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("E", 0.38);
+		E1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("E1", 0.3);
+		poissonRatio_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("Poisson Ratio", 0.49e-0);
+		c1_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("c1", 0.25e-0);
+		D0_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("D0",6.e-05);
+		m_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("m", 0.0);
+		dofOrdering_ = this->params_->sublist("Parameter").sublist(std::to_string(materialID)).get("Ordering", 2);
+		//cout << "--- Init AssembleFE_SCI_NH Element --- EMOD " << E0_  << " D0_ " << D0_ << endl;
 
 		FEType_ = std::get<1>(this->diskTuple_->at(0));	   // FEType of Disk
 		dofsSolid_ = std::get<2>(this->diskTuple_->at(0)); // Degrees of freedom per node
@@ -35,6 +47,9 @@ namespace FEDD
 		solution_n_.resize(60, 0.);
 		solution_n1_.resize(60, 0.);
 
+		//this->postProcessingData_ = Teuchos::rcp( new SmallMatrix_Type(dofsElement_,0.));
+
+		//cout << " Parameters:: E=" << E0_ << " E1=" << E1_ << " poissionRation=" << poissonRatio_ << endl; 
 		/*timeParametersVec_.resize(0, vec_dbl_Type(2));
 		numSegments_ = this->params_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);
 
@@ -69,10 +84,21 @@ namespace FEDD
 			if(this->timeStep_ +1.0e-12 > timeParametersVec_[i][0])
 				this->timeIncrement_=timeParametersVec_[i][1];
 		}*/
-       
+		if(this->timeStep_ -1.e-13 < 0) // only in this one instance T=0 we set the dt beforehand, as the initial dt is set through the paramterlist and this is error prone
+			this->timeIncrement_=dt;
+
 		this->timeStep_ = this->timeStep_ + this->timeIncrement_;
 
 		this->timeIncrement_ = dt;
+
+		if(this->globalElementID_==0){
+			cout << " ---------------------------------------------- " << endl;
+			cout << " AssembleFE_SCI_NH: Advancing time in elements" << endl;
+			cout << " Timestep: " << this->timeStep_ << " \t timeincrement: "<< this->timeIncrement_ << endl;
+			cout << " ---------------------------------------------- " << endl;
+
+		}
+        //cout << " Advance in time on element timestep: " << this->timeStep_ << " increment: " << this->timeIncrement_ << endl;
 
 		for (int i = 0; i < 40; i++)
 		{
@@ -131,7 +157,7 @@ namespace FEDD
 		double *residuum = neoHookeElement.getResiduum();
 
 		for (int i = 0; i < 40; i++)
-			(*this->rhsVec_)[i] = residuum[i];
+			(*this->rhsVec_)[i] = -residuum[i];
 
 
 #endif
@@ -142,7 +168,6 @@ namespace FEDD
 	template <class SC, class LO, class GO, class NO>
 	void AssembleFE_SCI_NH<SC, LO, GO, NO>::assembleDeformationDiffusionNeoHook(SmallMatrixPtr_Type &elementMatrix)
 	{
-
 		std::vector<double> positions(30);
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
@@ -190,13 +215,12 @@ namespace FEDD
 		{
 			for (UN j = 0; j < this->dofsElement_; j++)
 			{
-				(*elementMatrix)[i][j] = stiffnessMatrix[i][j];
+				(*elementMatrix)[i][j] = -stiffnessMatrix[i][j];
 			}
 		}
-#endif
 
+	
+	#endif
 	}
-
-
 } // namespace FEDD
 #endif // ASSEMBLEFE_SCI_NH_DEF_hpp

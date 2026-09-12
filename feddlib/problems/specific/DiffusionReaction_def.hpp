@@ -25,10 +25,12 @@ u_rep_(),
 reactionFunc_()
 {
  
-    this->addVariable( domain , FEType , "u" , 1);
+    this->addVariable( domain , FEType , "c" , 1);
     this->dim_ = this->getDomain(0)->getDimension();
 	
 	diffusionTensor_ = diffusionTensor;
+
+    this->parameterList_ = parameterList;
 
     funcParameter_.push_back(this->parameterList_->sublist("Parameter").get("E0",1.0));
     funcParameter_.push_back(this->parameterList_->sublist("Parameter").get("E1",0.5));
@@ -63,7 +65,7 @@ void DiffusionReaction<SC,LO,GO,NO>::assembleConstantMatrices( std::string type 
 
     A_.reset(new Matrix_Type( this->getDomain(0)->getMapUnique(), this->getDomain(0)->getApproxEntriesPerRow() ) );
 
-    this->feFactory_->assemblyLaplaceDiffusion(this->dim_, this->domain_FEType_vec_.at(0), 2, A_, this->diffusionTensor_ );
+    this->feFactory_->assemblyLaplaceDiffusion(this->dim_, this->domain_FEType_vec_.at(0), 2, A_, this->diffusionTensor_,this->parameterList_  );
 
     if (this->system_.is_null())
         this->system_.reset(new BlockMatrix_Type(1));
@@ -75,6 +77,9 @@ void DiffusionReaction<SC,LO,GO,NO>::assembleConstantMatrices( std::string type 
     
     if (this->verbose_)
         std::cout << "done -- " << std::endl;
+
+    //this->bcFactory_->setRHS( this->getSolution(), 0.);
+
 }
 
 /*!

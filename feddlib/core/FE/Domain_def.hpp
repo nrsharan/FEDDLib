@@ -184,13 +184,15 @@ LO Domain<SC,LO,GO,NO>::getApproxEntriesPerRow() const{
         else {
             return 200;
         }
-    } else {
+    } 
+    else {
         if ( this->FEType_ == "P1" ) {
             return 100;
         }
         else if ( this->FEType_ == "P2" ) {
             return 200;
         }
+        
         else {
             return 300;
         }
@@ -203,7 +205,6 @@ template <class SC, class LO, class GO, class NO>
 void Domain<SC,LO,GO,NO>::buildMesh(int flagsOption , std::string meshType, int dim, std::string FEType, int N, int M, int numProcsCoarseSolve){
 
     int geoNumber = checkGeomentry(meshType, dim);
-
 #ifdef ASSERTS_WARNINGS
     MYASSERT(geoNumber!=-1, "Geometry not known for this Dimension.")
 #endif
@@ -259,9 +260,35 @@ void Domain<SC,LO,GO,NO>::buildMesh(int flagsOption , std::string meshType, int 
     }
     meshStructured->buildElementMap();
     meshStructured->setStructuredMeshFlags(flagsOption,FEType);
-    meshStructured->buildSurfaces(flagsOption,FEType);
     
+    // Building the surfaces for elements as well (necessary with surface loads!)
+    meshStructured->buildSurfaces(flagsOption,FEType);
+
     mesh_ = meshStructured;
+}
+
+template <class SC, class LO, class GO, class NO>
+void Domain<SC,LO,GO,NO>::setPhysicProperty(std::string physic){
+    physics_ = physic;
+}
+
+template <class SC, class LO, class GO, class NO>
+void Domain<SC, LO, GO, NO>::setDofs(int dofs)
+{
+    dofs_ = dofs;
+}
+
+template <class SC, class LO, class GO, class NO>
+int Domain<SC, LO, GO, NO>::getDofs() const
+{
+    return dofs_;
+}
+
+
+template <class SC, class LO, class GO, class NO>
+std::string Domain<SC,LO,GO,NO>::getPhysicProperty() const
+{
+    return physics_;
 }
 
 template <class SC, class LO, class GO, class NO>

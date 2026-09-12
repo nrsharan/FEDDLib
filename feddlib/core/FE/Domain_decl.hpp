@@ -403,6 +403,7 @@ public:
 
 	/*!
          \brief Checks geometriy
+         \brief Checks geometriy
          @param[in] MeshType
          @param[in] dim
          \return 
@@ -458,9 +459,11 @@ public:
 
     /*!
          \brief Generally the domain object holds only meshes from type 'Mesh'. If we read a mesh from file it becomes the type 'MeshUnstructured' and needs to be initialized
-         @param[in] dimension
-         @param[in] FEType
-         @param[in] volumeID       
+          @param[in] dimension
+          @param[in] FEType
+          @param[in] volumeID 
+          @param[in] unit of read mesh (i.e. cm, mm ..)
+          @param[in] converToSI option to convert unit to SI unit which is m
     */
     void initializeUnstructuredMesh(int dimension, std::string feType, int volumeID=10,  std::string meshUnit = "cm", bool convertToCM = false);
 
@@ -507,6 +510,22 @@ public:
     */
     MultiVectorPtr_Type getNodeListMV() const;
 
+     /// @brief Setting physic property of domain 
+     /// @param physic physics property of unterlying component of problem i.e. velocity for Navier-Stokes
+     void setPhysicProperty(std::string physic);
+
+     /// @brief 
+     /// @param dofs 
+     void setDofs(int dofs);
+
+     /// @brief 
+     /// @return 
+     int getDofs() const;
+
+     /// @brief Returning the physics property of domain
+     /// @return physics property of unterlying component of problem i.e. velocity for Navier-Stokes
+     std::string getPhysicProperty() const;
+
     /*!
          \brief Exporting Mesh
          
@@ -541,23 +560,28 @@ public:
    void exportDistribution(std::string name = "default");
    /* ----------------------------------------------------------------------------------------*/
 
-   private:
-   CommConstPtr_Type comm_; // underlying comm
-   MeshPtr_Type mesh_;      // underlying mesh as base class mesh type. usually underlying mesh is either structured or unstructured
-   int dim_;                // dimension
-   vec_dbl_Type coorRec;
-   double length;
-   double height;
-   double width;
-   int n_;
-   int m_;
-   std::string FEType_; // Finite element discretization
-   mutable MapPtr_Type mapVecFieldUnique_;
-   mutable MapPtr_Type mapVecFieldRepeated_;
+private:
 
-   string_vec_ptr_Type geometries2DVec_; // list with available 2D structured geometries
-   string_vec_ptr_Type geometries3DVec_; // list with available 3D structured geometries
-   vec_dbl_ptr_Type distancesToInterface_;
+    CommConstPtr_Type 		comm_;
+    MeshPtr_Type 			mesh_;
+    int                     dim_;
+    int                     dofs_=1; // dimension
+
+    vec_dbl_Type            coorRec;
+    double 					length;
+    double		 			height;
+    double 					width;
+    int 					n_;
+    int 					m_;
+    std::string				FEType_;
+    std::string               physics_ = "u"; // Physics component - only useful for multiphysics problems to identify blocks
+
+    mutable MapPtr_Type mapVecFieldUnique_;
+    mutable  MapPtr_Type mapVecFieldRepeated_;
+    
+    string_vec_ptr_Type     geometries2DVec_;
+    string_vec_ptr_Type		geometries3DVec_;
+    vec_dbl_ptr_Type        distancesToInterface_;
 
    // Unique Interface-Maps als nodes und als dofs in der Interface-Nummerierung
    MapPtr_Type interfaceMapUnique_;         // nodes

@@ -68,6 +68,11 @@ public:
 
     /// @brief Constructor
     /// @param comm 
+    typedef ExporterParaView<SC,LO,GO,NO> Exporter_Type;
+    typedef Teuchos::RCP<Exporter_Type> ExporterPtr_Type;
+    typedef std::vector<ExporterPtr_Type> ExporterPtrVec_Type;
+    typedef typename Problem_Type::Domain_Type::Mesh_Type Mesh_Type;
+    typedef typename Problem_Type::Domain_Type::MeshPtr_Type MeshPtr_Type;
     NonLinearProblem(CommConstPtr_Type comm);
 
     /// @brief Constructor with parameterlist
@@ -104,6 +109,12 @@ public:
     /// @return Number of linear iterations
     int solveUpdate( );
 
+    /// @brief Plotting residual Vector of problem
+    /// @param problem Timeproblem
+    /// @param time current time
+    void plotResidualVec(double time =0.) const;
+
+//    virtual void reAssemble(std::string type="FixedPoint") const = 0;
 
     /// @brief Reassemble with previous solution. I think it is not used anymore. @TODO: Look into this.
     /// @param previousSolution 
@@ -120,6 +131,8 @@ public:
     /// @brief Calculate the 2-norm of the residual vector
     /// @return Value of the norm of the residual
     double calculateResidualNorm() const;
+
+    vec_dbl_Type calculateResidualNormVec() const;
 
     /// @brief Virtual function which is implemented in the specific non-linear problem classes to calculate the non-linear residual vector
     /// @param type standard or reverse depending on Newton formulation, e.g. as in NOX or FEDDLib-Newton
@@ -144,6 +157,8 @@ public:
     virtual Teuchos::RCP<const ::Thyra::VectorSpaceBase<SC> > get_f_space() const;
 
     virtual ::Thyra::ModelEvaluatorBase::InArgs<SC> createInArgs() const;
+
+    void initExporterResidual() const;
 
     void initNOXParameters( );
 
@@ -181,7 +196,11 @@ private:
                                 // called for the first time. However, the preconditioner is only correct 
                                 // if a linear system is solved in the first nonlinear iteration. 
 
+    mutable ExporterPtrVec_Type exporterResidual_;
 
+    mutable double currentTimeExport_=0.;
+    mutable double timeStep_ =0;
+    mutable double newtonStep_=0;
     Thyra::ModelEvaluatorBase::InArgs<SC> nominalValues_;
 
     Thyra::ModelEvaluatorBase::InArgs<SC> prototypeInArgs_;

@@ -1,6 +1,8 @@
 #include "TimeSteppingTools.hpp"
 #include "feddlib/core/General/ExporterParaView.hpp"
 
+// For std::numeric_limits
+#include <limits>
 /*!
  Definition of TimeSteppingTools
  
@@ -132,6 +134,13 @@ void TimeSteppingTools::setParameter(){
         BDFNmb_ = parameterList_->get("BDF",1);
         setInformationBDF();
     }
+
+    // Updating time if restart occurs.
+    bool restart = this->parameterList_->get("Restart", false);
+    double timeStep = this->parameterList_->get("Time step", 0.0);
+    if(restart)
+        t_ = timeStep;
+        
 }
 
 double TimeSteppingTools::currentTime(){
@@ -139,10 +148,11 @@ double TimeSteppingTools::currentTime(){
 }
 
 bool TimeSteppingTools::continueTimeStepping(){
-    if (t_+1.e-10<tEnd_)
-        return true;
-    else
-        return false;
+    // Avoid stopping a step early due to floating point accumulation (e.g. dt=0.2 over many steps).
+    // We consider the simulation finished only once t_ is sufficiently close to tEnd_.
+    const double scale = std::max(1.0, std::abs(tEnd_));
+    const double tol = std::max(1e-12, 100.0 * std::numeric_limits<double>::epsilon() * scale);
+    return (t_ < tEnd_ - tol);
 }
 
 double TimeSteppingTools::getButcherTableCoefficient(int row , int col){
@@ -269,7 +279,27 @@ void TimeSteppingTools::advanceTime(bool printInfo){
         exporterTxtError_->exportData(t_);
     }
 
-    t_+=dt_;
+    // Clamp the very last step so we hit Final time exactly.
+    // This prevents exporting a "final" timestep slightly beyond tEnd_ or missing it entirely.
+    if (t_ < tEnd_) {
+        const double remaining = tEnd_ - t_;
+        const double scale = std::max(1.0, std::abs(tEnd_));
+        const double tol = std::max(1e-12, 100.0 * std::numeric_limits<double>::epsilon() * scale);
+        if (dt_ > remaining && remaining > tol) {
+            dt_ = remaining;
+        }
+    }
+
+    t_ += dt_;
+
+    // If we're extremely close, snap to tEnd_.
+    {
+        const double scale = std::max(1.0, std::abs(tEnd_));
+        const double tol = std::max(1e-12, 100.0 * std::numeric_limits<double>::epsilon() * scale);
+        if (std::abs(t_ - tEnd_) <= tol) {
+            t_ = tEnd_;
+        }
+    }
 
     if (printInfo)
         this->printInfo();

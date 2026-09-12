@@ -212,17 +212,28 @@ public:
 
     virtual void getValuesOfInterest( vec_dbl_Type& values ) = 0 ;
 
+    virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values ) = 0 ;
+
     virtual void computeValuesOfInterestAndExport() = 0;
-    
+
+    /// @brief Write the problem's own restart data (e.g. element history) for the checkpoint at 'time'. Nothing by default.
+    virtual void exportValuesOfInterest(double time) {}
+
+    /// @brief Read the problem's own restart data of the checkpoint at 'time' (the restart time). Nothing by default.
+    virtual void importValuesOfInterest(double time) {}
+
     void addParemeterRhs(double para){ parasSourceFunc_.push_back( para ); }
     
     void changeAssFELinearization(std::string linearization); // Function in order to be able to change e.g. from FixedPoint to Newton linearization on element level
+    double getParameterRhs(int i ) const { return parasSourceFunc_[i]; }
+
+    double getParameterCount( ) const { return parasSourceFunc_.size(); }
 
 	double calculateH1Norm(MultiVectorConstPtr_Type mv, int blockId1=0, int blockId2=0, int domainInd=0); // Function that calculates H1 Error in the 'mv * K * mv' sense, with K beeing the Stiffness Matrix
 
 	double calculateL2Norm(MultiVectorConstPtr_Type mv, int domainInd=0); // Function that calculates L2 Error in the 'mv * M * mv' sense, with M beeing the Mass Matrix
 
-
+    void exportSolutionHDF5(); // Export the solution BlockMultiVector to a HDF5 Format
     int dim_;
     mutable CommConstPtr_Type comm_;
     mutable BlockMatrixPtr_Type system_;
@@ -236,6 +247,10 @@ public:
     std::vector<RhsFunc_Type>   rhsFuncVec_; // RHS functions of different blocks
     vec_dbl_Type parasSourceFunc_; //
     
+    // Exporter for the solution. Vector entry i corresponds to block i of the solution BlockMultiVector
+    std::vector<HDF5Export<SC,LO,GO,NO>> HDF5exporterSolution_; // Solution
+
+
 protected:
 
     mutable ParameterListPtr_Type	parameterList_;

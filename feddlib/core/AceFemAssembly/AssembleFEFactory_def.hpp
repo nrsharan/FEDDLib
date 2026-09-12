@@ -22,11 +22,11 @@ typename AssembleFEFactory<SC,LO,GO,NO>::AssembleFEPtr_Type AssembleFEFactory<SC
 		Teuchos::RCP<AssembleFE_Laplace<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_Laplace<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
 		assembleFE = assembleFESpecific;
 	}
-  else if (problemType == "NonLinearLaplace") {
+	else if (problemType == "NonLinearLaplace") {
     	Teuchos::RCP<AssembleFENonLinLaplace<SC, LO, GO, NO>> assembleFESpecific(new AssembleFENonLinLaplace<SC, LO, GO, NO>(flag, nodesRefConfig,
                                                     params, tuple));
     	assembleFE = assembleFESpecific;
-  }
+  	}
 	else if(problemType == "NavierStokes"){
 		Teuchos::RCP<AssembleFENavierStokes<SC,LO,GO,NO>> assembleFESpecific(new AssembleFENavierStokes<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
 		assembleFE = assembleFESpecific;
@@ -43,6 +43,10 @@ typename AssembleFEFactory<SC,LO,GO,NO>::AssembleFEPtr_Type AssembleFEFactory<SC
 		Teuchos::RCP<AssembleFE_NonLinElas<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_NonLinElas<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
 		assembleFE = assembleFESpecific;
 	}
+	// else if(problemType == "Neo-Hooke2D"){
+	// 	Teuchos::RCP<AssembleFE_NeoHooke2D<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_NeoHooke2D<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
+	// 	assembleFE = assembleFESpecific;
+	// }
 	else if(problemType == "NonLinearElasticity2"){
 		Teuchos::RCP<AssembleFE_NonLinElas2<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_NonLinElas2<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
 		assembleFE = assembleFESpecific;
@@ -51,13 +55,18 @@ typename AssembleFEFactory<SC,LO,GO,NO>::AssembleFEPtr_Type AssembleFEFactory<SC
 		Teuchos::RCP<AssembleFE_SCI_NH<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_SCI_NH<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
 		assembleFE = assembleFESpecific;
 	}
-	// Structure interaction model established by Klemens Uhlmann
+	// Structure interaction model established by Balzani, Uhlmann et al.
 	else if(problemType == "SCI_SMC_MLCK"){
 		Teuchos::RCP<AssembleFE_SCI_SMC_MLCK<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_SCI_SMC_MLCK<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
 		assembleFE = assembleFESpecific;
 	}
 	else if(problemType == "SCI_SMC_Active_Growth_Reorientation"){
 		Teuchos::RCP<AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
+		assembleFE = assembleFESpecific;
+	}
+	// Constrained-mixture (CMM) variant of the model above
+	else if(problemType == "SCI_SMC_CMM_Active_Growth_Reorientation"){
+		Teuchos::RCP<AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC,LO,GO,NO>> assembleFESpecific(new AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC,LO,GO,NO>(flag,nodesRefConfig, params,tuple) );
 		assembleFE = assembleFESpecific;
 	}
 	else

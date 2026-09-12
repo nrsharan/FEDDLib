@@ -16,6 +16,7 @@
 #include "feddlib/core/AceFemAssembly/specific/AssembleFENavierStokes.hpp"
 
 #include "feddlib/core/AceFemAssembly/AssembleFEFactory.hpp"
+#include "feddlib/core/General/TimeSteppingTools.hpp"
 
 #include <Teuchos_Array.hpp>
 #include <Teuchos_BLAS.hpp>
@@ -163,6 +164,15 @@ class FE_ElementAssembly {
                                 bool callFillComplete = true,
                                 int FELocExternal=-1);
 
+    // SCI element assembly: time, history (restart) and post-processing of the elements
+    void initAssembleFEAceDeformDiffu(int dim, std::string FETypeChem, std::string FETypeSolid, int dofsChem, int dofsSolid, ParameterListPtr_Type params);
+    void advanceInTimeAssemblyFEElements(Teuchos::RCP<TimeSteppingTools> timeSteppingTool, MultiVectorPtr_Type d_rep, MultiVectorPtr_Type c_rep);
+    void updateSolutionAssemblyFEElements(MultiVectorPtr_Type d_rep, MultiVectorPtr_Type c_rep);
+    void synchronizeTime(Teuchos::RCP<TimeSteppingTools> timeSteppingTool);
+    void postProcessing(std::string type, MultiVectorPtr_Type &postProcessingVec);
+    std::vector<std::string> getPostDataNames();
+    BlockMultiVectorPtr_Type getHistoryValues();
+    void setHistoryValues(LO T, vec_dbl_Type history);
     void advanceInTimeAssemblyFEElements(double dt ,MultiVectorPtr_Type d_rep , MultiVectorPtr_Type c_rep) 
     {
         //UN FElocChem = 1; //checkFE(dim,FETypeChem); // Checks for different domains which belongs to a certain fetype
