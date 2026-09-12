@@ -3,20 +3,21 @@ TRIBITS_ADD_EXECUTABLE(
     SOURCES main.cpp
 )
 
-TRIBITS_ADD_TEST(
-    sci_scaling
-    NAME sci_scaling
-    ARGS
-    NUM_MPI_PROCS 4
-)
+# The case needs the AceGen elements (Interface2)
+if(TPL_ENABLE_AceGENInterface)
+  TRIBITS_ADD_TEST(
+      sci_scaling
+      NAME sci_scaling
+      ARGS --problemfile=parametersProblemSCI_test.xml
+      NUM_MPI_PROCS 4
+  )
+endif()
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(data_sciscaling
 	SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-	SOURCE_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml parametersProblemStructure_plaque_full.xml sbatchStrongScaling100Mono.sh parametersPrecCE.xml
-	#sbatchWeakScaling216Mono.sh sbatchWeakScaling1000Mono.sh sbatchWeakScaling4096Mono.sh sbatchStrongScaling100Mono.sh sbatchStrongScaling200Mono.sh sbatchStrongScaling400Mono.sh sbatchStrongScaling800Mono.sh 
+	SOURCE_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemSCI_test.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml parametersProblemStructure_plaque_full.xml
 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	DEST_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml parametersProblemStructure_plaque_full.xml sbatchStrongScaling100Mono.sh parametersPrecCE.xml
-	# sbatchWeakScaling216Mono.sh sbatchWeakScaling1000Mono.sh sbatchWeakScaling4096.sh sbatchStrongScaling100Mono.sh sbatchStrongScaling200Mono.sh sbatchStrongScaling400Mono.sh sbatchStrongScaling800Mono.sh 
+	DEST_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemSCI_test.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml parametersProblemStructure_plaque_full.xml
 	EXEDEPS sci_scaling
 )
 # cube_h_0_05.mesh cube_h_0_1.mesh artery_h_025.mesh artery_h_0_1.mesh structure_realistic_artery.mesh

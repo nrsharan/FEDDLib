@@ -12,6 +12,7 @@
 		<Parameter name="FA" type="double" value="30.e0"/>
 		<Parameter name="LambdaC50" type="double" value="0.12e1"/>
 		<Parameter name="Gamma3" type="double" value="0.9e0"/>
+		<Parameter name="Gamma3Max" type="double" value="0.9" /> <!-- as in the artery_dan and CCB examples -->
 		<Parameter name="LambdaBarCDotMax" type="double" value="0.3387e-1"/>
 		<Parameter name="LambdaBarCDotMin" type="double" value="-0.3387e-1"/>
 		<Parameter name="Gamma2" type="double" value="50.0e0"/>

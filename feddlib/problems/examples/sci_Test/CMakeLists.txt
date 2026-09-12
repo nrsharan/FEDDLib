@@ -3,18 +3,21 @@ TRIBITS_ADD_EXECUTABLE(
     SOURCES main.cpp
 )
 
-TRIBITS_ADD_TEST(
-    sci_Test
-    NAME sci_Test
-    ARGS
-    NUM_MPI_PROCS 4
-)
+# The case needs the AceGen elements (Interface2)
+if(TPL_ENABLE_AceGENInterface)
+  TRIBITS_ADD_TEST(
+      sci_Test
+      NAME sci_Test
+      ARGS --problemfile=parametersProblemSCI_test.xml
+      NUM_MPI_PROCS 4
+  )
+endif()
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(data_sciTest
 	SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-	SOURCE_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml slurm-script.sh
+	SOURCE_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemSCI_test.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml
 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	DEST_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml slurm-script.sh
+	DEST_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemSCI_test.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml
 	EXEDEPS sci_Test
 )
 

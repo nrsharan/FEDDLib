@@ -88,15 +88,15 @@
     </ParameterList>
     <ParameterList name="Timestepping Parameter">
         <!-- Restart test, phase 1 (this file): the uninterrupted run. It writes
-             checkpoints at 1.5 (the restart time of phase 2) and 2.5 (the time phase 2
-             compares at) to the checkpoint directory. A checkpoint is written at the
+             checkpoints at 0.05 (the restart time of phase 2, after the first step of the
+             load ramp) and 0.1 (the time phase 2 compares at) to the checkpoint directory. A checkpoint is written at the
              start of the time step after it, so this run ends one step later. -->
         <Parameter name="Checkpointing" type="bool"  value="true"/>
         <Parameter name="Checkpoint directory" type="string" value="restartCheckpoints"/>
         <Parameter name="Number Checkpoints"  type="int"   	value="2"/>
         <ParameterList name="Checkpoints">
-         	<Parameter name="1" type="double"   	value="1.5"/>
-         	<Parameter name="2" type="double"   	value="2.5"/>
+         	<Parameter name="1" type="double"   	value="0.05"/>
+         	<Parameter name="2" type="double"   	value="0.1"/>
         </ParameterList>
         <Parameter name="Export history" type="bool"  value="true"/>
 
@@ -104,12 +104,12 @@
              "Time step" in the restart directory -->
         <Parameter name="Restart" type="bool"  value="false"/>
         <Parameter name="Restart directory" type="string" value="restartCheckpoints"/>
-        <Parameter name="Time step" type="double"   	value="1.5"/>
+        <Parameter name="Time step" type="double"   	value="0.05"/>
         <Parameter name="Import history" type="bool"  value="false"/>
 
         <!-- Phase 2 compares its solution at its final time with the checkpoint of
              phase 1 at that time -->
-        <Parameter name="Final time compare" type="double" value="2.5"/>
+        <Parameter name="Final time compare" type="double" value="0.1"/>
         <Parameter name="Restart tolerance" type="double" value="1.e-8"/> <!-- relative 2-norm of the difference -->
 
 
@@ -117,8 +117,8 @@
         <Parameter name="Class" type="string" value="Multistep"/> <!-- External, Multistep-->
         <Parameter name="Timestepping type" type="string" value="non-adaptive"/><!--non-adaptive,adaptive:not working for BDF2-->
     
-        <Parameter name="Final time" type="double" value="3.0"/>
-        <Parameter name="dt" type="double" value=".05"/>
+        <Parameter name="Final time" type="double" value="0.15"/>
+        <Parameter name="dt" type="double" value="0.05"/>
         <Parameter name="beta" type="double" value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma" type="double" value="0.5"/> <!-- newmark method parameter-->
         <ParameterList name="Timestepping Intervalls">

@@ -5,6 +5,24 @@
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="15"/> <!--Adventitia--> <!--corresponding element flag to material-->  
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> <!-- SCI_NH , SCI_SMC_MLCK , SCI_SMC_Active_Growth_Reorientation -->
+				<Parameter name="Gamma1Max" type="double" value="0.5131" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="LambdaBarDotPMin" type="double" value="-0.0002323" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="LambdaBarDotPMax" type="double" value="0.0000699" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="Gamma1Min" type="double" value="0.07797910389823641" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="Gamma3Min" type="double" value="0.13677878297366072" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="M" type="double" value="0." /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="kEtaPlus" type="double" value="0.001" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="mEtaPlus" type="double" value="5.0" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="ActiveBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="growthBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="reorientationBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="growthDirectionBool" type="double" value="1" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="kFiberDistribution" type="double" value="0.1333333333334" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="P" type="double" value="2.9580835205796716" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="Density" type="double" value="1.e0" /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="PostProcessingType" type="double" value="1." /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="PostProcessingPower" type="double" value="1." /> <!-- as in artery_dan_restart (flag 15) -->
+				<Parameter name="Fibre angle" type="double" value="30." /> <!-- as in the other SCI examples -->
 				<!-- For Explicit Coupling and SCI_NH -->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
 				<Parameter name="E" type="double" value="0.38"/>
@@ -15,6 +33,7 @@
            		<Parameter name="FA" type="double" value="30.e0"/>
                 <Parameter name="LambdaC50" type="double" value="0.12e1"/>
                 <Parameter name="Gamma3" type="double" value="0.9e0"/>
+                <Parameter name="Gamma3Max" type="double" value="0.9" /> <!-- as in the artery_dan and CCB examples -->
                 <Parameter name="LambdaBarCDotMax" type="double" value="0.0443"/>
                 <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443"/>
                 <Parameter name="Gamma2" type="double" value="50.0e0"/>
@@ -75,6 +94,24 @@
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="16"/> <!--Media-->
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
+				<Parameter name="Gamma1Max" type="double" value="0.5131" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="LambdaBarDotPMin" type="double" value="-0.0002323" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="LambdaBarDotPMax" type="double" value="0.0000699" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="Gamma1Min" type="double" value="0.07797910389823641" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="Gamma3Min" type="double" value="0.13677878297366072" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="M" type="double" value="0." /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="kEtaPlus" type="double" value="0.001" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="mEtaPlus" type="double" value="5.0" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="ActiveBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="growthBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="reorientationBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="growthDirectionBool" type="double" value="1" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="kFiberDistribution" type="double" value="0.1333333333334" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="P" type="double" value="2.9580835205796716" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="Density" type="double" value="1.e0" /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="PostProcessingType" type="double" value="1." /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="PostProcessingPower" type="double" value="1." /> <!-- as in artery_dan_restart (flag 16) -->
+				<Parameter name="Fibre angle" type="double" value="30." /> <!-- as in the other SCI examples -->
 				<!-- For Explicit Coupling and SCI_NH -->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
 				<Parameter name="E" type="double" value="0.38"/>
@@ -85,6 +122,7 @@
            		<Parameter name="FA" type="double" value="30.e0"/>
                 <Parameter name="LambdaC50" type="double" value="0.12e1"/>
                 <Parameter name="Gamma3" type="double" value="0.9e0"/>
+                <Parameter name="Gamma3Max" type="double" value="0.9" /> <!-- as in the artery_dan and CCB examples -->
                 <Parameter name="LambdaBarCDotMax" type="double" value="0.0443"/>
                 <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443"/>
                 <Parameter name="Gamma2" type="double" value="50.0e0"/>
@@ -145,6 +183,24 @@
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="17"/> <!--DegenMedia-->
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
+				<Parameter name="Gamma1Max" type="double" value="0.5131" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="LambdaBarDotPMin" type="double" value="-0.0002323" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="LambdaBarDotPMax" type="double" value="0.0000699" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="Gamma1Min" type="double" value="0.07797910389823641" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="Gamma3Min" type="double" value="0.13677878297366072" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="M" type="double" value="0." /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="kEtaPlus" type="double" value="0.001" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="mEtaPlus" type="double" value="5.0" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="ActiveBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="growthBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="reorientationBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="growthDirectionBool" type="double" value="1" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="kFiberDistribution" type="double" value="0.1333333333334" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="P" type="double" value="2.9580835205796716" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="Density" type="double" value="1.e0" /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="PostProcessingType" type="double" value="1." /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="PostProcessingPower" type="double" value="1." /> <!-- as in artery_dan_restart (flag 17) -->
+				<Parameter name="Fibre angle" type="double" value="30." /> <!-- as in the other SCI examples -->
 				<!-- For Explicit Coupling and SCI_NH -->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
 				<Parameter name="E" type="double" value="0.38"/>
@@ -155,6 +211,7 @@
            		<Parameter name="FA" type="double" value="30.e0"/>
                 <Parameter name="LambdaC50" type="double" value="0.12e1"/>
                 <Parameter name="Gamma3" type="double" value="0.9e0"/>
+                <Parameter name="Gamma3Max" type="double" value="0.9" /> <!-- as in the artery_dan and CCB examples -->
                 <Parameter name="LambdaBarCDotMax" type="double" value="0.0443"/>
                 <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443"/>
                 <Parameter name="Gamma2" type="double" value="50.0e0"/>
@@ -215,6 +272,24 @@
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="18"/> <!--Lipid-->
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
+				<Parameter name="Gamma1Max" type="double" value="0.5131" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="LambdaBarDotPMin" type="double" value="-0.0002323" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="LambdaBarDotPMax" type="double" value="0.0000699" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="Gamma1Min" type="double" value="0.07797910389823641" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="Gamma3Min" type="double" value="0.13677878297366072" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="M" type="double" value="0." /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="kEtaPlus" type="double" value="0.001" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="mEtaPlus" type="double" value="5.0" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="ActiveBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="growthBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="reorientationBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="growthDirectionBool" type="double" value="1" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="kFiberDistribution" type="double" value="0.1333333333334" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="P" type="double" value="2.9580835205796716" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="Density" type="double" value="1.e0" /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="PostProcessingType" type="double" value="1." /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="PostProcessingPower" type="double" value="1." /> <!-- as in artery_dan_restart (flag 18) -->
+				<Parameter name="Fibre angle" type="double" value="30." /> <!-- as in the other SCI examples -->
 				<!-- For Explicit Coupling and SCI_NH -->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
 				<Parameter name="E" type="double" value="0.38"/>
@@ -225,6 +300,7 @@
            		<Parameter name="FA" type="double" value="30.e0"/>
                 <Parameter name="LambdaC50" type="double" value="0.12e1"/>
                 <Parameter name="Gamma3" type="double" value="0.9e0"/>
+                <Parameter name="Gamma3Max" type="double" value="0.9" /> <!-- as in the artery_dan and CCB examples -->
                 <Parameter name="LambdaBarCDotMax" type="double" value="0.0443"/>
                 <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443"/>
                 <Parameter name="Gamma2" type="double" value="50.0e0"/>
@@ -285,6 +361,24 @@
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="19"/> <!--Calc1-->
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
+				<Parameter name="Gamma1Max" type="double" value="0.5131" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="LambdaBarDotPMin" type="double" value="-0.0002323" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="LambdaBarDotPMax" type="double" value="0.0000699" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="Gamma1Min" type="double" value="0.07797910389823641" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="Gamma3Min" type="double" value="0.13677878297366072" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="M" type="double" value="0." /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="kEtaPlus" type="double" value="0.001" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="mEtaPlus" type="double" value="5.0" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="ActiveBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="growthBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="reorientationBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="growthDirectionBool" type="double" value="1" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="kFiberDistribution" type="double" value="0.1333333333334" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="P" type="double" value="2.9580835205796716" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="Density" type="double" value="1.e0" /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="PostProcessingType" type="double" value="1." /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="PostProcessingPower" type="double" value="1." /> <!-- as in artery_dan_restart (flag 19) -->
+				<Parameter name="Fibre angle" type="double" value="30." /> <!-- as in the other SCI examples -->
 				<!-- For Explicit Coupling and SCI_NH -->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
 				<Parameter name="E" type="double" value="0.38"/>
@@ -295,6 +389,7 @@
            		<Parameter name="FA" type="double" value="30.e0"/>
                 <Parameter name="LambdaC50" type="double" value="0.12e1"/>
                 <Parameter name="Gamma3" type="double" value="0.9e0"/>
+                <Parameter name="Gamma3Max" type="double" value="0.9" /> <!-- as in the artery_dan and CCB examples -->
                 <Parameter name="LambdaBarCDotMax" type="double" value="0.0443"/>
                 <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443"/>
                 <Parameter name="Gamma2" type="double" value="50.0e0"/>
@@ -355,6 +450,24 @@
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="20"/> <!--Calc2-->
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
+				<Parameter name="Gamma1Max" type="double" value="0.5131" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="LambdaBarDotPMin" type="double" value="-0.0002323" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="LambdaBarDotPMax" type="double" value="0.0000699" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="Gamma1Min" type="double" value="0.07797910389823641" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="Gamma3Min" type="double" value="0.13677878297366072" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="M" type="double" value="0." /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="kEtaPlus" type="double" value="0.001" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="mEtaPlus" type="double" value="5.0" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="ActiveBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="growthBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="reorientationBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="growthDirectionBool" type="double" value="1" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="kFiberDistribution" type="double" value="0.1333333333334" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="P" type="double" value="2.9580835205796716" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="Density" type="double" value="1.e0" /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="PostProcessingType" type="double" value="1." /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="PostProcessingPower" type="double" value="1." /> <!-- as in artery_dan_restart (flag 20) -->
+				<Parameter name="Fibre angle" type="double" value="30." /> <!-- as in the other SCI examples -->
 				<!-- For Explicit Coupling and SCI_NH -->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
 				<Parameter name="E" type="double" value="0.38"/>
@@ -365,6 +478,7 @@
            		<Parameter name="FA" type="double" value="30.e0"/>
                 <Parameter name="LambdaC50" type="double" value="0.12e1"/>
                 <Parameter name="Gamma3" type="double" value="0.9e0"/>
+                <Parameter name="Gamma3Max" type="double" value="0.9" /> <!-- as in the artery_dan and CCB examples -->
                 <Parameter name="LambdaBarCDotMax" type="double" value="0.0443"/>
                 <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443"/>
                 <Parameter name="Gamma2" type="double" value="50.0e0"/>
@@ -425,6 +539,24 @@
 				<!--linear,Neo-Hooke Only relevant for explicit coupling-->  
 	         	<Parameter name="Volume Flag" type="int" value="21"/> <!--FibCap-->
 				<Parameter name="Material Model" type="string" value="SCI_SMC_Active_Growth_Reorientation"/> 
+				<Parameter name="Gamma1Max" type="double" value="0.5131" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="LambdaBarDotPMin" type="double" value="-0.0002323" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="LambdaBarDotPMax" type="double" value="0.0000699" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="Gamma1Min" type="double" value="0.07797910389823641" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="Gamma3Min" type="double" value="0.13677878297366072" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="M" type="double" value="0." /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="kEtaPlus" type="double" value="0.001" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="mEtaPlus" type="double" value="5.0" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="ActiveBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="growthBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="reorientationBool" type="double" value="0" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="growthDirectionBool" type="double" value="1" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="kFiberDistribution" type="double" value="0.1333333333334" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="P" type="double" value="2.9580835205796716" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="Density" type="double" value="1.e0" /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="PostProcessingType" type="double" value="1." /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="PostProcessingPower" type="double" value="1." /> <!-- as in artery_dan_restart (flag 21) -->
+				<Parameter name="Fibre angle" type="double" value="30." /> <!-- as in the other SCI examples -->
 				<!-- For Explicit Coupling and SCI_NH -->
 				<Parameter name="Neo-Hooke Modell" type="int" value="1"/> <!--different energy functions-->
 				<Parameter name="E" type="double" value="0.38"/>
@@ -435,6 +567,7 @@
            		<Parameter name="FA" type="double" value="30.e0"/>
                 <Parameter name="LambdaC50" type="double" value="0.12e1"/>
                 <Parameter name="Gamma3" type="double" value="0.9e0"/>
+                <Parameter name="Gamma3Max" type="double" value="0.9" /> <!-- as in the artery_dan and CCB examples -->
                 <Parameter name="LambdaBarCDotMax" type="double" value="0.0443"/>
                 <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443"/>
                 <Parameter name="Gamma2" type="double" value="50.0e0"/>

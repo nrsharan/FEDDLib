@@ -79,8 +79,8 @@
                     
                     <ParameterList name="Distribution">
                         <Parameter name="Type" type="string" value="linear"/>
-                        <Parameter name="GatheringSteps"  type="int" value="3"/>
-                        <Parameter name="NumProcs" type="int" value="5"/>
+                        <Parameter name="GatheringSteps"  type="int" value="1"/>
+                        <Parameter name="NumProcs" type="int" value="1"/>
                         <Parameter name="Factor" type="double" value="1."/>
                          <ParameterList name="Zoltan2 Parameter">
                             <Parameter name="algorithm" type="string"   value="parmetis"/>
