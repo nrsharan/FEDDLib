@@ -165,8 +165,8 @@ public:
 
     virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values );
 
-    virtual void exportValuesOfInterest();
-    virtual void importValuesOfInterest();
+    virtual void exportValuesOfInterest(double time);
+    virtual void importValuesOfInterest(double time);
 
     virtual void computeValuesOfInterestAndExport() {} ;
 
@@ -204,6 +204,9 @@ public:
     Teuchos::RCP<SmallMatrix<int>> defTS_;
     mutable Teuchos::RCP<TimeSteppingTools>	timeSteppingTool_;
 
+    // Sets the time and time increment of the elements to those of timeSteppingTool_
+    void synchronizeElementTime() const { this->feFactory_->synchronizeTime(timeSteppingTool_); }
+
 private:
     std::string materialModel_;
     vec_dbl_Type valuesForExport_;
@@ -218,6 +221,7 @@ private:
     mutable bool setUpTimeStep_;
     mutable MultiVectorPtr_Type eModVec_;
     bool loadStepping_;
+    mutable bool solidMassBuilt_ = false; // the structure mass matrix (setSolidMassmatrix) is built once
     bool chemistryExplicit_;
     bool externalForce_;
     bool nonlinearExternalForce_;

@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
 
     Teuchos::RCP<Teuchos::StackedTimer> stackedTimer = Teuchos::rcp(new Teuchos::StackedTimer("Structure-chemical interaction", true));
     bool verbose(comm->getRank() == 0);
+    bool testPassed = true;
 
     Teuchos::TimeMonitor::setStackedTimer(stackedTimer);
     {
@@ -244,45 +245,46 @@ int main(int argc, char *argv[])
         daeTimeSolver.setupTimeStepping();
 
         daeTimeSolver.advanceInTime();
-    
-        // Testing restarted solution
 
-        std::string fileName = allParameters->sublist("Timestepping Parameter").get("File name import", "Solution");
-        double finalTime = allParameters->sublist("Timestepping Parameter").get("Final time compare", 0.0);
-        HDF5Import<SC,LO,GO,NO> importer(sci.getSolution()->getBlock(0)->getMap(),fileName+"d_s");
-        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > solutionImported = importer.readVariablesHDF5(std::to_string(finalTime));
+        // Restart test: a restarted run (phase 2) must reproduce the uninterrupted run
+        // (phase 1): its solution at the final time is compared with the checkpoint
+        // phase 1 wrote at that time.
+        if (allParameters->sublist("Timestepping Parameter").get("Restart", false))
+        {
+            double finalTime = allParameters->sublist("Timestepping Parameter").get("Final time compare", 0.0);
+            double tolerance = allParameters->sublist("Timestepping Parameter").get("Restart tolerance", 1.e-8);
 
-        // Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaVelocity(new ExporterParaView<SC,LO,GO,NO>());
+            bool anyNonzeroReference = false; // comparing identically zero solutions checks nothing
+            for (int block = 0; block < 2; block++)
+            {
+                std::string variable = sci.getVariableName(block);
+                Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > solution = sci.getSolution()->getBlock(block);
 
-        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > exportSolutionV = sci.getSolution()->getBlock(0);
+                HDF5Import<SC,LO,GO,NO> importer(solution->getMap(), restartFile(allParameters, "Solution" + variable));
+                Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > uninterrupted = importer.readVariablesHDF5(std::to_string(finalTime));
 
-        // Calculating the error per node
-        Teuchos::RCP<MultiVector<SC,LO,GO,NO> > errorValues = Teuchos::rcp(new MultiVector<SC,LO,GO,NO>( sci.getSolution()->getBlock(0)->getMap() ) ); 
-        //this = alpha*A + beta*B + gamma*this
-        errorValues->update( 1., exportSolutionV, -1. ,solutionImported, 0.);
+                Teuchos::RCP<MultiVector<SC,LO,GO,NO> > difference = Teuchos::rcp(new MultiVector<SC,LO,GO,NO>(solution->getMap()));
+                difference->update(1., solution, -1., uninterrupted, 0.);
 
-        // Taking abs norm
-        Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > errorValuesAbs = errorValues;
+                Teuchos::Array<SC> norm(1), reference(1);
+                difference->norm2(norm);
+                uninterrupted->norm2(reference);
+                double relativeError = reference[0] > 0. ? norm[0] / reference[0] : norm[0];
+                anyNonzeroReference = anyNonzeroReference || reference[0] > 0.;
 
-        errorValues->abs(errorValuesAbs);
+                if (comm->getRank() == 0)
+                    cout << " Restart test: " << variable << " at t = " << finalTime << ", relative 2-norm of the difference to the uninterrupted run: " << relativeError << " (tolerance " << tolerance << ")" << endl;
 
-        Teuchos::Array<SC> norm(1); 
-        errorValues->normInf(norm);//const Teuchos::ArrayView<typename Teuchos::ScalarTraits<SC>::magnitudeType> &norms);
-        double res = norm[0];
-        if(comm->getRank() ==0)
-            cout << " Inf Norm of Error of Solution " << res << endl;
-
-        errorValues->norm2(norm);//const Teuchos::ArrayView<typename Teuchos::ScalarTraits<SC>::magnitudeType> &norms);
-        res = norm[0];
-        if(comm->getRank() ==0)
-            cout << " 2 Norm of Error of Solution " << res << endl;
-
-        double NormError = res;
-
-        sci.getSolution()->norm2(norm);
-        res = norm[0];
-        if(comm->getRank() ==0)
-            cout << " 2 rel. Norm to solution  " << NormError/res << endl;
+                if (!(relativeError <= tolerance))
+                    testPassed = false;
+            }
+            if (!anyNonzeroReference)
+            {
+                if (comm->getRank() == 0)
+                    cout << " Restart test: the uninterrupted solution is zero at t = " << finalTime << ", the comparison checks nothing" << endl;
+                testPassed = false;
+            }
+        }
     }
 
 
@@ -292,7 +294,7 @@ int main(int argc, char *argv[])
     options.output_fraction = options.output_histogram = options.output_minmax = true;
     stackedTimer->report((std::cout), comm, options);
 
-    return (EXIT_SUCCESS);
+    return testPassed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 // @brief Reaction Term in the reaction diffusion equation

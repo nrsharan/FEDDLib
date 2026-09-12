@@ -21,6 +21,12 @@
       <Parameter name="Fibre angle" type="double" value="30." /> <!-- degrees -->
       <Parameter name="LambdaC50" type="double" value="1.2" /> 
       <Parameter name="Gamma3" type="double" value="0.9" />  <!-- microMoles -->
+      <Parameter name="Gamma1Max" type="double" value="0.5131"/>
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641"/>
+      <Parameter name="Gamma3Max" type="double" value="0.9"/>
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072"/>
+      <Parameter name="P" type="double" value="2.9580835205796716"/>
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334"/>
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" /> <!-- s^-1 -->
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" /> <!-- s^-1 -->
       <Parameter name="Gamma2" type="double" value="50.0" /> <!-- microMoles^-1 -->
@@ -123,6 +129,12 @@
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
       <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131"/>
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641"/>
+      <Parameter name="Gamma3Max" type="double" value="0.9"/>
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072"/>
+      <Parameter name="P" type="double" value="2.9580835205796716"/>
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334"/>
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
@@ -240,6 +252,12 @@
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
       <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131"/>
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641"/>
+      <Parameter name="Gamma3Max" type="double" value="0.9"/>
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072"/>
+      <Parameter name="P" type="double" value="2.9580835205796716"/>
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334"/>
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
@@ -357,6 +375,12 @@
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
       <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131"/>
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641"/>
+      <Parameter name="Gamma3Max" type="double" value="0.9"/>
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072"/>
+      <Parameter name="P" type="double" value="2.9580835205796716"/>
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334"/>
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
@@ -436,6 +460,12 @@
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
       <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131"/>
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641"/>
+      <Parameter name="Gamma3Max" type="double" value="0.9"/>
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072"/>
+      <Parameter name="P" type="double" value="2.9580835205796716"/>
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334"/>
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
@@ -515,6 +545,12 @@
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
       <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131"/>
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641"/>
+      <Parameter name="Gamma3Max" type="double" value="0.9"/>
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072"/>
+      <Parameter name="P" type="double" value="2.9580835205796716"/>
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334"/>
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />
@@ -594,6 +630,12 @@
       <Parameter name="Fibre angle" type="double" value="30." />
       <Parameter name="LambdaC50" type="double" value="1.2" />
       <Parameter name="Gamma3" type="double" value="0.9" />
+      <Parameter name="Gamma1Max" type="double" value="0.5131"/>
+      <Parameter name="Gamma1Min" type="double" value="0.07797910389823641"/>
+      <Parameter name="Gamma3Max" type="double" value="0.9"/>
+      <Parameter name="Gamma3Min" type="double" value="0.13677878297366072"/>
+      <Parameter name="P" type="double" value="2.9580835205796716"/>
+      <Parameter name="kFiberDistribution" type="double" value="0.1333333333334"/>
       <Parameter name="LambdaBarCDotMax" type="double" value="0.0443" />
       <Parameter name="LambdaBarCDotMin" type="double" value="-0.0443" />
       <Parameter name="Gamma2" type="double" value="50.0" />

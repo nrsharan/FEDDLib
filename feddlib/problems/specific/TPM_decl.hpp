@@ -49,9 +49,7 @@ public:
   
     virtual void computeValuesOfInterestAndExport() {};
     
-    virtual void exportValuesOfInterest(){};    
 
-    virtual void importValuesOfInterest(){};
   private:
     mutable MultiVectorPtr_Type u_repNewton_;
     mutable MultiVectorPtr_Type p_repNewton_;

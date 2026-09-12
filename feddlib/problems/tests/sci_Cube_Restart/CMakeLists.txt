@@ -3,25 +3,35 @@ TRIBITS_ADD_EXECUTABLE(
     SOURCES main.cpp
 )
 
-TRIBITS_ADD_TEST(
+# Restart test, two runs of the same case: the uninterrupted run
+# (parametersProblemSCI.xml) writes checkpoints at t = 1.5 and 2.5 to
+# restartCheckpoints/; the restart (parametersProblemSCI_restart.xml) continues
+# from the checkpoint at t = 1.5, during fiber reorientation, and must reproduce
+# the uninterrupted solution at t = 2.5.
+TRIBITS_ADD_ADVANCED_TEST(
     sci_Cube_Restart
-    NAME sci_Cube_Restart
-    ARGS
-    NUM_MPI_PROCS 4
+    TEST_0 EXEC sci_Cube_Restart
+        ARGS --problemfile=parametersProblemSCI.xml
+        NUM_MPI_PROCS 4
+    TEST_1 EXEC sci_Cube_Restart
+        ARGS --problemfile=parametersProblemSCI_restart.xml
+        NUM_MPI_PROCS 4
+    OVERALL_NUM_MPI_PROCS 4
+    FAIL_FAST
 )
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(data_sci_Cube_Restart
 	SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-	SOURCE_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml slurm-script.sh
+	SOURCE_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemSCI_restart.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml slurm-script.sh
 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	DEST_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml slurm-script.sh
+	DEST_FILES parametersPrecChem.xml parametersPrecCE.xml parametersProblemSCI.xml parametersProblemSCI_restart.xml parametersProblemStructure.xml parametersSolverSCI.xml parametersPrecStructure.xml slurm-script.sh
 	EXEDEPS sci_Cube_Restart
 )
 
-# TRIBITS_COPY_FILES_TO_BINARY_DIR(meshes_sciTest
-# 	SOURCE_DIR ${CMAKE_SOURCE_DIR}/meshes/SPP2311
-#     SOURCE_FILES artery_h_025_L_025.mesh artery_h_0_8_L_0_25.mesh plaque_short_6_k.mesh
-# 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-# 	DEST_FILES artery_h_025_L_025.mesh artery_h_0_8_L_0_25.mesh plaque_short_6_k.mesh
-# 	EXEDEPS sci_Cube_Restart
-# )
+TRIBITS_COPY_FILES_TO_BINARY_DIR(meshes_sci_Cube_Restart
+	SOURCE_DIR ${CMAKE_SOURCE_DIR}/meshes/SPP2311
+    SOURCE_FILES plaque_short_6_k.mesh
+	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
+	DEST_FILES plaque_short_6_k.mesh
+	EXEDEPS sci_Cube_Restart
+)

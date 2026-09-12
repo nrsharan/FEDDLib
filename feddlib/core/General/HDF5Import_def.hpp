@@ -41,7 +41,7 @@ commEpetra_()
     hdf5importer_.reset( new HDF5_Type(*commEpetra_) ); // Build HDF5 importer as Epetra_Ext HDF5 Type
   
     inputFilename_ = inputFilename; //  Name of input file
-    hdf5importer_->Open(inputFilename_+".h5"); // We 'open' the file and connect to HDF5 iXpetramporter 
+    hdf5importer_->Open(inputFilename_+".h5", H5F_ACC_RDONLY); // We 'open' the file (read only, e.g. checkpoints) and connect to HDF5 iXpetramporter
 
     u_import_Xpetra_.reset(new MultiVector_Type(readMap)); // The general import vector is defined via readMap
 

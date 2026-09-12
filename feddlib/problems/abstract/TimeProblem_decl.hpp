@@ -181,6 +181,9 @@ public:
 
     void updateSolutionPreviousStep();
 
+    /// @brief After a restart: read the problem's own restart data (e.g. element history) of the restart time, once.
+    void importRestartValues();
+
     void updateSolutionMultiPreviousStep(int nmbSteps);
 
     void updateSystemMassMultiPreviousStep(int nmbSteps);
@@ -332,6 +335,10 @@ private:
     Teuchos::RCP<HDF5Export<SC, LO, GO, NO>> getExporter(string fileName, int i);
 
     std::vector<std::tuple<double,bool>> checkPointTupel_;
+    bool restartValuesImported_ = false; // importRestartValues() ran
+    bool restartNewmarkUpdate_ = false; // after a restart: the imported Newmark state is that of t_{r-1} and is updated (see updateSolutionNewmarkPreviousStep)
+    BlockMultiVectorPtrArray_Type restartMassSolutions_; // after a restart: the products M_i u_i of the checkpoint (see updateMultistepRhsFSI)
+    int timeStepsSinceRestart_ = 0; // time steps of updateMultistepRhsFSI after the one that read restartMassSolutions_
 
 };
 }

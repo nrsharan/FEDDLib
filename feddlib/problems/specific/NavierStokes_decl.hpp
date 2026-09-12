@@ -94,9 +94,7 @@ public:
     virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values ) {} ;
     
     virtual void computeValuesOfInterestAndExport() {};
-    virtual void exportValuesOfInterest(){};    
 
-    virtual void importValuesOfInterest(){};
 //    virtual void assembleExternal( std::string type ){};
     /*####################*/
 

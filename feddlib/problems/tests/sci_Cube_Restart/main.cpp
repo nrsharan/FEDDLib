@@ -356,6 +356,7 @@ int main(int argc, char *argv[])
    
     myCLP.recogniseAllOptions(true);
     myCLP.throwExceptions(false);
+    bool testPassed = true;
     Teuchos::CommandLineProcessor::EParseCommandLineReturn parseReturn = myCLP.parse(argc,argv);
     if(parseReturn == Teuchos::CommandLineProcessor::PARSE_HELP_PRINTED)
     {
@@ -642,11 +643,15 @@ int main(int argc, char *argv[])
             solutionChem = sci.getChemProblem()->getSolution()->getBlock(0);
         else
             solutionChem = sci.getSolution()->getBlock(1);
-        // Testing restarted solution
-        std::string fileName = parameterListStructureAll->sublist("Timestepping Parameter").get("File name import", "Solution");
-        double finalTime = parameterListStructureAll->sublist("Timestepping Parameter").get("Final time compare", 0.0);
-        HDF5Import<SC,LO,GO,NO> importer(sci.getSolution()->getBlock(0)->getMap(),fileName+"d_s");
-        HDF5Import<SC,LO,GO,NO> importerC(solutionChem->getMap(),fileName+"c");
+
+        // Restart test: a restarted run (phase 2) must reproduce the uninterrupted run
+        // (phase 1): its solution at the final time is compared with the checkpoint
+        // phase 1 wrote at that time.
+        if(parameterListAll->sublist("Timestepping Parameter").get("Restart", false)){
+        double finalTime = parameterListAll->sublist("Timestepping Parameter").get("Final time compare", 0.0);
+        double tolerance = parameterListAll->sublist("Timestepping Parameter").get("Restart tolerance", 1.e-8);
+        HDF5Import<SC,LO,GO,NO> importer(sci.getSolution()->getBlock(0)->getMap(),restartFile(parameterListAll, "Solutiond_s"));
+        HDF5Import<SC,LO,GO,NO> importerC(solutionChem->getMap(),restartFile(parameterListAll, "Solutionc"));
 
         Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > solutionImported = importer.readVariablesHDF5(std::to_string(finalTime));
         Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > solutionImportedC = importerC.readVariablesHDF5(std::to_string(finalTime));
@@ -704,12 +709,22 @@ int main(int argc, char *argv[])
         double NormError = norm[0];
         double NormErrorC = normC[0];
 
-        sci.getSolution()->norm2(norm);
-
-        res = norm[0];
+        // Relative to the uninterrupted solution of each field
+        Teuchos::Array<SC> reference(1), referenceC(1);
+        solutionImported->norm2(reference);
+        solutionImportedC->norm2(referenceC);
+        double relativeError = reference[0] > 0. ? NormError/reference[0] : NormError;
+        double relativeErrorC = referenceC[0] > 0. ? NormErrorC/referenceC[0] : NormErrorC;
         if(comm->getRank() ==0){
-            cout << " 2 rel. Norm to solution displacement " << NormError/res << endl;
-            cout << " 2 rel. Norm to solution concentration " << NormErrorC/res << endl;
+            cout << " Restart test: d_s at t = " << finalTime << ", relative 2-norm of the difference to the uninterrupted run: " << relativeError << " (tolerance " << tolerance << ")" << endl;
+            cout << " Restart test: c at t = " << finalTime << ", relative 2-norm of the difference to the uninterrupted run: " << relativeErrorC << " (tolerance " << tolerance << ")" << endl;
+        }
+        if(!(relativeError <= tolerance) || !(relativeErrorC <= tolerance))
+            testPassed = false;
+        if(!(reference[0] > 0.) && !(referenceC[0] > 0.)){ // comparing identically zero solutions checks nothing
+            if(comm->getRank() ==0)
+                cout << " Restart test: the uninterrupted solution is zero at t = " << finalTime << ", the comparison checks nothing" << endl;
+            testPassed = false;
         }
 
         // Adding error to paraview exporter
@@ -718,6 +733,7 @@ int main(int argc, char *argv[])
 
         exParaResults->save(0.0);
         exParaResultsC->save(0.0);
+        }
 
     }
     TimeMonitor_Type::report(std::cout);
@@ -726,5 +742,5 @@ int main(int argc, char *argv[])
 	options.output_fraction = options.output_histogram = options.output_minmax = true;
 	stackedTimer->report((std::cout),comm,options);
 	
-    return(EXIT_SUCCESS);
+    return testPassed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

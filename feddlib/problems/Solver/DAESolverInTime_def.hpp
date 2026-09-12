@@ -127,14 +127,25 @@ void DAESolverInTime<SC,LO,GO,NO>::setProblem(Problem_Type& problem){
 
         int numSegments = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").get("Number of Segments",0);
 
-        if(numSegments>0)
+        // During a time step the SCI problem has the time t_{n+1}: the first time
+        // step of a run starts with t_1 = dt. After a restart, the SCI time is the
+        // restart time (TimeSteppingTools) and the time loop advances it like in
+        // any later time step.
+        bool restart = parameterList_->sublist("Timestepping Parameter").get("Restart",false);
+        if(!restart)
         {
-            double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(1)).get("dt",-3586.0);
-            TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(dtTmp, -3586.0), std::runtime_error, "dt for time segment " + std::to_string(1) + " received default value and was not set properly!");
-            sci->timeSteppingTool_->dt_ = dtTmp; // Setting first time step size to SCI time stepping tool
-            sci->timeSteppingTool_->t_ = dtTmp; // Setting initial time to first time step size (first time step)
+            if(numSegments>0)
+            {
+                double dtTmp = parameterList_->sublist("Timestepping Parameter").sublist("Timestepping Intervalls").sublist(std::to_string(1)).get("dt",-3586.0);
+                TEUCHOS_TEST_FOR_EXCEPTION(approxEqual(dtTmp, -3586.0), std::runtime_error, "dt for time segment " + std::to_string(1) + " received default value and was not set properly!");
+                sci->timeSteppingTool_->dt_ = dtTmp; // Setting first time step size to SCI time stepping tool
+            }
+            sci->timeSteppingTool_->t_ = sci->timeSteppingTool_->dt_; // Setting initial time to first time step size (first time step)
+            // The elements took the time of the SCI problem when it was assembled (t = 0):
+            // the first time step evaluates them at t_1, where they initialize their history.
+            sci->synchronizeElementTime();
         }
-        
+
     }
 
 }
@@ -1032,6 +1043,12 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
     double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0);
     double timeStep = 0;
 
+    // A restart continues from the checkpoint at the restart time: the element
+    // history is read before the first time step, so that the step starts
+    // (UpdateTime below) from the same state as in the uninterrupted run.
+    if(restart)
+        this->problemTime_->importRestartValues();
+
     while(timeSteppingTool_->continueTimeStepping())
     {
         // Determine dt for current time segement
@@ -1040,28 +1057,14 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             getTimeIncrementFromSegments(timeSegments, activeSegmentNumber, timeSteppingTool_->currentTime(), dt);
         timeSteppingTool_->dt_= dt; // At this point DAESolver time stepper has t_n and accurate dt value
         sci->timeSteppingTool_->dt_ = dt; // At this point SCI time stepper has t_n and accurate dt value
-        if(restart){
-            if(approxEqual(timeSteppingTool_->currentTime(), timeStepRestart)){
-                timeSteppingTool_->dt_prev_= dt;        
-                sci->timeSteppingTool_->dt_prev_= dt;        
-            }
-            else{
-                timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
-                this->problemTime_->assemble("UpdateTime"); // Updates to next timestep
-                sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
-            }
-
+        if(approxEqual(timeSteppingTool_->currentTime(), 0.0)){ // First time step (SCI already has t_1, see setProblem)
+            timeSteppingTool_->dt_prev_= dt;
+            sci->timeSteppingTool_->dt_prev_= dt;
         }
-        else{
-            if(approxEqual(timeSteppingTool_->currentTime(), 0.0)){ // First time step
-                timeSteppingTool_->dt_prev_= dt;        
-                sci->timeSteppingTool_->dt_prev_= dt;        
-            }
-            else{
-                timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
-                this->problemTime_->assemble("UpdateTime"); // Updates to next timestep (SCI Now has t_n+1)
-                sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
-            }
+        else{ // Any later time step, including the first one after a restart
+            timeSteppingTool_->dt_prev_= timeSteppingTool_->dt_;
+            this->problemTime_->assemble("UpdateTime"); // Updates to next timestep (SCI Now has t_n+1)
+            sci->timeSteppingTool_->dt_prev_ = timeSteppingTool_->dt_;
         }
         
 

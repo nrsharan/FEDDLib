@@ -438,11 +438,11 @@ namespace FEDD
             }
             else if(restart && variableName_vec_[i] != "d_f") // We do not import the geometry solution right now.
             {
-                std::string fileName = parameterList_->sublist("Timestepping Parameter").get("File name import", "Solution");
+                // The solution at the restart time, from the checkpoint files in the restart directory (see CheckpointFiles.hpp)
                 std::string varName = std::to_string(parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0));
 
                 MapConstPtr_Type map = solution_->getBlock(i)->getMap();
-                HDF5Import<SC,LO,GO,NO> importer(map,fileName+variableName_vec_[i]);
+                HDF5Import<SC,LO,GO,NO> importer(map,restartFile(parameterList_, "Solution"+variableName_vec_[i]));
                 MultiVectorPtr_Type aImported = importer.readVariablesHDF5(varName);
                 solution_->addBlock(aImported,i);
             }

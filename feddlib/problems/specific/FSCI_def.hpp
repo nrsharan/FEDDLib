@@ -962,20 +962,21 @@ void FSCI<SC,LO,GO,NO>::initializeGE(){
 }
 
 template<class SC,class LO,class GO,class NO>
-void FSCI<SC,LO,GO,NO>::exportValuesOfInterest()
+void FSCI<SC,LO,GO,NO>::exportValuesOfInterest(double time)
 {
-    problemSCI_->exportValuesOfInterest();   
+    problemSCI_->exportValuesOfInterest(time);
     if(this->geometryExplicit_)
     {
         cout << " Export geometry " << endl;
-        string varName = std::to_string(this->timeSteppingTool_->currentTime());
-        this->exporterGeometry_->writeVariablesHDF5(varName,this->problemGeometry_->getSolution()->getBlock(0)); 
-    }}
+        string varName = std::to_string(time);
+        this->exporterGeometry_->writeVariablesHDF5(varName,this->problemGeometry_->getSolution()->getBlock(0));
+    }
+}
 
 template<class SC,class LO,class GO,class NO>
-void FSCI<SC,LO,GO,NO>::importValuesOfInterest()
+void FSCI<SC,LO,GO,NO>::importValuesOfInterest(double time)
 {
-    problemSCI_->importValuesOfInterest();   
+    problemSCI_->importValuesOfInterest(time);
 }
 
 }

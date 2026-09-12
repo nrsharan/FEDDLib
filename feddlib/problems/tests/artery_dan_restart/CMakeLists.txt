@@ -3,39 +3,33 @@ TRIBITS_ADD_EXECUTABLE(
     SOURCES main.cpp
 )
 
-TRIBITS_ADD_TEST(
+# Restart test, two runs of the same case: the uninterrupted run
+# (simulationParameters.xml) writes checkpoints at t = 1.5 and 2.5 to
+# restartCheckpoints/; the restart (simulationParameters_restart.xml) continues
+# from the checkpoint at t = 1.5, during fiber reorientation, and must reproduce
+# the uninterrupted solution at t = 2.5.
+TRIBITS_ADD_ADVANCED_TEST(
     artery_dan_restart
-    NAME artery_dan_restart
-    ARGS
-    NUM_MPI_PROCS 4
+    TEST_0 EXEC artery_dan_restart
+        ARGS --simulationsParameters=simulationParameters.xml
+        NUM_MPI_PROCS 4
+    TEST_1 EXEC artery_dan_restart
+        ARGS --simulationsParameters=simulationParameters_restart.xml
+        NUM_MPI_PROCS 4
+    OVERALL_NUM_MPI_PROCS 4
+    FAIL_FAST
 )
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(data_artery_dan_restart
-	SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} 
-	SOURCE_FILES materialParameters_dan.xml preconditionerParameters_Chemistry.xml 
-	preconditionerParameters_Structure.xml simulationParameters.xml solverParameters.xml slurm-script.sh
-	referenceSolution/History0.500000.h5
-	referenceSolution/History4.000000.h5
-	referenceSolution/History25.000000.h5
-	referenceSolution/Solution0.h5
-	referenceSolution/Solution1.h5
-	# referenceSolution/c.h5
-	# referenceSolution/c.xmf
-	# referenceSolution/d_s.h5
-	# referenceSolution/d_s.xmf
+	SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+	SOURCE_FILES materialParameters_dan.xml preconditionerParameters_Chemistry.xml
+	preconditionerParameters_Structure.xml simulationParameters.xml simulationParameters_restart.xml
+	solverParameters.xml slurm-script.sh
 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	DEST_FILES materialParameters_dan.xml preconditionerParameters_Chemistry.xml 
-	preconditionerParameters_Structure.xml simulationParameters.xml solverParameters.xml slurm-script.sh
-	History0.500000.h5
-	History4.000000.h5
-	History25.000000.h5
-	Solution0.h5
-	Solution1.h5
-	# referenceSolution/c.h5
-	# referenceSolution/c.xmf
-	# referenceSolution/d_s.h5
-	# referenceSolution/d_s.xmf
-	EXEDEPS artery_dan_restart 
+	DEST_FILES materialParameters_dan.xml preconditionerParameters_Chemistry.xml
+	preconditionerParameters_Structure.xml simulationParameters.xml simulationParameters_restart.xml
+	solverParameters.xml slurm-script.sh
+	EXEDEPS artery_dan_restart
 )
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(meshes_artery_dan_restart

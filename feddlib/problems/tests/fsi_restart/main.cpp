@@ -198,6 +198,7 @@ int main(int argc, char *argv[])
     myCLP.setOption("precfileGeometry",&xmlPrecFileGeometry,".xml file with Inputparameters.");
     myCLP.recogniseAllOptions(true);
     myCLP.throwExceptions(false);
+    bool testPassed = true;
     Teuchos::CommandLineProcessor::EParseCommandLineReturn parseReturn = myCLP.parse(argc,argv);
     if(parseReturn == Teuchos::CommandLineProcessor::PARSE_HELP_PRINTED)
     {
@@ -688,17 +689,20 @@ int main(int argc, char *argv[])
 
             daeTimeSolver.advanceInTime();
 
-            // Testing restarted solution
-            std::string fileName = parameterListAll->sublist("Timestepping Parameter").get("File name import", "Solution");
+            // Restart test: a restarted run (phase 2) must reproduce the uninterrupted run
+            // (phase 1): its solution at the final time is compared with the checkpoint
+            // phase 1 wrote at that time.
+            if(parameterListAll->sublist("Timestepping Parameter").get("Restart", false)){
             double finalTime = parameterListAll->sublist("Timestepping Parameter").get("Final time compare", 0.0);
+            double tolerance = parameterListAll->sublist("Timestepping Parameter").get("Restart tolerance", 1.e-8);
 
-            HDF5Import<SC,LO,GO,NO> importerV(fsi.getSolution()->getBlock(0)->getMap(),fileName+"u_f");
+            HDF5Import<SC,LO,GO,NO> importerV(fsi.getSolution()->getBlock(0)->getMap(),restartFile(parameterListAll, "Solutionu_f"));
             Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > solutionImportedV = importerV.readVariablesHDF5(std::to_string(finalTime));
 
-            HDF5Import<SC,LO,GO,NO> importerP(fsi.getSolution()->getBlock(1)->getMap(),fileName+"p");
+            HDF5Import<SC,LO,GO,NO> importerP(fsi.getSolution()->getBlock(1)->getMap(),restartFile(parameterListAll, "Solutionp"));
             Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > solutionImportedP = importerP.readVariablesHDF5(std::to_string(finalTime));
 
-            HDF5Import<SC,LO,GO,NO> importerD(fsi.getSolution()->getBlock(2)->getMap(),fileName+"d_s");
+            HDF5Import<SC,LO,GO,NO> importerD(fsi.getSolution()->getBlock(2)->getMap(),restartFile(parameterListAll, "Solutiond_s"));
             Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > solutionImportedD = importerD.readVariablesHDF5(std::to_string(finalTime));
 
             // HDF5Import<SC,LO,GO,NO> importerG(fsci.getSolution()->getBlock(3)->getMap(),fileName+"d_f");
@@ -761,6 +765,8 @@ int main(int argc, char *argv[])
                 cout << " 2 Norm of Error of FluidSolution " << norm2[0] << endl;
                 cout << " 2 rel. Norm Fluid  " << norm2[0]/res << endl;
             }
+            if(!(norm2[0]/res <= tolerance))
+                testPassed = false;
             if(comm->getRank() ==0)
                 cout << " ---------------------- " << endl;
 
@@ -785,6 +791,8 @@ int main(int argc, char *argv[])
                 cout << " 2 Norm of Error of Pressure Solution " << norm2[0] << endl;
                 cout << " 2 rel. Error Norm Pressure  " << norm2[0]/res << endl;
             }
+            if(!(norm2[0]/res <= tolerance))
+                testPassed = false;
             if(comm->getRank() ==0)
                 cout << " ---------------------- " << endl;
 
@@ -809,6 +817,8 @@ int main(int argc, char *argv[])
                 cout << " 2 Norm of Error of DisplacementSolution " << norm2[0] << endl;
                 cout << " 2 rel. Norm displacement  " << norm2[0]/res << endl;
             }
+            if(!(norm2[0]/res <= tolerance))
+                testPassed = false;
             if(comm->getRank() ==0)
                 cout << " ---------------------- " << endl;
 
@@ -816,11 +826,12 @@ int main(int argc, char *argv[])
             exParaResultsStructure->addVariable(errorValuesAbsS, "d - d_Import", "Vector", dim,  domainStructure->getMapUnique());
             exParaResultsStructure->save(0.0);
             // ------------------------------
+            }
         }
-        
+
     }
 
     TimeMonitor_Type::report(std::cout);
 
-    return(EXIT_SUCCESS);
+    return testPassed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

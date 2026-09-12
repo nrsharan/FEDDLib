@@ -119,11 +119,11 @@ exporterGeo_()
     // If we restart we need to initialize the old/previous geometry solution in meshDisplacementOld to correctly
     // compute the mesh velocity
     if(this->parameterList_->sublist("Timestepping Parameter").get("Checkpointing", false))
-        exporterGeometry_.reset(new HDF5Export<SC,LO,GO,NO>(this->getDomain(4)->getMapVecFieldUnique(),"Solutiond_f"));
+        exporterGeometry_.reset(new HDF5Export<SC,LO,GO,NO>(this->getDomain(4)->getMapVecFieldUnique(),checkpointFile(this->parameterList_, "Solutiond_f")));
 
     if(this->parameterList_->sublist("Timestepping Parameter").get("Restart", false))
     {
-      Teuchos::RCP<HDF5Import<SC,LO,GO,NO>> importer =Teuchos::rcp(new HDF5Import<SC,LO,GO,NO>(this->getDomain(4)->getMapVecFieldUnique(),"Solutiond_f"));
+      Teuchos::RCP<HDF5Import<SC,LO,GO,NO>> importer =Teuchos::rcp(new HDF5Import<SC,LO,GO,NO>(this->getDomain(4)->getMapVecFieldUnique(),restartFile(this->parameterList_, "Solutiond_f")));
       double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0);
       string varName = std::to_string(timeStepRestart);
 
@@ -1134,14 +1134,8 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
     //######################
     // RHS nach BDF2
     //######################
-    // #####################
-    // We consider Restarts here now.
-    // Unfortunatelly the previous mass matrix would be necessary if we use a BDF 2 Scheme with restarts.
-    // We will ignore that for now, and when we compute the rhs for now just use BDF-1 for the first time step
-    // later we can think about saving the RHS to be completely accurate
-    bool restart = this->parameterList_->sublist("Timestepping Parameter").get("Restart", false);
-    double timeStepRestart = this->parameterList_->sublist("Timestepping Parameter").get("Time step", 0.0); 
-    //###############################
+    // After a restart, the BDF2 right-hand side continues from the products of the previous
+    // mass matrices and solutions of the checkpoint (see TimeProblem::updateMultistepRhsFSI).
 
     int sizeFluid = this->problemFluid_->getSystem()->size();
     double dt = timeSteppingTool_->get_dt();
@@ -1178,7 +1172,7 @@ void FSI<SC,LO,GO,NO>::computeFluidRHSInTime( ) const
         }
         this->problemTimeFluid_->setTimeParameters(tmpmassCoeff, tmpproblemCoeff);
     }
-    if (timeSteppingTool_->currentTime()==0. || (restart && timeStepRestart + 1.e-10 > timeSteppingTool_->currentTime())) {
+    if (timeSteppingTool_->currentTime()==0.) {
         vec_dbl_Type tmpcoeffPrevSteps(1, 1. / dt);
         this->problemTimeFluid_->updateMultistepRhsFSI(tmpcoeffPrevSteps,1);/*apply (mass matrix_t / dt) to u_t*/
     }
@@ -1701,13 +1695,13 @@ void FSI<SC,LO,GO,NO>::computePressureRHSInTime() const{
   
 }
 template<class SC,class LO,class GO,class NO>
-void FSI<SC,LO,GO,NO>::exportValuesOfInterest()
+void FSI<SC,LO,GO,NO>::exportValuesOfInterest(double time)
 {
-    
+
     if(geometryExplicit_)
     {
         cout << " Export geometry " << endl;
-        string varName = std::to_string(this->timeSteppingTool_->currentTime());
+        string varName = std::to_string(time);
         exporterGeometry_->writeVariablesHDF5(varName,problemGeometry_->getSolution()->getBlockNonConst(0)); 
     }
 }

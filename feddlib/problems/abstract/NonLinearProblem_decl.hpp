@@ -77,10 +77,6 @@ public:
     
     virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values) = 0;
 
-    virtual void exportValuesOfInterest() =0;
-
-    virtual void importValuesOfInterest() =0;
-    
     int solveAndUpdate( const std::string& criterion , double& criterionValue );
 
     int solveUpdate( );

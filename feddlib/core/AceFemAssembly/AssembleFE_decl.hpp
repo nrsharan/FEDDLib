@@ -254,6 +254,9 @@ namespace FEDD {
 
         int getHistoryLength() {return historyLength_;};
 
+        /// Number of integration points the element keeps history at (0 if it keeps none).
+        virtual int getNumberOfIntegrationPoints() {return 0;};
+
         virtual std::vector<std::string> getPostDataNames(){return {};};
         virtual std::map<std::string, int> getFieldNameToPosition(){return {};};
     protected:

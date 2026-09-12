@@ -86,38 +86,37 @@
     </ParameterList>
     <ParameterList name="Timestepping Parameter">
          <!-- CHECKPOINTING -->
-        <Parameter name="Checkpointing" type="bool"  value="true"/> 
-        <Parameter name="Number Checkpoints"  type="int"   	value="10"/>
+        <!-- Restart test, phase 1 (this file): the uninterrupted run. It writes
+             checkpoints at 1.5 (the restart time of phase 2, during fiber
+             reorientation) and 2.5 (the time phase 2 compares at) to the checkpoint
+             directory. A checkpoint is written at the start of the time step after
+             it, so this run ends one step later. -->
+        <Parameter name="Checkpointing" type="bool"  value="true"/>
+        <Parameter name="Checkpoint directory" type="string" value="restartCheckpoints"/>
+        <Parameter name="Number Checkpoints"  type="int"   	value="2"/>
         <ParameterList name="Checkpoints">
-         	<Parameter name="1" type="double"   	value="0.2"/>
-         	<Parameter name="2" type="double"   	value="0.5"/>
-            <Parameter name="3" type="double"   	value="1.0"/>
-         	<Parameter name="4" type="double"   	value="2.0"/>
-            <Parameter name="5" type="double"   	value="4.0"/>
-         	<Parameter name="6" type="double"   	value="8.0"/>
-            <Parameter name="7" type="double"   	value="16.0"/>
-         	<Parameter name="8" type="double"   	value="25.0"/>
-            <Parameter name="9" type="double"   	value="30.0"/>
-         	<Parameter name="10" type="double"   	value="50.0"/>
+         	<Parameter name="1" type="double"   	value="1.5"/>
+         	<Parameter name="2" type="double"   	value="2.5"/>
         </ParameterList>
-       	<!-- Import: Read solution from hdf5 as start soltion :::: RESTART     -->
-        <Parameter name="Restart" type="bool"  value="false"/>
-        <Parameter name="Time step" type="double"   	value="0.0"/> <!-- this time must be set as variable name import. Variable name import need to be set for 6 dezimal points -->
         <Parameter name="Export history" type="bool"  value="true"/>
+
+        <!-- Restart (phase 2, parametersProblemSCI_restart.xml): from the checkpoint at
+             "Time step" in the restart directory -->
+        <Parameter name="Restart" type="bool"  value="false"/>
+        <Parameter name="Restart directory" type="string" value="restartCheckpoints"/>
+        <Parameter name="Time step" type="double"   	value="1.5"/>
         <Parameter name="Import history" type="bool"  value="false"/>
 
-        <!-- Parameters to compare the computed solution to a reference solution-->
-        
-        <Parameter name="File name import" type="string" value="referenceSolution/Solution"/>  <!-- general name of the import file which will be extended by a block id -->
-        <Parameter name="Final time compare" type="double" value="4.0"/> <!-- Final time we compare to -->
-
-        <!-- ###################################### -->
+        <!-- Phase 2 compares its solution at its final time with the checkpoint of
+             phase 1 at that time -->
+        <Parameter name="Final time compare" type="double" value="2.5"/>
+        <Parameter name="Restart tolerance" type="double" value="1.e-8"/> <!-- relative 2-norm of the difference -->
 
         <Parameter name="BDF" type="int" value="1"/>
         <Parameter name="Class" type="string" value="Multistep"/> <!-- External, Multistep-->
         <Parameter name="Timestepping type" type="string" value="non-adaptive"/><!--non-adaptive,adaptive:not working for BDF2-->
     
-        <Parameter name="Final time" type="double" value="51"/>
+        <Parameter name="Final time" type="double" value="3.0"/>
         <Parameter name="dt" type="double" value=".05"/>
         <Parameter name="beta" type="double" value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma" type="double" value="0.5"/> <!-- newmark method parameter-->

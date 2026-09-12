@@ -65,9 +65,7 @@ public:
 
     virtual void computeValuesOfInterestAndExport() {};
     
-    virtual void exportValuesOfInterest(){};    
 
-    virtual void importValuesOfInterest(){};
 //    virtual void assembleExternal( std::string type ){};
 
 protected:

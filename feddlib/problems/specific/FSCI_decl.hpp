@@ -134,9 +134,9 @@ public:
     
     virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values ) {} ;
 
-    virtual void exportValuesOfInterest();    
+    virtual void exportValuesOfInterest(double time);
 
-    virtual void importValuesOfInterest();
+    virtual void importValuesOfInterest(double time);
 
     // init FSCI vectors from partial problems
     void setFromPartialVectorsInit() const;

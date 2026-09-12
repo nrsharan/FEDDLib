@@ -34,14 +34,25 @@ commEpetra_()
 
     hdf5exporter_.reset( new HDF5_Type(*commEpetra_) ); // Building HDF5 Exporter
 
+    // The output file may lie in a (checkpoint) directory: create it first
+    std::string::size_type slash = outputFilename.rfind('/');
+    if (slash != std::string::npos) {
+        if (comm_->getRank() == 0)
+            mkdir(outputFilename.substr(0, slash).c_str(), 0777);
+        comm_->barrier();
+    }
+
     hdf5exporter_->Create(outputFilename+".h5"); // Creating output file with the 'outoutFilename'
 
     outputFilename_ = outputFilename; 
 
-    // Export Information write
+    // Export Information write. The output file may lie in a (checkpoint)
+    // directory; its information file goes flat into ExportOutput.
     int status = mkdir("ExportOutput", 0777);
+    std::string informationName = outputFilename_;
+    std::replace(informationName.begin(), informationName.end(), '/', '_');
     exporterTxt_ = Teuchos::rcp(new ExporterTxt());
-    exporterTxt_->setup( "ExportOutput/HDFExporterInformation_"+outputFilename_, this->comm_ );
+    exporterTxt_->setup( "ExportOutput/HDFExporterInformation_"+informationName, this->comm_ );
 
 
 }

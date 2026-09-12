@@ -7,6 +7,10 @@
 // Trilinos
 #include <Teuchos_Array.hpp>
 #include "feddlib/core/General/ExporterTxt.hpp"
+#include "feddlib/core/General/CheckpointFiles.hpp"
+
+#include <algorithm>
+#include <sys/stat.h>
 
 #include "Epetra_ConfigDefs.h"
 #ifdef HAVE_MPI

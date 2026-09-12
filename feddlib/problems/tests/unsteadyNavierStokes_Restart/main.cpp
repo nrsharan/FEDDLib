@@ -108,6 +108,7 @@ int main(int argc, char *argv[]) {
 
     myCLP.recogniseAllOptions(true);
     myCLP.throwExceptions(false);
+    bool testPassed = true;
     Teuchos::CommandLineProcessor::EParseCommandLineReturn parseReturn = myCLP.parse(argc,argv);
     if(parseReturn == Teuchos::CommandLineProcessor::PARSE_HELP_PRINTED) {
         MPI_Finalize();
@@ -215,10 +216,9 @@ int main(int argc, char *argv[]) {
 
 			// ###########################################################################################################
             // Comparing computed solution from restart to the hdf5 saved solution.
-            std::string fileName = parameterListProblem->sublist("Timestepping Parameter").get("File name import", "solution");
             double finalTime = parameterListProblem->sublist("Timestepping Parameter").get("Final time compare", 0.0);
             double dt = parameterListProblem->sublist("Timestepping Parameter").get("dt", 0.01);
-            HDF5Import<SC,LO,GO,NO> importer(navierStokes.getSolution()->getBlock(0)->getMap(),fileName+"u_f");
+            HDF5Import<SC,LO,GO,NO> importer(navierStokes.getSolution()->getBlock(0)->getMap(),restartFile(parameterListProblem, "Solutionu_f"));
             Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > solutionImported = importer.readVariablesHDF5( std::to_string(finalTime));
 		
 			Teuchos::RCP<ExporterParaView<SC,LO,GO,NO> > exParaVelocity(new ExporterParaView<SC,LO,GO,NO>());
@@ -247,6 +247,10 @@ int main(int argc, char *argv[]) {
 			if(comm->getRank() ==0)
 				cout << " 2 rel. Norm to solution navier stokes " << NormError/res << endl;
 
+			double tolerance = parameterListProblem->sublist("Timestepping Parameter").get("Restart tolerance", 1.e-6);
+			if(!(NormError/res <= tolerance))
+				testPassed = false;
+
 			navierStokes.getSolution()->norm2(norm);
 			res = norm[0];
 			if(comm->getRank() ==0)
@@ -270,5 +274,5 @@ int main(int argc, char *argv[]) {
 
     Teuchos::TimeMonitor::report(cout);
 
-    return(EXIT_SUCCESS);
+    return testPassed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

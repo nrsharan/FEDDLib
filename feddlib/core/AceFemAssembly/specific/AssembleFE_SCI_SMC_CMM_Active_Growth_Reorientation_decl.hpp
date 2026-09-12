@@ -75,6 +75,8 @@ class AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation : public AssembleFE<SC,
     std::vector<std::string> getPostDataNames() { return postDataNames_; }
     std::map<std::string, int> getFieldNameToPosition() { return fieldNameToPosition_; }
 
+    int getNumberOfIntegrationPoints() { return numberOfIntegrationPoints_; }
+
    protected:
     AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params, tuple_disk_vec_ptr_Type tuple);
 
@@ -104,7 +106,6 @@ class AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation : public AssembleFE<SC,
     int dofsElement_;  // "Dimension of return matrix"
 
     int iCode_;                      // Integration Code
-    int historyLength_;              // Length of history vector
     int numberOfIntegrationPoints_;  // Number of integration points
     int postDataLength_;             // Number of post processing variables
     int domainDataLength_;           // Number of domain data parameters

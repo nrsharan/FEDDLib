@@ -204,11 +204,13 @@ public:
     virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values ) = 0 ;
 
     virtual void computeValuesOfInterestAndExport() = 0;
-    
-    virtual void exportValuesOfInterest() =0;
 
-    virtual void importValuesOfInterest() =0;
-    
+    /// @brief Write the problem's own restart data (e.g. element history) for the checkpoint at 'time'. Nothing by default.
+    virtual void exportValuesOfInterest(double time) {}
+
+    /// @brief Read the problem's own restart data of the checkpoint at 'time' (the restart time). Nothing by default.
+    virtual void importValuesOfInterest(double time) {}
+
     void addParemeterRhs(double para){ parasSourceFunc_.push_back( para ); }
     
     double getParameterRhs(int i ) const { return parasSourceFunc_[i]; }
