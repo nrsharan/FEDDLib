@@ -736,7 +736,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinearNewmark()
     NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","Newton"));
     while(timeSteppingTool_->continueTimeStepping())
     {
-        cout << "  ############## Timeloop Newmark ##########" << endl;
+        std::cout << "  ############## Timeloop Newmark ##########" << std::endl;
         // Stelle (massCoeff*M + problemCoeff*A) auf
         problemTime_->combineSystems();
         
@@ -749,7 +749,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeNonLinearNewmark()
         // Bei Newmark lautet dies:
         // M*[\frac{1}{dt^2*beta}*u_n + \frac{1}{dt*beta}*u'_n + \frac{0.5 - beta}{beta}*u''_n],
         // wobei u' = v (velocity) und u'' = w (acceleration).
-        cout << " Beta " << beta << " gamma " << gamma << endl;
+        std::cout << " Beta " << beta << " gamma " << gamma << std::endl;
         problemTime_->updateNewmarkRhs(dt, beta, gamma, coeffTemp);
         
         // TODO: SourceTerm wird in jedem Zeitschritt neu berechnet; auch wenn konstant!!!
@@ -845,7 +845,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
 
         valueCorner = map->getLocalElement(idExport);
         if(valueCorner != -1)
-            cout <<" Value corner local ID " << valueCorner  << " with node values " << points->at(valueCorner).at(0) << " " << points->at(valueCorner).at(1) << " " << points->at(valueCorner).at(2)  << endl;
+            std::cout <<" Value corner local ID " << valueCorner  << " with node values " << points->at(valueCorner).at(0) << " " << points->at(valueCorner).at(1) << " " << points->at(valueCorner).at(2)  << std::endl;
 
 
     }
@@ -1203,7 +1203,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
         NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
 
         if(this->comm_->getRank()==0)
-            cout << " ----- Nonlinear System Info|| Number of rows:" << problemTime_->getSystem()->size() << " || number of rhs:" << problemTime_->getRhs()->size() << " || solution: " << problemTime_->getSolution()->size() << endl; 
+            std::cout << " ----- Nonlinear System Info|| Number of rows:" << problemTime_->getSystem()->size() << " || number of rhs:" << problemTime_->getRhs()->size() << " || solution: " << problemTime_->getSolution()->size() << std::endl; 
         //massCoeffSCI.print();
         //problemCoeffSCI.print();
         if("SCI_Linear" != parameterList_->sublist("Parameter").get("Structure Model","SCI_Linear"))
@@ -1245,7 +1245,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeSCI()
             vec_dbl_Type d_s(0);
             double norm=0.;
 
-            string name = parameterList_->sublist("General").get("Physic","Structure");             
+            std::string name = parameterList_->sublist("General").get("Physic","Structure");             
             if(valueCorner != -1){
 
                 if(name == "Structure"){
@@ -1337,7 +1337,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceWithLoadStepping()
     // problemCoeff vor A (= komplettes steady-System)
     // massCoeff vor M (= Massematrix)
     // coeffSourceTerm vor f (= rechte Seite der DGL)
-    cout << " Advance with Loadstepping " << endl;
+    std::cout << " Advance with Loadstepping " << std::endl;
     NonLinElasProblemPtr_Type nonLinElas = Teuchos::rcp_dynamic_cast<NonLinElasProblem_Type>( this->problemTime_->getUnderlyingProblem() );
 
     bool print = parameterList_->sublist("General").get("ParaViewExport",false);
@@ -1385,7 +1385,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceWithLoadStepping()
 
         valueCorner = map->getLocalElement(idExport);
         if(valueCorner != -1)
-            cout <<" Value corner local ID " << valueCorner  << " with node values " << points->at(valueCorner).at(0) << " " << points->at(valueCorner).at(1) << " " << points->at(valueCorner).at(2)  << endl;
+            std::cout <<" Value corner local ID " << valueCorner  << " with node values " << points->at(valueCorner).at(0) << " " << points->at(valueCorner).at(1) << " " << points->at(valueCorner).at(2)  << std::endl;
 
 
     }
@@ -1525,7 +1525,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceWithLoadStepping()
             vec_dbl_Type d_s(0);
             double norm=0.;
 
-            string name = parameterList_->sublist("General").get("Physic","Structure");             
+            std::string name = parameterList_->sublist("General").get("Physic","Structure");             
             if(valueCorner != -1){
 
                 if(name == "Structure"){
@@ -1771,7 +1771,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSCI()
 
         timeSteppingTool_->printInfo();
 
-        string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
+        std::string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
 
         problemTime_->updateTime ( timeSteppingTool_->currentTime() );
 
@@ -2226,7 +2226,6 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
     bool printData = parameterList_->sublist("General").get("Export Data",false);
     bool printFlowRate = parameterList_->sublist("General").get("Export Flow Rate",true);
     bool printExtraData = parameterList_->sublist("General").get("Export Extra Data",false);
-    bool printFlowRate = parameterList_->sublist("General").get("Export Flow Rate",true);
 
     if (print)
     {
@@ -2639,7 +2638,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
         {
             problemCoeffFSI[4][2] = 1.0; // C4
             problemCoeffFSI[4][4] = 1.0; // H (Geometrie)
-            string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
+            std::string linearization = this->parameterList_->sublist("General").get("Linearization","Extrapolation");
             if(linearization == "Newton" || linearization == "NOX")
             {
                 problemCoeffFSI[0][4] = 1.0; // Shape-Derivatives Velocity
@@ -2788,7 +2787,7 @@ void DAESolverInTime<SC,LO,GO,NO>::advanceInTimeFSI()
             
         double time = timeSteppingTool_->currentTime() +  timeSteppingTool_->dt_;
         problemTime_->updateTime ( time );     
-        cout << " ----> Time updated <-----" << endl;       
+        std::cout << " ----> Time updated <-----" << std::endl;       
         NonLinearSolver<SC, LO, GO, NO> nlSolver(parameterList_->sublist("General").get("Linearization","FixedPoint"));
 
         nlSolver.solve(*this->problemTime_, time, its);
@@ -3311,7 +3310,7 @@ void DAESolverInTime<SC,LO,GO,NO>::exportPostprocess(BlockMultiVectorPtr_Type po
         setupExporter(postProcessVec,domain,exportNames);
     }
     if (verbose_) {
-        cout << "-- Exporting Postprocessing Data..."<< flush;
+        std::cout << "-- Exporting Postprocessing Data..."<< std::flush;
     }
     for (int i=0; i<postProcessVec->size(); i++) {
 
@@ -3322,7 +3321,7 @@ void DAESolverInTime<SC,LO,GO,NO>::exportPostprocess(BlockMultiVectorPtr_Type po
     exporter_vector_postprocess_[0]->save( timeSteppingTool_->currentTime() );
 
     if (verbose_) {
-        cout << "done! --"<< endl;
+        std::cout << "done! --"<< std::endl;
     }
 
 }

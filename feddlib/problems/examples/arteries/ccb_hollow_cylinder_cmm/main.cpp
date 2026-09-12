@@ -24,6 +24,7 @@
 //   14 - pin face at theta=90  (outer)    -> Dirichlet_X (tangential dir)
 //   16 - pin face at theta=180 (outer)    -> Dirichlet_Y (tangential dir)
 
+#include "feddlib/core/General/BCBuilder.hpp"
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 #include "feddlib/core/FE/Domain.hpp"
@@ -156,12 +157,12 @@ int main(int argc, char *argv[])
     Teuchos::RCP<const Teuchos::Comm<int>> comm = Xpetra::DefaultPlatform::getDefaultPlatform().getComm();
 
     Teuchos::CommandLineProcessor commandLineProcessor;
-    string underlyingLibrary = "Tpetra";
-    string simulationParametersXML = "simulationParameters.xml";
-    string materialParametersXML = "materialParameters.xml";
-    string solverParametersXML = "solverParameters.xml";
-    string structurePreconditionerParametersXML = "preconditionerParameters_Structure.xml";
-    string chemistryPreconditionerParametersXML = "preconditionerParameters_Chemistry.xml";
+    std::string underlyingLibrary = "Tpetra";
+    std::string simulationParametersXML = "simulationParameters.xml";
+    std::string materialParametersXML = "materialParameters.xml";
+    std::string solverParametersXML = "solverParameters.xml";
+    std::string structurePreconditionerParametersXML = "preconditionerParameters_Structure.xml";
+    std::string chemistryPreconditionerParametersXML = "preconditionerParameters_Chemistry.xml";
     commandLineProcessor.setOption("underlyingLibrary", &underlyingLibrary, "Underlying Library");
     commandLineProcessor.setOption("simulationsParameters", &simulationParametersXML, "xml file with simulation parameters");
     commandLineProcessor.setOption("materialParameters", &materialParametersXML, "xml file with material parameters");
@@ -191,7 +192,7 @@ int main(int argc, char *argv[])
         Teuchos::RCP<Teuchos::ParameterList> chemistryPreconditionerParamerters = Teuchos::getParametersFromXmlFile(chemistryPreconditionerParametersXML);
 
         int dimension = simulationParameters->sublist("Simulation Parameters").get("Dimension", 3);
-        string discretizationType = simulationParameters->sublist("Simulation Parameters").get("Discretization", "P2");
+        std::string discretizationType = simulationParameters->sublist("Simulation Parameters").get("Discretization", "P2");
 
         Teuchos::RCP<Teuchos::ParameterList> allParameters = Teuchos::rcp(new Teuchos::ParameterList(*simulationParameters));
         allParameters->sublist("Parameter").set("Chemistry Explicit", false);

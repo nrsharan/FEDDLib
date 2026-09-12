@@ -1,3 +1,5 @@
+#include "feddlib/core/General/BCBuilder.hpp"
+#include "feddlib/core/FE/FE.hpp"
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 
@@ -129,13 +131,13 @@ int main(int argc, char *argv[])
   
     // Command Line Parameters
     Teuchos::CommandLineProcessor myCLP;
-    string xmlProbL = "plistProblemLaplace.xml";
+    std::string xmlProbL = "plistProblemLaplace.xml";
     myCLP.setOption("probLaplace",&xmlProbL,".xml file with Inputparameters.");
-    string xmlPrecL = "plistPrecLaplace.xml";
+    std::string xmlPrecL = "plistPrecLaplace.xml";
     myCLP.setOption("precLaplace",&xmlPrecL,".xml file with Inputparameters.");
-    string xmlSolverL = "plistSolverLaplace.xml";
+    std::string xmlSolverL = "plistSolverLaplace.xml";
     myCLP.setOption("solverLaplace",&xmlSolverL,".xml file with Inputparameters.");
-    string xmlProblemFile = "parametersProblem.xml";
+    std::string xmlProblemFile = "parametersProblem.xml";
     myCLP.setOption("problemfile",&xmlProblemFile,".xml file with Inputparameters.");
     
     myCLP.recogniseAllOptions(true);
@@ -154,10 +156,10 @@ int main(int argc, char *argv[])
         
         int 		dim				= parameterListProblem->sublist("Parameter").get("Dimension",2);
         
-        string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
+        std::string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
         
-        string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
-        string preconditionerMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
+        std::string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
+        std::string preconditionerMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
         int         n;
 
         TimePtr_Type totalTime(TimeMonitor_Type::getNewCounter("FEDD - main - Total Time"));
@@ -172,9 +174,9 @@ int main(int argc, char *argv[])
         // #####################
         if (verbose)
         {
-            cout << "###############################################" <<endl;
-            cout << "############ Starting test  ... ################" <<endl;
-            cout << "###############################################" <<endl;
+            std::cout << "###############################################" <<std::endl;
+            std::cout << "############ Starting test  ... ################" <<std::endl;
+            std::cout << "###############################################" <<std::endl;
         }
 
         DomainPtr_Type domainP1fluid;      
@@ -188,7 +190,7 @@ int main(int argc, char *argv[])
         TimeMonitor_Type buildMeshMonitor(*buildMesh);
         if (verbose)
         {
-            cout << " -- Building Mesh ... " << flush;
+            std::cout << " -- Building Mesh ... " << std::flush;
         }
 
         domainP1fluid.reset( new Domain_Type( comm, dim ) );
@@ -226,7 +228,7 @@ int main(int argc, char *argv[])
         }
 
         if (verbose){
-            cout << "done! -- " << endl;
+            std::cout << "done! -- " << std::endl;
         }
             
                         
@@ -331,7 +333,7 @@ int main(int argc, char *argv[])
 		fe.assemblyFlowRate(dim, flowRateInlet, discType , dim, 4 , vector_rep);
 		
 		
-		cout << " Flowrate set by parameterlist: " << flowRate << "  |  flowrate set at inlet: " << flowRateInlet << endl;
+		std::cout << " Flowrate set by parameterlist: " << flowRate << "  |  flowrate set at inlet: " << flowRateInlet << std::endl;
     	TEUCHOS_TEST_FOR_EXCEPTION( abs(flowRateInlet - flowRate) > 1e-12 , std::runtime_error, " Flowrate meassured != flowrate prescribed");
 
     

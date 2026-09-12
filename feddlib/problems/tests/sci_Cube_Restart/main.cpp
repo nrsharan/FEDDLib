@@ -1,3 +1,4 @@
+#include "feddlib/core/General/BCBuilder.hpp"
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 
@@ -326,22 +327,22 @@ int main(int argc, char *argv[])
 
        // Command Line Parameters
     Teuchos::CommandLineProcessor myCLP;
-    string ulib_str = "Tpetra";
+    std::string ulib_str = "Tpetra";
     myCLP.setOption("ulib",&ulib_str,"Underlying lib");
    
-    string xmlProblemFile = "parametersProblemSCI.xml";
+    std::string xmlProblemFile = "parametersProblemSCI.xml";
     myCLP.setOption("problemfile",&xmlProblemFile,".xml file with Inputparameters.");    
     
-    string xmlProblemStructureFile = "parametersProblemStructure.xml";  
+    std::string xmlProblemStructureFile = "parametersProblemStructure.xml";  
     myCLP.setOption("problemfileStructure",&xmlProblemStructureFile,".xml file with Inputparameters.");    
  
-    string xmlSolverFileSCI = "parametersSolverSCI.xml"; 
+    std::string xmlSolverFileSCI = "parametersSolverSCI.xml"; 
     myCLP.setOption("solverfileSCI",&xmlSolverFileSCI,".xml file with Inputparameters.");
     
-    string xmlPrecFileStructure = "parametersPrecStructure.xml";
+    std::string xmlPrecFileStructure = "parametersPrecStructure.xml";
     myCLP.setOption("precfileStructure",&xmlPrecFileStructure,".xml file with Inputparameters.");
     
-    string xmlPrecFileChem = "parametersPrecChem.xml";
+    std::string xmlPrecFileChem = "parametersPrecChem.xml";
     myCLP.setOption("precfileChem",&xmlPrecFileChem,".xml file with Inputparameters.");
     
  	//string xmlBlockPrecFile = "parametersPrecBlock.xml";
@@ -350,7 +351,7 @@ int main(int argc, char *argv[])
     //string xmlPrecFile = "parametersPrec.xml";
     //myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
 
-    string xmlPrecCEFile = "parametersPrecCE.xml";
+    std::string xmlPrecCEFile = "parametersPrecCE.xml";
     myCLP.setOption("precCEfile",&xmlPrecCEFile,".xml file with Inputparameters.");
 
    
@@ -379,10 +380,10 @@ int main(int argc, char *argv[])
 
 
  		int 		dim				= parameterListProblem->sublist("Parameter").get("Dimension",2);
-        string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
+        std::string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
         int 		m				= parameterListProblem->sublist("Parameter").get("H/h",5);
-        string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
-        string precMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
+        std::string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
+        std::string precMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
         int         n;
 
         ParameterListPtr_Type parameterListAll(new Teuchos::ParameterList(*parameterListProblem)) ;     
@@ -429,9 +430,9 @@ int main(int argc, char *argv[])
     
         if (verbose)
         {
-            cout << "###############################################" <<endl;
-            cout << "############ Starting SCI  ... ################" <<endl;
-            cout << "###############################################" <<endl;
+            std::cout << "###############################################" <<std::endl;
+            std::cout << "############ Starting SCI  ... ################" <<std::endl;
+            std::cout << "###############################################" <<std::endl;
         }
 
         DomainPtr_Type domainP1chem;
@@ -448,8 +449,8 @@ int main(int argc, char *argv[])
         int minNumberSubdomains=1;
         if (verbose)
         {
-            cout << "\t  ###############################################" <<endl;
-            cout << "\t  ############ sci_Test.main:: INFOs ############" <<endl;
+            std::cout << "\t  ###############################################" <<std::endl;
+            std::cout << "\t  ############ sci_Test.main:: INFOs ############" <<std::endl;
         }
         
     
@@ -523,11 +524,11 @@ int main(int argc, char *argv[])
         
 
         if(verbose){
-            cout << " \t Boundary Condition type Cube " << endl;
-            cout << " \t \t Point (0,0,0) held in all directions " << endl;
-            cout << " \t \t Connecting x,y,z planes are held in their respective planes" << endl;
-            cout << " \t \t Connecting x,y,z edges are held in x,y-direction, y,z-direction, and x,z-direction" << endl;
-            cout << " \t \t Pull on z=1 and y=1 plane. " << endl;
+            std::cout << " \t Boundary Condition type Cube " << std::endl;
+            std::cout << " \t \t Point (0,0,0) held in all directions " << std::endl;
+            std::cout << " \t \t Connecting x,y,z planes are held in their respective planes" << std::endl;
+            std::cout << " \t \t Connecting x,y,z edges are held in x,y-direction, y,z-direction, and x,z-direction" << std::endl;
+            std::cout << " \t \t Pull on z=1 and y=1 plane. " << std::endl;
         }
 
         bcFactory->addBC(zeroDirichlet3D, 1, 0, domainStructure, "Dirichlet_X", dim); // x=0
@@ -554,7 +555,7 @@ int main(int argc, char *argv[])
         
                         
         if(verbose)
-            cout << " \t Possible rhs functions for 'Cube' boundary type are: Constant, Paper, Heart Beat" << endl;
+            std::cout << " \t Possible rhs functions for 'Cube' boundary type are: Constant, Paper, Heart Beat" << std::endl;
         if(rhsType=="Constant")
             sci.problemStructureNonLin_->addRhsFunction( rhsYZ,0 );
         else if(rhsType=="Paper")
@@ -575,11 +576,11 @@ int main(int argc, char *argv[])
         double heartBeatStart= parameterListAll->sublist("Parameter").get("Heart Beat Start",70.);
         sci.problemStructureNonLin_->addParemeterRhs( heartBeatStart );
         if(verbose){
-            cout << "\t The following parameters were set for the RHS of your problem:" << endl;
-            cout << "\t \t Force applied to interior wall (Volume Force per List): " << force << endl;
-            cout << "\t \t End of Loadstepping ramp: " << loadRampEnd << endl;
-            cout << "\t \t Loadstep size: " << loadStep << endl;
-            cout << "\t \t Heart beat start time: " << heartBeatStart << endl;          
+            std::cout << "\t The following parameters were set for the RHS of your problem:" << std::endl;
+            std::cout << "\t \t Force applied to interior wall (Volume Force per List): " << force << std::endl;
+            std::cout << "\t \t End of Loadstepping ramp: " << loadRampEnd << std::endl;
+            std::cout << "\t \t Loadstep size: " << loadStep << std::endl;
+            std::cout << "\t \t Heart beat start time: " << heartBeatStart << std::endl;          
         }  
         
                    
@@ -600,9 +601,9 @@ int main(int argc, char *argv[])
        
         if (verbose)
         {
-            cout << "\t ... setup done." <<endl;
-            cout << "\t  ###############################################" <<endl;
-            cout << "\t  start solving problem ..." <<endl;
+            std::cout << "\t ... setup done." <<std::endl;
+            std::cout << "\t  ###############################################" <<std::endl;
+            std::cout << "\t  start solving problem ..." <<std::endl;
         }
         // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
         // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()
@@ -693,8 +694,8 @@ int main(int argc, char *argv[])
 
         double res = norm[0];
         if(comm->getRank() ==0){
-            cout << " Inf Norm of Error of Solution Displacement " << norm[0] << endl;
-            cout << " Inf Norm of Error of Solution Concentration " << normC[0] << endl;
+            std::cout << " Inf Norm of Error of Solution Displacement " << norm[0] << std::endl;
+            std::cout << " Inf Norm of Error of Solution Concentration " << normC[0] << std::endl;
         }
 
         errorValues->norm2(norm);//const Teuchos::ArrayView<typename Teuchos::ScalarTraits<SC>::magnitudeType> &norms);
@@ -702,8 +703,8 @@ int main(int argc, char *argv[])
 
         res = norm[0];
         if(comm->getRank() ==0){
-            cout << " 2 Norm of Error of Solution Concentration " << norm[0] << endl;
-            cout << " 2 Norm of Error of Solution Concentration " << normC[0] << endl;
+            std::cout << " 2 Norm of Error of Solution Concentration " << norm[0] << std::endl;
+            std::cout << " 2 Norm of Error of Solution Concentration " << normC[0] << std::endl;
 
         }
         double NormError = norm[0];
@@ -716,14 +717,14 @@ int main(int argc, char *argv[])
         double relativeError = reference[0] > 0. ? NormError/reference[0] : NormError;
         double relativeErrorC = referenceC[0] > 0. ? NormErrorC/referenceC[0] : NormErrorC;
         if(comm->getRank() ==0){
-            cout << " Restart test: d_s at t = " << finalTime << ", relative 2-norm of the difference to the uninterrupted run: " << relativeError << " (tolerance " << tolerance << ")" << endl;
-            cout << " Restart test: c at t = " << finalTime << ", relative 2-norm of the difference to the uninterrupted run: " << relativeErrorC << " (tolerance " << tolerance << ")" << endl;
+            std::cout << " Restart test: d_s at t = " << finalTime << ", relative 2-norm of the difference to the uninterrupted run: " << relativeError << " (tolerance " << tolerance << ")" << std::endl;
+            std::cout << " Restart test: c at t = " << finalTime << ", relative 2-norm of the difference to the uninterrupted run: " << relativeErrorC << " (tolerance " << tolerance << ")" << std::endl;
         }
         if(!(relativeError <= tolerance) || !(relativeErrorC <= tolerance))
             testPassed = false;
         if(!(reference[0] > 0.) && !(referenceC[0] > 0.)){ // comparing identically zero solutions checks nothing
             if(comm->getRank() ==0)
-                cout << " Restart test: the uninterrupted solution is zero at t = " << finalTime << ", the comparison checks nothing" << endl;
+                std::cout << " Restart test: the uninterrupted solution is zero at t = " << finalTime << ", the comparison checks nothing" << std::endl;
             testPassed = false;
         }
 

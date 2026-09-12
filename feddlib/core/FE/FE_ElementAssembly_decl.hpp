@@ -13,6 +13,7 @@
 #include "sms.hpp"
 #include "feddlib/core/AceFemAssembly/AssembleFE.hpp"
 #include "feddlib/core/AceFemAssembly/specific/AssembleFE_SCI_SMC_Active_Growth_Reorientation.hpp"
+#include "feddlib/core/AceFemAssembly/specific/AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation.hpp"
 #include "feddlib/core/AceFemAssembly/specific/AssembleFENavierStokes.hpp"
 
 #include "feddlib/core/AceFemAssembly/AssembleFEFactory.hpp"
@@ -77,6 +78,8 @@ class FE_ElementAssembly {
 
     typedef AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC,LO,GO,NO> AssembleFE_SCI_SMC_Active_Growth_Reorientation_Type;
     typedef Teuchos::RCP<AssembleFE_SCI_SMC_Active_Growth_Reorientation_Type> AssembleFE_SCI_SMC_Active_Growth_Reorientation_Ptr_Type;
+    typedef AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC,LO,GO,NO> AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation_Type;
+    typedef Teuchos::RCP<AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation_Type> AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation_Ptr_Type;
 
     typedef std::vector<AssembleFEPtr_Type> AssembleFEPtr_vec_Type;	
 

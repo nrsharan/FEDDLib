@@ -265,7 +265,7 @@ void NonLinElasAssFE<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, 
 
     }
     else if(!type.compare("external")){
-        cout << " Only computing residual, without combining it with rhs " << endl;
+        std::cout << " Only computing residual, without combining it with rhs " << std::endl;
     }
     else{
         TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "Unknown type for residual computation.");

@@ -606,8 +606,8 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
     SC      H = length/N;
 
     if (verbose) {
-            cout << "-- H:"<<H << " h:" <<h << " --" << endl;
-            cout << "-- N:"<<N << " M:" <<M << " --" << endl;
+            std::cout << "-- H:"<<H << " h:" <<h << " --" << std::endl;
+            std::cout << "-- N:"<<N << " M:" <<M << " --" << std::endl;
 
         }
 
@@ -648,7 +648,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
 
 
     if (verbose) {
-            cout << "-- Number of Points in one direction: " << nmbPoints_oneDir << " ||  Number of Points " << nmbPoints << " --" << endl;
+            std::cout << "-- Number of Points in one direction: " << nmbPoints_oneDir << " ||  Number of Points " << nmbPoints << " --" << std::endl;
     }
     this->FEType_ = FEType;
 
@@ -794,7 +794,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
         }
 
         if (verbose) {
-            cout << "-- Building P2 Points Repeated ... " << endl;
+            std::cout << "-- Building P2 Points Repeated ... " << std::endl;
         }
        this->comm_->barrier();
 
@@ -863,7 +863,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
                     //if(rank ==4 ){
                        // cout << " Global Node on Proc " << rank << " : " << pointsRepGlobMapping[counter] << " with local ID " << counter <<  " with " <<  (*this->pointsRep_)[counter][0] << " " <<  (*this->pointsRep_)[counter][1] << " " << (*this->pointsRep_)[counter][2]  << endl;
                         //cout << " Wanted ID " << r + s*nmbPoints_oneDir + t*nmbPoints_oneDir*nmbPoints_oneDir \
-                    + offset_x*(2*(M+1)-2) + offset_y*(nmbPoints_oneDir)*(2*(M+1)-2) + offset_z*(nmbPoints_oneDir)*(nmbPoints_oneDir)*(2*(M+1)-2) << " Offset due to z_offset " << -offset_z*(N*N*M*M) << " other offset " << offset << " and nodeskip " << nodeSkip << endl;
+                    + offset_x*(2*(M+1)-2) + offset_y*(nmbPoints_oneDir)*(2*(M+1)-2) + offset_z*(nmbPoints_oneDir)*(nmbPoints_oneDir)*(2*(M+1)-2) << " Offset due to z_offset " << -offset_z*(N*N*M*M) << " other offset " << offset << " and nodeskip " << nodeSkip << std::endl;
                     //}
                      if (s%2==1 && r%2==1 && t%2==1) {
                       //  cout << "Point to skip on rank  " << rank << " "  << (*this->pointsRep_)[counter][0] << " " << (*this->pointsRep_)[counter][1] << " " << (*this->pointsRep_)[counter][2] << " with global ID " <<  pointsRepGlobMapping[counter] << endl; 
@@ -887,16 +887,16 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
         this->bcFlagUni_.reset(new std::vector<int> (this->mapUnique_->getNodeNumElements(),10));
 
         if (verbose) {
-            cout << "-- Building P2 Points Unique ... " << endl;
+            std::cout << "-- Building P2 Points Unique ... " << std::endl;
         }
         if (verbose) {
-            cout << "-- Number of repeated points per proc: "  << this->mapRepeated_->getNodeNumElements() << " ... " << endl;
+            std::cout << "-- Number of repeated points per proc: "  << this->mapRepeated_->getNodeNumElements() << " ... " << std::endl;
         }
     
        this->comm_->barrier();
 
         // Points and Flags Unique
-		this->pointsUni_.reset(new std::vector<std::vector<double> >( this->mapUnique_->getNodeNumElements(), vector<double>(this->dim_,-1. ) ) );
+		this->pointsUni_.reset(new std::vector<std::vector<double> >( this->mapUnique_->getNodeNumElements(), std::vector<double>(this->dim_,-1. ) ) );
 		this->bcFlagUni_.reset( new std::vector<int> ( this->mapUnique_->getNodeNumElements(), 0 ) );
 		for (int i=0; i<this->mapUnique_->getNodeNumElements(); i++) {
 			GO gid = this->mapUnique_->getGlobalElement( i );
@@ -920,11 +920,11 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
         //        1 * * 4 * * 0      0                           1         1 * * 4 * * 0
 
 
-        //int    P2M = 2*(M+1)-1;
+        int    P2M = 2*(M+1)-1;
 
         if (verbose) {
-            cout << "-- ElementsList ... " << endl;
-            cout << "-- P2M =" << P2M << endl;
+            std::cout << "-- ElementsList ... " << std::endl;
+            std::cout << "-- P2M =" << P2M << std::endl;
         }
       
 
@@ -1051,7 +1051,7 @@ void MeshStructured<SC,LO,GO,NO>::buildMesh3D(std::string FEType,
             
         }
         if (verbose) {
-            cout << "... done !" << endl;
+            std::cout << "... done !" << std::endl;
         }
         buildElementsClass(elementsVec, elementFlag);
        // for(int i=0; i<this->mapUnique_->getNodeNumElements(); i++) {
@@ -3553,6 +3553,107 @@ void MeshStructured<SC,LO,GO,NO>::setStructuredMeshFlags(int flagsOption,std::st
                         this->pointsUni_->at(i).at(1) > (coorRec[1] + width - tol) ) {
                         this->bcFlagUni_->at(i) = 5;
                     }
+                    // x=1 Face
+                    if (this->pointsUni_->at(i).at(0) > (coorRec[0] + length - tol) &&
+                        this->pointsUni_->at(i).at(1) > (coorRec[1] + tol) &&
+                        this->pointsUni_->at(i).at(1) < (coorRec[1] + width - tol)&&
+                        this->pointsUni_->at(i).at(2) > (coorRec[2] + tol) &&
+                        this->pointsUni_->at(i).at(2) < (coorRec[2] + height - tol)) {
+                        this->bcFlagUni_->at(i) = 6;
+                    }
+                    // x=0 Face  
+                    if (this->pointsUni_->at(i).at(0) < (coorRec[0] + tol) ) {
+                        this->bcFlagUni_->at(i) = 1;
+                    }
+                    // y=0 Face
+                    if (this->pointsUni_->at(i).at(0) > (coorRec[0] + tol) &&
+                        this->pointsUni_->at(i).at(1) < (coorRec[1] + tol) ) {
+                        this->bcFlagUni_->at(i) = 2;
+                    }
+                    // z=0 Face
+                    if (this->pointsUni_->at(i).at(0) > (coorRec[0] + tol) &&
+                        this->pointsUni_->at(i).at(2) < (coorRec[2] + tol) ) {
+                        this->bcFlagUni_->at(i) = 3;
+                    }
+
+                         // (0,0,z) Edge
+                    if  (this->pointsUni_->at(i).at(0) < (coorRec[0] + tol) &&
+                        this->pointsUni_->at(i).at(1) < (coorRec[1] + tol)  )
+                        this->bcFlagUni_->at(i) = 7;
+
+                         // (0,y,0) Edge
+                    if  (this->pointsUni_->at(i).at(0) < (coorRec[0] + tol)  &&
+                        this->pointsUni_->at(i).at(2) < (coorRec[2] + tol)  )
+                        this->bcFlagUni_->at(i) = 9;
+
+                         // (x,0,0) Edge
+                    if  (this->pointsUni_->at(i).at(1) < (coorRec[1] + tol)  &&
+                        this->pointsUni_->at(i).at(2) < (coorRec[2] + tol)  )
+                        this->bcFlagUni_->at(i) = 8;
+
+                        // (0,0,0) Point
+                    if  (this->pointsUni_->at(i).at(0) < (coorRec[0] + tol) &&
+                        this->pointsUni_->at(i).at(1) < (coorRec[1] + tol)  &&
+                        this->pointsUni_->at(i).at(2) < (coorRec[2] + tol)  )
+                        this->bcFlagUni_->at(i) = 0;
+
+                }
+                for (int i=0; i<this->pointsRep_->size(); i++) {
+
+                    // z=1 Face
+                    if (this->pointsRep_->at(i).at(0) > (coorRec[0] + tol) &&
+                        this->pointsRep_->at(i).at(2) > (coorRec[2] + height - tol) ) {
+                        this->bcFlagRep_->at(i) = 4;
+                    }
+                 
+                    // y=1 face
+                    if (this->pointsRep_->at(i).at(0) > (coorRec[0] + tol) &&
+                        this->pointsRep_->at(i).at(1) > (coorRec[1] + width - tol) ) {
+                        this->bcFlagRep_->at(i) = 5;
+                    }
+                    //x=1
+                    if (this->pointsRep_->at(i).at(0) > (coorRec[0] + length - tol) &&
+                        this->pointsRep_->at(i).at(1) > (coorRec[1] + tol) &&
+                        this->pointsRep_->at(i).at(1) < (coorRec[1] + width - tol)&&
+                        this->pointsRep_->at(i).at(2) > (coorRec[2] + tol) &&
+                        this->pointsRep_->at(i).at(2) < (coorRec[2] + height - tol)) {
+                        this->bcFlagRep_->at(i) = 6;
+                    }
+                    // x=0 Face
+                    if (this->pointsRep_->at(i).at(0) < (coorRec[0] + tol) ) {
+                        this->bcFlagRep_->at(i) = 1;
+                    }
+                    // z=0 Face
+                    if (this->pointsRep_->at(i).at(0) > (coorRec[0] + tol) &&
+                        this->pointsRep_->at(i).at(2) < (coorRec[2] + tol) ) {
+                        this->bcFlagRep_->at(i) = 3;
+                    }
+                    // y=0 Face
+                    if (this->pointsRep_->at(i).at(0) > (coorRec[0] + tol) &&
+                        this->pointsRep_->at(i).at(1) < (coorRec[1] + tol) ) {
+                        this->bcFlagRep_->at(i) = 2;
+                    }
+                         // (0,0,z) Edge
+                    if  (this->pointsRep_->at(i).at(0) < (coorRec[0] + tol) &&
+                        this->pointsRep_->at(i).at(1) < (coorRec[1] + tol)  )
+                        this->bcFlagRep_->at(i) = 7;
+
+                         // (0,y,0) Edge
+                    if  (this->pointsRep_->at(i).at(0) < (coorRec[0] + tol)  &&
+                        this->pointsRep_->at(i).at(2) < (coorRec[2] + tol)  )
+                        this->bcFlagRep_->at(i) = 9;
+
+                         // (x,0,0) Edge
+                    if  (this->pointsRep_->at(i).at(1) < (coorRec[1] + tol)  &&
+                        this->pointsRep_->at(i).at(2) < (coorRec[2] + tol)  )
+                        this->bcFlagRep_->at(i) = 8;
+                         // (0,0,0) Point
+                    if  (this->pointsRep_->at(i).at(0) < (coorRec[0] + tol) &&
+                        this->pointsRep_->at(i).at(1) < (coorRec[1] + tol)  &&
+                        this->pointsRep_->at(i).at(2) < (coorRec[2] + tol)  )
+                        this->bcFlagRep_->at(i) = 0;
+
+                    }
                     break;
                 case 4: // tube flow through z-direction
                     for (int i=0; i<this->pointsUni_->size(); i++) {
@@ -4242,21 +4343,6 @@ void MeshStructured<SC,LO,GO,NO>::buildSurfaces(int flagsOption, std::string FET
 }
 
 template <class SC, class LO, class GO, class NO>
-void MeshStructured<SC,LO,GO,NO>::buildElementMap(){
-
-    Teuchos::Array<GO> elementsGlobalMapping( this->elementsC_->numberElements() );
-    LO offset = this->comm_->getRank() * elementsGlobalMapping.size();
-    for (int i=0; i<elementsGlobalMapping.size(); i++)
-        elementsGlobalMapping[i] = i + offset;
-
-    std::string underlyingLib = this->mapRepeated_->getUnderlyingLib();
-    this->elementMap_.reset(new Map<LO,GO,NO>( underlyingLib, (GO) -1, elementsGlobalMapping(), 0, this->comm_) );
-
-}
-
-
-// We allways want a outward normal direction
-template <class SC, class LO, class GO, class NO>
 void MeshStructured<SC,LO,GO,NO>::flipSurface(vec_int_Type &surfaceElements_vec){
 
     LO id1,id2,id3,id4,id5,id6;
@@ -4284,6 +4370,8 @@ void MeshStructured<SC,LO,GO,NO>::buildElementMap(){
         elementsGlobalMapping[i] = i + offset;
 
     this->elementMap_.reset(new Map<LO,GO,NO>(  (GO) -1, elementsGlobalMapping(), 0, this->comm_) );
+
+}
 
 }
 #endif

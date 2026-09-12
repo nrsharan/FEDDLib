@@ -7,6 +7,8 @@
 
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/problems/abstract/Problem.hpp"
+#include "feddlib/core/General/ExporterParaView.hpp"
+#include "feddlib/core/FE/Domain.hpp"
 
 /*!
  Declaration of NonLinearProblem
@@ -200,7 +202,6 @@ private:
 
     mutable double currentTimeExport_=0.;
     mutable double timeStep_ =0;
-    mutable double newtonStep_=0;
     Thyra::ModelEvaluatorBase::InArgs<SC> nominalValues_;
 
     Thyra::ModelEvaluatorBase::InArgs<SC> prototypeInArgs_;

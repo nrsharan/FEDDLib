@@ -1,3 +1,4 @@
+#include "feddlib/core/General/BCBuilder.hpp"
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 
@@ -448,7 +449,7 @@ void rhsArteryPaperPulse(double* x, double* res, double* parameters){
         res[2] =lambda*force; 
         
        if(fabs(lambda*force)<0.75*0.016)
-        cout << " ALARMAAAAA lamba=" << lambda << " force=" << force << " t= " << parameters[0] << " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ----------------" << endl;
+        std::cout << " ALARMAAAAA lamba=" << lambda << " force=" << force << " t= " << parameters[0] << " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ----------------" << std::endl;
     }
       
 }
@@ -567,22 +568,22 @@ int main(int argc, char *argv[])
 
        // Command Line Parameters
     Teuchos::CommandLineProcessor myCLP;
-    string ulib_str = "Tpetra";
+    std::string ulib_str = "Tpetra";
     myCLP.setOption("ulib",&ulib_str,"Underlying lib");
    
-    string xmlProblemFile = "parametersProblemSCI.xml";
+    std::string xmlProblemFile = "parametersProblemSCI.xml";
     myCLP.setOption("problemfile",&xmlProblemFile,".xml file with Inputparameters.");    
     
-    string xmlProblemStructureFile = "parametersProblemStructure.xml";  
+    std::string xmlProblemStructureFile = "parametersProblemStructure.xml";  
     myCLP.setOption("problemfileStructure",&xmlProblemStructureFile,".xml file with Inputparameters.");    
  
-    string xmlSolverFileSCI = "parametersSolverSCI.xml"; 
+    std::string xmlSolverFileSCI = "parametersSolverSCI.xml"; 
     myCLP.setOption("solverfileSCI",&xmlSolverFileSCI,".xml file with Inputparameters.");
     
-    string xmlPrecFileStructure = "parametersPrecStructure.xml";
+    std::string xmlPrecFileStructure = "parametersPrecStructure.xml";
     myCLP.setOption("precfileStructure",&xmlPrecFileStructure,".xml file with Inputparameters.");
     
-    string xmlPrecFileChem = "parametersPrecChem.xml";
+    std::string xmlPrecFileChem = "parametersPrecChem.xml";
     myCLP.setOption("precfileChem",&xmlPrecFileChem,".xml file with Inputparameters.");
     
  	//string xmlBlockPrecFile = "parametersPrecBlock.xml";
@@ -591,7 +592,7 @@ int main(int argc, char *argv[])
     //string xmlPrecFile = "parametersPrec.xml";
     //myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
 
-    string xmlPrecCEFile = "parametersPrecCE.xml";
+    std::string xmlPrecCEFile = "parametersPrecCE.xml";
     myCLP.setOption("precCEfile",&xmlPrecCEFile,".xml file with Inputparameters.");
 
    
@@ -619,10 +620,10 @@ int main(int argc, char *argv[])
 
 
  		int 		dim				= parameterListProblem->sublist("Parameter").get("Dimension",2);
-        string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
+        std::string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
         int 		m				= parameterListProblem->sublist("Parameter").get("H/h",5);
-        string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
-        string precMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
+        std::string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
+        std::string precMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
         int         n;
 
         ParameterListPtr_Type parameterListAll(new Teuchos::ParameterList(*parameterListProblem)) ;     
@@ -671,9 +672,9 @@ int main(int argc, char *argv[])
     
         if (verbose)
         {
-            cout << "###############################################" <<endl;
-            cout << "############ Starting SCI  ... ################" <<endl;
-            cout << "###############################################" <<endl;
+            std::cout << "###############################################" <<std::endl;
+            std::cout << "############ Starting SCI  ... ################" <<std::endl;
+            std::cout << "###############################################" <<std::endl;
         }
 
         DomainPtr_Type domainP1chem;
@@ -692,19 +693,19 @@ int main(int argc, char *argv[])
         int minNumberSubdomains=1;
         if (verbose)
         {
-            cout << "\t  ###############################################" <<endl;
-            cout << "\t  ############ sci_Test.main:: INFOs ############" <<endl;
+            std::cout << "\t  ###############################################" <<std::endl;
+            std::cout << "\t  ############ sci_Test.main:: INFOs ############" <<std::endl;
         }
         if (verbose)
         {
             if (!meshType.compare("structured")) {
-                cout << "\t ---- Building structured mesh based on number of processors and H/h ----" <<endl;
+                std::cout << "\t ---- Building structured mesh based on number of processors and H/h ----" <<std::endl;
                 if(bcType.compare("Cube"))
                     TEUCHOS_TEST_FOR_EXCEPTION( true , std::logic_error, "Wrong BC Type. Structured meshes here are cubes. Please choose 'Cube' as BC Type.");
 
             }
             else if (!meshType.compare("unstructured")) {
-                cout << " ---- Reading unstructured mesh based on inputfile: 'Mesh 1 Name' ----" <<endl;
+                std::cout << " ---- Reading unstructured mesh based on inputfile: 'Mesh 1 Name' ----" <<std::endl;
             }
         }
     
@@ -822,11 +823,11 @@ int main(int argc, char *argv[])
         {
 
             if(verbose){
-                cout << " \t Boundary Condition type Cube " << endl;
-                cout << " \t \t Point (0,0,0) held in all directions " << endl;
-                cout << " \t \t Connecting x,y,z planes are held in their respective planes" << endl;
-                cout << " \t \t Connecting x,y,z edges are held in x,y-direction, y,z-direction, and x,z-direction" << endl;
-                cout << " \t \t Pull on z=1 and y=1 plane. " << endl;
+                std::cout << " \t Boundary Condition type Cube " << std::endl;
+                std::cout << " \t \t Point (0,0,0) held in all directions " << std::endl;
+                std::cout << " \t \t Connecting x,y,z planes are held in their respective planes" << std::endl;
+                std::cout << " \t \t Connecting x,y,z edges are held in x,y-direction, y,z-direction, and x,z-direction" << std::endl;
+                std::cout << " \t \t Pull on z=1 and y=1 plane. " << std::endl;
             }
 
             bcFactory->addBC(zeroDirichlet3D, 1, 0, domainStructure, "Dirichlet_X", dim); // x=0
@@ -853,9 +854,9 @@ int main(int argc, char *argv[])
         }
         else if(dim==3 && bcType=="Artery"){
             if(verbose){
-                cout << " \t Boundary Condition type Artery. This corresponds to the artial segment like geometries of height c. " << endl;
-                cout << " \t \t z=0 and z=c plane are held in z-direction. " << endl;
-                cout << " \t \t For more information on BC see paper " << endl;
+                std::cout << " \t Boundary Condition type Artery. This corresponds to the artial segment like geometries of height c. " << std::endl;
+                std::cout << " \t \t z=0 and z=c plane are held in z-direction. " << std::endl;
+                std::cout << " \t \t For more information on BC see paper " << std::endl;
             }
 			bcFactory->addBC(zeroDirichlet3D, 1, 0, domainStructure, "Dirichlet_Y", dim);
 			bcFactory->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_X", dim);
@@ -888,10 +889,10 @@ int main(int argc, char *argv[])
         else if(dim==3 && bcType=="Artery Full"){
         
              if(verbose){
-                cout << " \t Boundary Condition type Artery Full. This boundary condition is for longer and full artery like geometry (or tube) with length c. " << endl;
-                cout << " \t \t z=0 and z=c plane are held in z-direction. Important this geometry spans/runs in z direction. " << endl;
-                cout << " \t \t Two or more additional points are held in x and y direction each." << endl;
-                cout << " \t \t Internal surface force is applied." << endl;
+                std::cout << " \t Boundary Condition type Artery Full. This boundary condition is for longer and full artery like geometry (or tube) with length c. " << std::endl;
+                std::cout << " \t \t z=0 and z=c plane are held in z-direction. Important this geometry spans/runs in z direction. " << std::endl;
+                std::cout << " \t \t Two or more additional points are held in x and y direction each." << std::endl;
+                std::cout << " \t \t Internal surface force is applied." << std::endl;
             }
 			bcFactory->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactory->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dim);
@@ -912,11 +913,11 @@ int main(int argc, char *argv[])
         }
         else if(dim==3 && bcType=="Plaque"){
             if(verbose){
-                cout << " \t Boundary Condition type Plaque. This boundary condition is for artery like geometries containing plaque. " << endl;
-                cout << " \t \t z=0 and z=c plane are held in z-direction. Important this geometry spans/runs in z direction. " << endl;
-                cout << " \t \t Two or more additional points are held in x and y direction each." << endl;
-                cout << " \t \t Internal surface force is applied." << endl;
-                cout << " \t \t The parameters for the different material are set through parametersProblemStructure" << endl;
+                std::cout << " \t Boundary Condition type Plaque. This boundary condition is for artery like geometries containing plaque. " << std::endl;
+                std::cout << " \t \t z=0 and z=c plane are held in z-direction. Important this geometry spans/runs in z direction. " << std::endl;
+                std::cout << " \t \t Two or more additional points are held in x and y direction each." << std::endl;
+                std::cout << " \t \t Internal surface force is applied." << std::endl;
+                std::cout << " \t \t The parameters for the different material are set through parametersProblemStructure" << std::endl;
             }
 			bcFactory->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dim);
 			bcFactory->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dim);
@@ -948,7 +949,7 @@ int main(int argc, char *argv[])
                             
         if(bcType=="Cube"){
             if(verbose)
-                cout << " \t Possible rhs functions for 'Cube' boundary type are: Constant, Paper, Heart Beat" << endl;
+                std::cout << " \t Possible rhs functions for 'Cube' boundary type are: Constant, Paper, Heart Beat" << std::endl;
             if(rhsType=="Constant")
                 sci.problemStructureNonLin_->addRhsFunction( rhsYZ,0 );
             else if(rhsType=="Paper")
@@ -961,7 +962,7 @@ int main(int argc, char *argv[])
         }
         else if(bcType=="Artery" || bcType == "Artery Full" || bcType == "Plaque"  ){
             if(verbose)
-                cout << " \t Possible rhs functions for 'Artery (Full), Plaque' boundary type are: Constant, Paper, Heart Beat, Paper Pulse, Heat Beat Pulse. You selected: "<< rhsType << endl;
+                std::cout << " \t Possible rhs functions for 'Artery (Full), Plaque' boundary type are: Constant, Paper, Heart Beat, Paper Pulse, Heat Beat Pulse. You selected: "<< rhsType << std::endl;
           
             if(rhsType=="Constant")
                 sci.problemStructureNonLin_->addRhsFunction( rhsArtery,0 );
@@ -990,11 +991,11 @@ int main(int argc, char *argv[])
         double heartBeatStart= parameterListAll->sublist("Parameter").get("Heart Beat Start",70.);
         sci.problemStructureNonLin_->addParemeterRhs( heartBeatStart );
         if(verbose){
-            cout << "\t The following parameters were set for the RHS of your problem:" << endl;
-            cout << "\t \t Force applied to interior wall (Volume Force per List): " << force << endl;
-            cout << "\t \t End of Loadstepping ramp: " << loadRampEnd << endl;
-            cout << "\t \t Loadstep size: " << loadStep << endl;
-            cout << "\t \t Heart beat start time: " << heartBeatStart << endl;          
+            std::cout << "\t The following parameters were set for the RHS of your problem:" << std::endl;
+            std::cout << "\t \t Force applied to interior wall (Volume Force per List): " << force << std::endl;
+            std::cout << "\t \t End of Loadstepping ramp: " << loadRampEnd << std::endl;
+            std::cout << "\t \t Loadstep size: " << loadStep << std::endl;
+            std::cout << "\t \t Heart beat start time: " << heartBeatStart << std::endl;          
         }  
         
                    
@@ -1057,9 +1058,9 @@ int main(int argc, char *argv[])
 
         if (verbose)
         {
-            cout << "\t ... setup done." <<endl;
-            cout << "\t  ###############################################" <<endl;
-            cout << "\t  start solving problem ..." <<endl;
+            std::cout << "\t ... setup done." <<std::endl;
+            std::cout << "\t  ###############################################" <<std::endl;
+            std::cout << "\t  start solving problem ..." <<std::endl;
         }
         // Fuer die Teil-TimeProblems brauchen wir bei TimeProblems
         // die bcFactory; vgl. z.B. Timeproblem::updateMultistepRhs()

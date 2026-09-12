@@ -798,82 +798,9 @@ void NavierStokes<SC,LO,GO,NO>::calculateNonLinResidualVecWithMeshVelo(std::stri
 }
 
     
-template<class SC,class LO,class GO,class NO>
-Teuchos::RCP<Thyra::LinearOpBase<SC> > NavierStokes<SC,LO,GO,NO>::create_W_op() const
-{
-    this->reAssemble("FixedPoint");
-    this->reAssemble("Newton");
-
-    std::string type = this->parameterList_->sublist("General").get("Preconditioner Method","Monolithic");
-    if ( !type.compare("Monolithic"))
-        return create_W_op_Monolithic( );
-    else if ( !type.compare("Teko")){
 #ifdef FEDD_HAVE_TEKO
-        return create_W_op_Block( );
-#else
-        TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "Teko not found! Build Trilinos with Teko.");
-#endif
-    }
-    else
-        TEUCHOS_TEST_FOR_EXCEPTION( true, std::logic_error, "Unkown preconditioner/solver type.");
-}
-
-template<class SC,class LO,class GO,class NO>
-Teuchos::RCP<Thyra::LinearOpBase<SC> > NavierStokes<SC,LO,GO,NO>::create_W_op_Monolithic() const
-{
-    Teuchos::RCP<const Thyra::LinearOpBase<SC> > W_opConst = this->system_->getThyraLinOp();
-    Teuchos::RCP<Thyra::LinearOpBase<SC> > W_op = Teuchos::rcp_const_cast<Thyra::LinearOpBase<SC> >(W_opConst);
-    return W_op;
-}
-
-#ifdef FEDD_HAVE_TEKO
-template<class SC,class LO,class GO,class NO>
-Teuchos::RCP<Thyra::LinearOpBase<SC> > NavierStokes<SC,LO,GO,NO>::create_W_op_Block() const
-{
-
-    Teko::LinearOp thyraF = this->system_->getBlock(0,0)->getThyraLinOp();
-    Teko::LinearOp thyraBT = this->system_->getBlock(0,1)->getThyraLinOp();
-    Teko::LinearOp thyraB = this->system_->getBlock(1,0)->getThyraLinOp();
-
-    if (!this->system_->blockExists(1,1)){
-        MatrixPtr_Type dummy = Teuchos::rcp( new Matrix_Type( this->system_->getBlock(1,0)->getMap(), 1 ) );
-        dummy->fillComplete();
-        this->system_->addBlock( dummy, 1, 1 );
-    }
-
-    Teko::LinearOp thyraC = this->system_->getBlock(1,1)->getThyraLinOp();
-
-    Teuchos::RCP<const Thyra::LinearOpBase<SC> > W_opConst = Thyra::block2x2(thyraF,thyraBT,thyraB,thyraC);
-    Teuchos::RCP<Thyra::LinearOpBase<SC> > W_op = Teuchos::rcp_const_cast<Thyra::LinearOpBase<SC> >(W_opConst);
-    return W_op;
-}
 #endif
 
-template<class SC,class LO,class GO,class NO>
-Teuchos::RCP<Thyra::PreconditionerBase<SC> > NavierStokes<SC,LO,GO,NO>::create_W_prec() const
-{
-
-    this->initializeSolverBuilder();
-
-    std::string type = this->parameterList_->sublist("General").get("Preconditioner Method","Monolithic");
-    this->setBoundariesSystem();
-
-    if (!type.compare("Teko")) { //
-        this->setupPreconditioner( type );
-        stokesTekoPrecUsed_ = false;
-    }
-    else{
-        this->setupPreconditioner( type ); //this->initializePreconditioner( type ); //
-    }
-    
-    
-
-    Teuchos::RCP<const Thyra::PreconditionerBase<SC> > thyraPrec =  this->getPreconditionerConst()->getThyraPrecConst();
-    Teuchos::RCP<Thyra::PreconditionerBase<SC> > thyraPrecNonConst = Teuchos::rcp_const_cast<Thyra::PreconditionerBase<SC> >(thyraPrec);
-
-    return thyraPrecNonConst;
-
-}
 }
 
 #endif

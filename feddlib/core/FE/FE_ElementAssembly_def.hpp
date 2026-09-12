@@ -711,7 +711,7 @@ void FE_ElementAssembly<SC,LO,GO,NO>::assemblyAceDeformDiffu(int dim,
            // elementMatrix->print();
 			assemblyFEElements_[T]->advanceNewtonStep(); // n genereal non linear solver step
 			
-			addFeBlockMatrix(A, elementMatrix, elementsSolid->getElement(T),  mapSolid, mapChem, problemDisk);
+			addFeBlockMatrix(A, elementMatrix, elementsSolid->getElement(T), elementsSolid->getElement(T), mapSolid, mapChem, problemDisk);
 
           
 

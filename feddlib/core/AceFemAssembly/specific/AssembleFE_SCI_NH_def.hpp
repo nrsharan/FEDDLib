@@ -23,7 +23,7 @@ namespace FEDD
 				materialID = i;
 		
 		if(materialID == 0)
-			cout << "!!! Warning: No corresponding parameterslist for the element flag="<< this->flag_ << ". Please Check volume flags of elements and Mesh Data !!! " << endl;
+			std::cout << "!!! Warning: No corresponding parameterslist for the element flag="<< this->flag_ << ". Please Check volume flags of elements and Mesh Data !!! " << std::endl;
 
 
 		E0_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("E", 0.38);
@@ -92,10 +92,10 @@ namespace FEDD
 		this->timeIncrement_ = dt;
 
 		if(this->globalElementID_==0){
-			cout << " ---------------------------------------------- " << endl;
-			cout << " AssembleFE_SCI_NH: Advancing time in elements" << endl;
-			cout << " Timestep: " << this->timeStep_ << " \t timeincrement: "<< this->timeIncrement_ << endl;
-			cout << " ---------------------------------------------- " << endl;
+			std::cout << " ---------------------------------------------- " << std::endl;
+			std::cout << " AssembleFE_SCI_NH: Advancing time in elements" << std::endl;
+			std::cout << " Timestep: " << this->timeStep_ << " \t timeincrement: "<< this->timeIncrement_ << std::endl;
+			std::cout << " ---------------------------------------------- " << std::endl;
 
 		}
         //cout << " Advance in time on element timestep: " << this->timeStep_ << " increment: " << this->timeIncrement_ << endl;

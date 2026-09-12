@@ -6,6 +6,7 @@
 #define MAIN_TIMER_STOP(A) A.reset();
 #endif
 
+#include "feddlib/core/General/BCBuilder.hpp"
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/FE/Domain.hpp"
 #include "feddlib/core/Mesh/MeshPartitioner.hpp"
@@ -85,22 +86,22 @@ int main(int argc, char *argv[]) {
     Teuchos::RCP<const Teuchos::Comm<int> > comm = Xpetra::DefaultPlatform::getDefaultPlatform().getComm();
     bool verbose (comm->getRank() == 0);
     if (verbose) {
-        cout << "###############################################################" <<endl;
-        cout << "################### Unsteady Navier-Stokes ####################" <<endl;
-        cout << "###############################################################" <<endl;
+        std::cout << "###############################################################" <<std::endl;
+        std::cout << "################### Unsteady Navier-Stokes ####################" <<std::endl;
+        std::cout << "###############################################################" <<std::endl;
     }
 
     // Command Line Parameters
     Teuchos::CommandLineProcessor myCLP;
 
-    string xmlProblemFile = "parametersProblem.xml";
+    std::string xmlProblemFile = "parametersProblem.xml";
     myCLP.setOption("problemfile",&xmlProblemFile,".xml file with Inputparameters.");
-    string xmlPrecFile = "parametersPrec.xml";
+    std::string xmlPrecFile = "parametersPrec.xml";
     myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
-    string xmlSolverFile = "parametersSolver.xml";
+    std::string xmlSolverFile = "parametersSolver.xml";
     myCLP.setOption("solverfile",&xmlSolverFile,".xml file with Inputparameters.");
 
-    string xmlTekoPrecFile = "parametersTeko.xml";
+    std::string xmlTekoPrecFile = "parametersTeko.xml";
     myCLP.setOption("tekoprecfile",&xmlTekoPrecFile,".xml file with Inputparameters.");
 
     double length = 4.;
@@ -126,11 +127,11 @@ int main(int argc, char *argv[]) {
         int 		dim				= 3;
         std::string discVelocity = "P2";
         std::string discPressure = "P1";
-        string		meshType ="unstructured";
-        string		meshName = "BFS3dCC.mesh";
-        string		meshDelimiter = " ";
-        string		linearization = parameterListProblem->sublist("General").get("Linearization","FixedPoint");
-        string		precMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
+        std::string		meshType ="unstructured";
+        std::string		meshName = "BFS3dCC.mesh";
+        std::string		meshDelimiter = " ";
+        std::string		linearization = parameterListProblem->sublist("General").get("Linearization","FixedPoint");
+        std::string		precMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
         int         n;
 
 
@@ -239,13 +240,13 @@ int main(int argc, char *argv[]) {
     		errorValues->norm2(norm);//const Teuchos::ArrayView<typename Teuchos::ScalarTraits<SC>::magnitudeType> &norms);
 			double res = norm[0];
 			if(comm->getRank() ==0)
-				cout << " 2 Norm of Error of Solution Velocity " << res << endl;
+				std::cout << " 2 Norm of Error of Solution Velocity " << res << std::endl;
 			double NormError = res;
 		
 			navierStokes.getSolution()->norm2(norm);
 			res = norm[0];
 			if(comm->getRank() ==0)
-				cout << " 2 rel. Norm to solution navier stokes " << NormError/res << endl;
+				std::cout << " 2 rel. Norm to solution navier stokes " << NormError/res << std::endl;
 
 			double tolerance = parameterListProblem->sublist("Timestepping Parameter").get("Restart tolerance", 1.e-6);
 			if(!(NormError/res <= tolerance))
@@ -254,7 +255,7 @@ int main(int argc, char *argv[]) {
 			navierStokes.getSolution()->norm2(norm);
 			res = norm[0];
 			if(comm->getRank() ==0)
-				cout << " 2 rel. Norm to solutions navier stokes assemFE " << NormError/res << endl;
+				std::cout << " 2 rel. Norm to solutions navier stokes assemFE " << NormError/res << std::endl;
 
             DomainPtr_Type dom = domainVelocity;
 
@@ -272,7 +273,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    Teuchos::TimeMonitor::report(cout);
+    Teuchos::TimeMonitor::report(std::cout);
 
     return testPassed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

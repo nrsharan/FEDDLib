@@ -4,7 +4,7 @@
 #include "feddlib/problems/specific/DiffusionReaction.hpp"
 #include "feddlib/problems/specific/LinElas.hpp"
 #include "feddlib/core/General/ExporterTxt.hpp"
-#include "feddlib/problems/specific/NonLinElasAssFE.hpp"
+#include "feddlib/problems/specific/NonLinElasticity.hpp"
 #include "feddlib/problems/specific/Geometry.hpp"
 #include "feddlib/core/General/TimeSteppingTools.hpp"
 #include "Xpetra_ThyraUtils.hpp"
@@ -24,7 +24,7 @@ class DiffusionReaction;
 template <class SC , class LO , class GO , class NO >
 class LinElas;
 template <class SC , class LO , class GO , class NO >
-class NonLinElasAssFE;
+class NonLinElasticity;
 template <class SC = default_sc, class LO = default_lo, class GO = default_go, class NO = default_no>
 class SCI : public NonLinearProblem<SC,LO,GO,NO>  {
 
@@ -61,7 +61,7 @@ public:
 
     typedef DiffusionReaction<SC,LO,GO,NO> ChemProblem_Type;
     typedef LinElas<SC,LO,GO,NO> StructureProblem_Type;
-    typedef NonLinElasAssFE<SC,LO,GO,NO> StructureNonLinProblem_Type;
+    typedef NonLinElasticity<SC,LO,GO,NO> StructureNonLinProblem_Type;
 
     typedef Teuchos::RCP<ChemProblem_Type> ChemProblemPtr_Type;
     typedef Teuchos::RCP<StructureProblem_Type> StructureProblemPtr_Type;

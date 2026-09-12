@@ -1,6 +1,9 @@
 #ifndef FSCI_def_hpp
 #define FSCI_def_hpp
 #include "FSCI_decl.hpp"
+#include "feddlib/core/FE/Domain.hpp"
+#include "feddlib/core/FE/FE.hpp"
+#include "feddlib/core/General/BCBuilder.hpp"
 
 namespace FEDD {
 // Funktionen fuer die rechte Seite der Struktur/ Fluid/ Geometrie sind im jeweiligen Problem
@@ -788,7 +791,7 @@ void FSCI<SC,LO,GO,NO>::setupSubTimeProblems(ParameterListPtr_Type parameterList
    // this->problemTimeStructure_->assemble( "MassSystem" );
   // this->problemSCI_->setupSubTimeProblems(parameterListStructure,parameterListChem); // already called in SCI
     if(this->verbose_)
-        std::cout << " Setup Sub-Timeproblems done-- \n" << endl;
+        std::cout << " Setup Sub-Timeproblems done-- \n" << std::endl;
 
 }
 
@@ -967,8 +970,8 @@ void FSCI<SC,LO,GO,NO>::exportValuesOfInterest(double time)
     problemSCI_->exportValuesOfInterest(time);
     if(this->geometryExplicit_)
     {
-        cout << " Export geometry " << endl;
-        string varName = std::to_string(time);
+        std::cout << " Export geometry " << std::endl;
+        std::string varName = std::to_string(time);
         this->exporterGeometry_->writeVariablesHDF5(varName,this->problemGeometry_->getSolution()->getBlock(0));
     }
 }

@@ -685,7 +685,7 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
             criterionValue = residual/residual0;
 //            exporterTxt->exportData( criterionValue );
             if (verbose)
-                cout << "### Newton iteration : " << nlIts << "  relative nonlinear residual : " << criterionValue << endl;
+                std::cout << "### Newton iteration : " << nlIts << "  relative nonlinear residual : " << criterionValue << std::endl;
             if ( criterionValue < tol ){
                 exporterRelRes_->exportData(  "--Converged with value: " , criterionValue );
                 break;
@@ -720,21 +720,21 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
 
             }
             if (verbose){
-                cout << "############################################################ " << endl;
-                cout << "Initial relative residual (as sum over all partial res) r0 = " << residualInit << endl;
+                std::cout << "############################################################ " << std::endl;
+                std::cout << "Initial relative residual (as sum over all partial res) r0 = " << residualInit << std::endl;
                 for(int i=0; i< numNorms; i++){
 
-                    cout << "### Residual of component: " << i << ": " << normVec[i]  << " relative residual: " << normVec[i]/residualInitV[i] << " \t with r_0_" << i << "= " << residualInitV[i] << endl;
+                    std::cout << "### Residual of component: " << i << ": " << normVec[i]  << " relative residual: " << normVec[i]/residualInitV[i] << " \t with r_0_" << i << "= " << residualInitV[i] << std::endl;
                     exporterRelRes_->exportData(  i ,normVec[i]/residualInitV[i] );
 
                 }
-                cout << "############################################################ " << endl;
+                std::cout << "############################################################ " << std::endl;
                 for(int i=0; i< numNorms; i++){
-                    cout << "### Update of component: " << i << ": " << criterionValueVec[i] << endl;
+                    std::cout << "### Update of component: " << i << ": " << criterionValueVec[i] << std::endl;
                     exporterAbsRes_->exportData(  i ,criterionValueVec[i]);
 
                 }
-                cout << "############################################################ " << endl;
+                std::cout << "############################################################ " << std::endl;
 
             }
         }
@@ -744,7 +744,7 @@ void NonLinearSolver<SC,LO,GO,NO>::solveNewton(TimeProblem_Type &problem, double
         //problem.getSolution()->getBlock(0)->print();
         if(criterion=="Update"){
             if (verbose)
-                cout << "### Newton iteration : " << nlIts << "  residual of update : " << criterionValue << endl;
+                std::cout << "### Newton iteration : " << nlIts << "  residual of update : " << criterionValue << std::endl;
             if ( criterionValue < tol ){
                 exporterAbsRes_->exportData(  "--Converged with value: " , criterionValue );
                 break;

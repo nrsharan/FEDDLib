@@ -9,6 +9,8 @@
 #include "feddlib/core/General/HDF5Export.hpp"
 #include "feddlib/core/General/HDF5Import.hpp"
 #include "feddlib/core/General/CheckpointFiles.hpp"
+#include "feddlib/core/General/ExporterParaView.hpp"
+#include "feddlib/core/FE/Domain.hpp"
 
 /*!
  Declaration of TimeProblem
@@ -274,7 +276,7 @@ public:
     // ###########################
     BlockMatrixPtrArray_Type systemMassPreviousTimeSteps_;
     //#################
-    void checkForExportAndExport(BlockMultiVectorPtrArray_Type solutionVec, string fileName);
+    void checkForExportAndExport(BlockMultiVectorPtrArray_Type solutionVec, std::string fileName);
 
 
     double time_;
@@ -329,10 +331,10 @@ private:
     
     mutable bool precInitOnly_; //Help variable to signal that we constructed the initial preconditioner for NOX with the Stokes system and we do not need to compute it if fill_W_prec is called for the first time. However, the preconditioner is only correct if a Stokes system is solved in the first nonlinear iteration. This only affects the block preconditioners of Teko
 
-    void initExporter(string fileName  );
+    void initExporter(std::string fileName  );
     void initCheckPoints();
     double getPreviousTimeIncrement(double timeStep =-1.0);
-    Teuchos::RCP<HDF5Export<SC, LO, GO, NO>> getExporter(string fileName, int i);
+    Teuchos::RCP<HDF5Export<SC, LO, GO, NO>> getExporter(std::string fileName, int i);
 
     std::vector<std::tuple<double,bool>> checkPointTupel_;
     bool restartValuesImported_ = false; // importRestartValues() ran

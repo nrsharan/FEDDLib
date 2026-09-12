@@ -288,8 +288,6 @@ namespace FEDD {
 
         int dim_;
 
-        // This can be any postprocessing output field ddefined inside an element using converged solution
-        vec_dbl_Type constOutputField_ ; // can be a vector with values on P1/ P2 nodes or just averaged element value
 
 
 		tuple_disk_vec_ptr_Type diskTuple_;
@@ -312,6 +310,9 @@ namespace FEDD {
         // This can be any postprocessing output field ddefined inside an element using converged solution
         vec_dbl_Type constOutputField_ ; // can be a vector with values on P1/ P2 nodes or just averaged element value
         bool historyImported_;
+        vec_dbl_Type history_;
+        vec_dbl_Type historyUpdated_;
+        int historyLength_; // Length of history vector
 
         friend class AssembleFEFactory<SC,LO,GO,NO>;
     };

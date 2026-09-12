@@ -1,3 +1,4 @@
+#include "feddlib/core/General/BCBuilder.hpp"
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 #include "feddlib/core/FE/Domain.hpp"
@@ -33,12 +34,12 @@ int main(int argc, char *argv[])
     Teuchos::RCP<const Teuchos::Comm<int>> comm = Xpetra::DefaultPlatform::getDefaultPlatform().getComm();
 
     Teuchos::CommandLineProcessor commandLineProcessor;
-    string underlyingLibrary = "Tpetra";
-    string simulationParametersXML = "simulationParameters.xml";
-    string materialParametersXML = "materialParameters_dan.xml";
-    string solverParametersXML = "solverParameters.xml";
-    string structurePreconditionerParametersXML = "preconditionerParameters_Structure.xml";
-    string chemistryPreconditionerParametersXML = "preconditionerParameters_Chemistry.xml";
+    std::string underlyingLibrary = "Tpetra";
+    std::string simulationParametersXML = "simulationParameters.xml";
+    std::string materialParametersXML = "materialParameters_dan.xml";
+    std::string solverParametersXML = "solverParameters.xml";
+    std::string structurePreconditionerParametersXML = "preconditionerParameters_Structure.xml";
+    std::string chemistryPreconditionerParametersXML = "preconditionerParameters_Chemistry.xml";
     commandLineProcessor.setOption("underlyingLibrary", &underlyingLibrary, "Underlying Library");
     commandLineProcessor.setOption("simulationsParameters", &simulationParametersXML, "xml file with simulation parameters");
     commandLineProcessor.setOption("materialParameters", &materialParametersXML, "xml file with material parameters");
@@ -69,7 +70,7 @@ int main(int argc, char *argv[])
         Teuchos::RCP<Teuchos::ParameterList> chemistryPreconditionerParamerters = Teuchos::getParametersFromXmlFile(chemistryPreconditionerParametersXML); // Parameters for solving Chemistry explicit
 
         int dimension = simulationParameters->sublist("Simulation Parameters").get("Dimension", 3);
-        string discretizationType = simulationParameters->sublist("Simulation Parameters").get("Discretization", "P2");
+        std::string discretizationType = simulationParameters->sublist("Simulation Parameters").get("Discretization", "P2");
         // string preconditionerType = simulationParameters->sublist("Simulation Parameters").get("Preconditioner Type");
 
         Teuchos::RCP<Teuchos::ParameterList> allParameters = Teuchos::rcp(new Teuchos::ParameterList(*simulationParameters));
@@ -273,7 +274,7 @@ int main(int argc, char *argv[])
                 anyNonzeroReference = anyNonzeroReference || reference[0] > 0.;
 
                 if (comm->getRank() == 0)
-                    cout << " Restart test: " << variable << " at t = " << finalTime << ", relative 2-norm of the difference to the uninterrupted run: " << relativeError << " (tolerance " << tolerance << ")" << endl;
+                    std::cout << " Restart test: " << variable << " at t = " << finalTime << ", relative 2-norm of the difference to the uninterrupted run: " << relativeError << " (tolerance " << tolerance << ")" << std::endl;
 
                 if (!(relativeError <= tolerance))
                     testPassed = false;
@@ -281,7 +282,7 @@ int main(int argc, char *argv[])
             if (!anyNonzeroReference)
             {
                 if (comm->getRank() == 0)
-                    cout << " Restart test: the uninterrupted solution is zero at t = " << finalTime << ", the comparison checks nothing" << endl;
+                    std::cout << " Restart test: the uninterrupted solution is zero at t = " << finalTime << ", the comparison checks nothing" << std::endl;
                 testPassed = false;
             }
         }

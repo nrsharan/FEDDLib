@@ -1,3 +1,4 @@
+#include "feddlib/core/General/BCBuilder.hpp"
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 
@@ -550,7 +551,7 @@ void rhsArteryPaperPulse(double* x, double* res, double* parameters){
         res[2] =lambda*force; 
         
        if(fabs(lambda*force)<0.75*0.016)
-        cout << " ALARMAAAAA lamba=" << lambda << " force=" << force << " t= " << parameters[0] << " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ----------------" << endl;
+        std::cout << " ALARMAAAAA lamba=" << lambda << " force=" << force << " t= " << parameters[0] << " !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ----------------" << std::endl;
     }
       
 }
@@ -669,22 +670,22 @@ int main(int argc, char *argv[])
 
     // Command Line Parameters
     Teuchos::CommandLineProcessor myCLP;
-    string ulib_str = "Tpetra";
+    std::string ulib_str = "Tpetra";
     myCLP.setOption("ulib",&ulib_str,"Underlying lib");
    
-    string xmlProblemFile = "parametersProblemSCI.xml";
+    std::string xmlProblemFile = "parametersProblemSCI.xml";
     myCLP.setOption("problemfile",&xmlProblemFile,".xml file with Inputparameters.");    
     
-    string xmlProblemStructureFile = "parametersProblemStructure.xml";  
+    std::string xmlProblemStructureFile = "parametersProblemStructure.xml";  
     myCLP.setOption("problemfileStructure",&xmlProblemStructureFile,".xml file with Inputparameters.");    
  
-    string xmlSolverFileSCI = "parametersSolverSCI.xml"; 
+    std::string xmlSolverFileSCI = "parametersSolverSCI.xml"; 
     myCLP.setOption("solverfileSCI",&xmlSolverFileSCI,".xml file with Inputparameters.");
     
-    string xmlPrecFileStructure = "parametersPrecStructure.xml";
+    std::string xmlPrecFileStructure = "parametersPrecStructure.xml";
     myCLP.setOption("precfileStructure",&xmlPrecFileStructure,".xml file with Inputparameters.");
     
-    string xmlPrecFileChem = "parametersPrecChem.xml";
+    std::string xmlPrecFileChem = "parametersPrecChem.xml";
     myCLP.setOption("precfileChem",&xmlPrecFileChem,".xml file with Inputparameters.");
     
  	//string xmlBlockPrecFile = "parametersPrecBlock.xml";
@@ -693,7 +694,7 @@ int main(int argc, char *argv[])
     //string xmlPrecFile = "parametersPrec.xml";
     //myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
 
-    string xmlPrecCEFile = "parametersPrecCE.xml";
+    std::string xmlPrecCEFile = "parametersPrecCE.xml";
     myCLP.setOption("precCEfile",&xmlPrecCEFile,".xml file with Inputparameters.");
 
     myCLP.recogniseAllOptions(true);
@@ -721,10 +722,10 @@ int main(int argc, char *argv[])
 
 
  		int 		dim				= parameterListProblem->sublist("Parameter").get("Dimension",2);
-        string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
+        std::string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
         int 		m				= parameterListProblem->sublist("Parameter").get("H/h",5);
-        string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
-        string precMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
+        std::string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
+        std::string precMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
         int         n;
 
         ParameterListPtr_Type parameterListAll(new Teuchos::ParameterList(*parameterListProblem)) ;     
@@ -773,9 +774,9 @@ int main(int argc, char *argv[])
     
         if (verbose)
         {
-            cout << "###############################################" <<endl;
-            cout << "############ Starting SCI  ... ################" <<endl;
-            cout << "###############################################" <<endl;
+            std::cout << "###############################################" <<std::endl;
+            std::cout << "############ Starting SCI  ... ################" <<std::endl;
+            std::cout << "###############################################" <<std::endl;
         }
 
         DomainPtr_Type domainP1chem;
@@ -837,7 +838,7 @@ int main(int argc, char *argv[])
 		    	
 		    //partitionerP1.readAndPartition(volumeID);
             bool convertMesh = parameterListAll->sublist("Parameter").get("Convert Mesh",false);
-            string unit = parameterListAll->sublist("Parameter").get("Mesh Unit","cm");
+            std::string unit = parameterListAll->sublist("Parameter").get("Mesh Unit","cm");
 
             if(convertMesh)
                 partitionerP1.readAndPartition(15,unit , true ); // Convert it from mm to sm
@@ -895,7 +896,7 @@ int main(int argc, char *argv[])
 
 			exParaF->setup("Flags", domainStructure->getMesh(), discType);
 
-			exParaF->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainStructure->getMapUnique(), domainStructure->getMapUniqueP2());
+			exParaF->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainStructure->getMapUnique());
 
 			exParaF->save(0.0);
 

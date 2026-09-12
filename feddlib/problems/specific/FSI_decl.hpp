@@ -180,8 +180,6 @@ public:
     // Macht setupTimeStepping() auf problemTimeFluid_ und problemTimeStructure_
     void setupSubTimeProblems(ParameterListPtr_Type parameterListFluid, ParameterListPtr_Type parameterListStructure) const;
 
-    // Compute special Pressure Boundaries
-    void computePressureRHSInTime() const;
     
     FluidProblemPtr_Type getFluidProblem(){
         return problemFluid_;
@@ -228,7 +226,6 @@ public:
     /*####################*/
     void solveSteadyStateNavierStokes() const;
 
-    double getPressureOutlet(){return pressureOutlet_;};
     // Alternativ wie in reAssembleExtrapolation() in NS?
 
     MultiVectorPtr_Type meshDisplacementOld_rep_;
@@ -266,13 +263,6 @@ private:
     vec_dbl_Type valuesForExport_;
     ExporterTxtPtr_Type exporterTxtDrag_;
     ExporterTxtPtr_Type exporterTxtLift_;
-    ExporterTxtPtr_Type exporterBoundaryCondition_; // Values for absorbing boundary condition
-    mutable double areaInlet_init_=0.;
-    mutable double areaOutlet_init_ =0.;
-    mutable double areaOutlet_T_ =0.;
-    mutable double flowRateOutlet_n_ =0.; // Current flowrate
-    mutable double flowRateOutlet_n_1_ =0.; // flowrate from previous timestep
-    mutable double pressureOutlet_ =0.;
     /*####################*/
     ExporterTxtPtr_Type exporterBoundaryCondition_; // Values for absorbing boundary condition
     mutable double areaInlet_init_=0.;

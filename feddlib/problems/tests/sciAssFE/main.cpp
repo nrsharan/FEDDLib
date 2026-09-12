@@ -1,3 +1,4 @@
+#include "feddlib/core/General/BCBuilder.hpp"
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 
@@ -166,19 +167,19 @@ int main(int argc, char *argv[])
 
     // Command Line Parameters
     Teuchos::CommandLineProcessor myCLP;
-    string ulib_str = "Tpetra";
+    std::string ulib_str = "Tpetra";
     myCLP.setOption("ulib",&ulib_str,"Underlying lib");
-    string xmlProblemFile = "parametersProblemSCI.xml";
+    std::string xmlProblemFile = "parametersProblemSCI.xml";
     myCLP.setOption("problemfile",&xmlProblemFile,".xml file with Inputparameters.");       
-    string xmlSolverFileSCI = "parametersSolverSCI.xml"; 
+    std::string xmlSolverFileSCI = "parametersSolverSCI.xml"; 
     myCLP.setOption("solverfileSCI",&xmlSolverFileSCI,".xml file with Inputparameters.");
     
-    string xmlPrecFileStructure = "parametersPrecStructure.xml";
+    std::string xmlPrecFileStructure = "parametersPrecStructure.xml";
     myCLP.setOption("precfileStructure",&xmlPrecFileStructure,".xml file with Inputparameters.");
-    string xmlPrecFileChem = "parametersPrecChem.xml";
+    std::string xmlPrecFileChem = "parametersPrecChem.xml";
     myCLP.setOption("precfileChem",&xmlPrecFileChem,".xml file with Inputparameters.");
 
-    string xmlPrecFile = "parametersPrec.xml";
+    std::string xmlPrecFile = "parametersPrec.xml";
     myCLP.setOption("precfile",&xmlPrecFile,".xml file with Inputparameters.");
 
 
@@ -223,10 +224,10 @@ int main(int argc, char *argv[])
 
                  
         int 		dim				= parameterListProblem->sublist("Parameter").get("Dimension",2);
-        string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
+        std::string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
         
-        string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
-        string preconditionerMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
+        std::string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
+        std::string preconditionerMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
         int         n;
 
         TimePtr_Type totalTime(TimeMonitor_Type::getNewCounter("FEDD - main - Total Time"));
@@ -242,9 +243,9 @@ int main(int argc, char *argv[])
     
         if (verbose)
         {
-            cout << "###############################################" <<endl;
-            cout << "############ Starting SCI  ... ################" <<endl;
-            cout << "###############################################" <<endl;
+            std::cout << "###############################################" <<std::endl;
+            std::cout << "############ Starting SCI  ... ################" <<std::endl;
+            std::cout << "###############################################" <<std::endl;
         }
 
         DomainPtr_Type domainP1chem;
@@ -307,7 +308,7 @@ int main(int argc, char *argv[])
 
 		exParaF->setup("Flags", domainStructure->getMesh(), discType);
 
-		exParaF->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainStructure->getMapUnique(), domainStructure->getMapUniqueP2());
+		exParaF->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainStructure->getMapUnique());
 
 		exParaF->save(0.0);
 
@@ -485,13 +486,13 @@ int main(int argc, char *argv[])
         daeTimeSolver.advanceInTime();
         
 
-        string	writeFile   	= parameterListProblem->sublist("Parameter").get("Write File","FEDDLib_Solution");
+        std::string	writeFile   	= parameterListProblem->sublist("Parameter").get("Write File","FEDDLib_Solution");
 
         sci.getSolution()->getBlock(0)->writeMM(writeFile);
         
         Teuchos::RCP<MultiVector<SC,LO,GO,NO> > solutionRead = Teuchos::rcp(new MultiVector<SC,LO,GO,NO>( sci.getSolution()->getBlock(0)->getMap() ) ); 
 
-        string	readFile= parameterListProblem->sublist("Parameter").get("Read File","FEDDLib_Solution");
+        std::string	readFile= parameterListProblem->sublist("Parameter").get("Read File","FEDDLib_Solution");
 
 		solutionRead->readMM(readFile);
         Teuchos::RCP<const MultiVector<SC,LO,GO,NO> > solReadConst= solutionRead;
@@ -510,8 +511,8 @@ int main(int argc, char *argv[])
         errorValues->norm2(norm);//const Teuchos::ArrayView<typename Teuchos::ScalarTraits<SC>::magnitudeType> &norms);
         double res = norm[0];
         if(comm->getRank() ==0){
-            cout << " #####################################" << endl;
-            cout << " 2 Norm of Error of Solution Velocity " << res << endl; 
+            std::cout << " #####################################" << std::endl;
+            std::cout << " 2 Norm of Error of Solution Velocity " << res << std::endl; 
         }   
 
     }

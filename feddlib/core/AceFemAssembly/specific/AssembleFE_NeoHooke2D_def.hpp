@@ -85,9 +85,9 @@ namespace FEDD
 
 		for (int i = 0; i < dofsElement_; i++){
 			(*this->rhsVec_)[i] = -residuum[i];
-			cout << (*this->rhsVec_)[i] << " " ;
+			std::cout << (*this->rhsVec_)[i] << " " ;
 		}
-		cout << endl;
+		std::cout << std::endl;
 
 
 #endif
@@ -102,25 +102,25 @@ namespace FEDD
 
 		std::vector<double> positions(dofsElement_);
 		int count = 0;
-		cout << "--------- Positions ----------" << endl;
+		std::cout << "--------- Positions ----------" << std::endl;
 		for (int i = 0; i < numNodes_; i++)
 		{
 			for (int j = 0; j < dofs_; j++)
 			{
 				positions[count] = this->getNodesRefConfig()[i][j];
-				cout << positions[count] << " " ;
+				std::cout << positions[count] << " " ;
 				count++;
 			}
 		}
-		cout << endl;
+		std::cout << std::endl;
 
 		std::vector<double> displacements(dofsElement_);
-		cout << "--------- Displacements ----------" << endl;
+		std::cout << "--------- Displacements ----------" << std::endl;
 		for (int i = 0; i < dofsElement_; i++){
 			displacements[i] = (*this->solution_)[i];
-			cout << displacements[i] << " " ;
+			std::cout << displacements[i] << " " ;
 		}
-		cout << endl;
+		std::cout << std::endl;
 
 		std::vector<double> domainData(6);
 		domainData[0] = E_;
@@ -129,7 +129,7 @@ namespace FEDD
 		domainData[3] = bodyForceY_;
 		domainData[4] = rho_;
 		domainData[5] = t_;
-		cout << " Domain Data " << domainData[0] << " " << domainData[1] << " " <<domainData[2] << " " <<domainData[3] << " " <<domainData[4] << " " <<domainData[5]  << endl;
+		std::cout << " Domain Data " << domainData[0] << " " << domainData[1] << " " <<domainData[2] << " " <<domainData[3] << " " <<domainData[4] << " " <<domainData[5]  << std::endl;
 		AceGenInterface::NeoHookeTriangle2D3PlaneStress elem = AceGenInterface::NeoHookeTriangle2D3PlaneStress(&positions[0], &displacements[0], domainData, this->globalElementID_);
 		elem.compute();
 

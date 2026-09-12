@@ -47,7 +47,6 @@ tribits_add_library(
 tribits_add_test_directories(Solver/tests)
 tribits_add_test_directories(tests)
 tribits_add_example_directories(examples)
-tribits_add_example_directories(examples/fluidPaper)
 tribits_add_example_directories(examples/arteries)
 
 #

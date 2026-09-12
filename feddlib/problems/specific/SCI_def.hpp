@@ -1,6 +1,9 @@
 #ifndef SCI_def_hpp
 #define SCI_def_hpp
 #include "SCI_decl.hpp"
+#include "feddlib/core/FE/Domain.hpp"
+#include "feddlib/core/FE/FE.hpp"
+#include "feddlib/core/General/BCBuilder.hpp"
 
 
 namespace FEDD {
@@ -499,7 +502,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     if (!type.compare("standard")){
         //this->rhs_->getBlockNonConst(0)->scale(-1.0);
         if(this->verbose_)
-            cout << " Residual Type : " << type  << endl;
+            std::cout << " Residual Type : " << type  << std::endl;
         this->residualVec_->getBlockNonConst(0)->update(-1.,*this->rhs_->getBlockNonConst(0),1.);
         //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
         //   this->residualVec_->getBlockNonConst(0)->update(-1.,*this->problemTimeStructure_->getSourceTerm()->getBlockNonConst(0),1.);    
@@ -510,7 +513,7 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
             this->residualVec_->getBlockNonConst(1)->scale(-1.0);
 
         if(this->verbose_)
-            cout << " Residual Type : " << type  << endl;
+            std::cout << " Residual Type : " << type  << std::endl;
 
         this->residualVec_->getBlockNonConst(0)->update(1.,*this->rhs_->getBlockNonConst(0),-1.);
         //if ( !this->problemTimeStructure_->getSourceTerm()->getBlock(0).is_null() )
@@ -547,14 +550,14 @@ void SCI<SC,LO,GO,NO>::calculateNonLinResidualVec(std::string type, double time)
     this->residualVec_->getBlock(0)->norm2(norm_d);
     
     if(this->verbose_)
-        cout << "2-Norm of residual of displacement: " << norm_d[0] << endl;
+        std::cout << "2-Norm of residual of displacement: " << norm_d[0] << std::endl;
 
     if(!chemistryExplicit_){
         Teuchos::Array<SC> norm_c(1); 
         this->residualVec_->getBlock(1)->norm2(norm_c);
         
         if(this->verbose_)
-            cout << "2-Norm of residual of concentration: " << norm_c[0] << endl;
+            std::cout << "2-Norm of residual of concentration: " << norm_c[0] << std::endl;
 
     }
 
@@ -628,7 +631,7 @@ void SCI<SC,LO,GO,NO>::setupSubTimeProblems(ParameterListPtr_Type parameterListC
     problemTimeChem_.reset(new TimeProblem<SC,LO,GO,NO>(*this->problemChem_, this->comm_));
         
     if(this->verbose_)
-        std::cout << "-- done " << endl;
+        std::cout << "-- done " << std::endl;
 
     if(this->verbose_)
         std::cout << "-- Setup SCI Sub-TimeProblem for Elasticity " ;
@@ -639,7 +642,7 @@ void SCI<SC,LO,GO,NO>::setupSubTimeProblems(ParameterListPtr_Type parameterListC
         problemTimeStructure_.reset(new TimeProblem<SC,LO,GO,NO>(*this->problemStructureNonLin_, this->comm_));
 
     if(this->verbose_)
-        std::cout << "-- done " << endl;
+        std::cout << "-- done " << std::endl;
 
     // ######################
     // Chem: Mass-, Problem, SourceTerm Koeffizienten
@@ -738,7 +741,7 @@ void SCI<SC,LO,GO,NO>::setupSubTimeProblems(ParameterListPtr_Type parameterListC
     this->problemTimeStructure_->assemble( "MassSystem" );
   
     if(this->verbose_)
-        std::cout << "done -- \n" << endl;
+        std::cout << "done -- \n" << std::endl;
 
     // TIMER ERSTELLEN AN DER
 
@@ -1357,7 +1360,7 @@ void SCI<SC,LO,GO,NO>::exportValuesOfInterest(double time)
 
         for(int gp =0; gp<numGaussPoints; gp++){
             for(int k=0; k < historyNames.size(); k++){
-                string varName = historyNames[k]+"_"+std::to_string(gp);
+                std::string varName = historyNames[k]+"_"+std::to_string(gp);
                 exporter->writeVariablesHDF5(varName,historyValues->getBlock(gp)->getVector(k));
             }
         }
@@ -1387,7 +1390,7 @@ void SCI<SC,LO,GO,NO>::importValuesOfInterest(double time)
 
         for(int gp =0; gp<numGaussPoints; gp++){
             for(int k=0; k < valuesPerGaussPoint; k++){
-                string varName = historyNames[k]+"_"+std::to_string(gp);
+                std::string varName = historyNames[k]+"_"+std::to_string(gp);
                 MultiVectorConstPtr_Type history  = importer->readVariablesHDF5(varName);
                 Teuchos::ArrayRCP<const SC>  historyArray = history->getData(0);
                 for(int T =0;T<historyArray.size(); T++){

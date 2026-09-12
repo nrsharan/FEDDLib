@@ -1,3 +1,5 @@
+#include "feddlib/problems/Solver/Preconditioner.hpp"
+#include "feddlib/core/General/BCBuilder.hpp"
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/General/DefaultTypeDefs.hpp"
 
@@ -406,43 +408,43 @@ int main(int argc, char *argv[])
 
     // Command Line Parameters
     Teuchos::CommandLineProcessor myCLP;
-    string ulib_str = "Tpetra";
+    std::string ulib_str = "Tpetra";
     myCLP.setOption("ulib",&ulib_str,"Underlying lib");
-    string xmlProblemFile = "parametersProblemFSCI.xml";
+    std::string xmlProblemFile = "parametersProblemFSCI.xml";
     myCLP.setOption("problemfile",&xmlProblemFile,".xml file with Inputparameters.");
-    string xmlPrecFileGE = "parametersPrecGE.xml"; // GE
-    string xmlPrecFileGI = "parametersPrecGI.xml"; // GI
+    std::string xmlPrecFileGE = "parametersPrecGE.xml"; // GE
+    std::string xmlPrecFileGI = "parametersPrecGI.xml"; // GI
     myCLP.setOption("precfileGE",&xmlPrecFileGE,".xml file with Inputparameters.");
     myCLP.setOption("precfileGI",&xmlPrecFileGI,".xml file with Inputparameters.");
-    string xmlSolverFileFSI = "parametersSolverFSCI.xml"; // GI
+    std::string xmlSolverFileFSI = "parametersSolverFSCI.xml"; // GI
     myCLP.setOption("solverfileFSI",&xmlSolverFileFSI,".xml file with Inputparameters.");
-    string xmlSolverFileGeometry = "parametersSolverGeometry.xml"; // GE
+    std::string xmlSolverFileGeometry = "parametersSolverGeometry.xml"; // GE
     myCLP.setOption("solverfileGeometry",&xmlSolverFileGeometry,".xml file with Inputparameters.");
 
-    string xmlPrecFileFluidMono = "parametersPrecFluidMono.xml";
-    string xmlPrecFileFluidTeko = "parametersPrecFluidTeko.xml";
+    std::string xmlPrecFileFluidMono = "parametersPrecFluidMono.xml";
+    std::string xmlPrecFileFluidTeko = "parametersPrecFluidTeko.xml";
     myCLP.setOption("precfileFluidMono",&xmlPrecFileFluidMono,".xml file with Inputparameters.");
     myCLP.setOption("precfileFluidTeko",&xmlPrecFileFluidTeko,".xml file with Inputparameters.");
-    string xmlProblemFileFluid = "parametersProblemFluid.xml";
+    std::string xmlProblemFileFluid = "parametersProblemFluid.xml";
     myCLP.setOption("problemFileFluid",&xmlProblemFileFluid,".xml file with Inputparameters.");
-    string xmlProblemFileStructure = "parametersProblemStructure.xml";
+    std::string xmlProblemFileStructure = "parametersProblemStructure.xml";
     myCLP.setOption("problemFileStructure",&xmlProblemFileStructure,".xml file with Inputparameters.");
 
-    string xmlPrecFileStructure = "parametersPrecStructure.xml";
+    std::string xmlPrecFileStructure = "parametersPrecStructure.xml";
     myCLP.setOption("precfileStructure",&xmlPrecFileStructure,".xml file with Inputparameters.");
-    string xmlPrecFileStructureCE = "parametersPrecStructureCE.xml";
+    std::string xmlPrecFileStructureCE = "parametersPrecStructureCE.xml";
     myCLP.setOption("precfileStructureCE",&xmlPrecFileStructureCE,".xml file with Inputparameters.");
 
-    string xmlPrecFileGeometry = "parametersPrecGeometry.xml";
+    std::string xmlPrecFileGeometry = "parametersPrecGeometry.xml";
     myCLP.setOption("precfileGeometry",&xmlPrecFileGeometry,".xml file with Inputparameters.");
-    string xmlProbL = "plistProblemLaplace.xml";
+    std::string xmlProbL = "plistProblemLaplace.xml";
     myCLP.setOption("probLaplace",&xmlProbL,".xml file with Inputparameters.");
-    string xmlPrecL = "plistPrecLaplace.xml";
+    std::string xmlPrecL = "plistPrecLaplace.xml";
     myCLP.setOption("precLaplace",&xmlPrecL,".xml file with Inputparameters.");
-    string xmlSolverL = "plistSolverLaplace.xml";
+    std::string xmlSolverL = "plistSolverLaplace.xml";
     myCLP.setOption("solverLaplace",&xmlSolverL,".xml file with Inputparameters.");
     
-    string xmlPrecFileChem = "parametersPrecChem.xml";
+    std::string xmlPrecFileChem = "parametersPrecChem.xml";
     myCLP.setOption("precfileChem",&xmlPrecFileChem,".xml file with Inputparameters.");
     
     myCLP.recogniseAllOptions(true);
@@ -542,10 +544,10 @@ int main(int argc, char *argv[])
         sublist( parameterListGeometry, "Parameter" )->set( "Coefficient Laplace", coefficientLaplace );
             
         int 		dim				= parameterListProblem->sublist("Parameter").get("Dimension",2);
-        string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
+        std::string		meshType    	= parameterListProblem->sublist("Parameter").get("Mesh Type","unstructured");
         
-        string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
-        string preconditionerMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
+        std::string      discType        = parameterListProblem->sublist("Parameter").get("Discretization","P2");
+        std::string preconditionerMethod = parameterListProblem->sublist("General").get("Preconditioner Method","Monolithic");
         int         n;
 
         TimePtr_Type totalTime(TimeMonitor_Type::getNewCounter("FEDD - main - Total Time"));
@@ -560,9 +562,9 @@ int main(int argc, char *argv[])
         // #####################
         if (verbose)
         {
-            cout << "###############################################" <<endl;
-            cout << "############ Starting FSCI  ... ################" <<endl;
-            cout << "###############################################" <<endl;
+            std::cout << "###############################################" <<std::endl;
+            std::cout << "############ Starting FSCI  ... ################" <<std::endl;
+            std::cout << "###############################################" <<std::endl;
         }
 
         DomainPtr_Type domainP1fluid;
@@ -587,7 +589,7 @@ int main(int argc, char *argv[])
         TimeMonitor_Type buildMeshMonitor(*buildMesh);
         if (verbose)
         {
-            cout << " -- Building Mesh ... " << flush;
+            std::cout << " -- Building Mesh ... " << std::flush;
         }
 
         domainP1fluid.reset( new Domain_Type( comm, dim ) );
@@ -621,7 +623,7 @@ int main(int argc, char *argv[])
         MeshPartitioner<SC,LO,GO,NO> partitionerP1 ( domainP1Array, pListPartitioner, "P1", dim );
         
         bool convertMesh = parameterListAll->sublist("Parameter").get("Convert Mesh",true);
-        string unit = parameterListAll->sublist("Parameter").get("Mesh Unit","cm");
+        std::string unit = parameterListAll->sublist("Parameter").get("Mesh Unit","cm");
 
         if(convertMesh)
             partitionerP1.readAndPartition(15,unit , true ); // Convert it from mm to cm
@@ -653,7 +655,7 @@ int main(int argc, char *argv[])
 
         exPara->setup("FlagsFluid",domainP2fluid->getMesh(), discType);
 
-        exPara->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainP2fluid->getMapUnique(), domainP2fluid->getMapUniqueP2());
+        exPara->addVariable(exportSolutionConst, "Flags", "Scalar", 1,domainP2fluid->getMapUnique());
 
         exPara->save(0.0);
 
@@ -671,7 +673,7 @@ int main(int argc, char *argv[])
 
         exPara2->setup("FlagsStructure", domainP2struct->getMesh(), discType);
 
-        exPara2->addVariable(exportSolutionConst2, "Flags", "Scalar", 1,domainP2struct->getMapUnique(), domainP2struct->getMapUniqueP2());
+        exPara2->addVariable(exportSolutionConst2, "Flags", "Scalar", 1,domainP2struct->getMapUnique());
 
         exPara2->save(0.0);
 
@@ -699,7 +701,7 @@ int main(int argc, char *argv[])
         }
 
         if (verbose){
-            cout << "done! -- " << endl;
+            std::cout << "done! -- " << std::endl;
         }
             
 
@@ -1203,12 +1205,12 @@ int main(int argc, char *argv[])
         fsci.getSolution()->getBlock(0)->norm2(normSol2);
         res = normSol2[0];
         if(comm->getRank() ==0){
-            cout << " Inf Norm of Error of Fluid Solution " << normInf[0] << endl;
-            cout << " 2 Norm of Error of FluidSolution " << norm2[0] << endl;
-            cout << " 2 rel. Norm Fluid  " << norm2[0]/res << endl;
+            std::cout << " Inf Norm of Error of Fluid Solution " << normInf[0] << std::endl;
+            std::cout << " 2 Norm of Error of FluidSolution " << norm2[0] << std::endl;
+            std::cout << " 2 rel. Norm Fluid  " << norm2[0]/res << std::endl;
         }
         if(comm->getRank() ==0)
-            cout << " ---------------------- " << endl;
+            std::cout << " ---------------------- " << std::endl;
 
         // Adding error to paraview exporter
         exParaResultsVel->addVariable(errorValuesAbsV, "v - v_Import", "Vector", 3,  domainFluidVelocity->getMapUnique());
@@ -1227,12 +1229,12 @@ int main(int argc, char *argv[])
         fsci.getSolution()->getBlock(1)->norm2(normSol2);
         res = normSol2[0];
         if(comm->getRank() ==0){
-            cout << " Inf Norm of Error of Pressure Solution " << normInf[0] << endl;
-            cout << " 2 Norm of Error of Pressure Solution " << norm2[0] << endl;
-            cout << " 2 rel. Error Norm Pressure  " << norm2[0]/res << endl;
+            std::cout << " Inf Norm of Error of Pressure Solution " << normInf[0] << std::endl;
+            std::cout << " 2 Norm of Error of Pressure Solution " << norm2[0] << std::endl;
+            std::cout << " 2 rel. Error Norm Pressure  " << norm2[0]/res << std::endl;
         }
         if(comm->getRank() ==0)
-            cout << " ---------------------- " << endl;
+            std::cout << " ---------------------- " << std::endl;
 
         // Adding error to paraview exporter
         exParaResultsPres->addVariable(errorValuesAbsP, "p - p_Import", "Scalar", 1,  domainFluidPressure->getMapUnique());
@@ -1251,12 +1253,12 @@ int main(int argc, char *argv[])
         fsci.getSolution()->getBlock(2)->norm2(normSol2);
         res = normSol2[0];
         if(comm->getRank() ==0){
-            cout << " Inf Norm of Error of displacement Solution " << normInf[0] << endl;
-            cout << " 2 Norm of Error of DisplacementSolution " << norm2[0] << endl;
-            cout << " 2 rel. Norm displacement  " << norm2[0]/res << endl;
+            std::cout << " Inf Norm of Error of displacement Solution " << normInf[0] << std::endl;
+            std::cout << " 2 Norm of Error of DisplacementSolution " << norm2[0] << std::endl;
+            std::cout << " 2 rel. Norm displacement  " << norm2[0]/res << std::endl;
         }
         if(comm->getRank() ==0)
-            cout << " ---------------------- " << endl;
+            std::cout << " ---------------------- " << std::endl;
 
         // Adding error to paraview exporter
         exParaResultsStructure->addVariable(errorValuesAbsS, "d - d_Import", "Vector", 3,  domainStructure->getMapUnique());
@@ -1275,12 +1277,12 @@ int main(int argc, char *argv[])
         fsci.getSolution()->getBlock(4)->norm2(normSol2);
         res = normSol2[0];
         if(comm->getRank() ==0){
-            cout << " Inf Norm of Error of Chem Solution " << normInf[0] << endl;
-            cout << " 2 Norm of Error of ChemSolution " << norm2[0] << endl;
-            cout << " 2 rel. Norm Chem  " << norm2[0]/res << endl;
+            std::cout << " Inf Norm of Error of Chem Solution " << normInf[0] << std::endl;
+            std::cout << " 2 Norm of Error of ChemSolution " << norm2[0] << std::endl;
+            std::cout << " 2 rel. Norm Chem  " << norm2[0]/res << std::endl;
         }
         if(comm->getRank() ==0)
-            cout << " ---------------------- " << endl;
+            std::cout << " ---------------------- " << std::endl;
 
         // Adding error to paraview exporter
         exParaResultsChem->addVariable(errorValuesAbsC, "v - v_Import", "Scalar", 1,  domainChem->getMapUnique());

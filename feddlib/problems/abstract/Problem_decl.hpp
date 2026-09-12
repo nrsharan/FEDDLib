@@ -13,6 +13,8 @@
 #include "feddlib/problems/problems_config.h"
 #include "feddlib/core/FEDDCore.hpp"
 #include "feddlib/core/LinearAlgebra/Matrix.hpp"
+#include "feddlib/core/General/HDF5Export.hpp"
+#include "feddlib/core/General/HDF5Import.hpp"
 
 /*!
  Declaration of Problem
@@ -211,8 +213,6 @@ public:
     CommConstPtr_Type getComm() const{return comm_;}
 
     virtual void getValuesOfInterest( vec_dbl_Type& values ) = 0 ;
-
-    virtual void getValuesOfInterest( BlockMultiVectorPtr_Type& values ) = 0 ;
 
     virtual void computeValuesOfInterestAndExport() = 0;
 

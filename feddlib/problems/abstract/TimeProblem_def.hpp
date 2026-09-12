@@ -610,7 +610,7 @@ void TimeProblem<SC, LO, GO, NO>::plotLinResVec(double time) const {
         newtonStep_++;
     }
     else   
-        cout << " !!! WARNING: For your linear subproblem the residual export is not working yet. " << endl;
+        std::cout << " !!! WARNING: For your linear subproblem the residual export is not working yet. " << std::endl;
 }
 
 template <class SC, class LO, class GO, class NO>
@@ -655,7 +655,7 @@ void TimeProblem<SC, LO, GO, NO>::initExporterResidual() const{
         }
     }
     else   
-        cout << " !!! WARNING: For your linear subproblem the residual export is not working yet. " << endl;
+        std::cout << " !!! WARNING: For your linear subproblem the residual export is not working yet. " << std::endl;
 }
 
 
@@ -1617,7 +1617,7 @@ void TimeProblem<SC,LO,GO,NO>::importRestartValues(){
 }
 
 template<class SC,class LO,class GO,class NO>
-void TimeProblem<SC,LO,GO,NO>::checkForExportAndExport( BlockMultiVectorPtrArray_Type solutionVec, string fileName){
+void TimeProblem<SC,LO,GO,NO>::checkForExportAndExport( BlockMultiVectorPtrArray_Type solutionVec, std::string fileName){
 
     //-----------
     // Parameter
@@ -1661,7 +1661,7 @@ void TimeProblem<SC,LO,GO,NO>::checkForExportAndExport( BlockMultiVectorPtrArray
                           !problem_->getParameterList()->sublist("Parameter").get("Chemistry Explicit", false) && 
                            problem_->getParameterList()->sublist("Parameter").get("Geometry Explicit", true))
                             idVarname = 5;
-                        cout << " Export for filename " << fileName << " and " <<  problem_->getVariableName(idVarname) << " with i=" << i << endl;
+                        std::cout << " Export for filename " << fileName << " and " <<  problem_->getVariableName(idVarname) << " with i=" << i << std::endl;
                         std::string varName =  std::to_string(time_); 
                         this->getExporter(fileName, i)->writeVariablesHDF5(varName,solutionVec[0]->getBlock(i));  // We use 0, because it was not updated yet with the newest solution
 
@@ -1733,7 +1733,7 @@ void TimeProblem<SC,LO,GO,NO>::initCheckPoints(){
 
 }
 template<class SC,class LO,class GO,class NO>
-Teuchos::RCP <HDF5Export<SC,LO,GO,NO>> TimeProblem<SC,LO,GO,NO>::getExporter(string fileName, int i){
+Teuchos::RCP <HDF5Export<SC,LO,GO,NO>> TimeProblem<SC,LO,GO,NO>::getExporter(std::string fileName, int i){
     if(fileName == "ds_Velocity"){
         if(HDF5exporterDsVelocity_.is_null())
             initExporter(fileName);
@@ -1776,7 +1776,7 @@ Teuchos::RCP <HDF5Export<SC,LO,GO,NO>> TimeProblem<SC,LO,GO,NO>::getExporter(str
 
 }
 template<class SC,class LO,class GO,class NO>
-void TimeProblem<SC,LO,GO,NO>::initExporter(string fileName  ){
+void TimeProblem<SC,LO,GO,NO>::initExporter(std::string fileName  ){
 
     // All checkpoint files are written to the checkpoint directory (see CheckpointFiles.hpp)
     if(fileName == "ds_Velocity")
