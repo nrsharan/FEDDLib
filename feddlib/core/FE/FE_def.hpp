@@ -6706,7 +6706,11 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegralExternal(int dim,
                		
                
                 paramsFunc[ funcParameter.size() - 1 ] = feSub.getFlag();
-                vec_dbl_Type p1 = {0.,0.,0.}; // Dummy vector
+                // The load function is evaluated at the midpoint of the surface (its corner nodes)
+                vec_dbl_Type p1(3, 0.);
+                for (int n = 0; n < 3; n++)
+                    for (int k = 0; k < 3; k++)
+                        p1[k] += nodes[n][k] / 3.;
                 func( &p1[0], &valueFunc[0], paramsFunc);
   
                 if(valueFunc[0] != 0.){
@@ -6730,7 +6734,8 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegralExternal(int dim,
             }
         }
     }
-    //f->scale(-1.);
+    // The pressure acts against the surface normal (as in assemblyNonlinearSurfaceIntegralExternal)
+    f->scale(-1.);
 
 }
     
@@ -6789,8 +6794,12 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
                     }
                 }
 
-                vec_dbl_Type p1 = {0.,0.,0.}; // Dummy vector
-                paramsFunc[ funcParameter.size() - 1 ] = feSub.getFlag();          
+                // The load function is evaluated at the midpoint of the surface (its corner nodes)
+                vec_dbl_Type p1(3, 0.);
+                for (int n = 0; n < 3; n++)
+                    for (int k = 0; k < 3; k++)
+                        p1[k] += nodes[n][k] / 3.;
+                paramsFunc[ funcParameter.size() - 1 ] = feSub.getFlag();
                 func( &p1[0], &valueFunc[0], paramsFunc);
   
                 if(valueFunc[0] != 0.){
@@ -6858,7 +6867,9 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
             }
         }
     }
-    //f->scale(-1.);
+    // The residual of the load enters the right-hand side, while its tangent Kext is added to the
+    // system (A + Kext): the right-hand side takes the negative residual
+    f->scale(-1.);
     Kext->fillComplete(this->domainVec_.at(FEloc)->getMapVecFieldUnique(),this->domainVec_.at(FEloc)->getMapVecFieldUnique());
 }
 
