@@ -12,6 +12,7 @@
 #include "feddlib/problems/Solver/DAESolverInTime.hpp"
 #include "feddlib/problems/Solver/NonLinearSolver.hpp"
 #include <Teuchos_GlobalMPISession.hpp>
+#include "feddlib/core/General/AceGenInterfaceCheck.hpp"
 #include <Xpetra_DefaultPlatform.hpp>
 
 /*! Test case for specific artery geometrie or straight tube geometry. Inflow depends on inflow region
@@ -403,6 +404,8 @@ int main(int argc, char *argv[])
 
     oblackholestream blackhole;
     GlobalMPISession mpiSession(&argc,&argv,&blackhole);
+    if (!FEDD::aceGenInterfaceAvailable())
+        return EXIT_FAILURE;
 
     Teuchos::RCP<const Teuchos::Comm<int> > comm = Xpetra::DefaultPlatform::getDefaultPlatform().getComm();
 

@@ -14,6 +14,9 @@ namespace FEDD
 	template <class SC, class LO, class GO, class NO>
 	AssembleFE_SCI_NH<SC, LO, GO, NO>::AssembleFE_SCI_NH(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params, tuple_disk_vec_ptr_Type tuple) : AssembleFE<SC, LO, GO, NO>(flag, nodesRefConfig, params, tuple)
 	{
+#ifndef FEDD_HAVE_ACEGENINTERFACE
+    TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "AssembleFE_SCI_NH needs FEDDLib built with the AceGen interface (Interface2): configure with -D TPL_ENABLE_AceGENInterface=ON.");
+#endif
 		// Extracting values from ParameterList
 		int numMaterials =  this->params_->sublist("Parameter Solid").get("Number of Materials", 1);
 		int materialID = 0;

@@ -6721,6 +6721,8 @@ void FE<SC,LO,GO,NO>::assemblySurfaceIntegralExternal(int dim,
                     AceGenInterface::PressureTriangle3D6 pt(valueFunc[0], 1., 35, &positions[0], &solution_d[0]);
                     pt.computeTangentResidual();
                     residuumVector = pt.getResiduum();
+                    #else
+                    TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "assemblySurfaceIntegralExternal needs FEDDLib built with the AceGen interface (Interface2).");
                     #endif
                    
                     for(int i=0; i< nodeList.size() ; i++){
@@ -6813,6 +6815,8 @@ void FE<SC,LO,GO,NO>::assemblyNonlinearSurfaceIntegralExternal(int dim,
 
                     residuumVector = pt.getResiduum();
                     stiffMat = pt.getStiffnessMatrix();
+                    #else
+                    TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "assemblyNonlinearSurfaceIntegralExternal needs FEDDLib built with the AceGen interface (Interface2).");
                     #endif
 
                  

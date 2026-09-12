@@ -1,4 +1,5 @@
 set(General_HEADERS
+	General/AceGenInterfaceCheck.hpp
 	General/BCBuilder.hpp
 	General/BCBuilder_decl.hpp
 	General/BCBuilder_def.hpp

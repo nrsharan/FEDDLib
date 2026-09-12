@@ -10,6 +10,7 @@
 #include "feddlib/problems/Solver/DAESolverInTime.hpp"
 #include "feddlib/problems/Solver/NonLinearSolver.hpp"
 #include <Teuchos_GlobalMPISession.hpp>
+#include "feddlib/core/General/AceGenInterfaceCheck.hpp"
 #include <Xpetra_DefaultPlatform.hpp>
 
 void rhsDummy2D(double* x, double* res, double* parameters){
@@ -213,6 +214,8 @@ int main(int argc, char *argv[])
 
     oblackholestream blackhole;
     GlobalMPISession mpiSession(&argc,&argv,&blackhole);
+    if (!FEDD::aceGenInterfaceAvailable())
+        return EXIT_FAILURE;
 
     Teuchos::RCP<const Teuchos::Comm<int> > comm = Xpetra::DefaultPlatform::getDefaultPlatform().getComm();
 

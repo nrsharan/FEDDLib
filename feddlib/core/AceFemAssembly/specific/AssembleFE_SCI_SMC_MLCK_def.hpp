@@ -14,6 +14,9 @@ template <class SC, class LO, class GO, class NO>
 AssembleFE_SCI_SMC_MLCK<SC,LO,GO,NO>::AssembleFE_SCI_SMC_MLCK(int flag, vec2D_dbl_Type nodesRefConfig, ParameterListPtr_Type params,tuple_disk_vec_ptr_Type tuple):
 AssembleFE<SC,LO,GO,NO>(flag, nodesRefConfig, params, tuple)
 {
+#ifndef FEDD_HAVE_ACEGENINTERFACE
+    TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "AssembleFE_SCI_SMC_MLCK needs FEDDLib built with the AceGen interface (Interface2): configure with -D TPL_ENABLE_AceGENInterface=ON.");
+#endif
 		/*
 		fA -Fibre angle_1  							30e0, 
 		$[Lambda]$C50 -LambdaC50_2				 	0.12e1

@@ -13,6 +13,9 @@ AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::AssembleFE_SCI_S
                                                                                                                                                                                                                        segmentsActive_(0),
                                                                                                                                                                                                                        segmentsGrowth_(0),
                                                                                                                                                                                                                        segmentsReorientation_(0) {
+#ifndef FEDD_HAVE_ACEGENINTERFACE
+    TEUCHOS_TEST_FOR_EXCEPTION(true, std::runtime_error, "AssembleFE_SCI_SMC_Active_Growth_Reorientation needs FEDDLib built with the AceGen interface (Interface2): configure with -D TPL_ENABLE_AceGENInterface=ON.");
+#endif
     activeAcceleratedEndTime_ = this->params_->sublist("Parameter").get("Accelerated Active Until", -1.);
     TEUCHOS_TEST_FOR_EXCEPTION(activeAcceleratedEndTime_ < 0, std::logic_error, "!!! Warning: Accelerated Active Until not set correctly. Please Check Parameterlist !!!");
 
@@ -507,7 +510,8 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::initializeG
 template <class SC, class LO, class GO, class NO>
 void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::initializeActiveResponse() {
     double deltaT = this->getTimeIncrement();
-    std::cout << "AssembleFEAceSCISMC: Initialize active Response in element: " << this->getGlobalElementID() << "\n";
+    if (this->getGlobalElementID() == 0)
+        std::cout << "AssembleFE_SCI_SMC: Initialize active response in elements\n";
     double time = this->getTimeStep();
 #ifdef FEDD_HAVE_ACEGENINTERFACE
     std::vector<double> domainDataModified(this->domainDataLength_);
