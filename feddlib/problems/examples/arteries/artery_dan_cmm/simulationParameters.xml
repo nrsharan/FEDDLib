@@ -1,0 +1,108 @@
+<ParameterList name="SCI">
+    <!--
+      Comparison case for svMultiPhysics's Interface2/AceGen CCB element
+      (tests/cases/def_diffu/artery_dan in the svMultiPhysics repo): the artery
+      of ../paper_amlodipine/.../artery_dan with the constrained-mixture (CMM)
+      element in all seven regions (materialParameters.xml), the same Dirichlet
+      node sets (the geometry override below, see main.cpp) and the same
+      load/time stepping as the svMultiPhysics case: the pressure is ramped
+      linearly over the first second with dt=0.02.
+    -->
+    <ParameterList name="Parameter">
+        <Parameter name="Dimension" type="int" value="3"/>
+        <Parameter name="Discretization" type="string" value="P2"/>
+        <!-- Not read by this example's main.cpp (BCs are applied explicitly via
+             bcFactoryStructure/bcFactory against the node/face flags). -->
+        <Parameter name="BC Type" type="string" value="Plaque"/>
+        <Parameter name="RHS Type" type="string" value="Constant"/>
+        <Parameter name="Mesh Type" type="string" value="unstructured"/>
+        <Parameter name="H/h" type="int" value="1"/>
+        <!-- As in artery_dan: 97.14 mmHg scaled to 85 mmHg (converted to kPa in
+             main.cpp), reached at Ramp End Time. -->
+        <Parameter name="Max Pressure mmHg" type="double" value="97.14"/>
+        <Parameter name="Target Pressure mmHg" type="double" value="85.0"/>
+        <Parameter name="Pressure Reduction Start Time" type="double" value="1000000.0"/>
+        <Parameter name="Pressure Reduction End Time" type="double" value="1000000.0"/>
+        <Parameter name="Pressure Reduction Amount mmHg" type="double" value="0.0"/>
+        <Parameter name="Source Type" type="string"   value="surface"/>
+        <Parameter name="Model Geometry" type="string" value="Laplace"/>
+        <Parameter name="SCI" type="bool" value="true"/>
+        <Parameter name="Chemistry Explicit" type="bool" value="false"/>
+        <Parameter name="Load Stepping" type="bool" value="true"/>
+        <Parameter name="Inflow Start Time" type="double" value="10000000.0"/>
+        <Parameter name="Inflow Concentration" type="double" value="2.0"/>
+        <Parameter name="Heart Beat Start" type="double" value="70000000.0"/>
+        <!-- lambda(t) = t / Ramp End Time, evaluated at t_{n+1} (see main.cpp's
+             loadFunction): svMultiPhysics's load.dat ramp. -->
+        <Parameter name="Load Step Size" type="double" value="0.02"/>
+        <Parameter name="Ramp End Time" type="double" value="1.0"/>
+        <Parameter name="External Force" type="bool" value="true"/>
+        <Parameter name="Nonlinear External Force" type="bool" value="true"/>
+        <Parameter name="Coupling Type" type="string" value="implicit"/>
+        <Parameter name="Accelerated Active Until" type="double" value="0.0"/>
+        <Parameter name="Active Acceleration Multiplier" type="double" value="1.0"/>
+        <Parameter name="Post Processing Fields" type="Array(string)" value="{MisesStress, SCirc, SAxial, SRadial, W, DetF}"/>
+        <Parameter name="relNonLinTol" type="double" value="1.0e-7"/>
+        <Parameter name="absNonLinTol" type="double" value="1.0e-7"/>
+        <Parameter name="updateTol" type="double" value="1.0e-7"/>
+        <Parameter name="Combo" type="string" value="OR"/>
+        <Parameter name="Use update tol" type="bool" value="true"/>
+        <Parameter name="Use WRMS" type="bool" value="false"/>
+        <Parameter name="MaxNonLinIts" type="int" value="25"/>
+        <Parameter name="Criterion" type="string" value="Update"/>
+    </ParameterList>
+    <ParameterList name="Mesh Partitioner">
+        <Parameter name="Contiguous" type="bool" value="true"/>
+        <Parameter name="Mesh 1 Name" type="string" value="Artery_dan_SCI.mesh"/>
+        <!-- Sets svMultiPhysics's Dirichlet node sets (see main.cpp). Written by
+             svMultiPhysics's tests/cases/def_diffu/tools/feddlib_mesh_to_svmp.py
+             (see tests/cases/def_diffu/artery_dan/README). -->
+        <Parameter name="Geometry Override" type="string" value="Artery_dan_SCI_svmp_flags.txt"/>
+        <Parameter name="Automatic partition" type="bool" value="false"/>
+        <Parameter name="Mesh 1 fraction ranks" type="int" value="-1"/>
+        <Parameter name="Mesh 1 number ranks" type="int" value="-1"/>
+    </ParameterList>
+    <ParameterList name="Exporter">
+        <Parameter name="Write new mesh" type="bool" value="false"/>
+        <Parameter name="Export every X timesteps" type="int" value="1"/>
+        <Parameter name="Export coarse functions" type="bool" value="false"/>
+        <Parameter name="Name coarse functions block1" type="string" value="phiC"/>
+        <Parameter name="Name coarse functions block2" type="string" value="phiD"/>
+        <Parameter name="Exclude coarse functions block4" type="bool" value="true"/>
+    </ParameterList>
+    <ParameterList name="General">
+        <Parameter name="Mpi Ranks Coarse" type="int" value="0"/>
+        <Parameter name="ParaViewExport" type="bool" value="true"/>
+        <Parameter name="ParaViewCoarse" type="bool" value="false"/>
+        <Parameter name="ExportID" type="int" value="7"/>
+        <Parameter name="ParaView export subdomains" type="bool" value="true"/>
+        <Parameter name="Export Suffix" type="string" value=""/>
+        <Parameter name="Export Data" type="bool" value="true"/>
+        <Parameter name="Export Extra Data" type="bool" value="false"/>
+        <Parameter name="Export drag and lift" type="bool" value="false"/>
+        <Parameter name="Export Stress" type="bool" value="true"/>
+        <Parameter name="Every X Second" type="double" value="0.2"/>
+        <Parameter name="Preconditioner Method" type="string" value="Monolithic"/>
+        <Parameter name="Only Diagonal" type="bool" value="false"/>
+        <Parameter name="Scale mass matrix" type="bool" value="true"/>
+        <Parameter name="Set Zeros" type="bool" value="true"/>
+        <Parameter name="Linearization" type="string" value="NOX"/>
+    </ParameterList>
+
+    <ParameterList name="Timestepping Parameter">
+        <Parameter name="BDF" type="int" value="1"/>
+        <Parameter name="Class" type="string" value="Multistep"/>
+        <Parameter name="Timestepping type" type="string" value="non-adaptive"/>
+        <Parameter name="Final time" type="double" value="1.0"/>
+        <Parameter name="dt" type="double" value="0.02"/>
+        <Parameter name="beta" type="double" value="0.25"/>
+        <Parameter name="gamma" type="double" value="0.5"/>
+        <ParameterList name="Timestepping Intervalls">
+            <Parameter name="Number of Segments" type="int" value="1"/>
+            <ParameterList name="1">
+                <Parameter name="Start Time" type="double" value="0."/>
+                <Parameter name="dt" type="double" value="0.02"/>
+            </ParameterList>
+        </ParameterList>
+    </ParameterList>
+</ParameterList>
