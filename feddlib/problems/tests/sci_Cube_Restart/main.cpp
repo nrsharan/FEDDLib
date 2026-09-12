@@ -456,6 +456,8 @@ int main(int argc, char *argv[])
     
         TEUCHOS_TEST_FOR_EXCEPTION( size%minNumberSubdomains != 0 , std::logic_error, "Wrong number of processors for structured mesh.");
         n = (int)(std::pow( size/minNumberSubdomains, 1/3.) + 100*Teuchos::ScalarTraits<double>::eps()); // 1/H
+        // Ranks beyond the n^3 subdomains would build copies of subdomain (rank % n^3)
+        TEUCHOS_TEST_FOR_EXCEPTION( n*n*n*minNumberSubdomains != size, std::logic_error, "The structured cube needs n^3 ranks (1, 8, 27, ...) apart from the coarse ranks, got " << size << ".");
         std::vector<double> x(3);
         x[0]=0.0;    x[1]=0.0;	x[2]=0.0;
         domainStructure.reset(new Domain<SC,LO,GO,NO>( x, 1., 1., 1., comm));

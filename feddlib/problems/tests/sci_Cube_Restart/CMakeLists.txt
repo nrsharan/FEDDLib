@@ -8,15 +8,17 @@ TRIBITS_ADD_EXECUTABLE(
 # restartCheckpoints/; the restart (parametersProblemSCI_restart.xml) continues
 # from the checkpoint at t = 1.5, during fiber reorientation, and must reproduce
 # the uninterrupted solution at t = 2.5.
+# The structured cube needs n^3 ranks; 8 would exceed TriBITS' default
+# MPI_EXEC_MAX_NUMPROCS of 4 (the test would be skipped), so it runs on 1.
 TRIBITS_ADD_ADVANCED_TEST(
     sci_Cube_Restart
     TEST_0 EXEC sci_Cube_Restart
         ARGS --problemfile=parametersProblemSCI.xml
-        NUM_MPI_PROCS 4
+        NUM_MPI_PROCS 1
     TEST_1 EXEC sci_Cube_Restart
         ARGS --problemfile=parametersProblemSCI_restart.xml
-        NUM_MPI_PROCS 4
-    OVERALL_NUM_MPI_PROCS 4
+        NUM_MPI_PROCS 1
+    OVERALL_NUM_MPI_PROCS 1
     FAIL_FAST
 )
 
