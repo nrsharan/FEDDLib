@@ -29,6 +29,23 @@
 #include "feddlib/problems/Solver/PrecOpFaCSCI.hpp"
 #include "feddlib/problems/specific/FSCI.hpp"
 
+namespace FEDD {
+namespace PreconditionerDetail {
+// FROSch builds a local problem on every rank; it has no parameters for ranks that hold only the coarse
+// problem (the "Local problem ranks ..." and "Coarse problem ranks ..." bounds set below are not read by
+// the FROSch of Trilinos 16). A rank without mesh entries then crashes while the coarse space is built
+// (RGDSW volume functions), so extra coarse ranks are rejected here. The coarse problem can instead be
+// solved on fewer ranks with the coarse solver's "Distribution" parameters ("NumProcs", "GatheringSteps").
+inline void checkNoExtraCoarseRanks(int coarseRanks)
+{
+    TEUCHOS_TEST_FOR_EXCEPTION(coarseRanks > 0, std::logic_error,
+        "\"Mpi Ranks Coarse\" = " << coarseRanks << " is not supported by FROSch: every rank needs a part of the mesh. "
+        "Set \"Mpi Ranks Coarse\" to 0 and distribute the coarse problem with the \"Distribution\" parameters "
+        "(\"NumProcs\", \"GatheringSteps\") of the FROSch coarse solver.");
+}
+}
+}
+
 /*!
  Definition of Preconditioner
 
@@ -479,6 +496,7 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
             pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").set("Coordinates List Vector",nodeListVec);
             pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").set("DofOrdering Vector",dofOrderings);
             pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").set("DofsPerNode Vector",dofsPerNodeVector);
+            PreconditionerDetail::checkNoExtraCoarseRanks( parameterList->sublist("General").get("Mpi Ranks Coarse",0) );
             pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").set( "Mpi Ranks Coarse",parameterList->sublist("General").get("Mpi Ranks Coarse",0) );
 
             // This a pressure projection is only used for saddle point problems. We check here if we have a pressure projection set and if we have more than one block or one block with dim dof per node (i.e. fluid problem)
@@ -756,6 +774,7 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithicFSI( )
             pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").set("Coordinates List Vector",nodeListVec);
             pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").set("DofOrdering Vector",dofOrderings);
             pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").set("DofsPerNode Vector",dofsPerNodeVector);
+            PreconditionerDetail::checkNoExtraCoarseRanks( parameterList->sublist("General").get("Mpi Ranks Coarse",0) );
             pListThyraPrec->sublist("Preconditioner Types").sublist("FROSch").set( "Mpi Ranks Coarse",parameterList->sublist("General").get("Mpi Ranks Coarse",0) );
 
             /*  We need to set the ranges of local problems and the coarse problem here.
@@ -1800,6 +1819,7 @@ void Preconditioner<SC,LO,GO,NO>::setVelocityParameters( ParameterListPtr_Type p
     velocitySubList->set("Repeated Map Vector",repeatedMaps);
     velocitySubList->set("DofOrdering Vector",dofOrderings);
     velocitySubList->set("DofsPerNode Vector",dofsPerNodeVector);
+    PreconditionerDetail::checkNoExtraCoarseRanks( coarseRanks );
     velocitySubList->set( "Mpi Ranks Coarse", coarseRanks );
     
     int lowerBound = 100000000;
@@ -1909,6 +1929,7 @@ void Preconditioner<SC,LO,GO,NO>::setPressureParameters( ParameterListPtr_Type p
     pressureSubList->set("Repeated Map Vector",repeatedMaps);
     pressureSubList->set("DofOrdering Vector",dofOrderings);
     pressureSubList->set("DofsPerNode Vector",dofsPerNodeVector);
+    PreconditionerDetail::checkNoExtraCoarseRanks( coarseRanks );
     pressureSubList->set( "Mpi Ranks Coarse", coarseRanks );
     
     int lowerBound = 100000000;
