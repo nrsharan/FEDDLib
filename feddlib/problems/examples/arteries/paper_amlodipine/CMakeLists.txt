@@ -1,4 +1,4 @@
 INCLUDE(TribitsCopyFilesToBinaryDir)
 INCLUDE(TribitsAddExecutableAndTest)
 INCLUDE(AddSubdirectories)
-ADD_SUBDIRECTORIES( paper_amlodipine simpleTest ccb_hollow_cylinder ccb_hollow_cylinder_cmm )
+ADD_SUBDIRECTORIES(diffusion_variation kappa_variation pressure_drop_variation reaction_variation)
