@@ -17,7 +17,9 @@
 # (/lustre/nurans63/feddlib_comparison/do-config-feddlib_intel.sh).
 #
 #   mkdir -p /lustre/nurans63/feddlib-logs
-#   sbatch sampleConfigureScripts/elysium-build-job.sh [make targets, e.g. problems_artery_dan_cmm.exe]
+#   sbatch sampleConfigureScripts/elysium-build-job.sh [make targets, e.g. problems_artery_dan_cmm]
+# (TriBITS names an example's target <package>_<example>; its executable is
+# <package>_<example>.exe in the example's build directory.)
 #
 # The paths are set below; pass the make targets as arguments rather than
 # variables with sbatch --export=ALL,... (that copies the submitting shell's
