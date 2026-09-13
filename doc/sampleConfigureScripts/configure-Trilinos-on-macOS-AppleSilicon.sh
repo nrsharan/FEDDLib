@@ -11,8 +11,7 @@
 #   - HDF5 and ParMETIS are spack builds against the same Homebrew Open MPI;
 #   - tests off (disk space).
 # Tpetra supports a single global ordinal type per build: this one uses
-# long long (FEDDLib). svMultiPhysics's Trilinos interface needs int and so a
-# separate Trilinos install (see svMultiPhysics).
+# long long (FEDDLib).
 # Rythmos no longer exists in 16.1.0; PackagesList.cmake lists it as allowed
 # missing, so the enable is kept only for parity with the cluster script.
 #

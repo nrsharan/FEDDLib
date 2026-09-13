@@ -1,18 +1,12 @@
-// Element-identical comparison case for svMultiPhysics's Interface2/AceGen CCB
-// element test (tests/cases/def_diffu/hollow_cylinder in the svMultiPhysics repo):
-// the same constrained-mixture (CMM) AceGen element
-// (SCI_SMC_CMM_Active_Growth_Reorientation), on the same mesh, with the same
-// Dirichlet node sets, the same material parameters (materialParameters.xml is
-// svMultiPhysics's <CCBActiveCMMGandR> block verbatim) and the same load/time
-// stepping (dt=0.2, pressure ramped 0 -> 20 over t=[0,10]).
+// Hollow cylinder with the constrained-mixture (CMM) AceGen element
+// (SCI_SMC_CMM_Active_Growth_Reorientation, material parameters in
+// materialParameters.xml), time step 0.2, pressure ramped 0 -> 20 over t=[0,10].
 //
-// FEDDLib only reads P1 meshes and builds P2 with straight edges, while
-// svMultiPhysics's quadratic mesh puts the mid-edge nodes of the curved inner/outer
-// walls on the true cylinder. The geometry override file (see
-// generate_feddlib_p2_override.py next to svMultiPhysics's test) moves those nodes
-// to svMultiPhysics's positions after the P2 build, and sets the Dirichlet flags of
-// exactly svMultiPhysics's constrained nodes (every node of the bottom/top faces and
-// of each 6-node pin face).
+// FEDDLib only reads P1 meshes and builds P2 with straight edges. The geometry
+// override file (meshes/ccb_hollow_cylinder/hollow_cylinder_p2_override.txt) moves
+// the mid-edge nodes of the curved inner/outer walls onto the cylinder after the P2
+// build, and sets the Dirichlet flags of every node of the bottom/top faces and of
+// each 6-node pin face.
 //
 // Flags:
 //   15 - volume
@@ -183,7 +177,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Teuchos::RCP<Teuchos::StackedTimer> stackedTimer = Teuchos::rcp(new Teuchos::StackedTimer("CCB hollow cylinder CMM comparison", true));
+    Teuchos::RCP<Teuchos::StackedTimer> stackedTimer = Teuchos::rcp(new Teuchos::StackedTimer("CCB hollow cylinder CMM", true));
     bool verbose(comm->getRank() == 0);
 
     Teuchos::TimeMonitor::setStackedTimer(stackedTimer);
@@ -249,7 +243,7 @@ int main(int argc, char *argv[])
         domainStructure->setDofs(dimension);
         domainDiffusion->setDofs(1);
 
-        // Make the P2 geometry and Dirichlet node sets identical to svMultiPhysics's
+        // Apply the geometry override (P2 node positions and Dirichlet flags)
         // before the reference configuration is taken and the elements are built.
         std::string geometryOverride = partitionerParameters->get("Geometry Override", std::string(""));
         if (!geometryOverride.empty())
@@ -271,7 +265,7 @@ int main(int argc, char *argv[])
             }
             if (verbose)
                 std::cout << " Geometry override " << geometryOverride << ": moved " << expected[0]
-                          << " P2 nodes onto svMultiPhysics's positions, set " << expected[1] << " Dirichlet flags." << std::endl;
+                          << " P2 nodes, set " << expected[1] << " Dirichlet flags." << std::endl;
         }
 
         domainStructure->setReferenceConfiguration();
@@ -313,8 +307,8 @@ int main(int argc, char *argv[])
         double timeRampEnd = allParameters->sublist("Parameter").get("Ramp End Time", 1.0);
 
         // Plain pressure units, no mmHg conversion -- "Max Pressure mmHg" is used
-        // directly as the target pressure, matching svMultiPhysics's test (ramped
-        // 0 -> 20). The negative sign is FEDDLib's convention for an inflating
+        // directly as the target pressure (ramped 0 -> 20).
+        // The negative sign is FEDDLib's convention for an inflating
         // internal pressure.
         double maxPressureMmHg = allParameters->sublist("Parameter").get("Max Pressure mmHg", 20.0);
         double targetPressureMmHg = allParameters->sublist("Parameter").get("Target Pressure mmHg", 20.0);
@@ -339,7 +333,7 @@ int main(int argc, char *argv[])
 
         // Structure Dirichlet BCs: bottom/top faces axially fixed, 3 circumferential
         // pin faces (single component, aligned with global X/Y since the pins sit at
-        // theta=0/90/180) -- the same scheme and node sets as svMultiPhysics's test.
+        // theta=0/90/180).
         bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension);
         bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension);
         bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_Y", dimension);
@@ -387,7 +381,7 @@ int main(int argc, char *argv[])
         daeTimeSolver.advanceInTime();
     }
     FEDD::TimeMonitor_Type::report(std::cout);
-    stackedTimer->stop("CCB hollow cylinder CMM comparison");
+    stackedTimer->stop("CCB hollow cylinder CMM");
     Teuchos::StackedTimer::OutputOptions options;
     options.output_fraction = options.output_histogram = options.output_minmax = true;
     stackedTimer->report((std::cout), comm, options);
@@ -396,7 +390,7 @@ int main(int argc, char *argv[])
 }
 
 // No separate reaction term outside the AceGen kernel's own internal Rc computation
-// (m=0 is a no-op) -- matches svMultiPhysics's assembly.
+// (m=0 is a no-op).
 void reactionTerm(double *x, double *res, double *parameters)
 {
     double m = 0.0;
@@ -433,7 +427,7 @@ void loadFunction(double *x, double *res, double *parameters)
     double currentLambdaReduction = 0.0;
 
     // currentTime is already t_{n+1} (DAESolverInTime advances time before the solve),
-    // so the ramp lambda(t) = t / timeRampEnd gives svMultiPhysics's load.dat ramp.
+    // so the ramp lambda(t) = t / timeRampEnd reaches 1 at timeRampEnd.
     if (currentTime < timeRampEnd)
         lambda = initialLambda * currentTime / timeRampEnd;
     else

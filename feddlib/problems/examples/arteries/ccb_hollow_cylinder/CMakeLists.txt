@@ -22,7 +22,7 @@ TRIBITS_COPY_FILES_TO_BINARY_DIR(data_ccb_hollow_cylinder
 )
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(meshes_ccb_hollow_cylinder
-	SOURCE_DIR ${CMAKE_SOURCE_DIR}/meshes/ccb_comparison
+	SOURCE_DIR ${CMAKE_SOURCE_DIR}/meshes/ccb_hollow_cylinder
     SOURCE_FILES hollow_cylinder_p1.mesh
 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
 	DEST_FILES hollow_cylinder_p1.mesh

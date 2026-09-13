@@ -1,19 +1,11 @@
 <ParameterList name="SCI">
     <!--
-      Comparison case for svMultiPhysics's Interface2/AceGen CCB element
-      test (tests/cases/def_diffu/hollow_cylinder in the svMultiPhysics
-      repo). Same geometry (hollow cylinder Ri=1.0, Ro=1.3, L=2.0), same
-      shared material parameters (Alpha1-5, fA, etc, see
-      materialParameters.xml), same BC scheme (bottom/top axial fix, 3
-      circumferential pins, ramped inner pressure to 20), all bools off
-      (purely passive). svMultiPhysics's own equivalent test uses the CMM
-      (constrained-mixture) element; this uses the non-CMM sibling
-      (SCI_SMC_Active_Growth_Reorientation). The two elements share most
-      material parameter names/roles but are not numerically identical
-      models; this comparison is meant to check solver/convergence
-      *behavior*, not to reproduce identical numbers. For the
-      element-identical comparison (CMM element, identical mesh, BCs and
-      parameters) see ../ccb_hollow_cylinder_cmm.
+      Hollow cylinder (Ri=1.0, Ro=1.3, L=2.0) with the non-CMM SMC element
+      (SCI_SMC_Active_Growth_Reorientation; material parameters Alpha1-5, fA,
+      etc. in materialParameters.xml), bottom/top axial fix, 3
+      circumferential pins, inner pressure ramped to 20, all bools off
+      (purely passive). ../ccb_hollow_cylinder_cmm is the same case with the
+      constrained-mixture (CMM) element.
     -->
     <ParameterList name="Parameter">
         <Parameter name="Dimension" type="int" value="3"/>
@@ -35,7 +27,7 @@
         <Parameter name="Mesh Type" type="string" value="unstructured"/>
         <Parameter name="H/h" type="int" value="1"/>
 
-        <!-- Plain pressure units matching svMultiPhysics's test (no mmHg
+        <!-- Plain pressure units (no mmHg
              conversion; Max Pressure is used directly as the target
              pressure in the same units as the Alpha1-5 stress
              parameters). -->
@@ -53,9 +45,8 @@
         <Parameter name="Inflow Start Time" type="double" value="10000000.0"/>
         <Parameter name="Heart Beat Start" type="double" value="70000000.0"/>
         <!-- The pressure is ramped linearly, lambda(t) = t / Ramp End Time,
-             evaluated at t_{n+1} (see main.cpp's loadFunction). With dt=0.2
-             over [0,10] this is exactly svMultiPhysics's load.dat ramp
-             (0 -> 20 over t=[0,10], 50 steps of 0.02*Pmax), and the same dt
+             evaluated at t_{n+1} (see main.cpp's loadFunction): 0 -> 20 over
+             t=[0,10] in 50 steps of 0.02*Pmax with dt=0.2. The same dt
              also enters the concentration capacitance term Mc/dt. -->
         <Parameter name="Load Step Size" type="double" value="0.2"/>
         <Parameter name="Ramp End Time" type="double" value="10.0"/>
@@ -112,9 +103,7 @@
         <Parameter name="Only Diagonal" type="bool" value="false"/>
         <Parameter name="Scale mass matrix" type="bool" value="true"/>
         <Parameter name="Set Zeros" type="bool" value="true"/>
-        <!-- NOX is FEDDLib's normal nonlinear driver; kept as-is so this
-             comparison exercises FEDDLib's real solver stack rather than
-             a hand-rolled Newton loop. -->
+        <!-- NOX, FEDDLib's usual nonlinear driver. -->
         <Parameter name="Linearization" type="string" value="NOX"/>
     </ParameterList>
 
