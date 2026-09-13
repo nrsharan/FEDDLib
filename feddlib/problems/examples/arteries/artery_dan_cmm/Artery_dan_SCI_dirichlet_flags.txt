@@ -1,5 +1,5 @@
-# FEDDLib Dirichlet flags of svMultiPhysics's constrained nodes, written by
-# tests/cases/def_diffu/tools/feddlib_mesh_to_svmp.py with the rules (first match wins):
+# Dirichlet flags of the constrained nodes (see main.cpp), set with the rules
+# (first match wins):
 #   pin_xz+outer=23 pin_xz=13 pin_yz+outer=24 pin_yz=14 bottom+inner=7 bottom+outer=6 top+inner=8 top+outer=9 bottom=2 top=3 inner=5 outer=4
 # FLAG <straight-P2 node position x y z> <flag>
 FLAG -1.9697899999999999 0.58571799999999996 0 6

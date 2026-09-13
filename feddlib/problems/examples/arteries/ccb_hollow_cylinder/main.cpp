@@ -1,8 +1,5 @@
-// Comparison case for svMultiPhysics's Interface2/AceGen CCB element test
-// (tests/cases/def_diffu/hollow_cylinder in the svMultiPhysics repo).
-//
-// Same geometry (hollow cylinder Ri=1.0, Ro=1.3, L=2.0), same shared
-// material parameters (see materialParameters.xml), same BC scheme
+// Hollow cylinder (Ri=1.0, Ro=1.3, L=2.0) with the SCI SMC element
+// (SCI_SMC_Active_Growth_Reorientation, see materialParameters.xml), BC scheme
 // (bottom/top faces axially fixed, 3 circumferential pins for static
 // determinacy, ramped inner-wall pressure 0->20 over 10 steps), all
 // active/growth/reorientation bools off (purely passive, load-driven
@@ -11,9 +8,8 @@
 // changed; the overall SCI/BCBuilder/DAESolverInTime driving pattern is
 // identical.
 //
-// Mesh face/vertex flags (see feddlib/meshes/ccb_comparison/
-// hollow_cylinder_p1.mesh and svMultiPhysics's tests/cases/def_diffu/
-// hollow_cylinder/generate_feddlib_mesh.py, which generated it):
+// Mesh face/vertex flags (see meshes/ccb_hollow_cylinder/
+// hollow_cylinder_p1.mesh):
 //   15 - volume (single material)
 //    2 - bottom face (z=0)                -> Dirichlet_Z
 //    3 - top face (z=2)                   -> Dirichlet_Z
@@ -77,7 +73,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Teuchos::RCP<Teuchos::StackedTimer> stackedTimer = Teuchos::rcp(new Teuchos::StackedTimer("CCB hollow cylinder comparison", true));
+    Teuchos::RCP<Teuchos::StackedTimer> stackedTimer = Teuchos::rcp(new Teuchos::StackedTimer("CCB hollow cylinder", true));
     bool verbose(comm->getRank() == 0);
 
     Teuchos::TimeMonitor::setStackedTimer(stackedTimer);
@@ -128,8 +124,7 @@ int main(int argc, char *argv[])
         partitionerParameters->set("Build Edge List", true);
         partitionerParameters->set("Build Surface List", true);
 
-        // Read the hollow-cylinder P1 mesh, no unit conversion (it is
-        // already in the same units svMultiPhysics's test uses).
+        // Read the hollow-cylinder P1 mesh, no unit conversion.
         FEDD::MeshPartitioner<SC, LO, GO, NO> p1Partitioner(domainP1Array, partitionerParameters, "P1", dimension);
         p1Partitioner.readAndPartition(15);
 
@@ -181,8 +176,8 @@ int main(int argc, char *argv[])
         double timeRampEnd = allParameters->sublist("Parameter").get("Ramp End Time", 1.0);
 
         // Plain pressure units, no mmHg conversion -- "Max Pressure mmHg"
-        // is used directly as the target pressure, matching
-        // svMultiPhysics's test (ramped 0 -> 20). The negative sign is
+        // is used directly as the target pressure (ramped 0 -> 20).
+        // The negative sign is
         // kept from simpleTest's convention (outward/inflating internal
         // pressure).
         double maxPressureMmHg = allParameters->sublist("Parameter").get("Max Pressure mmHg", 20.0);
@@ -208,7 +203,7 @@ int main(int argc, char *argv[])
         // Structure Dirichlet BCs: bottom/top faces axially fixed, 3
         // circumferential pins (single-component, aligned with global
         // X/Y since the pins sit at theta=0/90/180) for static
-        // determinacy -- same scheme as svMultiPhysics's test.
+        // determinacy.
         bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension);
         bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension);
         bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_Y", dimension);
@@ -226,7 +221,7 @@ int main(int argc, char *argv[])
         bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_X", dimension);
         bcFactory->addBC(zeroDirichlet3D, 16, 0, domainStructure, "Dirichlet_Y", dimension);
 
-        // No diffusion Dirichlet BCs, matching svMultiPhysics's test
+        // No diffusion Dirichlet BCs
         // (concentration is left with natural/zero-flux boundaries
         // everywhere -- the model is passive, so this dof only matters
         // through Kuc/Kcu/Kcc's own internal dynamics).
@@ -245,7 +240,7 @@ int main(int argc, char *argv[])
         daeTimeSolver.advanceInTime();
     }
     FEDD::TimeMonitor_Type::report(std::cout);
-    stackedTimer->stop("CCB hollow cylinder comparison");
+    stackedTimer->stop("CCB hollow cylinder");
     Teuchos::StackedTimer::OutputOptions options;
     options.output_fraction = options.output_histogram = options.output_minmax = true;
     stackedTimer->report((std::cout), comm, options);
@@ -254,8 +249,7 @@ int main(int argc, char *argv[])
 }
 
 // No separate reaction term outside the AceGen kernel's own internal Rc
-// computation (m=0 is a no-op) -- matches svMultiPhysics's assembly,
-// which adds nothing beyond Interface2's own Rc output either.
+// computation (m=0 is a no-op).
 void reactionTerm(double *x, double *res, double *parameters)
 {
     double m = 0.0;

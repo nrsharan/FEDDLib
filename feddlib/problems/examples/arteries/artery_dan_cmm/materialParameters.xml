@@ -1,10 +1,8 @@
 <ParameterList name="SCI">
   <ParameterList name="Parameter Solid">
     <!-- The seven tissue regions of Artery_dan_SCI.mesh (volume flags 15-21),
-         all with the constrained-mixture (CMM) element and the same parameters:
-         svMultiPhysics's tests/cases/def_diffu/hollow_cylinder <CCBActiveCMMGandR>
-         block verbatim (as in ../ccb_hollow_cylinder_cmm), which
-         tests/cases/def_diffu/artery_dan uses for its domains 15-21.
+         all with the constrained-mixture (CMM) element and the same parameters
+         (those of ../ccb_hollow_cylinder_cmm).
          PLACEHOLDER PARAMETERS: region-specific CMM parameters are still to be
          defined. All active/growth/remodeling switches are off. -->
     <Parameter name="Number of Materials" type="int" value="7" />
@@ -85,7 +83,7 @@
       <Parameter name="PostProcessingType" type="double" value="1" />
       <Parameter name="PostProcessingPower" type="double" value="1" />
       <!-- No time intervals: the switches above stay as given for the whole
-           run, as in svMultiPhysics. -->
+           run. -->
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="0" />
       </ParameterList>
@@ -173,7 +171,7 @@
       <Parameter name="PostProcessingType" type="double" value="1" />
       <Parameter name="PostProcessingPower" type="double" value="1" />
       <!-- No time intervals: the switches above stay as given for the whole
-           run, as in svMultiPhysics. -->
+           run. -->
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="0" />
       </ParameterList>
@@ -261,7 +259,7 @@
       <Parameter name="PostProcessingType" type="double" value="1" />
       <Parameter name="PostProcessingPower" type="double" value="1" />
       <!-- No time intervals: the switches above stay as given for the whole
-           run, as in svMultiPhysics. -->
+           run. -->
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="0" />
       </ParameterList>
@@ -349,7 +347,7 @@
       <Parameter name="PostProcessingType" type="double" value="1" />
       <Parameter name="PostProcessingPower" type="double" value="1" />
       <!-- No time intervals: the switches above stay as given for the whole
-           run, as in svMultiPhysics. -->
+           run. -->
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="0" />
       </ParameterList>
@@ -437,7 +435,7 @@
       <Parameter name="PostProcessingType" type="double" value="1" />
       <Parameter name="PostProcessingPower" type="double" value="1" />
       <!-- No time intervals: the switches above stay as given for the whole
-           run, as in svMultiPhysics. -->
+           run. -->
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="0" />
       </ParameterList>
@@ -525,7 +523,7 @@
       <Parameter name="PostProcessingType" type="double" value="1" />
       <Parameter name="PostProcessingPower" type="double" value="1" />
       <!-- No time intervals: the switches above stay as given for the whole
-           run, as in svMultiPhysics. -->
+           run. -->
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="0" />
       </ParameterList>
@@ -613,7 +611,7 @@
       <Parameter name="PostProcessingType" type="double" value="1" />
       <Parameter name="PostProcessingPower" type="double" value="1" />
       <!-- No time intervals: the switches above stay as given for the whole
-           run, as in svMultiPhysics. -->
+           run. -->
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="0" />
       </ParameterList>

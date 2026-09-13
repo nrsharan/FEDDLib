@@ -1,12 +1,10 @@
 <ParameterList name="SCI">
     <!--
-      Comparison case for svMultiPhysics's Interface2/AceGen CCB element
-      (tests/cases/def_diffu/artery_dan in the svMultiPhysics repo): the artery
-      of ../paper_amlodipine/.../artery_dan with the constrained-mixture (CMM)
-      element in all seven regions (materialParameters.xml), the same Dirichlet
-      node sets (the geometry override below, see main.cpp) and the same
-      load/time stepping as the svMultiPhysics case: the pressure is ramped
-      linearly over the first second with dt=0.02.
+      The artery of ../paper_amlodipine/.../artery_dan with the
+      constrained-mixture (CMM) element in all seven regions
+      (materialParameters.xml), Dirichlet conditions on faces (the geometry
+      override below, see main.cpp) and the pressure ramped linearly over the
+      first second with dt=0.02.
     -->
     <ParameterList name="Parameter">
         <Parameter name="Dimension" type="int" value="3"/>
@@ -33,7 +31,7 @@
         <Parameter name="Inflow Concentration" type="double" value="2.0"/>
         <Parameter name="Heart Beat Start" type="double" value="70000000.0"/>
         <!-- lambda(t) = t / Ramp End Time, evaluated at t_{n+1} (see main.cpp's
-             loadFunction): svMultiPhysics's load.dat ramp. -->
+             loadFunction). -->
         <Parameter name="Load Step Size" type="double" value="0.02"/>
         <Parameter name="Ramp End Time" type="double" value="1.0"/>
         <Parameter name="External Force" type="bool" value="true"/>
@@ -54,10 +52,8 @@
     <ParameterList name="Mesh Partitioner">
         <Parameter name="Contiguous" type="bool" value="true"/>
         <Parameter name="Mesh 1 Name" type="string" value="Artery_dan_SCI.mesh"/>
-        <!-- Sets svMultiPhysics's Dirichlet node sets (see main.cpp). Written by
-             svMultiPhysics's tests/cases/def_diffu/tools/feddlib_mesh_to_svmp.py
-             (see tests/cases/def_diffu/artery_dan/README). -->
-        <Parameter name="Geometry Override" type="string" value="Artery_dan_SCI_svmp_flags.txt"/>
+        <!-- Sets the Dirichlet flags of the constrained nodes (see main.cpp). -->
+        <Parameter name="Geometry Override" type="string" value="Artery_dan_SCI_dirichlet_flags.txt"/>
         <Parameter name="Automatic partition" type="bool" value="false"/>
         <Parameter name="Mesh 1 fraction ranks" type="int" value="-1"/>
         <Parameter name="Mesh 1 number ranks" type="int" value="-1"/>

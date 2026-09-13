@@ -71,9 +71,8 @@
            verbatim); it is inert here regardless since growthBool is 0
            (growthDirectionBool only selects which anisotropy direction
            growth accumulates along, and no growth accumulates). ActiveBool,
-           growthBool and reorientationBool are 0, matching Media, matching
-           svMultiPhysics's test, and matching this being a purely passive,
-           load-driven comparison. -->
+           growthBool and reorientationBool are 0, matching Media and this
+           being a purely passive, load-driven case. -->
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />

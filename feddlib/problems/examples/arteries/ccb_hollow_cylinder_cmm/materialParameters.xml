@@ -2,11 +2,8 @@
   <ParameterList name="Parameter Solid">
     <Parameter name="Number of Materials" type="int" value="1" />
     <ParameterList name="1">
-      <!-- The 71 domain-data values below are svMultiPhysics's
-           tests/cases/def_diffu/hollow_cylinder/solver.xml <CCBActiveCMMGandR>
-           block verbatim, in the element's own domain-data order; Integration
-           Code and Subiteration Tolerance match its <Integration_code> and
-           <Subiteration_tolerance>. All active/growth/remodeling switches are
+      <!-- The 71 domain-data values below are in the element's own
+           domain-data order. All active/growth/remodeling switches are
            off (purely passive response). -->
       <Parameter name="Volume Flag" type="int" value="15" />
       <Parameter name="Material Model" type="string" value="SCI_SMC_CMM_Active_Growth_Reorientation" />
@@ -84,7 +81,7 @@
       <Parameter name="PostProcessingType" type="double" value="1" />
       <Parameter name="PostProcessingPower" type="double" value="1" />
       <!-- No time intervals: the switches above stay as given for the whole
-           run, as in svMultiPhysics. -->
+           run. -->
       <ParameterList name="Timestepping Intervalls Active">
         <Parameter name="Number of Segments" type="int" value="0" />
       </ParameterList>

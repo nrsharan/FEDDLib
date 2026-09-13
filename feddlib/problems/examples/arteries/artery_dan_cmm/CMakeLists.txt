@@ -5,9 +5,9 @@ TRIBITS_ADD_EXECUTABLE(
 
 TRIBITS_COPY_FILES_TO_BINARY_DIR(data_artery_dan_cmm
 	SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
-	SOURCE_FILES materialParameters.xml preconditionerParameters_Chemistry.xml preconditionerParameters_Structure.xml simulationParameters.xml solverParameters.xml Artery_dan_SCI_svmp_flags.txt
+	SOURCE_FILES materialParameters.xml preconditionerParameters_Chemistry.xml preconditionerParameters_Structure.xml simulationParameters.xml solverParameters.xml Artery_dan_SCI_dirichlet_flags.txt
 	DEST_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	DEST_FILES materialParameters.xml preconditionerParameters_Chemistry.xml preconditionerParameters_Structure.xml simulationParameters.xml solverParameters.xml Artery_dan_SCI_svmp_flags.txt
+	DEST_FILES materialParameters.xml preconditionerParameters_Chemistry.xml preconditionerParameters_Structure.xml simulationParameters.xml solverParameters.xml Artery_dan_SCI_dirichlet_flags.txt
 	EXEDEPS artery_dan_cmm
 )
 

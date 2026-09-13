@@ -15,8 +15,7 @@ namespace SCI_SMC_CMM_detail {
 // pretty-printed symbol before the dash and the parameter name after it
 // ("k$[Eta]$Plus -kEtaPlus" -> "kEtaPlus"), but at least one entry is reversed
 // ("fA -Fibre angle" -> "fA"). Take the post-dash, pre-underscore token and fall back
-// to the pre-dash token when that is empty or contains whitespace. Same rule as
-// svMultiPhysics's ace_gen_cmm_smc::clean_domain_data_name.
+// to the pre-dash token when that is empty or contains whitespace.
 inline std::string cleanDomainDataName(const std::string& raw) {
     const std::string::size_type dash = raw.find('-');
     std::string candidate = raw;
@@ -34,8 +33,7 @@ inline std::string cleanDomainDataName(const std::string& raw) {
 }
 
 // History of one Gauss point before the first step, in the element's history order
-// (the model author's "SingleGP" vector; identical to svMultiPhysics's
-// ace_gen_cmm_smc::kInitialHistorySingleGP). The fiber-orientation (a**) and growth
+// (the model author's "SingleGP" vector). The fiber-orientation (a**) and growth
 // tensor (ag**) entries are placeholders: the element initializes them itself on its
 // first call, when time == timeIncrement.
 constexpr int kHistoryPerGaussPoint = 39;
@@ -274,7 +272,7 @@ void AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::checkin
 
     // Unlike AssembleFE_SCI_SMC_Active_Growth_Reorientation, a switch is only driven by its
     // time intervals when intervals are configured for it; otherwise the value given in the
-    // material parameters is kept (as in svMultiPhysics, which has no time intervals).
+    // material parameters is kept.
     if (!segmentsActive_.empty()) {
         for (int i = 0; i < segmentsActive_.size(); i++) {
             // if (time >= startTime && time < endTime)

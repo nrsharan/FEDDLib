@@ -1,17 +1,12 @@
-// Comparison case for svMultiPhysics's Interface2/AceGen CCB element
-// (tests/cases/def_diffu/artery_dan in the svMultiPhysics repo): the artery of
-// ../paper_amlodipine/.../artery_dan (mesh, boundary conditions, pressure load)
-// with the constrained-mixture (CMM) element (SCI_SMC_CMM_Active_Growth_Reorientation)
-// in all seven tissue regions, set up so that both codes solve the same problem:
-// the same P2 mesh (both build straight-edged P2 elements from the P1 file), the
-// same Dirichlet node sets, the same material parameters and the same load/time
-// stepping.
+// The artery of ../paper_amlodipine/.../artery_dan (mesh, boundary conditions,
+// pressure load) with the constrained-mixture (CMM) element
+// (SCI_SMC_CMM_Active_Growth_Reorientation) in all seven tissue regions, on the
+// straight-edged P2 mesh built from the P1 file.
 //
-// svMultiPhysics prescribes Dirichlet conditions on faces, so the vertices that
-// artery_dan pins (flags 13 and 14) become six-node pin faces there. The geometry
-// override file (written by svMultiPhysics's tools/feddlib_mesh_to_svmp.py
-// --dirichlet-override) sets the Dirichlet flags of exactly svMultiPhysics's
-// constrained nodes:
+// The Dirichlet conditions are prescribed on faces, so the vertices that
+// artery_dan pins (flags 13 and 14) become six-node pin faces here. The geometry
+// override file (Artery_dan_SCI_dirichlet_flags.txt) sets the Dirichlet flags of
+// the constrained nodes:
 //    2 - bottom face (z=0)                      -> Dirichlet_Z
 //    3 - top face                               -> Dirichlet_Z
 //    4 - outer wall                             -> concentration
@@ -22,8 +17,8 @@
 //   14 - pin faces held in y and z              -> Dirichlet_Y_Z
 //   23, 24 - nodes of the pin faces 13, 14 on the outer wall -> as 13, 14, and concentration
 //
-// The pressure on the inner wall (flag 5) is ramped linearly as in
-// svMultiPhysics's load.dat: lambda(t) = targetPressure/maxPressure * t / Ramp End Time,
+// The pressure on the inner wall (flag 5) is ramped linearly:
+// lambda(t) = targetPressure/maxPressure * t / Ramp End Time,
 // evaluated at t_{n+1} (artery_dan's ramp adds one load step: lambda(t + Load Step Size)).
 
 #include "feddlib/core/General/BCBuilder.hpp"
@@ -182,7 +177,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
-    Teuchos::RCP<Teuchos::StackedTimer> stackedTimer = Teuchos::rcp(new Teuchos::StackedTimer("Artery dan CMM comparison", true));
+    Teuchos::RCP<Teuchos::StackedTimer> stackedTimer = Teuchos::rcp(new Teuchos::StackedTimer("Artery dan CMM", true));
     bool verbose(comm->getRank() == 0);
 
     Teuchos::TimeMonitor::setStackedTimer(stackedTimer);
@@ -244,7 +239,7 @@ int main(int argc, char *argv[])
         domainStructure->setDofs(dimension);
         domainDiffusion->setDofs(1);
 
-        // Make the Dirichlet node sets identical to svMultiPhysics's before the
+        // Set the Dirichlet flags of the geometry override before the
         // reference configuration is taken and the elements are built.
         std::string geometryOverride = partitionerParameters->get("Geometry Override", std::string(""));
         if (!geometryOverride.empty())
@@ -266,7 +261,7 @@ int main(int argc, char *argv[])
             }
             if (verbose)
                 std::cout << " Geometry override " << geometryOverride << ": set " << expected[1]
-                          << " Dirichlet flags (svMultiPhysics's constrained nodes)." << std::endl;
+                          << " Dirichlet flags." << std::endl;
         }
 
         domainStructure->setReferenceConfiguration();
@@ -363,8 +358,8 @@ int main(int argc, char *argv[])
         sci.initializeCE();
 
         // Debugging: with FEDD_WRITE_SYSTEM=<prefix>, write the P2 nodes of each
-        // process (<prefix>_coords_<rank>.txt: node GID and coordinates), to
-        // match them with svMultiPhysics's nodes.
+        // process (<prefix>_coords_<rank>.txt: node GID and coordinates), which
+        // identify the rows of the written system.
         if (const char *prefix = std::getenv("FEDD_WRITE_SYSTEM"))
         {
             std::ofstream coords(std::string(prefix) + "_coords_" + std::to_string(comm->getRank()) + ".txt");
@@ -388,7 +383,7 @@ int main(int argc, char *argv[])
         daeTimeSolver.advanceInTime();
     }
     FEDD::TimeMonitor_Type::report(std::cout);
-    stackedTimer->stop("Artery dan CMM comparison");
+    stackedTimer->stop("Artery dan CMM");
     Teuchos::StackedTimer::OutputOptions options;
     options.output_fraction = options.output_histogram = options.output_minmax = true;
     stackedTimer->report((std::cout), comm, options);
@@ -397,7 +392,7 @@ int main(int argc, char *argv[])
 }
 
 // No separate reaction term outside the AceGen kernel's own internal Rc computation
-// (m=0 is a no-op) -- matches svMultiPhysics's assembly.
+// (m=0 is a no-op).
 void reactionTerm(double *x, double *res, double *parameters)
 {
     double m = 0.0;
@@ -434,7 +429,7 @@ void loadFunction(double *x, double *res, double *parameters)
     double currentLambdaReduction = 0.0;
 
     // currentTime is already t_{n+1} (DAESolverInTime advances time before the solve),
-    // so lambda(t) = initialLambda * t / timeRampEnd gives svMultiPhysics's load.dat ramp.
+    // so lambda(t) = initialLambda * t / timeRampEnd reaches initialLambda at timeRampEnd.
     if (currentTime < timeRampEnd)
         lambda = initialLambda * currentTime / timeRampEnd;
     else
