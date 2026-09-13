@@ -362,6 +362,24 @@ int main(int argc, char *argv[])
         sci.initializeProblem();
         sci.initializeCE();
 
+        // Debugging: with FEDD_WRITE_SYSTEM=<prefix>, write the P2 nodes of each
+        // process (<prefix>_coords_<rank>.txt: node GID and coordinates), to
+        // match them with svMultiPhysics's nodes.
+        if (const char *prefix = std::getenv("FEDD_WRITE_SYSTEM"))
+        {
+            std::ofstream coords(std::string(prefix) + "_coords_" + std::to_string(comm->getRank()) + ".txt");
+            coords.precision(17);
+            auto points = domainStructure->getPointsUnique();
+            auto map = domainStructure->getMapUnique();
+            for (size_t i = 0; i < points->size(); i++)
+            {
+                coords << map->getGlobalElement(i);
+                for (double x : points->at(i))
+                    coords << " " << x;
+                coords << "\n";
+            }
+        }
+
         FEDD::DAESolverInTime<SC, LO, GO, NO> daeTimeSolver(allParameters, comm);
         daeTimeSolver.defineTimeStepping(*defTS);
         daeTimeSolver.setProblem(sci);

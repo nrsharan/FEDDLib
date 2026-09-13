@@ -278,6 +278,17 @@ void Preconditioner<SC,LO,GO,NO>::buildPreconditionerMonolithic( )
     else if(!timeProblem_.is_null())
         thyraMatrix = timeProblem_->getSystemCombined()->getThyraLinOp();
 
+    // Debugging: with FEDD_WRITE_SYSTEM=<prefix>, write the blocks of the first
+    // system a monolithic preconditioner is built for (<prefix>ij.mm).
+    static bool systemWritten = false;
+    if (!systemWritten && std::getenv("FEDD_WRITE_SYSTEM") != nullptr) {
+        systemWritten = true;
+        if (!problem_.is_null())
+            problem_->getSystem()->writeMM(std::getenv("FEDD_WRITE_SYSTEM"));
+        else if (!timeProblem_.is_null())
+            timeProblem_->getSystemCombined()->writeMM(std::getenv("FEDD_WRITE_SYSTEM"));
+    }
+
     UN numberOfBlocks = parameterList->get("Number of blocks",1);
     Teuchos::ArrayRCP<Teuchos::RCP<Xpetra::Map<LO,GO,NO> > > repeatedMaps(numberOfBlocks);
 
