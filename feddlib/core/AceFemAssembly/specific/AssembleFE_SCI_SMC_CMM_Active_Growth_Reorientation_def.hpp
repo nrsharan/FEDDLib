@@ -412,7 +412,7 @@ void AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::assembl
 
     std::vector<double> domainDataModified = modifiedDomainData(time);
 
-    AceGenInterface::DeformationDiffusionConstrainedMixtureModelSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+    AceGenElement_Type& elem = aceGenElement(this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), deltaT, time);
 
     int errorCode = elem.compute(computeTangent);
     TEUCHOS_TEST_FOR_EXCEPTION(errorCode != 0, std::runtime_error, "AssembleFE_SCI_SMC_CMM: AceGen element " << this->getGlobalElementID() << " failed (Gauss-point sub-iteration did not converge), error code " << errorCode);
@@ -489,7 +489,7 @@ void AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::postPro
 
     std::vector<double> domainDataModified = modifiedDomainData(time);
 
-    AceGenInterface::DeformationDiffusionConstrainedMixtureModelSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+    AceGenElement_Type& elem = aceGenElement(&displacements[0], &concentrations[0], &accelerations[0], &rates[0], domainDataModified.data(), deltaT, time);
 
     double** postProcessingResults = elem.postProcess(&displacements[0], &concentrations[0], this->history_.data(), &rates[0], &accelerations[0]);
 
@@ -533,7 +533,7 @@ void AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::initial
 
     std::vector<double> domainDataModified = modifiedDomainData(time);
 
-    AceGenInterface::DeformationDiffusionConstrainedMixtureModelSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), &displacements[0], &concentrations[0], &accelerations[0], &rates[0], domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+    AceGenElement_Type& elem = aceGenElement(&displacements[0], &concentrations[0], &accelerations[0], &rates[0], domainDataModified.data(), deltaT, time);
 
     std::vector<double> historyNew = elem.initializeGrowthOrientationVectors();
 
@@ -553,7 +553,7 @@ void AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::initial
 #ifdef FEDD_HAVE_ACEGENINTERFACE
     std::vector<double> domainDataModified = modifiedDomainData(time);
 
-    AceGenInterface::DeformationDiffusionConstrainedMixtureModelSmoothMuscleActiveGrowthReorientationTetrahedra3D10 elem(this->positions_.data(), this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID());
+    AceGenElement_Type& elem = aceGenElement(this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), deltaT, time);
 
     std::vector<double> stretches = elem.getGaussPointStretches();
 
@@ -569,6 +569,36 @@ void AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::initial
 #endif
     activeInitialized_ = true;
 }
+
+#ifdef FEDD_HAVE_ACEGENINTERFACE
+template <class SC, class LO, class GO, class NO>
+typename AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::AceGenElement_Type&
+AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::aceGenElement(double* displacements, double* concentrations, double* accelerations, double* rates, double* domainData, double deltaT, double time) {
+#ifdef ACEGENINTERFACE_REUSABLE_ELEMENTS
+    // Interface2 resets the element's results in compute(), so one element can be
+    // reused with the data of each call.
+    if (aceGenElement_) {
+        aceGenElement_->setPositions(this->positions_.data());
+        aceGenElement_->setDisplacements(displacements);
+        aceGenElement_->setConcentrations(concentrations);
+        aceGenElement_->setAccelerations(accelerations);
+        aceGenElement_->setRates(rates);
+        aceGenElement_->setDomainData(domainData);
+        aceGenElement_->setHistoryVector(this->history_.data());
+        aceGenElement_->setSubIterationTolerance(this->subiterationTolerance_);
+        aceGenElement_->setTimeIncrement(deltaT);
+        aceGenElement_->setTime(time);
+        aceGenElement_->setIntegrationCode(this->iCode_);
+        aceGenElement_->setElementID(this->getGlobalElementID());
+        return *aceGenElement_;
+    }
+#endif
+    // Older Interface2 versions add the results of compute() to those of the previous
+    // call: a new element for every call.
+    aceGenElement_.reset(new AceGenElement_Type(this->positions_.data(), displacements, concentrations, accelerations, rates, domainData, this->history_.data(), this->subiterationTolerance_, deltaT, time, this->iCode_, this->getGlobalElementID()));
+    return *aceGenElement_;
+}
+#endif
 
 template <class SC, class LO, class GO, class NO>
 void AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::updateDomainData(const std::string& dataName, double dataValue) {

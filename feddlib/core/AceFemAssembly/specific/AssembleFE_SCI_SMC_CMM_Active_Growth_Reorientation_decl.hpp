@@ -11,6 +11,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
+#include <memory>
 
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 #include "aceinterface.hpp"
@@ -156,6 +157,20 @@ class AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation : public AssembleFE<SC,
     // Pre-computed indices for domain data modification
     std::vector<int> acceleratedParamIndices_;  // Parameters to multiply
     std::vector<int> deceleratedParamIndices_;  // Parameters to divide
+
+#ifdef FEDD_HAVE_ACEGENINTERFACE
+    typedef AceGenInterface::DeformationDiffusionConstrainedMixtureModelSmoothMuscleActiveGrowthReorientationTetrahedra3D10 AceGenElement_Type;
+
+    /*!
+    \brief The AceGen element of this element, given the current data (created on the first call).
+
+    Constructing an AceGen element allocates its result arrays and sets up the element
+    specification, so the element keeps one and only passes it the data of each use.
+    */
+    AceGenElement_Type& aceGenElement(double* displacements, double* concentrations, double* accelerations, double* rates, double* domainData, double deltaT, double time);
+
+    std::unique_ptr<AceGenElement_Type> aceGenElement_;
+#endif
 };
 
 }  // namespace FEDD
