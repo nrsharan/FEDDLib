@@ -1431,7 +1431,60 @@ void TimeProblem<SC,LO,GO,NO>::evalModelImplMonolithic( const Thyra::ModelEvalua
                 W_tpetraMat->replaceLocalValues( i,  indices, values);
             }
             W_tpetraMat->fillComplete();
-            
+
+            // Debugging: with FEDD_WRITE_SYSTEM set, compare the Jacobian W given to
+            // the linear solver with the merged system S it was just copied from
+            // (row by row, by global column).
+            if (std::getenv("FEDD_WRITE_SYSTEM") != nullptr) {
+                typedef typename TpetraMatrix_Type::global_ordinal_type GOW;
+                static int fillNumber = 0;
+                fillNumber++;
+                double local[4] = {0.0, 0.0, 0.0, 0.0}; // |S|^2, |W - S|^2, S entries missing in W, nonzero W entries not in S
+                std::vector<std::pair<GOW,SC> > rowS, rowW;
+                for (size_t r = 0; r < tpetraMatXpetra->getLocalNumRows(); r++) {
+                    typename Tpetra::CrsMatrix<SC,LO,GO,NO>::local_inds_host_view_type colsS, colsW;
+                    typename Tpetra::CrsMatrix<SC,LO,GO,NO>::values_host_view_type valsS, valsW;
+                    tpetraMatXpetra->getLocalRowView(r, colsS, valsS);
+                    const LO rW = W_tpetraMat->getRowMap()->getLocalElement(tpetraMatXpetra->getRowMap()->getGlobalElement(r));
+                    W_tpetraMat->getLocalRowView(rW, colsW, valsW);
+                    rowS.clear();
+                    rowW.clear();
+                    for (size_t k = 0; k < colsS.extent(0); k++)
+                        rowS.push_back(std::make_pair((GOW) tpetraMatXpetra->getColMap()->getGlobalElement(colsS(k)), valsS(k)));
+                    for (size_t k = 0; k < colsW.extent(0); k++)
+                        rowW.push_back(std::make_pair((GOW) W_tpetraMat->getColMap()->getGlobalElement(colsW(k)), valsW(k)));
+                    std::sort(rowS.begin(), rowS.end());
+                    std::sort(rowW.begin(), rowW.end());
+                    size_t a = 0, b = 0;
+                    while (a < rowS.size() || b < rowW.size()) {
+                        if (b == rowW.size() || (a < rowS.size() && rowS[a].first < rowW[b].first)) {
+                            local[0] += rowS[a].second * rowS[a].second;
+                            local[1] += rowS[a].second * rowS[a].second;
+                            local[2] += 1;
+                            a++;
+                        } else if (a == rowS.size() || rowW[b].first < rowS[a].first) {
+                            local[1] += rowW[b].second * rowW[b].second;
+                            local[3] += (rowW[b].second != 0.0) ? 1 : 0;
+                            b++;
+                        } else {
+                            local[0] += rowS[a].second * rowS[a].second;
+                            local[1] += (rowW[b].second - rowS[a].second) * (rowW[b].second - rowS[a].second);
+                            a++;
+                            b++;
+                        }
+                    }
+                }
+                double global[4];
+                Teuchos::reduceAll(*this->comm_, Teuchos::REDUCE_SUM, 4, local, global);
+                const bool sameColMap = W_tpetraMat->getColMap()->isSameAs(*tpetraMatXpetra->getColMap());
+                if (this->comm_->getRank() == 0)
+                    std::cout << "-- W check (fill " << fillNumber << "): |S|_F = " << std::sqrt(global[0])
+                              << ", |W - S|_F / |S|_F = " << std::sqrt(global[1] / global[0])
+                              << ", entries of S missing in W = " << global[2]
+                              << ", nonzero entries of W not in S = " << global[3]
+                              << ", same column map = " << sameColMap << std::endl;
+            }
+
         }
         
         if (fill_W_prec) {
@@ -1549,6 +1602,18 @@ void TimeProblem<SC,LO,GO,NO>::evalModelImplBlock( const Thyra::ModelEvaluatorBa
 						    W_tpetraMat->replaceLocalValues( i,  indices, values);
 						}
                         W_tpetraMat->fillComplete( W_tpetraMat->getDomainMap(), W_tpetraMat->getRangeMap() );
+
+                        // Debugging: with FEDD_WRITE_SYSTEM=<prefix>, write the blocks of the
+                        // first Jacobian given to the linear solver (<prefix>W<ij>.mm) and
+                        // of the system they are copied from (<prefix>S<ij>.mm).
+                        static bool jacobianBlockWritten[4] = {false, false, false, false};
+                        if (std::getenv("FEDD_WRITE_SYSTEM") != nullptr && i < 2 && j < 2 && !jacobianBlockWritten[2*i+j]) {
+                            jacobianBlockWritten[2*i+j] = true;
+                            const std::string prefix = std::getenv("FEDD_WRITE_SYSTEM");
+                            const std::string ij = std::to_string(i) + std::to_string(j);
+                            Tpetra::MatrixMarket::Writer<TpetraMatrix_Type>::writeSparseFile(prefix + "W" + ij + ".mm", W_tpetraMat, "W", "");
+                            Tpetra::MatrixMarket::Writer<TpetraMatrix_Type>::writeSparseFile(prefix + "S" + ij + ".mm", tpetraMatXpetra, "S", "");
+                        }
                     }
                 }
             }
