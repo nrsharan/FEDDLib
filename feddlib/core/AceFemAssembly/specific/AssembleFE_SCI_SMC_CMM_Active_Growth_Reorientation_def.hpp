@@ -3,6 +3,7 @@
 
 #include <cctype>
 #include <string>
+#include <set>
 #include <vector>
 
 #include "AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation_decl.hpp"
@@ -106,25 +107,16 @@ AssembleFE_SCI_SMC_CMM_Active_Growth_Reorientation<SC, LO, GO, NO>::AssembleFE_S
 
         TEUCHOS_TEST_FOR_EXCEPTION(this->domainData_[i] > 1.e12, std::logic_error, " Parameter not set correctly. Parameter " << this->domainDataNames_[i] << " received default value!!");
 
-        // Pre-compute which parameters need acceleration/deceleration (same selection as
-        // AssembleFE_SCI_SMC_Active_Growth_Reorientation)
-        if (domainDataNames_[i].find("LambdaBarCDotMax") != std::string::npos ||
-            domainDataNames_[i].find("LambdaBarCDotMin") != std::string::npos ||
-            domainDataNames_[i].find("Eta") != std::string::npos ||
-            domainDataNames_[i].find("K3") != std::string::npos ||
-            domainDataNames_[i].find("K4") != std::string::npos ||
-            domainDataNames_[i].find("K7") != std::string::npos ||
-            domainDataNames_[i].find("Beta1") != std::string::npos ||
-            domainDataNames_[i].find("Gamma6") != std::string::npos ||
-            domainDataNames_[i].find("KDotMin") != std::string::npos ||
-            domainDataNames_[i].find("KDotMax") != std::string::npos ||
-            domainDataNames_[i].find("LambdaBarDotPMin") != std::string::npos ||
-            domainDataNames_[i].find("LambdaBarDotPMax") != std::string::npos) {
+        // Pre-compute which parameters need acceleration/deceleration, by exact name: a
+        // substring match would also scale kEtaPlus and mEtaPlus (through "Eta").
+        static const std::set<std::string> acceleratedNames = {
+            "LambdaBarCDotMax", "LambdaBarCDotMin", "Eta", "K3", "K4", "K7", "Beta1", "Gamma6",
+            "KDotMin", "KDotMax", "LambdaBarDotPMin", "LambdaBarDotPMax"};
+        static const std::set<std::string> deceleratedNames = {"Gamma5", "Gamma2"};
+        if (acceleratedNames.count(domainDataNames_[i]) > 0)
             acceleratedParamIndices_.push_back(i);
-        } else if (domainDataNames_[i].find("Gamma5") != std::string::npos ||
-                   domainDataNames_[i].find("Gamma2") != std::string::npos) {
+        else if (deceleratedNames.count(domainDataNames_[i]) > 0)
             deceleratedParamIndices_.push_back(i);
-        }
     }
 
     for (int i = 0; i < this->postDataLength_; i++) {
