@@ -57,8 +57,8 @@ for case in "${CASES[@]}"; do
 $mail
 
 unset SLURM_EXPORT_ENV
-module load intel-oneapi-mkl
-module load intel-oneapi-mpi/2021.12.1-qdmj2yh
+# the modules the executable was built with (build-job.sh)
+ml load intel-oneapi-compilers intel-oneapi-mpi intel-oneapi-mkl
 
 srun --mpi=pmi2 $EXE --materialParameters=$MATERIAL
 EOF
