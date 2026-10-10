@@ -1,0 +1,83 @@
+case	job	artery	mesh	final time	changes
+kappa_variation/artery_dan_15	kap_dan_15	dan	Artery_dan_SCI.mesh	1500	control, Kappa media/degenerated media 126.023/84.4352
+kappa_variation/artery_dan_withDrug_15	kap_dan_d_15	dan	Artery_dan_SCI.mesh	1500	drug, Kappa media/degenerated media 126.023/84.4352
+kappa_variation/artery_dan_30	kap_dan_30	dan	Artery_dan_SCI.mesh	1700	control, Kappa media/degenerated media 103.783/69.5349, unloading 1500-1600 s to 1700 s
+kappa_variation/artery_dan_withDrug_30	kap_dan_d_30	dan	Artery_dan_SCI.mesh	1500	drug, Kappa media/degenerated media 103.783/69.5349
+kappa_variation/artery_dan_45	kap_dan_45	dan	Artery_dan_SCI.mesh	1500	control, Kappa media/degenerated media 81.5441/54.6345
+kappa_variation/artery_dan_withDrug_45	kap_dan_d_45	dan	Artery_dan_SCI.mesh	1500	drug, Kappa media/degenerated media 81.5441/54.6345
+arteries/artery_kim	art_kim	kim	Artery_kim_guzman_SCI.mesh	1700	control, unloading 1500-1600 s to 1700 s
+arteries/artery_kim_withDrug	art_kim_d	kim	Artery_kim_guzman_SCI.mesh	1500	drug
+arteries/artery_narula	art_narula	narula	narula_r0.1_L1.mesh	1700	control, unloading 1500-1600 s to 1700 s
+arteries/artery_narula_withDrug	art_narula_d	narula	narula_r0.1_L1.mesh	1500	drug
+arteries/artery_phini	art_phini	phini	Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh	1700	control, unloading 1500-1600 s to 1700 s
+arteries/artery_phini_withDrug	art_phini_d	phini	Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh	1500	drug
+arteries/artery_plass	art_plass	plass	Artery_plasschaert_heeneman_daemem_SCI.mesh	1700	control, unloading 1500-1600 s to 1700 s
+arteries/artery_plass_withDrug	art_plass_d	plass	Artery_plasschaert_heeneman_daemem_SCI.mesh	1500	drug
+pressure_drop_variation/10_pressure_drop/artery_dan_withDrug	pd10_dan_d	dan	Artery_dan_SCI.mesh	1500	drug, pressure drop 10 mmHg
+pressure_drop_variation/10_pressure_drop/artery_kim_withDrug	pd10_kim_d	kim	Artery_kim_guzman_SCI.mesh	1500	drug, pressure drop 10 mmHg
+pressure_drop_variation/10_pressure_drop/artery_narula_withDrug	pd10_narula_d	narula	narula_r0.1_L1.mesh	1500	drug, pressure drop 10 mmHg
+pressure_drop_variation/10_pressure_drop/artery_phini_withDrug	pd10_phini_d	phini	Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh	1500	drug, pressure drop 10 mmHg
+pressure_drop_variation/10_pressure_drop/artery_plass_withDrug	pd10_plass_d	plass	Artery_plasschaert_heeneman_daemem_SCI.mesh	1500	drug, pressure drop 10 mmHg
+pressure_drop_variation/20_pressure_drop/artery_dan_withDrug	pd20_dan_d	dan	Artery_dan_SCI.mesh	1500	drug, pressure drop 20 mmHg
+pressure_drop_variation/20_pressure_drop/artery_kim_withDrug	pd20_kim_d	kim	Artery_kim_guzman_SCI.mesh	1500	drug, pressure drop 20 mmHg
+pressure_drop_variation/20_pressure_drop/artery_narula_withDrug	pd20_narula_d	narula	narula_r0.1_L1.mesh	1500	drug, pressure drop 20 mmHg
+pressure_drop_variation/20_pressure_drop/artery_phini_withDrug	pd20_phini_d	phini	Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh	1500	drug, pressure drop 20 mmHg
+pressure_drop_variation/20_pressure_drop/artery_plass_withDrug	pd20_plass_d	plass	Artery_plasschaert_heeneman_daemem_SCI.mesh	1500	drug, pressure drop 20 mmHg
+pressure_drop_variation/30_pressure_drop/artery_dan_withDrug	pd30_dan_d	dan	Artery_dan_SCI.mesh	1500	drug, pressure drop 30 mmHg
+pressure_drop_variation/30_pressure_drop/artery_kim_withDrug	pd30_kim_d	kim	Artery_kim_guzman_SCI.mesh	1500	drug, pressure drop 30 mmHg
+pressure_drop_variation/30_pressure_drop/artery_narula_withDrug	pd30_narula_d	narula	narula_r0.1_L1.mesh	1500	drug, pressure drop 30 mmHg
+pressure_drop_variation/30_pressure_drop/artery_phini_withDrug	pd30_phini_d	phini	Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh	1500	drug, pressure drop 30 mmHg
+pressure_drop_variation/30_pressure_drop/artery_plass_withDrug	pd30_plass_d	plass	Artery_plasschaert_heeneman_daemem_SCI.mesh	1500	drug, pressure drop 30 mmHg
+diffusion_variation/artery_dan_withDrug_a	dif_dan_d_a	dan	Artery_dan_SCI.mesh	1500	drug, D0 adventitia/degenerated media 0.0007/0.00035
+diffusion_variation/artery_dan_withDrug_b	dif_dan_d_b	dan	Artery_dan_SCI.mesh	1500	drug, D0 adventitia/degenerated media 0.0007/0.0035
+diffusion_variation/artery_dan_withDrug_c	dif_dan_d_c	dan	Artery_dan_SCI.mesh	1500	drug, D0 adventitia/degenerated media 0.0007/0.035
+diffusion_variation/artery_dan_withDrug_d	dif_dan_d_d	dan	Artery_dan_SCI.mesh	1500	drug, D0 adventitia/degenerated media 0.007/0.00035
+diffusion_variation/artery_dan_withDrug_f	dif_dan_d_f	dan	Artery_dan_SCI.mesh	1500	drug, D0 adventitia/degenerated media 0.007/0.035
+diffusion_variation/artery_dan_withDrug_h	dif_dan_d_h	dan	Artery_dan_SCI.mesh	1500	drug, D0 adventitia/degenerated media 0.07/0.00035
+diffusion_variation/artery_dan_withDrug_i	dif_dan_d_i	dan	Artery_dan_SCI.mesh	1500	drug, D0 adventitia/degenerated media 0.07/0.0035
+diffusion_variation/artery_dan_withDrug_j	dif_dan_d_j	dan	Artery_dan_SCI.mesh	1500	drug, D0 adventitia/degenerated media 0.07/0.035
+reaction_variation/artery_dan_withDrug_a	rea_dan_d_a	dan	Artery_dan_SCI.mesh	1500	drug, M media/degenerated media -3.e-1/-1.5e-1
+reaction_variation/artery_dan_withDrug_b	rea_dan_d_b	dan	Artery_dan_SCI.mesh	1500	drug, M media/degenerated media -3.e-2/-1.5e-2
+reaction_variation/artery_dan_withDrug_c	rea_dan_d_c	dan	Artery_dan_SCI.mesh	1500	drug, M media/degenerated media -3.e-3/-1.5e-3
+reaction_variation/artery_dan_withDrug_d	rea_dan_d_d	dan	Artery_dan_SCI.mesh	1500	drug, M media/degenerated media -3.e-4/-1.5e-4
+reaction_variation/artery_dan_withDrug_e	rea_dan_d_e	dan	Artery_dan_SCI.mesh	1500	drug, M media/degenerated media -3.e-5/-1.5e-5
+reaction_variation/artery_dan_withDrug_f	rea_dan_d_f	dan	Artery_dan_SCI.mesh	1500	drug, M media/degenerated media -3.e-6/-1.5e-6
+degen_kappa_variation/artery_dan_33	dkap_dan_33	dan	Artery_dan_SCI.mesh	1500	control, Kappa degenerated media 34.25 (33 % of the media)
+degen_kappa_variation/artery_dan_withDrug_33	dkap_dan_d_33	dan	Artery_dan_SCI.mesh	1500	drug, Kappa degenerated media 34.25 (33 % of the media)
+degen_kappa_variation/artery_dan_10	dkap_dan_10	dan	Artery_dan_SCI.mesh	1500	control, Kappa degenerated media 10.38 (10 % of the media)
+degen_kappa_variation/artery_dan_withDrug_10	dkap_dan_d_10	dan	Artery_dan_SCI.mesh	1500	drug, Kappa degenerated media 10.38 (10 % of the media)
+degen_kappa_variation/artery_dan_0	dkap_dan_0	dan	Artery_dan_SCI.mesh	1500	control, Kappa degenerated media 0.0 (0 % of the media)
+degen_kappa_variation/artery_dan_withDrug_0	dkap_dan_d_0	dan	Artery_dan_SCI.mesh	1500	drug, Kappa degenerated media 0.0 (0 % of the media)
+dose_variation/artery_dan_withDrug_0.06uM	dose_dan_d_0.06uM	dan	Artery_dan_SCI.mesh	1500	drug, 0.06 uM at the walls
+dose_variation/artery_dan_withDrug_0.2uM	dose_dan_d_0.2uM	dan	Artery_dan_SCI.mesh	1500	drug, 0.2 uM at the walls
+dose_variation/artery_dan_withDrug_0.5uM	dose_dan_d_0.5uM	dan	Artery_dan_SCI.mesh	1500	drug, 0.5 uM at the walls
+dose_variation/artery_dan_withDrug_1uM	dose_dan_d_1uM	dan	Artery_dan_SCI.mesh	1500	drug, 1 uM at the walls
+dose_variation/artery_dan_withDrug_1.5uM	dose_dan_d_1.5uM	dan	Artery_dan_SCI.mesh	1500	drug, 1.5 uM at the walls
+drug_response_variation/artery_dan_withDrug_C50_x0.5	resp_dan_d_C50_x0.5	dan	Artery_dan_SCI.mesh	1500	drug, C50 x0.5 (all regions)
+drug_response_variation/artery_dan_withDrug_C50_x2	resp_dan_d_C50_x2	dan	Artery_dan_SCI.mesh	1500	drug, C50 x2 (all regions)
+drug_response_variation/artery_dan_withDrug_P_x0.5	resp_dan_d_P_x0.5	dan	Artery_dan_SCI.mesh	1500	drug, P x0.5 (all regions)
+drug_response_variation/artery_dan_withDrug_P_x2	resp_dan_d_P_x2	dan	Artery_dan_SCI.mesh	1500	drug, P x2 (all regions)
+mesh_variation/artery_narula_original_L1	mesh_narula_original_L1	narula	narula_original_L1.mesh	1500	control, mesh narula_original_L1.mesh
+mesh_variation/artery_narula_original_L1_withDrug	mesh_narula_original_L1_d	narula	narula_original_L1.mesh	1500	drug, mesh narula_original_L1.mesh
+mesh_variation/artery_narula_original_L2	mesh_narula_original_L2	narula	narula_original_L2.mesh	1500	control, mesh narula_original_L2.mesh
+mesh_variation/artery_narula_original_L2_withDrug	mesh_narula_original_L2_d	narula	narula_original_L2.mesh	1500	drug, mesh narula_original_L2.mesh
+mesh_variation/artery_narula_r0.1_L2	mesh_narula_r0.1_L2	narula	narula_r0.1_L2.mesh	1500	control, mesh narula_r0.1_L2.mesh
+mesh_variation/artery_narula_r0.1_L2_withDrug	mesh_narula_r0.1_L2_d	narula	narula_r0.1_L2.mesh	1500	drug, mesh narula_r0.1_L2.mesh
+mesh_variation/artery_narula_r0.2_L2	mesh_narula_r0.2_L2	narula	narula_r0.2_L2.mesh	1500	control, mesh narula_r0.2_L2.mesh
+mesh_variation/artery_narula_r0.2_L2_withDrug	mesh_narula_r0.2_L2_d	narula	narula_r0.2_L2.mesh	1500	drug, mesh narula_r0.2_L2.mesh
+mesh_variation/artery_phini_original_L1	mesh_phini_original_L1	phini	phini_original_L1.mesh	1500	control, mesh phini_original_L1.mesh
+mesh_variation/artery_phini_original_L1_withDrug	mesh_phini_original_L1_d	phini	phini_original_L1.mesh	1500	drug, mesh phini_original_L1.mesh
+mesh_variation/artery_phini_original_L2	mesh_phini_original_L2	phini	phini_original_L2.mesh	1500	control, mesh phini_original_L2.mesh
+mesh_variation/artery_phini_original_L2_withDrug	mesh_phini_original_L2_d	phini	phini_original_L2.mesh	1500	drug, mesh phini_original_L2.mesh
+mesh_variation/artery_phini_r0.1_L2	mesh_phini_r0.1_L2	phini	phini_r0.1_L2.mesh	1500	control, mesh phini_r0.1_L2.mesh
+mesh_variation/artery_phini_r0.1_L2_withDrug	mesh_phini_r0.1_L2_d	phini	phini_r0.1_L2.mesh	1500	drug, mesh phini_r0.1_L2.mesh
+mesh_variation/artery_phini_r0.2_L2	mesh_phini_r0.2_L2	phini	phini_r0.2_L2.mesh	1500	control, mesh phini_r0.2_L2.mesh
+mesh_variation/artery_phini_r0.2_L2_withDrug	mesh_phini_r0.2_L2_d	phini	phini_r0.2_L2.mesh	1500	drug, mesh phini_r0.2_L2.mesh
+axial_stretch/artery_dan_stretch5	ax_dan_stretch5	dan	Artery_dan_SCI.mesh	1500	control, 5 % axial stretch
+axial_stretch/artery_dan_withDrug_stretch5	ax_dan_d_stretch5	dan	Artery_dan_SCI.mesh	1500	drug, 5 % axial stretch
+basal_tone_tuning/artery_dan_eta_x0.75	eta_dan_eta_x0.75	dan	Artery_dan_SCI.mesh	540	control to 540 s, Eta x0.75 (all regions)
+basal_tone_tuning/artery_dan_eta_x0.5	eta_dan_eta_x0.5	dan	Artery_dan_SCI.mesh	540	control to 540 s, Eta x0.5 (all regions)
+basal_tone_tuning/artery_dan_eta_x0.35	eta_dan_eta_x0.35	dan	Artery_dan_SCI.mesh	540	control to 540 s, Eta x0.35 (all regions)
+basal_tone_tuning/artery_dan_eta_x0.25	eta_dan_eta_x0.25	dan	Artery_dan_SCI.mesh	540	control to 540 s, Eta x0.25 (all regions)
+basal_tone_tuning/artery_dan_eta_x0.15	eta_dan_eta_x0.15	dan	Artery_dan_SCI.mesh	540	control to 540 s, Eta x0.15 (all regions)
+basal_tone_tuning/artery_dan_eta_x0.1	eta_dan_eta_x0.1	dan	Artery_dan_SCI.mesh	540	control to 540 s, Eta x0.1 (all regions)

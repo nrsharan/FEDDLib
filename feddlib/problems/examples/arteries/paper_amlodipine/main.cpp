@@ -22,6 +22,7 @@ typedef Tpetra::KokkosClassic::DefaultNode::DefaultNodeType NO;
 void reactionTerm(double *, double *, double *);
 void loadFunction(double *, double *, double *);
 void zeroDirichlet3D(double *, double *, double, const double *);
+void axialStretchDirichlet3D(double *, double *, double, const double *);
 void inflowChem(double *, double *, double, const double *);
 
 int main(int argc, char *argv[])
@@ -201,13 +202,17 @@ int main(int argc, char *argv[])
         // Set load function (the second parameter is the block index)
         sci.problemStructureNonLin_->addRhsFunction(loadFunction, 0);
 
+        // Axial pre-stretch: the end faces and rings get the axial displacement "Axial Stretch" * z (the
+        // meshes start at z = 0), ramped up with the pressure over the load steps. 0 holds them in place.
+        std::vector<double> stretchParameters = {allParameters->sublist("Parameter").get("Axial Stretch", 0.), rampTimeStep, timeRampEnd};
+
         // Structure dirichtlet boundary conditions
-        bcFactoryStructure->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension);    // z=0
-        bcFactoryStructure->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension);    // z=0.5
-        bcFactoryStructure->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dimension);    // z=0, inner ring
-        bcFactoryStructure->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dimension);    // z=0.5 inner ring
-        bcFactoryStructure->addBC(zeroDirichlet3D, 6, 0, domainStructure, "Dirichlet_Z", dimension);    // z=0, outer ring
-        bcFactoryStructure->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dimension);    // z=0.5, outer ring
+        bcFactoryStructure->addBC(axialStretchDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);    // z=0
+        bcFactoryStructure->addBC(axialStretchDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);    // z=0.5
+        bcFactoryStructure->addBC(axialStretchDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);    // z=0, inner ring
+        bcFactoryStructure->addBC(axialStretchDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);    // z=0.5 inner ring
+        bcFactoryStructure->addBC(axialStretchDirichlet3D, 6, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);    // z=0, outer ring
+        bcFactoryStructure->addBC(axialStretchDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);    // z=0.5, outer ring
         bcFactoryStructure->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dimension); // additional point(s) on outer ring held in x-z direction
         bcFactoryStructure->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dimension); // additional point(s) on outer ring held in y-z direction
 
@@ -216,17 +221,17 @@ int main(int argc, char *argv[])
         else
             sci.problemStructureNonLin_->addBoundaries(bcFactoryStructure);
 
-        bcFactory->addBC(zeroDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactory->addBC(zeroDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactory->addBC(zeroDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactory->addBC(zeroDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactory->addBC(zeroDirichlet3D, 6, 0, domainStructure, "Dirichlet_Z", dimension);
-        bcFactory->addBC(zeroDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dimension);
+        bcFactory->addBC(axialStretchDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);
+        bcFactory->addBC(axialStretchDirichlet3D, 3, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);
+        bcFactory->addBC(axialStretchDirichlet3D, 7, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);
+        bcFactory->addBC(axialStretchDirichlet3D, 8, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);
+        bcFactory->addBC(axialStretchDirichlet3D, 6, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);
+        bcFactory->addBC(axialStretchDirichlet3D, 9, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);
         bcFactory->addBC(zeroDirichlet3D, 13, 0, domainStructure, "Dirichlet_X_Z", dimension);
         bcFactory->addBC(zeroDirichlet3D, 14, 0, domainStructure, "Dirichlet_Y_Z", dimension);
 
-        // Diffusion boundary conditions
-        std::vector<double> parameter_vec(1, allParameters->sublist("Parameter").get("Inflow Start Time", 0.));
+        // Diffusion boundary conditions: from "Inflow Start Time" on, the walls hold the drug concentration "Inflow Concentration"
+        std::vector<double> parameter_vec = {allParameters->sublist("Parameter").get("Inflow Start Time", 0.), allParameters->sublist("Parameter").get("Inflow Concentration", 2.0)};
         bcFactoryDiffusion->addBC(inflowChem, 5, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // Inflow through inner wall
         bcFactoryDiffusion->addBC(inflowChem, 7, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0, inner ring on innter wall
         bcFactoryDiffusion->addBC(inflowChem, 8, 0, domainDiffusion, "Dirichlet", 1, parameter_vec); // z=0.5 inner ring
@@ -350,10 +355,31 @@ void zeroDirichlet3D(double *x, double *res, double t, const double *parameters)
     res[2] = 0.;
 }
 
+/* Axial displacement of the end faces and rings for the axial pre-stretch
+ * parameters[0]: axial stretch (displacement per length)
+ * parameters[1]: rampTimeStep
+ * parameters[2]: timeRampEnd
+ * The stretch follows the pressure's load ramp (see loadFunction).
+ */
+void axialStretchDirichlet3D(double *x, double *res, double t, const double *parameters)
+{
+    double stretch = parameters[0];
+    double rampTimeStep = parameters[1];
+    double timeRampEnd = parameters[2];
+
+    double ramp = 1.0;
+    if (t < timeRampEnd)
+        ramp = std::min(1.0, (t + rampTimeStep) / timeRampEnd);
+
+    res[0] = 0.;
+    res[1] = 0.;
+    res[2] = stretch * ramp * x[2];
+}
+
 void inflowChem(double *x, double *res, double t, const double *parameters)
 {
     if (t >= parameters[0])
-        res[0] = 2.0;
+        res[0] = parameters[1];
     else
         res[0] = 0.;
 }
