@@ -60,7 +60,7 @@ unset SLURM_EXPORT_ENV
 # the modules the executable was built with (build-job.sh)
 ml load intel-oneapi-compilers intel-oneapi-mpi intel-oneapi-mkl
 
-srun --mpi=pmi2 $EXE --materialParameters=$MATERIAL
+srun --mpi=pmi2 --kill-on-bad-exit=1 $EXE --materialParameters=$MATERIAL
 EOF
     if [ $DRY_RUN -eq 1 ]; then
         echo "prepared: $run"
