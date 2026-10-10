@@ -6,7 +6,8 @@ paper's results were computed with) and changes only what is listed here:
 
 * every run: adaptive time stepping (see adaptive_segments), output by time,
   checkpoints, and the full stress tensor among the postprocessing fields;
-* phini: the compressibility Alpha2 of the other arteries;
+* phini: the compressibility Alpha2 of the other arteries, and load steps of 0.01 s
+  (with 0.02 s its first Newton iteration diverges);
 * narula: the remeshed geometry narula_r0.1_L1 (smoothed cap shoulders);
 * each run: the parameters of its study (the table in CASES below).
 
@@ -33,6 +34,9 @@ GEOMETRIES = {
 # Alpha2 by region (Volume Flag) as in dan, kim and plass; phini had 10.0 everywhere
 PHINI_ALPHA2 = {15: "198.654", 16: "151.73775", 17: "151.73775", 18: "500.0",
                 19: "151.73775", 20: "151.73775", 21: "151.73775", 22: "165.528"}
+
+# With the consistent Alpha2, phini's first Newton iteration diverges with load steps of 0.02 s
+PHINI_LOAD_STEP = "0.01"
 
 STRESS_FIELDS = ["Sxx", "Sxy", "Sxz", "Syx", "Syy", "Syz", "Szx", "Szy", "Szz"]
 
@@ -339,6 +343,10 @@ def main():
         if artery == "phini":
             for flag, region in regions(material_tree):
                 parameter(region, "Alpha2").set("value", PHINI_ALPHA2[flag])
+            parameter(sublist(simulation.getroot(), "Parameter"), "Load Step Size").set("value", PHINI_LOAD_STEP)
+            ramp = sublist(simulation.getroot(), "Timestepping Parameter", "Timestepping Intervalls", "1")
+            assert float(parameter(ramp, "Start Time").get("value")) == 0.
+            parameter(ramp, "dt").set("value", PHINI_LOAD_STEP)
         change(simulation, material_tree)
 
         final_time, extra_segments, extra_exports = 1500., (), ()

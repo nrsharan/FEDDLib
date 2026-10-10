@@ -42,7 +42,8 @@ so all runs share the one executable.
   if it is not longer than 50 s; a longer one is written at its end.
 - **Checkpoints** at 220, 540, 860 and 1200 s, in `checkpoints/`.
 - **The full stress tensor** (`Sxx` ... `Szz`) among the postprocessing fields.
-- **phini**: `Alpha2` as in dan, kim and plasschaert (it was 10.0 in every region).
+- **phini**: `Alpha2` as in dan, kim and plasschaert (it was 10.0 in every region),
+  and load steps of 0.01 s (with 0.02 s its first Newton iteration diverges).
 - **narula**: the remeshed geometry `narula_r0.1_L1.mesh` (cap shoulders smoothed
   with a 0.1 mm fillet, refined to 0.06 mm there).
 
