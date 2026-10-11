@@ -41,11 +41,10 @@ so all runs share the one executable.
   in `Exporter`). A time step ends exactly at the phase ends, and at the 50 s marks
   if it is not longer than 50 s; a longer one is written at its end.
 - **Checkpoints** at 220, 540, 860 and 1200 s, in `checkpoints/`.
-- **The full stress tensor** (`Sxx` ... `Szz`) among the postprocessing fields.
+- **The full stress tensor** (`Sxx` ... `Szz`) and the fibre stresses (`SFiber1`,
+  `SFiber2`) among the postprocessing fields.
 - **phini**: `Alpha2` as in dan, kim and plasschaert (it was 10.0 in every region),
   and load steps of 0.01 s (with 0.02 s its first Newton iteration diverges).
-- **narula**: the remeshed geometry `narula_r0.1_L1.mesh` (cap shoulders smoothed
-  with a 0.1 mm fillet, refined to 0.06 mm there).
 
 The studies:
 
@@ -59,9 +58,15 @@ The studies:
 | `degen_kappa_variation` | dan, control and drug | `Kappa` of the degenerated media at 33, 10, 0 % of the media's |
 | `dose_variation` | dan, drug | `Inflow Concentration` 0.06-1.5 µM (paper: 2) |
 | `drug_response_variation` | dan, drug | `C50` or `P` halved or doubled |
-| `mesh_variation` | narula and phini remeshed, control and drug | the mesh |
+| `mesh_convergence` | narula and phini remeshed, control and drug | the mesh: the paper's geometry (`original`) and its cap shoulders smoothed with a 0.1 mm fillet (`r0.1`), each refined at the shoulders to 0.12, 0.06, 0.03 mm (L0-L2) |
 | `axial_stretch` | dan, control and drug | `Axial Stretch` 0.05, ramped with the pressure |
 | `basal_tone_tuning` | dan, control to 540 s | `Eta` scaled, to find the basal-tone levels |
+
+The narula and phini runs on the paper's meshes are on hold (`HOLD` in
+`case.env`) until `mesh_convergence` shows whether those meshes are fine
+enough; `submit_cases.sh` skips them unless `INCLUDE_HELD=1` is set. The
+larger meshes of `mesh_convergence` run on 2 or 4 nodes (`NODES` in
+`case.env`).
 
 The controls of the baseline arteries (`kappa_variation/artery_dan_30` and the
 four in `arteries`) continue past 1500 s: the pressure goes to 0 over
@@ -77,7 +82,7 @@ get the axial displacement `Axial Stretch` × z, ramped up like the pressure).
 ./submit_cases.sh <build>/.../problems_paper_amlodipine.exe <run root> <case or study> ...
 ```
 
-Each case runs in `<run root>/<case>` on one node with 48 ranks. `--dry-run`
+Each case runs in `<run root>/<case>` with 48 ranks per node. `--dry-run`
 only prepares the directories.
 
 A run stopped by the time limit continues from its last checkpoint: in its

@@ -4,14 +4,17 @@
 Each run starts from the study's inputs for its artery in base/ (the files the
 paper's results were computed with) and changes only what is listed here:
 
-* every run: adaptive time stepping (see adaptive_segments), output by time,
-  checkpoints, and the full stress tensor among the postprocessing fields;
+* every run: adaptive time stepping (see adaptive_segments), output by time and
+  checkpoints;
 * phini: the compressibility Alpha2 of the other arteries, and load steps of 0.01 s
   (with 0.02 s its first Newton iteration diverges);
-* narula: the remeshed geometry narula_r0.1_L1 (smoothed cap shoulders);
+* every run: the stress tensor (Sxx ... Szz) and the fibre stresses (SFiber1, SFiber2)
+  among the postprocessing fields;
 * each run: the parameters of its study (the table in CASES below).
 
-cases/index.tsv lists every run with its job name, mesh and changes.
+cases/index.tsv lists every run with its job name, mesh, nodes and changes. The runs of
+narula and phini on the paper's meshes are on hold (HOLD in case.env; submit_cases.sh
+skips them) until the mesh convergence study shows whether those meshes are fine enough.
 Run it from this directory; it rewrites cases/ completely.
 """
 
@@ -22,11 +25,12 @@ import xml.etree.ElementTree as ET
 HERE = os.path.dirname(os.path.abspath(__file__))
 BASE = os.path.join(HERE, "base")
 CASES_DIR = os.path.join(HERE, "cases")
+MESHES = os.path.join(HERE, "..", "..", "..", "..", "..", "meshes", "SPP2311")
 
 GEOMETRIES = {
     "dan": ("simulationParameters_dan.xml", "materialParameters_dan.xml", "Artery_dan_SCI.mesh"),
     "kim": ("simulationParameters_kim.xml", "materialParameters_kim_guzman.xml", "Artery_kim_guzman_SCI.mesh"),
-    "narula": ("simulationParameters_narula.xml", "materialParameters_narula.xml", "narula_r0.1_L1.mesh"),
+    "narula": ("simulationParameters_narula.xml", "materialParameters_narula.xml", "Artery_narula_etal-coronoary_tcfa_medium_SCI.mesh"),
     "phini": ("simulationParameters_phini.xml", "materialParameters_phini.xml", "Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh"),
     "plass": ("simulationParameters_plass.xml", "materialParameters_plasschaert_heeneman_daemem.xml", "Artery_plasschaert_heeneman_daemem_SCI.mesh"),
 }
@@ -38,7 +42,11 @@ PHINI_ALPHA2 = {15: "198.654", 16: "151.73775", 17: "151.73775", 18: "500.0",
 # With the consistent Alpha2, phini's first Newton iteration diverges with load steps of 0.02 s
 PHINI_LOAD_STEP = "0.01"
 
-STRESS_FIELDS = ["Sxx", "Sxy", "Sxz", "Syx", "Syy", "Syz", "Szx", "Szy", "Szz"]
+STRESS_FIELDS = ["Sxx", "Sxy", "Sxz", "Syx", "Syy", "Syz", "Szx", "Szy", "Szz", "SFiber1", "SFiber2"]
+
+# Mesh convergence study: tetrahedra per node (48 ranks)
+TETS_PER_NODE = {"narula": 25000, "phini": 30000}
+HELD = "the mesh convergence study decides the mesh of narula and phini"
 
 # Phase ends: load ramp, reorientation, accelerated active, reorientation, active,
 # growth, reorientation, drug inflow, pressure drop, end of the run
@@ -301,12 +309,15 @@ for name, factor in [("C50", 0.5), ("C50", 2.0), ("P", 0.5), ("P", 2.0)]:
     add("drug_response_variation", "artery_dan_withDrug_%s_x%g" % (name, factor), "dan", scaled(name, factor),
         "drug, %s x%g (all regions)" % (name, factor))
 
-# Revision 3.4: remeshed narula and phini geometries (original geometry refined, smoothed shoulders)
-for artery in ["narula", "phini"]:
-    for variant in ["original_L1", "original_L2", "r0.1_L2", "r0.2_L2"]:
-        name = "%s_%s.mesh" % (artery, variant)
-        add("mesh_variation", "artery_%s_%s" % (artery, variant), artery, chain(mesh(name), drug(False)), "control, mesh " + name)
-        add("mesh_variation", "artery_%s_%s_withDrug" % (artery, variant), artery, mesh(name), "drug, mesh " + name)
+# Revision 3.4: mesh convergence, narula and phini remeshed with Gmsh: the paper's geometry
+# ("original") and its cap shoulders smoothed with a 0.1 mm fillet ("r0.1"); the size near the
+# shoulders halves from level to level (L0 0.12, L1 0.06, L2 0.03 mm)
+for artery in ["phini", "narula"]:
+    for family in ["original", "r0.1"]:
+        for level in ["L0", "L1", "L2"]:
+            name = "%s_%s_%s.mesh" % (artery, family, level)
+            add("mesh_convergence", "artery_%s_%s_%s" % (artery, family, level), artery, chain(mesh(name), drug(False)), "control, mesh " + name)
+            add("mesh_convergence", "artery_%s_%s_%s_withDrug" % (artery, family, level), artery, mesh(name), "drug, mesh " + name)
 
 # Revision 3.6: 5 % axial pre-stretch, ramped with the pressure
 add("axial_stretch", "artery_dan_stretch5", "dan", chain(axial_stretch(0.05), drug(False)), "control, 5 % axial stretch")
@@ -321,7 +332,7 @@ for factor in [0.75, 0.5, 0.35, 0.25, 0.15, 0.1]:
 STUDY_ABBREVIATIONS = {"kappa_variation": "kap", "arteries": "art", "pressure_drop_variation/10_pressure_drop": "pd10",
                        "pressure_drop_variation/20_pressure_drop": "pd20", "pressure_drop_variation/30_pressure_drop": "pd30",
                        "diffusion_variation": "dif", "reaction_variation": "rea", "degen_kappa_variation": "dkap",
-                       "dose_variation": "dose", "drug_response_variation": "resp", "mesh_variation": "mesh",
+                       "dose_variation": "dose", "drug_response_variation": "resp", "mesh_convergence": "mesh",
                        "axial_stretch": "ax", "basal_tone_tuning": "eta"}
 
 
@@ -329,10 +340,19 @@ def job_name(study, case):
     return STUDY_ABBREVIATIONS[study] + "_" + case.replace("artery_", "").replace("withDrug", "d")
 
 
+def tetrahedra(mesh_name):
+    with open(os.path.join(MESHES, mesh_name)) as f:
+        words = iter(f.read().split())
+    for word in words:
+        if word == "Tetrahedra":
+            return int(next(words))
+    raise ValueError("no tetrahedra in " + mesh_name)
+
+
 def main():
     if os.path.isdir(CASES_DIR):
         shutil.rmtree(CASES_DIR)
-    rows = ["case\tjob\tartery\tmesh\tfinal time\tchanges"]
+    rows = ["case\tjob\tartery\tmesh\tnodes\tfinal time\thold\tchanges"]
     names = set()
     for study, case, artery, change, description in CASES:
         sim_file, mat_file, mesh_file = GEOMETRIES[artery]
@@ -369,9 +389,15 @@ def main():
         assert name not in names, name
         names.add(name)
         mesh_name = parameter(sublist(simulation.getroot(), "Mesh Partitioner"), "Mesh 1 Name").get("value")
+        nodes = 1
+        if study == "mesh_convergence":
+            nodes = -(-tetrahedra(mesh_name) // TETS_PER_NODE[artery])
+        hold = HELD if artery in ("narula", "phini") and study != "mesh_convergence" else ""
         with open(os.path.join(folder, "case.env"), "w") as f:
-            f.write("JOB_NAME=%s\nMATERIAL=%s\nMESH=%s\n" % (name, mat_file, mesh_name))
-        rows.append("\t".join([study + "/" + case, name, artery, mesh_name, "%g" % final_time, description]))
+            f.write("JOB_NAME=%s\nMATERIAL=%s\nMESH=%s\nNODES=%d\n" % (name, mat_file, mesh_name, nodes))
+            if hold:
+                f.write("HOLD=\"%s\"\n" % hold)
+        rows.append("\t".join([study + "/" + case, name, artery, mesh_name, str(nodes), "%g" % final_time, "on hold" if hold else "", description]))
     with open(os.path.join(CASES_DIR, "index.tsv"), "w") as f:
         f.write("\n".join(rows) + "\n")
     print("%d runs written to %s" % (len(CASES), CASES_DIR))

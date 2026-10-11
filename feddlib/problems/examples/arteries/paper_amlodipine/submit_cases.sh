@@ -10,6 +10,8 @@
 #
 # The run directory gets the case's two input files, the shared solver and preconditioner
 # files, the mesh, and job.sh. --dry-run prepares the directories without submitting.
+# A case runs on NODES nodes (case.env) with 48 ranks each. Cases with HOLD in case.env
+# are skipped unless INCLUDE_HELD=1 is set.
 # MAIL_USER=<address> in the environment adds Slurm mails at the end of each job.
 set -euo pipefail
 
@@ -32,7 +34,10 @@ for arg in "$@"; do
 done
 
 for case in "${CASES[@]}"; do
+    unset HOLD NODES
     source "$HERE/cases/$case/case.env"
+    NODES=${NODES:-1}
+    if [ -n "${HOLD:-}" ] && [ "${INCLUDE_HELD:-0}" != 1 ]; then echo "on hold ($HOLD): $case"; continue; fi
     run="$RUN_ROOT/$case"
     if [ -e "$run/job.sh" ]; then echo "skipped (exists): $run"; continue; fi
     mkdir -p "$run"
@@ -46,8 +51,8 @@ for case in "${CASES[@]}"; do
 #!/bin/bash -l
 #SBATCH --job-name=$JOB_NAME
 #SBATCH --time=7-00:00:00
-#SBATCH --nodes=1
-#SBATCH --ntasks=48
+#SBATCH --nodes=$NODES
+#SBATCH --ntasks=$((48 * NODES))
 #SBATCH --ntasks-per-core=1
 #SBATCH --exclusive
 #SBATCH --account=balzadlb_0000
