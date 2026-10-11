@@ -52,8 +52,12 @@ HELD = "the mesh convergence study decides the mesh of narula and phini"
 # growth, reorientation, drug inflow, pressure drop, end of the run
 PHASE_ENDS = [1., 20., 220., 240., 540., 840., 860., 1000., 1200., 1500.]
 EXPORT_INTERVAL = 50.
-CHECKPOINT_TIMES = [220., 540., 860., 1200.]
 GROWTH_START = 540.
+GROWTH_END = 840.
+# Checkpoints at the phase ends and every 25 s of growth, so a run can be repeated from
+# shortly before the time of interest
+GROWTH_CHECKPOINT_INTERVAL = 25.
+CHECKPOINT_TIMES = sorted([220., 540., 860., 1200.] + [GROWTH_START + GROWTH_CHECKPOINT_INTERVAL * k for k in range(1, int((GROWTH_END - GROWTH_START) / GROWTH_CHECKPOINT_INTERVAL) + 1)])
 NO_DRUG = "10000000.0"  # Inflow Start Time of the drug-free runs (past the end)
 
 

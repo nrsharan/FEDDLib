@@ -40,7 +40,8 @@ so all runs share the one executable.
   1600, 1700 s with unloading) and every 50 s (`Export Times`, `Export Interval`
   in `Exporter`). A time step ends exactly at the phase ends, and at the 50 s marks
   if it is not longer than 50 s; a longer one is written at its end.
-- **Checkpoints** at 220, 540, 860 and 1200 s, in `checkpoints/`.
+- **Checkpoints** at 220, 540, 860 and 1200 s and every 25 s of growth (565 ... 840 s),
+  in `checkpoints/`, so a run can be repeated from shortly before a time of interest.
 - **The full stress tensor** (`Sxx` ... `Szz`) and the fibre stresses (`SFiber1`,
   `SFiber2`) among the postprocessing fields.
 - **phini**: `Alpha2` as in dan, kim and plasschaert (it was 10.0 in every region),

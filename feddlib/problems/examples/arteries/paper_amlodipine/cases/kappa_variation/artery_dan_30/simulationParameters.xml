@@ -118,7 +118,7 @@
         <Parameter name="Adaptive Time Stepping" type="bool" value="false"/>
         <Parameter name="Checkpointing" type="bool" value="true"/>
         <Parameter name="Checkpoint directory" type="string" value="checkpoints"/>
-        <Parameter name="Checkpoint Times" type="Array(double)" value="{220.0, 540.0, 860.0, 1200.0}"/>
+        <Parameter name="Checkpoint Times" type="Array(double)" value="{220.0, 540.0, 565.0, 590.0, 615.0, 640.0, 665.0, 690.0, 715.0, 740.0, 765.0, 790.0, 815.0, 840.0, 860.0, 1200.0}"/>
         <Parameter name="Export history" type="bool" value="true"/>
         <ParameterList name="Timestepping Intervalls">
             <Parameter name="Number of Segments" type="int" value="12"/>
