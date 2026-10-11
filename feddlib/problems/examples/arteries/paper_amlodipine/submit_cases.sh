@@ -64,6 +64,8 @@ $mail
 unset SLURM_EXPORT_ENV
 # the modules the executable was built with (build-job.sh)
 ml load intel-oneapi-compilers intel-oneapi-mpi intel-oneapi-mkl
+# every element message in full in ErrorLog.txt (Interface2 otherwise keeps 3 of each kind and counts the rest)
+export INTERFACE2_ERRORLOG_EXAMPLES=1000000000
 
 srun --mpi=pmi2 --kill-on-bad-exit=1 $EXE --materialParameters=$MATERIAL
 EOF
