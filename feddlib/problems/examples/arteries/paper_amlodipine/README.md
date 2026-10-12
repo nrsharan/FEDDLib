@@ -48,6 +48,18 @@ so all runs share the one executable.
   segment (540-840 s) is such a step accepted at the minimum time step, provided
   the global Newton iteration converges; anywhere else a failure at the minimum
   stops the run.
+  The paper's runs (fixed time steps, an older FEDDLib) never stopped: every
+  time step was accepted after at most 20 Newton iterations, converged or not,
+  with no divergence test. A segment with `Accept Unconverged Newton At Minimum
+  dt` set to true does that as a last resort: a time step that still fails at the
+  minimum (also with element failures accepted) is repeated once more at that
+  size without the divergence test and accepted after at most `MaxNonLinIts`
+  iterations, unless the residual is not a finite number or the solver breaks
+  down. Each such step is reported in the `.out` file (`[adaptive] ... accepted
+  the time step ... although the Newton iteration did not converge (||F|| = ...)`)
+  and counted at the end. `make_cases.py` does not set it; it is switched on in a
+  restart's `simulationParameters.xml` (growth segment) when a run cannot pass a
+  time otherwise.
 - **Output by time.** The solution and the postprocessing fields are written at
   the ends of the phases (1, 20, 220, 240, 540, 840, 860, 1000, 1200, 1500 s, and
   1600, 1700 s with unloading) and every 50 s (`Export Times`, `Export Interval`
