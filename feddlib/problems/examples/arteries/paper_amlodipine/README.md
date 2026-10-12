@@ -74,6 +74,15 @@ so all runs share the one executable.
   in `checkpoints/`, so a run can be repeated from shortly before a time of interest.
 - **The full stress tensor** (`Sxx` ... `Szz`) and the fibre stresses (`SFiber1`,
   `SFiber2`) among the postprocessing fields.
+- **Preconditioner reuse.** The preconditioner is built in the first two Newton
+  iterations of each time step and reused in the later ones (`Rebuild
+  Preconditioner every Newton Iteration` false, `newtonLimit` 2 in `Parameter`;
+  the paper: rebuilt in every iteration). With Eisenstat-Walker on, that takes
+  10-14 % less time with results within about 1e-5 (dan from 540 and 615 s,
+  faculty, 2026-10-12). It needs FEDDLib with the Newton iterations counted per
+  time step (`NonLinearSolver`, 2026-10-12): an older one never rebuilds the
+  preconditioner after the first time steps. Runs submitted before 2026-10-12
+  21:00 rebuild it in every iteration.
 - **phini**: `Alpha2` as in dan, kim and plasschaert (it was 10.0 in every region),
   and load steps of 0.01 s (with 0.02 s its first Newton iteration diverges).
   narula keeps the paper's `Alpha2` of 500 in its calcifications (19, 20), the

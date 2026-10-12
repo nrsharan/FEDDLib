@@ -10,6 +10,8 @@ paper's results were computed with) and changes only what is listed here:
   (with 0.02 s its first Newton iteration diverges);
 * every run: the stress tensor (Sxx ... Szz) and the fibre stresses (SFiber1, SFiber2)
   among the postprocessing fields;
+* every run: the preconditioner is built in the first PRECONDITIONER_NEWTON_STEPS Newton
+  steps of each time step and reused in the later ones;
 * each run: the parameters of its study (the table in CASES below).
 
 cases/index.tsv lists every run with its job name, mesh, nodes and changes. The runs of
@@ -60,6 +62,9 @@ GROWTH_END = 840.
 # shortly before the time of interest
 GROWTH_CHECKPOINT_INTERVAL = 25.
 CHECKPOINT_TIMES = sorted([220., 540., 860., 1200.] + [GROWTH_START + GROWTH_CHECKPOINT_INTERVAL * k for k in range(1, int((GROWTH_END - GROWTH_START) / GROWTH_CHECKPOINT_INTERVAL) + 1)])
+# Newton steps of a time step that build the preconditioner; the later ones reuse it
+# (the paper: rebuilt in every Newton step)
+PRECONDITIONER_NEWTON_STEPS = 2
 NO_DRUG = "10000000.0"  # Inflow Start Time of the drug-free runs (past the end)
 
 
@@ -193,7 +198,11 @@ def common(simulation, final_time, extra_segments=(), extra_export_times=()):
     root = simulation.getroot()
     adaptive_segments(simulation, final_time, extra_segments)
 
-    fields = parameter(sublist(root, "Parameter"), "Post Processing Fields")
+    p = sublist(root, "Parameter")
+    set_parameter(simulation, p, "Rebuild Preconditioner every Newton Iteration", "bool", "false")
+    set_parameter(simulation, p, "newtonLimit", "int", str(PRECONDITIONER_NEWTON_STEPS))
+
+    fields = parameter(p, "Post Processing Fields")
     names = [f.strip() for f in fields.get("value").strip("{}").split(",")]
     fields.set("value", "{%s}" % ", ".join(names + [f for f in STRESS_FIELDS if f not in names]))
 
