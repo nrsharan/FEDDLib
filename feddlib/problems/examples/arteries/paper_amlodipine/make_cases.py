@@ -151,7 +151,8 @@ def adaptive_segments(simulation, final_time, extra_segments=()):
     for item in intervals.findall("ParameterList"):
         segments.append((float(parameter(item, "Start Time").get("value")), parameter(item, "dt").get("value")))
     segments += list(extra_segments)
-    segments.sort()
+    # a run that ends early (basal_tone_tuning) leaves out the segments it does not reach
+    segments = sorted(s for s in segments if s[0] < final_time)
 
     depth = depth_of(simulation, intervals)
     for child in list(intervals):
