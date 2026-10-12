@@ -76,6 +76,9 @@ so all runs share the one executable.
   `SFiber2`) among the postprocessing fields.
 - **phini**: `Alpha2` as in dan, kim and plasschaert (it was 10.0 in every region),
   and load steps of 0.01 s (with 0.02 s its first Newton iteration diverges).
+  narula keeps the paper's `Alpha2` of 500 in its calcifications (19, 20), the
+  lipid value, where the other arteries use 151.73775: as a volumetric penalty
+  the higher value changes little.
 
 The studies:
 
