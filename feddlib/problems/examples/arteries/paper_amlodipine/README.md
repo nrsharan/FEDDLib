@@ -27,6 +27,11 @@ so all runs share the one executable.
   phinikaridou, plasschaert). The build directory gets dan's as
   `simulationParameters.xml` and `materialParameters_dan.xml`.
 - `solverParameters.xml`, `preconditionerParameters_*.xml`: shared by all runs.
+  The Newton iteration's linear solves use Eisenstat-Walker forcing terms
+  (`Forcing Term Method` Type 2, tolerance between 1e-6 and 1e-3; the paper:
+  Constant, 1e-5), which takes 15-17 % less time with results within about 1e-5
+  (dan from 540 and 615 s, Fritz, 2026-10-12); the Newton tolerance is unchanged.
+  Runs submitted before 2026-10-12 16:30 used Constant.
 - `cases/`: one folder per run (90 in all) with its simulation and material
   file and `case.env` (`JOB_NAME`, `MATERIAL`, `MESH`, `NODES`, and `HOLD` for
   runs on hold). `cases/index.tsv` lists every run with its mesh, nodes, final
