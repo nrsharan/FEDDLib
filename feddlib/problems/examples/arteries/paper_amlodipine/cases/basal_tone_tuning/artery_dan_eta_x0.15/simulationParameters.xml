@@ -116,6 +116,7 @@
         <Parameter name="beta" type="double" value="0.25"/> <!-- newmark method parameter-->
         <Parameter name="gamma" type="double" value="0.5"/> <!-- newmark method parameter-->
         <Parameter name="Adaptive Time Stepping" type="bool" value="false"/>
+        <Parameter name="Converged Time Steps Before Increase" type="int" value="7"/>
         <Parameter name="Checkpointing" type="bool" value="true"/>
         <Parameter name="Checkpoint directory" type="string" value="checkpoints"/>
         <Parameter name="Checkpoint Times" type="Array(double)" value="{220.0}"/>

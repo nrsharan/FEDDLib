@@ -52,6 +52,8 @@ HELD = "the mesh convergence study decides the mesh of narula and phini"
 # growth, reorientation, drug inflow, pressure drop, end of the run
 PHASE_ENDS = [1., 20., 220., 240., 540., 840., 860., 1000., 1200., 1500.]
 EXPORT_INTERVAL = 50.
+# Successful time steps of an adaptive segment before its time step grows (FEDDLib's default: 5)
+CONVERGED_STEPS_BEFORE_INCREASE = 7
 GROWTH_START = 540.
 GROWTH_END = 840.
 # Checkpoints at the phase ends and every 25 s of growth, so a run can be repeated from
@@ -179,6 +181,7 @@ def adaptive_segments(simulation, final_time, extra_segments=()):
 
     set_parameter(simulation, stepping, "Final time", "double", fmt(final_time))
     set_parameter(simulation, stepping, "Adaptive Time Stepping", "bool", "false")
+    set_parameter(simulation, stepping, "Converged Time Steps Before Increase", "int", str(CONVERGED_STEPS_BEFORE_INCREASE))
     set_parameter(simulation, stepping, "Checkpointing", "bool", "true")
     set_parameter(simulation, stepping, "Checkpoint directory", "string", "checkpoints")
     set_parameter(simulation, stepping, "Checkpoint Times", "Array(double)", "{%s}" % ", ".join(fmt(t) for t in CHECKPOINT_TIMES if t < final_time))

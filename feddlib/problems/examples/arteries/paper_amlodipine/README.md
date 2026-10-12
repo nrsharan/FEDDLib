@@ -40,7 +40,9 @@ so all runs share the one executable.
 
 - **Adaptive time stepping.** The load ramp (0-1 s) keeps its fixed load steps.
   Every later time segment starts with the paper's `dt`, which is also its
-  `Minimum dt`, and may grow to half the segment's length (`Maximum dt`).
+  `Minimum dt`, and may grow to half the segment's length (`Maximum dt`); it
+  doubles after 7 converged time steps (`Converged Time Steps Before Increase`;
+  FEDDLib's default is 5).
   A time step in which an element cannot compute its state (its local Newton
   iteration fails) is repeated with a smaller time step. Only in the growth
   segment (540-840 s) is such a step accepted at the minimum time step, provided
