@@ -1397,6 +1397,7 @@ void TimeProblem<SC,LO,GO,NO>::evalModelImplMonolithic( const Thyra::ModelEvalua
 
         if (fill_f) {
             
+            Teuchos::TimeMonitor residualTimer(*Teuchos::TimeMonitor::getNewCounter("FEDD TimeProblem: Residual"));
             this->calculateNonLinResidualVec( "standard", time_ );  // Calculating residual Vector
                         
             BlockMultiVectorConstPtr_Type resConst = this->getResidualConst();
@@ -1410,13 +1411,20 @@ void TimeProblem<SC,LO,GO,NO>::evalModelImplMonolithic( const Thyra::ModelEvalua
         TpetraMatrixPtr_Type W;
         if (fill_W) {
             
+            {
+            Teuchos::TimeMonitor assemblyTimer(*Teuchos::TimeMonitor::getNewCounter("FEDD TimeProblem: Assemble Newton"));
             this->assemble("Newton"); // ReAssembling matrices with updated u in this class
+            }
+            {
+            Teuchos::TimeMonitor boundaryTimer(*Teuchos::TimeMonitor::getNewCounter("FEDD TimeProblem: Boundaries"));
             this->setBoundariesSystem(); // setting boundaries to the system
+            }
 
             
             Teuchos::RCP<TpetraOp_Type> W_tpetra = tpetra_extract::getTpetraOperator(W_out);
             Teuchos::RCP<TpetraMatrix_Type> W_tpetraMat = Teuchos::rcp_dynamic_cast<TpetraMatrix_Type>(W_tpetra);
             
+            Teuchos::RCP<Teuchos::TimeMonitor> mergeTimer = Teuchos::rcp(new Teuchos::TimeMonitor(*Teuchos::TimeMonitor::getNewCounter("FEDD TimeProblem: Merge blocks and copy into W")));
             TpetraMatrixConstPtr_Type W_systemTpetra = this->getSystemCombined()->getMergedMatrix()->getTpetraMatrix();           
             TpetraMatrixPtr_Type W_systemTpetraNonConst = rcp_const_cast<TpetraMatrix_Type>(W_systemTpetra);
             
@@ -1434,6 +1442,7 @@ void TimeProblem<SC,LO,GO,NO>::evalModelImplMonolithic( const Thyra::ModelEvalua
                 W_tpetraMat->replaceLocalValues( i,  indices, values);
             }
             W_tpetraMat->fillComplete();
+            mergeTimer = Teuchos::null;
             
         }
         // 3) Compute preconditioner W_prec if needed
