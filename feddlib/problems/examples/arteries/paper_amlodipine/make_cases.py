@@ -12,6 +12,8 @@ paper's results were computed with) and changes only what is listed here:
   among the postprocessing fields;
 * every run: the preconditioner is built in the first PRECONDITIONER_NEWTON_STEPS Newton
   steps of each time step and reused in the later ones;
+* every run: growthDirectionBool GROWTH_DIRECTION_BOOL in every region (growth directions
+  kept at their values at the start of growth);
 * each run: the parameters of its study (the table in CASES below).
 
 cases/index.tsv lists every run with its job name, mesh, nodes and changes. The runs of
@@ -65,6 +67,11 @@ CHECKPOINT_TIMES = sorted([220., 540., 860., 1200.] + [GROWTH_START + GROWTH_CHE
 # Newton steps of a time step that build the preconditioner; the later ones reuse it
 # (the paper: rebuilt in every Newton step)
 PRECONDITIONER_NEWTON_STEPS = 2
+# growthDirectionBool of every region: 0 keeps the growth directions at their values at the start of
+# growth; with 1 (the paper) the element takes them from the Mandel stress in every step, and in the
+# fibrous cap they flip between two orientations from one step to the next (a residual at the start of
+# each step that does not shrink with dt; narula r0.1_L1 and plass could not pass ~595 and ~721 s)
+GROWTH_DIRECTION_BOOL = "0"
 NO_DRUG = "10000000.0"  # Inflow Start Time of the drug-free runs (past the end)
 
 
@@ -396,6 +403,7 @@ def main():
         if study == "basal_tone_tuning":
             final_time = 540.
         common(simulation, final_time, extra_segments, extra_exports)
+        set_material(material_tree, "growthDirectionBool", GROWTH_DIRECTION_BOOL)
 
         folder = os.path.join(CASES_DIR, study, case)
         os.makedirs(folder)

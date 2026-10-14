@@ -73,7 +73,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="growthDirectionBool" type="double" value="0" />
       <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
       <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
@@ -171,7 +171,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="growthDirectionBool" type="double" value="0" />
       <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
       <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
@@ -284,7 +284,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="growthDirectionBool" type="double" value="0" />
       <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
       <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
@@ -397,7 +397,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="growthDirectionBool" type="double" value="0" />
       <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
       <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
@@ -472,7 +472,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="growthDirectionBool" type="double" value="0" />
       <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
       <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
@@ -547,7 +547,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="growthDirectionBool" type="double" value="0" />
       <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
       <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
@@ -622,7 +622,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="growthDirectionBool" type="double" value="0" />
       <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
       <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />
@@ -697,7 +697,7 @@
       <Parameter name="ActiveBool" type="double" value="0" />
       <Parameter name="growthBool" type="double" value="0" />
       <Parameter name="reorientationBool" type="double" value="0" />
-      <Parameter name="growthDirectionBool" type="double" value="1" />
+      <Parameter name="growthDirectionBool" type="double" value="0" />
       <Parameter name="kFiberDistribution" type="double" value="0.1333333333334" />
       <Parameter name="P" type="double" value="2.9580835205796716" />
       <Parameter name="Density" type="double" value="1.e0" />

@@ -86,6 +86,20 @@ so all runs share the one executable.
   time step (`NonLinearSolver`, 2026-10-12): an older one never rebuilds the
   preconditioner after the first time steps. Runs submitted before 2026-10-12
   21:00 rebuild it in every iteration.
+- **Growth directions frozen** (`growthDirectionBool` 0 in every region; the
+  paper: 1). With 1 the element takes the growth directions from the
+  eigenvectors of the Mandel stress in every evaluation (only inside
+  `if (growthDirectionBool == 1)`; Interface2 starts each evaluation from the
+  previous step's history, so with 0 they keep their values from the start of
+  growth). In the fibrous cap (`Alpha4` 73375) they flip between two
+  orientations from one time step to the next (22 % of its Gauss points by more
+  than 0.1 every step, 2.5 % over two steps; narula r0.1_L1 at 595 s): every
+  growth step then starts with a residual that does not shrink with dt (about
+  2.2 at 0.05 ... 0.00625 s, 98 % of it in the cap), Newton needs 10-14
+  iterations, and narula r0.1_L1 (595 s) and plass (721.6 s) could not go on.
+  Frozen, the starting residual is proportional to dt again (0.025 at
+  0.0125 s) and Newton needs 3-5 iterations. Runs restarted on 2026-10-14 with
+  it froze the directions at their restart time, not at 540 s.
 - **phini**: `Alpha2` as in dan, kim and plasschaert (it was 10.0 in every region),
   and load steps of 0.01 s (with 0.02 s its first Newton iteration diverges).
   narula keeps the paper's `Alpha2` of 500 in its calcifications (19, 20), the
