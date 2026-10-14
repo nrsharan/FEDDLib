@@ -59,8 +59,11 @@ so all runs share the one executable.
   dt` set to true does that as a last resort: a time step that still fails at the
   minimum (also with element failures accepted) is repeated once more at that
   size without the divergence test and accepted after at most `MaxNonLinIts`
-  iterations, unless the residual is not a finite number or the solver breaks
-  down. Each such step is reported in the `.out` file (`[adaptive] ... accepted
+  iterations, unless the residual is not a finite number, ends above the residual
+  the attempt started from, or the solver breaks down; the run then stops. (Without
+  the divergence test a Newton iteration can blow up and then stop on a tiny
+  update: the narula r0.1_L1 restart accepted ||F|| = 1.3e17 at 599.2 s with
+  e03f42a and hung on the next step.) Each such step is reported in the `.out` file (`[adaptive] ... accepted
   the time step ... although the Newton iteration did not converge (||F|| = ...)`)
   and counted at the end. `make_cases.py` does not set it; it is switched on in a
   restart's `simulationParameters.xml` (growth segment) when a run cannot pass a
