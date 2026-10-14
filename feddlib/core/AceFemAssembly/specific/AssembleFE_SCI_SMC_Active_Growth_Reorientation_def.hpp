@@ -362,6 +362,13 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::assemble_SC
     for (int i = 0; i < 10; i++)
         this->residuumRc_[i] = residuumRc[i];
 
+    // The element updates its history in every evaluation. NOX's last evaluation of a time step is
+    // the residual at the converged solution, so the history is taken from residual evaluations too
+    // (otherwise the next time step starts from the history of the Newton iterate before it).
+    double* historyUpdated = elem.getHistoryUpdated();
+    for (int i = 0; i < this->historyLength_; i++)
+        this->historyUpdated_[i] = historyUpdated[i];
+
     if (computeTangent) {
         double** stiffnessMatrixKuu = elem.getStiffnessMatrixKuu();
         for (int i = 0; i < 30; i++)
@@ -387,10 +394,6 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::assemble_SC
         for (int i = 0; i < 10; i++)
             for (int j = 0; j < 10; j++)
                 this->stiffnessMatrixKcc_[i][j] = stiffnessMatrixKcc[i][j];
-
-        double* historyUpdated = elem.getHistoryUpdated();
-        for (int i = 0; i < this->historyLength_; i++)
-            this->historyUpdated_[i] = historyUpdated[i];
     }
 
 #endif
