@@ -14,6 +14,8 @@ paper's results were computed with) and changes only what is listed here:
   steps of each time step and reused in the later ones;
 * every run: growthDirectionBool GROWTH_DIRECTION_BOOL in every region (growth directions
   kept at their values at the start of growth);
+* kim: the paper's geometry remeshed finer at the cap (KIM_MESH; the paper's mesh is at the
+  coarsest level of the mesh convergence study there);
 * each run: the parameters of its study (the table in CASES below).
 
 cases/index.tsv lists every run with its job name, mesh, nodes and changes. The runs of
@@ -31,9 +33,14 @@ BASE = os.path.join(HERE, "base")
 CASES_DIR = os.path.join(HERE, "cases")
 MESHES = os.path.join(HERE, "..", "..", "..", "..", "..", "meshes", "SPP2311")
 
+# kim: the paper's geometry (Artery_kim_guzman_SCI.mesh, cap elements ~0.088 mm) remeshed with the
+# pipeline of the mesh convergence study (cross-section recovered from the paper's mesh, Gmsh, global
+# size 0.09 mm, 0.03 mm near the cap shoulders and stress peaks; cap elements ~0.054 mm)
+KIM_MESH = "kim_original_L2.mesh"
+
 GEOMETRIES = {
     "dan": ("simulationParameters_dan.xml", "materialParameters_dan.xml", "Artery_dan_SCI.mesh"),
-    "kim": ("simulationParameters_kim.xml", "materialParameters_kim_guzman.xml", "Artery_kim_guzman_SCI.mesh"),
+    "kim": ("simulationParameters_kim.xml", "materialParameters_kim_guzman.xml", KIM_MESH),
     "narula": ("simulationParameters_narula.xml", "materialParameters_narula.xml", "Artery_narula_etal-coronoary_tcfa_medium_SCI.mesh"),
     "phini": ("simulationParameters_phini.xml", "materialParameters_phini.xml", "Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh"),
     "plass": ("simulationParameters_plass.xml", "materialParameters_plasschaert_heeneman_daemem.xml", "Artery_plasschaert_heeneman_daemem_SCI.mesh"),
@@ -48,8 +55,12 @@ PHINI_LOAD_STEP = "0.01"
 
 STRESS_FIELDS = ["Sxx", "Sxy", "Sxz", "Syx", "Syy", "Syz", "Szx", "Szy", "Szz", "SFiber1", "SFiber2"]
 
-# Mesh convergence study: tetrahedra per node (48 ranks)
-TETS_PER_NODE = {"narula": 25000, "phini": 30000}
+# Remeshed meshes: tetrahedra per node (48 ranks)
+TETS_PER_NODE = {"narula": 25000, "phini": 30000, "kim": 30000}
+# The L3 meshes (5-12 MB) are not in the repository (smoothing_package/<artery>/meshes on the
+# user's machine); their sizes, for the node counts when the file is not there
+MESH_TETRAHEDRA = {"narula_original_L3.mesh": 316470, "narula_r0.1_L3.mesh": 317083,
+                   "phini_original_L3.mesh": 147267, "phini_r0.1_L3.mesh": 147835}
 HELD = "the mesh convergence study decides the mesh of narula and phini"
 
 # Phase ends: load ramp, reorientation, accelerated active, reorientation, active,
@@ -335,10 +346,10 @@ for name, factor in [("C50", 0.5), ("C50", 2.0), ("P", 0.5), ("P", 2.0)]:
 
 # Revision 3.4: mesh convergence, narula and phini remeshed with Gmsh: the paper's geometry
 # ("original") and its cap shoulders smoothed with a 0.1 mm fillet ("r0.1"); the size near the
-# shoulders halves from level to level (L0 0.12, L1 0.06, L2 0.03 mm)
+# shoulders halves from level to level (L0 0.12, L1 0.06, L2 0.03, L3 0.015 mm)
 for artery in ["phini", "narula"]:
     for family in ["original", "r0.1"]:
-        for level in ["L0", "L1", "L2"]:
+        for level in ["L0", "L1", "L2", "L3"]:
             name = "%s_%s_%s.mesh" % (artery, family, level)
             add("mesh_convergence", "artery_%s_%s_%s" % (artery, family, level), artery, chain(mesh(name), drug(False)), "control, mesh " + name)
             add("mesh_convergence", "artery_%s_%s_%s_withDrug" % (artery, family, level), artery, mesh(name), "drug, mesh " + name)
@@ -365,6 +376,8 @@ def job_name(study, case):
 
 
 def tetrahedra(mesh_name):
+    if not os.path.exists(os.path.join(MESHES, mesh_name)) and mesh_name in MESH_TETRAHEDRA:
+        return MESH_TETRAHEDRA[mesh_name]
     with open(os.path.join(MESHES, mesh_name)) as f:
         words = iter(f.read().split())
     for word in words:
@@ -415,7 +428,7 @@ def main():
         names.add(name)
         mesh_name = parameter(sublist(simulation.getroot(), "Mesh Partitioner"), "Mesh 1 Name").get("value")
         nodes = 1
-        if study == "mesh_convergence":
+        if study == "mesh_convergence" or artery == "kim":
             nodes = -(-tetrahedra(mesh_name) // TETS_PER_NODE[artery])
         hold = HELD if artery in ("narula", "phini") and study != "mesh_convergence" else ""
         with open(os.path.join(folder, "case.env"), "w") as f:

@@ -5,8 +5,8 @@ kappa_variation/artery_dan_30	kap_dan_30	dan	Artery_dan_SCI.mesh	1	1700		control
 kappa_variation/artery_dan_withDrug_30	kap_dan_d_30	dan	Artery_dan_SCI.mesh	1	1500		drug, Kappa media/degenerated media 103.783/69.5349
 kappa_variation/artery_dan_45	kap_dan_45	dan	Artery_dan_SCI.mesh	1	1500		control, Kappa media/degenerated media 81.5441/54.6345
 kappa_variation/artery_dan_withDrug_45	kap_dan_d_45	dan	Artery_dan_SCI.mesh	1	1500		drug, Kappa media/degenerated media 81.5441/54.6345
-arteries/artery_kim	art_kim	kim	Artery_kim_guzman_SCI.mesh	1	1700		control, unloading 1500-1600 s to 1700 s
-arteries/artery_kim_withDrug	art_kim_d	kim	Artery_kim_guzman_SCI.mesh	1	1500		drug
+arteries/artery_kim	art_kim	kim	kim_original_L2.mesh	3	1700		control, unloading 1500-1600 s to 1700 s
+arteries/artery_kim_withDrug	art_kim_d	kim	kim_original_L2.mesh	3	1500		drug
 arteries/artery_narula	art_narula	narula	Artery_narula_etal-coronoary_tcfa_medium_SCI.mesh	1	1700	on hold	control, unloading 1500-1600 s to 1700 s
 arteries/artery_narula_withDrug	art_narula_d	narula	Artery_narula_etal-coronoary_tcfa_medium_SCI.mesh	1	1500	on hold	drug
 arteries/artery_phini	art_phini	phini	Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh	1	1700	on hold	control, unloading 1500-1600 s to 1700 s
@@ -14,17 +14,17 @@ arteries/artery_phini_withDrug	art_phini_d	phini	Artery_phinikaridou_etal-corono
 arteries/artery_plass	art_plass	plass	Artery_plasschaert_heeneman_daemem_SCI.mesh	1	1700		control, unloading 1500-1600 s to 1700 s
 arteries/artery_plass_withDrug	art_plass_d	plass	Artery_plasschaert_heeneman_daemem_SCI.mesh	1	1500		drug
 pressure_drop_variation/10_pressure_drop/artery_dan_withDrug	pd10_dan_d	dan	Artery_dan_SCI.mesh	1	1500		drug, pressure drop 10 mmHg
-pressure_drop_variation/10_pressure_drop/artery_kim_withDrug	pd10_kim_d	kim	Artery_kim_guzman_SCI.mesh	1	1500		drug, pressure drop 10 mmHg
+pressure_drop_variation/10_pressure_drop/artery_kim_withDrug	pd10_kim_d	kim	kim_original_L2.mesh	3	1500		drug, pressure drop 10 mmHg
 pressure_drop_variation/10_pressure_drop/artery_narula_withDrug	pd10_narula_d	narula	Artery_narula_etal-coronoary_tcfa_medium_SCI.mesh	1	1500	on hold	drug, pressure drop 10 mmHg
 pressure_drop_variation/10_pressure_drop/artery_phini_withDrug	pd10_phini_d	phini	Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh	1	1500	on hold	drug, pressure drop 10 mmHg
 pressure_drop_variation/10_pressure_drop/artery_plass_withDrug	pd10_plass_d	plass	Artery_plasschaert_heeneman_daemem_SCI.mesh	1	1500		drug, pressure drop 10 mmHg
 pressure_drop_variation/20_pressure_drop/artery_dan_withDrug	pd20_dan_d	dan	Artery_dan_SCI.mesh	1	1500		drug, pressure drop 20 mmHg
-pressure_drop_variation/20_pressure_drop/artery_kim_withDrug	pd20_kim_d	kim	Artery_kim_guzman_SCI.mesh	1	1500		drug, pressure drop 20 mmHg
+pressure_drop_variation/20_pressure_drop/artery_kim_withDrug	pd20_kim_d	kim	kim_original_L2.mesh	3	1500		drug, pressure drop 20 mmHg
 pressure_drop_variation/20_pressure_drop/artery_narula_withDrug	pd20_narula_d	narula	Artery_narula_etal-coronoary_tcfa_medium_SCI.mesh	1	1500	on hold	drug, pressure drop 20 mmHg
 pressure_drop_variation/20_pressure_drop/artery_phini_withDrug	pd20_phini_d	phini	Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh	1	1500	on hold	drug, pressure drop 20 mmHg
 pressure_drop_variation/20_pressure_drop/artery_plass_withDrug	pd20_plass_d	plass	Artery_plasschaert_heeneman_daemem_SCI.mesh	1	1500		drug, pressure drop 20 mmHg
 pressure_drop_variation/30_pressure_drop/artery_dan_withDrug	pd30_dan_d	dan	Artery_dan_SCI.mesh	1	1500		drug, pressure drop 30 mmHg
-pressure_drop_variation/30_pressure_drop/artery_kim_withDrug	pd30_kim_d	kim	Artery_kim_guzman_SCI.mesh	1	1500		drug, pressure drop 30 mmHg
+pressure_drop_variation/30_pressure_drop/artery_kim_withDrug	pd30_kim_d	kim	kim_original_L2.mesh	3	1500		drug, pressure drop 30 mmHg
 pressure_drop_variation/30_pressure_drop/artery_narula_withDrug	pd30_narula_d	narula	Artery_narula_etal-coronoary_tcfa_medium_SCI.mesh	1	1500	on hold	drug, pressure drop 30 mmHg
 pressure_drop_variation/30_pressure_drop/artery_phini_withDrug	pd30_phini_d	phini	Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh	1	1500	on hold	drug, pressure drop 30 mmHg
 pressure_drop_variation/30_pressure_drop/artery_plass_withDrug	pd30_plass_d	plass	Artery_plasschaert_heeneman_daemem_SCI.mesh	1	1500		drug, pressure drop 30 mmHg
@@ -63,24 +63,32 @@ mesh_convergence/artery_phini_original_L1	mesh_phini_original_L1	phini	phini_ori
 mesh_convergence/artery_phini_original_L1_withDrug	mesh_phini_original_L1_d	phini	phini_original_L1.mesh	2	1500		drug, mesh phini_original_L1.mesh
 mesh_convergence/artery_phini_original_L2	mesh_phini_original_L2	phini	phini_original_L2.mesh	2	1500		control, mesh phini_original_L2.mesh
 mesh_convergence/artery_phini_original_L2_withDrug	mesh_phini_original_L2_d	phini	phini_original_L2.mesh	2	1500		drug, mesh phini_original_L2.mesh
+mesh_convergence/artery_phini_original_L3	mesh_phini_original_L3	phini	phini_original_L3.mesh	5	1500		control, mesh phini_original_L3.mesh
+mesh_convergence/artery_phini_original_L3_withDrug	mesh_phini_original_L3_d	phini	phini_original_L3.mesh	5	1500		drug, mesh phini_original_L3.mesh
 mesh_convergence/artery_phini_r0.1_L0	mesh_phini_r0.1_L0	phini	phini_r0.1_L0.mesh	2	1500		control, mesh phini_r0.1_L0.mesh
 mesh_convergence/artery_phini_r0.1_L0_withDrug	mesh_phini_r0.1_L0_d	phini	phini_r0.1_L0.mesh	2	1500		drug, mesh phini_r0.1_L0.mesh
 mesh_convergence/artery_phini_r0.1_L1	mesh_phini_r0.1_L1	phini	phini_r0.1_L1.mesh	2	1500		control, mesh phini_r0.1_L1.mesh
 mesh_convergence/artery_phini_r0.1_L1_withDrug	mesh_phini_r0.1_L1_d	phini	phini_r0.1_L1.mesh	2	1500		drug, mesh phini_r0.1_L1.mesh
 mesh_convergence/artery_phini_r0.1_L2	mesh_phini_r0.1_L2	phini	phini_r0.1_L2.mesh	2	1500		control, mesh phini_r0.1_L2.mesh
 mesh_convergence/artery_phini_r0.1_L2_withDrug	mesh_phini_r0.1_L2_d	phini	phini_r0.1_L2.mesh	2	1500		drug, mesh phini_r0.1_L2.mesh
+mesh_convergence/artery_phini_r0.1_L3	mesh_phini_r0.1_L3	phini	phini_r0.1_L3.mesh	5	1500		control, mesh phini_r0.1_L3.mesh
+mesh_convergence/artery_phini_r0.1_L3_withDrug	mesh_phini_r0.1_L3_d	phini	phini_r0.1_L3.mesh	5	1500		drug, mesh phini_r0.1_L3.mesh
 mesh_convergence/artery_narula_original_L0	mesh_narula_original_L0	narula	narula_original_L0.mesh	2	1500		control, mesh narula_original_L0.mesh
 mesh_convergence/artery_narula_original_L0_withDrug	mesh_narula_original_L0_d	narula	narula_original_L0.mesh	2	1500		drug, mesh narula_original_L0.mesh
 mesh_convergence/artery_narula_original_L1	mesh_narula_original_L1	narula	narula_original_L1.mesh	2	1500		control, mesh narula_original_L1.mesh
 mesh_convergence/artery_narula_original_L1_withDrug	mesh_narula_original_L1_d	narula	narula_original_L1.mesh	2	1500		drug, mesh narula_original_L1.mesh
 mesh_convergence/artery_narula_original_L2	mesh_narula_original_L2	narula	narula_original_L2.mesh	4	1500		control, mesh narula_original_L2.mesh
 mesh_convergence/artery_narula_original_L2_withDrug	mesh_narula_original_L2_d	narula	narula_original_L2.mesh	4	1500		drug, mesh narula_original_L2.mesh
+mesh_convergence/artery_narula_original_L3	mesh_narula_original_L3	narula	narula_original_L3.mesh	13	1500		control, mesh narula_original_L3.mesh
+mesh_convergence/artery_narula_original_L3_withDrug	mesh_narula_original_L3_d	narula	narula_original_L3.mesh	13	1500		drug, mesh narula_original_L3.mesh
 mesh_convergence/artery_narula_r0.1_L0	mesh_narula_r0.1_L0	narula	narula_r0.1_L0.mesh	2	1500		control, mesh narula_r0.1_L0.mesh
 mesh_convergence/artery_narula_r0.1_L0_withDrug	mesh_narula_r0.1_L0_d	narula	narula_r0.1_L0.mesh	2	1500		drug, mesh narula_r0.1_L0.mesh
 mesh_convergence/artery_narula_r0.1_L1	mesh_narula_r0.1_L1	narula	narula_r0.1_L1.mesh	2	1500		control, mesh narula_r0.1_L1.mesh
 mesh_convergence/artery_narula_r0.1_L1_withDrug	mesh_narula_r0.1_L1_d	narula	narula_r0.1_L1.mesh	2	1500		drug, mesh narula_r0.1_L1.mesh
 mesh_convergence/artery_narula_r0.1_L2	mesh_narula_r0.1_L2	narula	narula_r0.1_L2.mesh	4	1500		control, mesh narula_r0.1_L2.mesh
 mesh_convergence/artery_narula_r0.1_L2_withDrug	mesh_narula_r0.1_L2_d	narula	narula_r0.1_L2.mesh	4	1500		drug, mesh narula_r0.1_L2.mesh
+mesh_convergence/artery_narula_r0.1_L3	mesh_narula_r0.1_L3	narula	narula_r0.1_L3.mesh	13	1500		control, mesh narula_r0.1_L3.mesh
+mesh_convergence/artery_narula_r0.1_L3_withDrug	mesh_narula_r0.1_L3_d	narula	narula_r0.1_L3.mesh	13	1500		drug, mesh narula_r0.1_L3.mesh
 axial_stretch/artery_dan_stretch5	ax_dan_stretch5	dan	Artery_dan_SCI.mesh	1	1500		control, 5 % axial stretch
 axial_stretch/artery_dan_withDrug_stretch5	ax_dan_d_stretch5	dan	Artery_dan_SCI.mesh	1	1500		drug, 5 % axial stretch
 basal_tone_tuning/artery_dan_eta_x0.75	eta_dan_eta_x0.75	dan	Artery_dan_SCI.mesh	1	540		control to 540 s, Eta x0.75 (all regions)
