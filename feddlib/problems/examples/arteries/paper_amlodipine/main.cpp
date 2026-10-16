@@ -170,6 +170,12 @@ int main(int argc, char *argv[])
         // Getting the surface load parameters
         double rampTimeStep = allParameters->sublist("Parameter").get("Load Step Size", 0.05);
         double timeRampEnd = allParameters->sublist("Parameter").get("Ramp End Time", 1.0);
+        // The load functions get the time at the end of the time step, t_{n+1}. The paper's ramp adds one
+        // load step to it, Lambda (t_{n+1} + Load Step Size), which fixes the increments to that size (the
+        // first one is twice as large). With "Ramp Follows Time Step" the ramp is Lambda t_{n+1}, so that an
+        // adaptive first time segment also takes smaller load increments when it takes smaller time steps.
+        bool rampFollowsTimeStep = allParameters->sublist("Parameter").get("Ramp Follows Time Step", false);
+        double rampOffset = rampFollowsTimeStep ? 0. : rampTimeStep;
         
         // Get pressure parameters in mmHg and calculate pressure in kPa
         double maxPressureMmHg = allParameters->sublist("Parameter").get("Max Pressure mmHg", 97.14);
@@ -189,7 +195,7 @@ int main(int argc, char *argv[])
 
         // Setting the surface load parameters
         sci.problemStructureNonLin_->addParemeterRhs(pressure); // calculated from mmHg
-        sci.problemStructureNonLin_->addParemeterRhs(rampTimeStep);
+        sci.problemStructureNonLin_->addParemeterRhs(rampOffset);
         sci.problemStructureNonLin_->addParemeterRhs(timeRampEnd);
         
         // Add the new parameters to the parameter list
@@ -204,7 +210,7 @@ int main(int argc, char *argv[])
 
         // Axial pre-stretch: the end faces and rings get the axial displacement "Axial Stretch" * z (the
         // meshes start at z = 0), ramped up with the pressure over the load steps. 0 holds them in place.
-        std::vector<double> stretchParameters = {allParameters->sublist("Parameter").get("Axial Stretch", 0.), rampTimeStep, timeRampEnd};
+        std::vector<double> stretchParameters = {allParameters->sublist("Parameter").get("Axial Stretch", 0.), rampOffset, timeRampEnd};
 
         // Structure dirichtlet boundary conditions
         bcFactoryStructure->addBC(axialStretchDirichlet3D, 2, 0, domainStructure, "Dirichlet_Z", dimension, stretchParameters);    // z=0
@@ -288,12 +294,12 @@ void reactionTerm(double *x, double *res, double *parameters)
 /* The values of parameters are set in feddlib/core/FE/FE_def.hpp assemblySurfaceIntegralExternal()
  * x* for some reason gives the middle point of the surface element
  * parameters[0] is always the time, but all others depend on the order in which they are added using the addParametersRhs() (which is in Problem_decl.hpp) in the main function
- * Note that the time starts from 0, i.e. the first time step is 0
+ * parameters[0] is the time at the end of the time step, t_{n+1} (the first time step has t_1 = dt)
  * 
  * Parameter order:
- * parameters[0]: current time
+ * parameters[0]: time t_{n+1}
  * parameters[1]: pressure (kPa, calculated from Max Pressure mmHg)
- * parameters[2]: rampTimeStep
+ * parameters[2]: ramp offset: Load Step Size, or 0 with Ramp Follows Time Step
  * parameters[3]: timeRampEnd
  * parameters[4]: initialLambda (calculated from target pressure)
  * parameters[5]: pressureReductionStartTime
@@ -308,7 +314,7 @@ void loadFunction(double *x, double *res, double *parameters)
 
     double currentTime = parameters[0];
     double pressure = parameters[1];
-    double rampTimeStep = parameters[2];
+    double rampOffset = parameters[2];
     double timeRampEnd = parameters[3];
     double initialLambda = parameters[4];
     double pressureReductionStartTime = parameters[5];
@@ -321,7 +327,7 @@ void loadFunction(double *x, double *res, double *parameters)
 
     // Initial pressure ramp-up phase using the calculated initial lambda
     if (currentTime < timeRampEnd)
-        lambda = initialLambda * (currentTime + rampTimeStep);
+        lambda = initialLambda * (currentTime + rampOffset);
     else
         lambda = initialLambda;
 
@@ -357,19 +363,19 @@ void zeroDirichlet3D(double *x, double *res, double t, const double *parameters)
 
 /* Axial displacement of the end faces and rings for the axial pre-stretch
  * parameters[0]: axial stretch (displacement per length)
- * parameters[1]: rampTimeStep
+ * parameters[1]: ramp offset (see loadFunction)
  * parameters[2]: timeRampEnd
  * The stretch follows the pressure's load ramp (see loadFunction).
  */
 void axialStretchDirichlet3D(double *x, double *res, double t, const double *parameters)
 {
     double stretch = parameters[0];
-    double rampTimeStep = parameters[1];
+    double rampOffset = parameters[1];
     double timeRampEnd = parameters[2];
 
     double ramp = 1.0;
     if (t < timeRampEnd)
-        ramp = std::min(1.0, (t + rampTimeStep) / timeRampEnd);
+        ramp = std::min(1.0, (t + rampOffset) / timeRampEnd);
 
     res[0] = 0.;
     res[1] = 0.;
