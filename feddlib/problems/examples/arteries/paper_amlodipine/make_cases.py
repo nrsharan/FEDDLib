@@ -6,8 +6,8 @@ paper's results were computed with) and changes only what is listed here:
 
 * every run: adaptive time stepping (see adaptive_segments), output by time and
   checkpoints;
-* phini: the compressibility Alpha2 of the other arteries, and load steps of 0.01 s
-  (with 0.02 s its first Newton iteration diverges);
+* phini: the compressibility Alpha2 of the other arteries, and load steps of 0.005 s
+  (its first Newton iteration diverges with 0.02 s on the paper's mesh, 0.01 s on the remeshes);
 * every run: the stress tensor (Sxx ... Szz) and the fibre stresses (SFiber1, SFiber2)
   among the postprocessing fields;
 * every run: the preconditioner is built in the first PRECONDITIONER_NEWTON_STEPS Newton
@@ -58,8 +58,11 @@ GEOMETRIES = {
 PHINI_ALPHA2 = {15: "198.654", 16: "151.73775", 17: "151.73775", 18: "500.0",
                 19: "151.73775", 20: "151.73775", 21: "151.73775", 22: "165.528"}
 
-# With the consistent Alpha2, phini's first Newton iteration diverges with load steps of 0.02 s
-PHINI_LOAD_STEP = "0.01"
+# With the consistent Alpha2, phini's first Newton iteration diverges with load steps of 0.02 s on the
+# paper's mesh, and with 0.01 s on the (loaded) remeshes L0-L2; 0.005 s converges on all of them
+# (faculty tests 2026-10-16). The ramp load is Lambda (t + Load Step Size), so the load step and the
+# first segment's dt change together
+PHINI_LOAD_STEP = "0.005"
 
 STRESS_FIELDS = ["Sxx", "Sxy", "Sxz", "Syx", "Syy", "Syz", "Szx", "Szy", "Szz", "SFiber1", "SFiber2"]
 
