@@ -32,15 +32,17 @@ so all runs share the one executable.
   Constant, 1e-5), which takes 15-17 % less time with results within about 1e-5
   (dan from 540 and 615 s, Fritz, 2026-10-12); the Newton tolerance is unchanged.
   Runs submitted before 2026-10-12 16:30 used Constant.
-- `cases/`: one folder per run (90 in all) with its simulation and material
-  file and `case.env` (`JOB_NAME`, `MATERIAL`, `MESH`, `NODES`, and `HOLD` for
-  runs on hold). `cases/index.tsv` lists every run with its mesh, nodes, final
-  time and what it changes. The folders are written by `make_cases.py` from
+- `cases/`: one folder per run (98 in all) with its simulation and material
+  file and `case.env` (`JOB_NAME`, `MATERIAL`, `MESH`, `NODES`).
+  `cases/index.tsv` lists every run with its mesh, nodes, final time and what
+  it changes. The folders are written by `make_cases.py` from
   `base/`; change the script, not the folders.
 - The meshes are in `meshes/SPP2311` of the repository: the paper's
   `Artery_*_SCI.mesh` per artery (narula and phini: the `..._medium_SCI` ones),
-  the remeshed `narula_*`/`phini_*` of the mesh convergence study and kim's
-  `kim_original_L2.mesh`. The L3 meshes of the study (5-12 MB) are not in the
+  the remeshed `narula_*`/`phini_*` of the mesh convergence study (the paper's
+  narula and phini runs use `narula_original_L2.mesh` / `phini_original_L2.mesh`)
+  and kim's `kim_original_L2.mesh`. The L3 meshes of the study (5-12 MB) are
+  not in the
   repository; copy them there from the meshing package
   (`smoothing_package/<artery>/meshes`) before running those cases.
 
@@ -114,6 +116,13 @@ so all runs share the one executable.
   paper's mesh (region volumes within 0.6 %, the cap's equal), Gmsh, global size
   0.09 mm and 0.03 mm near the cap shoulders and the stress peaks (cap elements
   ~0.054 mm), the same boundary tags; 60,259 tetrahedra on 3 nodes.
+- **narula and phini on the study's L2 meshes** (`narula_original_L2.mesh`,
+  `phini_original_L2.mesh`: the paper's geometry, cap shoulders at 0.03 mm; the
+  paper: the `..._medium_SCI` meshes). L3 (phini) confirmed L2: the cap stress
+  statistics (95th / 99th percentile) within 1-2.5 %, the media and the drug
+  response within 0.4 %; the shoulder fillet (`r0.1`) changed them by less than
+  1 % at L3. narula L3 did not run through (the linear solves at their iteration
+  limit). 93,539 / 57,766 tetrahedra on 4 / 2 nodes.
 - **phini**: `Alpha2` as in dan, kim and plasschaert (it was 10.0 in every region),
   and load steps of 0.01 s (with 0.02 s its first Newton iteration diverges).
   narula keeps the paper's `Alpha2` of 500 in its calcifications (19, 20), the
@@ -136,10 +145,7 @@ The studies:
 | `axial_stretch` | dan, control and drug | `Axial Stretch` 0.05, ramped with the pressure |
 | `basal_tone_tuning` | dan, control to 540 s | `Eta` × 0.75, 0.5, 0.35, 0.25, 0.15, 0.1 (all regions), to find the basal-tone levels |
 
-The narula and phini runs on the paper's meshes are on hold (`HOLD` in
-`case.env`) until `mesh_convergence` shows whether those meshes are fine
-enough; `submit_cases.sh` skips them unless `INCLUDE_HELD=1` is set. The
-remeshed meshes run on 2-13 nodes, about 25,000 (narula) or 30,000 (phini, kim)
+The remeshed meshes run on 2-13 nodes, about 25,000 (narula) or 30,000 (phini, kim)
 tetrahedra per node (`NODES` in `case.env`).
 
 The controls of the baseline arteries (`kappa_variation/artery_dan_30` and the

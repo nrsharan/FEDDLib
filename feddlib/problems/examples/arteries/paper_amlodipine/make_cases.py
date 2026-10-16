@@ -14,13 +14,11 @@ paper's results were computed with) and changes only what is listed here:
   steps of each time step and reused in the later ones;
 * every run: growthDirectionBool GROWTH_DIRECTION_BOOL in every region (growth directions
   kept at their values at the start of growth);
-* kim: the paper's geometry remeshed finer at the cap (KIM_MESH; the paper's mesh is at the
-  coarsest level of the mesh convergence study there);
+* kim, narula, phini: the paper's geometry remeshed finer at the cap (KIM_MESH, NARULA_MESH,
+  PHINI_MESH; the paper's meshes are at the coarsest level of the mesh convergence study there);
 * each run: the parameters of its study (the table in CASES below).
 
-cases/index.tsv lists every run with its job name, mesh, nodes and changes. The runs of
-narula and phini on the paper's meshes are on hold (HOLD in case.env; submit_cases.sh
-skips them) until the mesh convergence study shows whether those meshes are fine enough.
+cases/index.tsv lists every run with its job name, mesh, nodes and changes.
 Run it from this directory; it rewrites cases/ completely.
 """
 
@@ -37,12 +35,18 @@ MESHES = os.path.join(HERE, "..", "..", "..", "..", "..", "meshes", "SPP2311")
 # pipeline of the mesh convergence study (cross-section recovered from the paper's mesh, Gmsh, global
 # size 0.09 mm, 0.03 mm near the cap shoulders and stress peaks; cap elements ~0.054 mm)
 KIM_MESH = "kim_original_L2.mesh"
+# narula, phini: level L2 of the mesh convergence study, unsmoothed shoulders (the paper's geometry).
+# The paper's meshes are at L0 in the cap (cap von Mises p95 9 % / 32 % above L2); L2 is within
+# 1-2.5 % of L3 in the cap stress statistics (phini), and the shoulder smoothing (r0.1) changes
+# them by < 1 % at L3
+NARULA_MESH = "narula_original_L2.mesh"
+PHINI_MESH = "phini_original_L2.mesh"
 
 GEOMETRIES = {
     "dan": ("simulationParameters_dan.xml", "materialParameters_dan.xml", "Artery_dan_SCI.mesh"),
     "kim": ("simulationParameters_kim.xml", "materialParameters_kim_guzman.xml", KIM_MESH),
-    "narula": ("simulationParameters_narula.xml", "materialParameters_narula.xml", "Artery_narula_etal-coronoary_tcfa_medium_SCI.mesh"),
-    "phini": ("simulationParameters_phini.xml", "materialParameters_phini.xml", "Artery_phinikaridou_etal-coronoary_tcfa_medium_SCI.mesh"),
+    "narula": ("simulationParameters_narula.xml", "materialParameters_narula.xml", NARULA_MESH),
+    "phini": ("simulationParameters_phini.xml", "materialParameters_phini.xml", PHINI_MESH),
     "plass": ("simulationParameters_plass.xml", "materialParameters_plasschaert_heeneman_daemem.xml", "Artery_plasschaert_heeneman_daemem_SCI.mesh"),
 }
 
@@ -61,7 +65,6 @@ TETS_PER_NODE = {"narula": 25000, "phini": 30000, "kim": 30000}
 # user's machine); their sizes, for the node counts when the file is not there
 MESH_TETRAHEDRA = {"narula_original_L3.mesh": 316470, "narula_r0.1_L3.mesh": 317083,
                    "phini_original_L3.mesh": 147267, "phini_r0.1_L3.mesh": 147835}
-HELD = "the mesh convergence study decides the mesh of narula and phini"
 
 # Phase ends: load ramp, reorientation, accelerated active, reorientation, active,
 # growth, reorientation, drug inflow, pressure drop, end of the run
@@ -389,7 +392,7 @@ def tetrahedra(mesh_name):
 def main():
     if os.path.isdir(CASES_DIR):
         shutil.rmtree(CASES_DIR)
-    rows = ["case\tjob\tartery\tmesh\tnodes\tfinal time\thold\tchanges"]
+    rows = ["case\tjob\tartery\tmesh\tnodes\tfinal time\tchanges"]
     names = set()
     for study, case, artery, change, description in CASES:
         sim_file, mat_file, mesh_file = GEOMETRIES[artery]
@@ -428,14 +431,11 @@ def main():
         names.add(name)
         mesh_name = parameter(sublist(simulation.getroot(), "Mesh Partitioner"), "Mesh 1 Name").get("value")
         nodes = 1
-        if study == "mesh_convergence" or artery == "kim":
+        if artery in TETS_PER_NODE:
             nodes = -(-tetrahedra(mesh_name) // TETS_PER_NODE[artery])
-        hold = HELD if artery in ("narula", "phini") and study != "mesh_convergence" else ""
         with open(os.path.join(folder, "case.env"), "w") as f:
             f.write("JOB_NAME=%s\nMATERIAL=%s\nMESH=%s\nNODES=%d\n" % (name, mat_file, mesh_name, nodes))
-            if hold:
-                f.write("HOLD=\"%s\"\n" % hold)
-        rows.append("\t".join([study + "/" + case, name, artery, mesh_name, str(nodes), "%g" % final_time, "on hold" if hold else "", description]))
+        rows.append("\t".join([study + "/" + case, name, artery, mesh_name, str(nodes), "%g" % final_time, description]))
     with open(os.path.join(CASES_DIR, "index.tsv"), "w") as f:
         f.write("\n".join(rows) + "\n")
     print("%d runs written to %s" % (len(CASES), CASES_DIR))
