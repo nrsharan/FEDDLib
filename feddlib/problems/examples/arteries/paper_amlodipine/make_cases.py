@@ -15,10 +15,12 @@ paper's results were computed with) and changes only what is listed here:
 * every run: growthDirectionBool GROWTH_DIRECTION_BOOL in every region (growth directions
   kept at their values at the start of growth);
 * kim, narula, phini: the paper's geometry remeshed finer at the cap (KIM_MESH, NARULA_MESH,
-  PHINI_MESH; the paper's meshes are at the coarsest level of the mesh convergence study there);
+  PHINI_MESH); on hold until the mesh convergence study has run on the corrected meshes;
 * each run: the parameters of its study (the table in CASES below).
 
-cases/index.tsv lists every run with its job name, mesh, nodes and changes.
+cases/index.tsv lists every run with its job name, mesh, nodes and changes. The runs of
+kim, narula and phini are on hold (HOLD in case.env; submit_cases.sh skips them): their mesh is
+decided by the mesh convergence study, which has to be repeated on the corrected meshes.
 Run it from this directory; it rewrites cases/ completely.
 """
 
@@ -36,9 +38,11 @@ MESHES = os.path.join(HERE, "..", "..", "..", "..", "..", "meshes", "SPP2311")
 # size 0.09 mm, 0.03 mm near the cap shoulders and stress peaks; cap elements ~0.054 mm)
 KIM_MESH = "kim_original_L2.mesh"
 # narula, phini: level L2 of the mesh convergence study, unsmoothed shoulders (the paper's geometry).
-# The paper's meshes are at L0 in the cap (cap von Mises p95 9 % / 32 % above L2); L2 is within
-# 1-2.5 % of L3 in the cap stress statistics (phini), and the shoulder smoothing (r0.1) changes
-# them by < 1 % at L3
+# The remeshed meshes written before 2026-10-16 had half of their boundary triangles pointing into
+# the volume; FEDDLib takes a surface load's normal from the vertex order, so the lumen pressure
+# cancelled and every run on them (the first mesh convergence study, kim L2) was unloaded. The
+# meshes are now written with outward triangles; KIM_MESH, NARULA_MESH and PHINI_MESH are to be
+# decided again from the repeated study (HELD)
 NARULA_MESH = "narula_original_L2.mesh"
 PHINI_MESH = "phini_original_L2.mesh"
 
@@ -63,8 +67,9 @@ STRESS_FIELDS = ["Sxx", "Sxy", "Sxz", "Syx", "Syy", "Syz", "Szx", "Szy", "Szz", 
 TETS_PER_NODE = {"narula": 25000, "phini": 30000, "kim": 30000}
 # The L3 meshes (5-12 MB) are not in the repository (smoothing_package/<artery>/meshes on the
 # user's machine); their sizes, for the node counts when the file is not there
-MESH_TETRAHEDRA = {"narula_original_L3.mesh": 316470, "narula_r0.1_L3.mesh": 317083,
-                   "phini_original_L3.mesh": 147267, "phini_r0.1_L3.mesh": 147835}
+MESH_TETRAHEDRA = {"narula_original_L3.mesh": 316461, "narula_r0.1_L3.mesh": 316935,
+                   "phini_original_L3.mesh": 147287, "phini_r0.1_L3.mesh": 147911}
+HELD = "the repeated mesh convergence study decides the mesh of kim, narula and phini"
 
 # Phase ends: load ramp, reorientation, accelerated active, reorientation, active,
 # growth, reorientation, drug inflow, pressure drop, end of the run
@@ -392,7 +397,7 @@ def tetrahedra(mesh_name):
 def main():
     if os.path.isdir(CASES_DIR):
         shutil.rmtree(CASES_DIR)
-    rows = ["case\tjob\tartery\tmesh\tnodes\tfinal time\tchanges"]
+    rows = ["case\tjob\tartery\tmesh\tnodes\tfinal time\thold\tchanges"]
     names = set()
     for study, case, artery, change, description in CASES:
         sim_file, mat_file, mesh_file = GEOMETRIES[artery]
@@ -433,9 +438,12 @@ def main():
         nodes = 1
         if artery in TETS_PER_NODE:
             nodes = -(-tetrahedra(mesh_name) // TETS_PER_NODE[artery])
+        hold = HELD if artery in ("kim", "narula", "phini") and study != "mesh_convergence" else ""
         with open(os.path.join(folder, "case.env"), "w") as f:
             f.write("JOB_NAME=%s\nMATERIAL=%s\nMESH=%s\nNODES=%d\n" % (name, mat_file, mesh_name, nodes))
-        rows.append("\t".join([study + "/" + case, name, artery, mesh_name, str(nodes), "%g" % final_time, description]))
+            if hold:
+                f.write("HOLD=\"%s\"\n" % hold)
+        rows.append("\t".join([study + "/" + case, name, artery, mesh_name, str(nodes), "%g" % final_time, "on hold" if hold else "", description]))
     with open(os.path.join(CASES_DIR, "index.tsv"), "w") as f:
         f.write("\n".join(rows) + "\n")
     print("%d runs written to %s" % (len(CASES), CASES_DIR))

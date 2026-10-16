@@ -33,7 +33,8 @@ so all runs share the one executable.
   (dan from 540 and 615 s, Fritz, 2026-10-12); the Newton tolerance is unchanged.
   Runs submitted before 2026-10-12 16:30 used Constant.
 - `cases/`: one folder per run (98 in all) with its simulation and material
-  file and `case.env` (`JOB_NAME`, `MATERIAL`, `MESH`, `NODES`).
+  file and `case.env` (`JOB_NAME`, `MATERIAL`, `MESH`, `NODES`, and `HOLD` for
+  runs on hold).
   `cases/index.tsv` lists every run with its mesh, nodes, final time and what
   it changes. The folders are written by `make_cases.py` from
   `base/`; change the script, not the folders.
@@ -42,9 +43,15 @@ so all runs share the one executable.
   the remeshed `narula_*`/`phini_*` of the mesh convergence study (the paper's
   narula and phini runs use `narula_original_L2.mesh` / `phini_original_L2.mesh`)
   and kim's `kim_original_L2.mesh`. The L3 meshes of the study (5-12 MB) are
-  not in the
-  repository; copy them there from the meshing package
+  not in the repository; copy them there from the meshing package
   (`smoothing_package/<artery>/meshes`) before running those cases.
+  FEDDLib takes the normal of a surface load (the lumen pressure) from the vertex
+  order of the mesh's boundary triangles, which must therefore point out of the
+  volume. The remeshed meshes before 2026-10-16 had half of them pointing inward:
+  the pressure cancelled and every run on them was unloaded (cap von Mises 0.8
+  instead of ~20 kPa at the end of the ramp). They were regenerated with outward
+  triangles (Gmsh is not deterministic, so the new meshes differ slightly in
+  the interior); the study is to be repeated.
 
 `make_cases.py` changes the paper's inputs in these ways for every run:
 
@@ -106,23 +113,19 @@ so all runs share the one executable.
   0.0125 s) and Newton needs 3-5 iterations. Runs restarted on 2026-10-14 with
   it froze the directions at their restart time, not at 540 s.
 - **kim on a finer mesh** (`kim_original_L2.mesh`; the paper:
-  `Artery_kim_guzman_SCI.mesh`). In the mesh convergence study the paper's narula
-  and phini meshes were at the coarsest level in the fibrous cap, and the cap
-  stress (95th percentile) came out 9 % (narula) and 32 % (phini) higher there
-  than on the finest level; the media and the drug response did not depend on
-  the mesh. Of the other meshes, dan's and plass's caps are as fine as that level
-  (elements ~0.047 and ~0.041 mm), kim's is not (~0.088 mm). kim was therefore
-  remeshed with the study's pipeline: its cross-section recovered from the
+  `Artery_kim_guzman_SCI.mesh`), on hold with narula and phini until the
+  repeated mesh convergence study (the first one ran unloaded, see above) decides
+  whether the paper's meshes are fine enough. The paper's narula and phini meshes
+  are at the coarsest level of the study in the fibrous cap (elements ~0.13 mm);
+  dan's and plass's caps are as fine as L2 (~0.047 and ~0.041 mm), kim's is not
+  (~0.088 mm). kim was remeshed with the study's pipeline: its cross-section recovered from the
   paper's mesh (region volumes within 0.6 %, the cap's equal), Gmsh, global size
   0.09 mm and 0.03 mm near the cap shoulders and the stress peaks (cap elements
   ~0.054 mm), the same boundary tags; 60,259 tetrahedra on 3 nodes.
 - **narula and phini on the study's L2 meshes** (`narula_original_L2.mesh`,
   `phini_original_L2.mesh`: the paper's geometry, cap shoulders at 0.03 mm; the
-  paper: the `..._medium_SCI` meshes). L3 (phini) confirmed L2: the cap stress
-  statistics (95th / 99th percentile) within 1-2.5 %, the media and the drug
-  response within 0.4 %; the shoulder fillet (`r0.1`) changed them by less than
-  1 % at L3. narula L3 did not run through (the linear solves at their iteration
-  limit). 93,539 / 57,766 tetrahedra on 4 / 2 nodes.
+  paper: the `..._medium_SCI` meshes; 93,487 / 57,760 tetrahedra on 4 / 2
+  nodes), on hold until the repeated study decides the mesh.
 - **phini**: `Alpha2` as in dan, kim and plasschaert (it was 10.0 in every region),
   and load steps of 0.01 s (with 0.02 s its first Newton iteration diverges).
   narula keeps the paper's `Alpha2` of 500 in its calcifications (19, 20), the
@@ -145,7 +148,9 @@ The studies:
 | `axial_stretch` | dan, control and drug | `Axial Stretch` 0.05, ramped with the pressure |
 | `basal_tone_tuning` | dan, control to 540 s | `Eta` × 0.75, 0.5, 0.35, 0.25, 0.15, 0.1 (all regions), to find the basal-tone levels |
 
-The remeshed meshes run on 2-13 nodes, about 25,000 (narula) or 30,000 (phini, kim)
+The kim, narula and phini runs outside `mesh_convergence` are on hold (`HOLD` in
+`case.env`) until the repeated mesh convergence study has decided their mesh;
+`submit_cases.sh` skips them unless `INCLUDE_HELD=1` is set. The remeshed meshes run on 2-13 nodes, about 25,000 (narula) or 30,000 (phini, kim)
 tetrahedra per node (`NODES` in `case.env`).
 
 The controls of the baseline arteries (`kappa_variation/artery_dan_30` and the
