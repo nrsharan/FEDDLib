@@ -6,8 +6,8 @@ paper's results were computed with) and changes only what is listed here:
 
 * every run: adaptive time stepping (see adaptive_segments), output by time and
   checkpoints;
-* phini: the compressibility Alpha2 of the other arteries, and load steps of 0.005 s
-  (its first Newton iteration diverges with 0.02 s on the paper's mesh, 0.01 s on the remeshes);
+* phini: the compressibility Alpha2 of the other arteries, and an adaptive load ramp that
+  follows the time step (with fixed load steps its Newton iteration diverges, see PHINI_RAMP_DT);
 * every run: the stress tensor (Sxx ... Szz) and the fibre stresses (SFiber1, SFiber2)
   among the postprocessing fields;
 * every run: the preconditioner is built in the first PRECONDITIONER_NEWTON_STEPS Newton
@@ -58,11 +58,15 @@ GEOMETRIES = {
 PHINI_ALPHA2 = {15: "198.654", 16: "151.73775", 17: "151.73775", 18: "500.0",
                 19: "151.73775", 20: "151.73775", 21: "151.73775", 22: "165.528"}
 
-# With the consistent Alpha2, phini's first Newton iteration diverges with load steps of 0.02 s on the
-# paper's mesh, and with 0.01 s on the (loaded) remeshes L0-L2; 0.005 s converges on all of them
-# (faculty tests 2026-10-16). The ramp load is Lambda (t + Load Step Size), so the load step and the
-# first segment's dt change together
-PHINI_LOAD_STEP = "0.005"
+# phini's load ramp adapts its time step. With the consistent Alpha2 and fixed load steps its first
+# Newton iteration diverges at 0.02 s on the paper's mesh and at 0.01 s on the remeshes; at 0.005 s the
+# finer remeshes (original L1, L2, r0.1 L2) still diverge at 84-92 % of the pressure. The ramp follows
+# the time step (main.cpp, "Ramp Follows Time Step"), starts with PHINI_RAMP_DT and may shrink to
+# PHINI_RAMP_MIN_DT (phini original L2 needed 0.00125 at 84 %, faculty test 2026-10-16). FEDDLib requires
+# Load Step Size = the first segment's dt.
+PHINI_RAMP_DT = "0.01"
+PHINI_RAMP_MIN_DT = "0.0003"
+PHINI_RAMP_MAX_DT = "0.05"
 
 STRESS_FIELDS = ["Sxx", "Sxy", "Sxz", "Syx", "Syy", "Syz", "Szx", "Szy", "Szz", "SFiber1", "SFiber2"]
 
@@ -290,6 +294,16 @@ def axial_stretch(s):
     return lambda sim, mat: set_parameter(sim, sublist(sim.getroot(), "Parameter"), "Axial Stretch", "double", fmt(s))
 
 
+def phini_adaptive_ramp(simulation):
+    """phini's load ramp (the first time segment) adapts its time step and the load follows it."""
+    set_parameter(simulation, sublist(simulation.getroot(), "Parameter"), "Ramp Follows Time Step", "bool", "true")
+    ramp = sublist(simulation.getroot(), "Timestepping Parameter", "Timestepping Intervalls", "1")
+    assert float(parameter(ramp, "Start Time").get("value")) == 0. and parameter(ramp, "dt").get("value") == PHINI_RAMP_DT
+    set_parameter(simulation, ramp, "Adaptive", "bool", "true")
+    set_parameter(simulation, ramp, "Minimum dt", "double", PHINI_RAMP_MIN_DT)
+    set_parameter(simulation, ramp, "Maximum dt", "double", PHINI_RAMP_MAX_DT)
+
+
 def mesh(name):
     return lambda sim, mat: parameter(sublist(sim.getroot(), "Mesh Partitioner"), "Mesh 1 Name").set("value", name)
 
@@ -411,10 +425,10 @@ def main():
         if artery == "phini":
             for flag, region in regions(material_tree):
                 parameter(region, "Alpha2").set("value", PHINI_ALPHA2[flag])
-            parameter(sublist(simulation.getroot(), "Parameter"), "Load Step Size").set("value", PHINI_LOAD_STEP)
+            parameter(sublist(simulation.getroot(), "Parameter"), "Load Step Size").set("value", PHINI_RAMP_DT)
             ramp = sublist(simulation.getroot(), "Timestepping Parameter", "Timestepping Intervalls", "1")
             assert float(parameter(ramp, "Start Time").get("value")) == 0.
-            parameter(ramp, "dt").set("value", PHINI_LOAD_STEP)
+            parameter(ramp, "dt").set("value", PHINI_RAMP_DT)
         change(simulation, material_tree)
 
         final_time, extra_segments, extra_exports = 1500., (), ()
@@ -427,6 +441,8 @@ def main():
         if study == "basal_tone_tuning":
             final_time = 540.
         common(simulation, final_time, extra_segments, extra_exports)
+        if artery == "phini":
+            phini_adaptive_ramp(simulation)
         set_material(material_tree, "growthDirectionBool", GROWTH_DIRECTION_BOOL)
 
         folder = os.path.join(CASES_DIR, study, case)

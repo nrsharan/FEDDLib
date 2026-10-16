@@ -23,7 +23,7 @@
         <Parameter name="Load Stepping" type="bool" value="true"/>
         <Parameter name="Inflow Start Time" type="double" value="10000000.0"/><!-- Start of diffusion process -->
         <Parameter name="Heart Beat Start" type="double" value="70000000.0"/><!-- Start of heart beat -->
-        <Parameter name="Load Step Size" type="double" value="0.005"/><!-- Length/size of Loadsteps -->
+        <Parameter name="Load Step Size" type="double" value="0.01"/><!-- Length/size of Loadsteps -->
         <Parameter name="Ramp End Time" type="double" value="1.0"/><!-- End of Load Stepping -->
         <Parameter name="External Force" type="bool" value="true"/>
         <Parameter name="Nonlinear External Force" type="bool" value="true"/>
@@ -55,6 +55,7 @@
         <Parameter name="Criterion" type="string" value="Update"/><!-- Criterion for nonlinear solve, Residual or Update: Residual is the norm of the nonlinear residual; Update is the norm of the update -->
         <Parameter name="Rebuild Preconditioner every Newton Iteration" type="bool" value="false"/>
         <Parameter name="newtonLimit" type="int" value="2"/>
+        <Parameter name="Ramp Follows Time Step" type="bool" value="true"/>
     </ParameterList>
 
     <ParameterList name="Mesh Partitioner">
@@ -127,8 +128,10 @@
             <Parameter name="Number of Segments" type="int" value="11"/>
             <ParameterList name="1">
                 <Parameter name="Start Time" type="double" value="0.0"/>
-                <Parameter name="dt" type="double" value="0.005"/>
-                <Parameter name="Adaptive" type="bool" value="false"/>
+                <Parameter name="dt" type="double" value="0.01"/>
+                <Parameter name="Adaptive" type="bool" value="true"/>
+                <Parameter name="Minimum dt" type="double" value="0.0003"/>
+                <Parameter name="Maximum dt" type="double" value="0.05"/>
             </ParameterList>
             <ParameterList name="2">
                 <Parameter name="Start Time" type="double" value="1.0"/>

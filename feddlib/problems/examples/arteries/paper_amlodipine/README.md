@@ -127,8 +127,14 @@ so all runs share the one executable.
   paper: the `..._medium_SCI` meshes; 93,487 / 57,760 tetrahedra on 4 / 2
   nodes), on hold until the repeated study decides the mesh.
 - **phini**: `Alpha2` as in dan, kim and plasschaert (it was 10.0 in every region),
-  and load steps of 0.005 s (its first Newton iteration diverges with 0.02 s on
-  the paper's mesh and with 0.01 s on the remeshes).
+  and an adaptive load ramp: "Ramp Follows Time Step" (the load is Lambda t, see
+  `main.cpp`) and a first time segment that adapts its step between 0.0003 and
+  0.05 s. With fixed load steps phini's Newton iteration diverges: in the first
+  step at 0.02 s on the paper's mesh and at 0.01 s on the remeshes, and at 0.005 s
+  at 84-92 % of the pressure on the finer remeshes; the adaptive ramp passed
+  original L2 by shrinking to 0.00125 s at 84 %. The mesh convergence runs of
+  phini original L0 and r0.1 L0/L1 ran with fixed load steps of 0.005 s (the paper's
+  ramp Lambda (t + Load Step Size)); the other phini runs use the adaptive ramp.
   narula keeps the paper's `Alpha2` of 500 in its calcifications (19, 20), the
   lipid value, where the other arteries use 151.73775: as a volumetric penalty
   the higher value changes little.
