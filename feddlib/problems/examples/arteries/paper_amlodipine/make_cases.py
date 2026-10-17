@@ -6,8 +6,10 @@ paper's results were computed with) and changes only what is listed here:
 
 * every run: adaptive time stepping (see adaptive_segments), output by time and
   checkpoints;
-* phini: the compressibility Alpha2 of the other arteries, and an adaptive load ramp that
-  follows the time step (with fixed load steps its Newton iteration diverges, see PHINI_RAMP_DT);
+* phini: the paper's Alpha2 of 10.0 (PHINI_ALPHA2), an adaptive load ramp that follows the time
+  step (with fixed load steps its Newton iteration diverges, see PHINI_RAMP_DT), smaller minimum
+  time steps (PHINI_MIN_DT_DIVISOR) and more linear iterations (PHINI_GMRES_ITERATIONS, the case's
+  own solverParameters.xml);
 * every run: the stress tensor (Sxx ... Szz) and the fibre stresses (SFiber1, SFiber2)
   among the postprocessing fields;
 * every run: the preconditioner is built in the first PRECONDITIONER_NEWTON_STEPS Newton
@@ -54,18 +56,26 @@ GEOMETRIES = {
     "plass": ("simulationParameters_plass.xml", "materialParameters_plasschaert_heeneman_daemem.xml", "Artery_plasschaert_heeneman_daemem_SCI.mesh"),
 }
 
-# Alpha2 by region (Volume Flag) as in dan, kim and plass; phini had 10.0 everywhere
-PHINI_ALPHA2 = {15: "198.654", 16: "151.73775", 17: "151.73775", 18: "500.0",
-                19: "151.73775", 20: "151.73775", 21: "151.73775", 22: "165.528"}
+# phini's Alpha2 in every region: the paper's 10.0 (FEDDLib-Sharan 18a1448b). With the values of dan,
+# kim and plass (198.654, 151.73775, 151.73775, 500.0, 151.73775, 151.73775, 151.73775, 165.528 in
+# regions 15-22) phini original stopped on the corrected remeshes: L1 at 0.91 s and L2 at 52.4 s, its
+# Newton iteration stalling at any time step (mesh convergence study, 2026-10-17)
+PHINI_ALPHA2 = "10.0"
+# phini's segments after the load ramp may shrink to their dt / PHINI_MIN_DT_DIVISOR (the other
+# arteries: to their dt)
+PHINI_MIN_DT_DIVISOR = 16
+# phini's GMRES: at most PHINI_GMRES_ITERATIONS iterations without restart (solverParameters.xml: 1000).
+# With 1000 it missed its tolerance in most Newton steps of the phini runs
+PHINI_GMRES_ITERATIONS = "3000"
 
 # phini's load ramp adapts its time step. With the consistent Alpha2 and fixed load steps its first
 # Newton iteration diverges at 0.02 s on the paper's mesh and at 0.01 s on the remeshes; at 0.005 s the
 # finer remeshes (original L1, L2, r0.1 L2) still diverge at 84-92 % of the pressure. The ramp follows
 # the time step (main.cpp, "Ramp Follows Time Step"), starts with PHINI_RAMP_DT and may shrink to
-# PHINI_RAMP_MIN_DT (phini original L2 needed 0.00125 at 84 %, faculty test 2026-10-16). FEDDLib requires
+# PHINI_RAMP_MIN_DT (phini original L2 needed 0.00039 at 84 %, 2026-10-17). FEDDLib requires
 # Load Step Size = the first segment's dt.
 PHINI_RAMP_DT = "0.01"
-PHINI_RAMP_MIN_DT = "0.0003"
+PHINI_RAMP_MIN_DT = "0.0001"
 PHINI_RAMP_MAX_DT = "0.05"
 
 STRESS_FIELDS = ["Sxx", "Sxy", "Sxz", "Syx", "Syy", "Syz", "Szx", "Szy", "Szz", "SFiber1", "SFiber2"]
@@ -304,6 +314,22 @@ def phini_adaptive_ramp(simulation):
     set_parameter(simulation, ramp, "Maximum dt", "double", PHINI_RAMP_MAX_DT)
 
 
+def phini_minimum_dt(simulation):
+    """phini's segments after the load ramp may shrink to their dt / PHINI_MIN_DT_DIVISOR."""
+    for item in sublist(simulation.getroot(), "Timestepping Parameter", "Timestepping Intervalls").findall("ParameterList"):
+        if float(parameter(item, "Start Time").get("value")) > 0.:
+            parameter(item, "Minimum dt").set("value", fmt(float(parameter(item, "dt").get("value")) / PHINI_MIN_DT_DIVISOR))
+
+
+def phini_solver(path):
+    """solverParameters.xml with PHINI_GMRES_ITERATIONS iterations and Krylov vectors."""
+    solver = read(os.path.join(HERE, "solverParameters.xml"))
+    gmres = sublist(solver.getroot(), "ThyraSolver", "Linear Solver Types", "Belos", "Solver Types", "Block GMRES")
+    parameter(gmres, "Maximum Iterations").set("value", PHINI_GMRES_ITERATIONS)
+    parameter(gmres, "Num Blocks").set("value", PHINI_GMRES_ITERATIONS)
+    write(solver, path, os.path.join(HERE, "solverParameters.xml"))
+
+
 def mesh(name):
     return lambda sim, mat: parameter(sublist(sim.getroot(), "Mesh Partitioner"), "Mesh 1 Name").set("value", name)
 
@@ -423,8 +449,7 @@ def main():
 
         parameter(sublist(simulation.getroot(), "Mesh Partitioner"), "Mesh 1 Name").set("value", mesh_file)
         if artery == "phini":
-            for flag, region in regions(material_tree):
-                parameter(region, "Alpha2").set("value", PHINI_ALPHA2[flag])
+            set_material(material_tree, "Alpha2", PHINI_ALPHA2)
             parameter(sublist(simulation.getroot(), "Parameter"), "Load Step Size").set("value", PHINI_RAMP_DT)
             ramp = sublist(simulation.getroot(), "Timestepping Parameter", "Timestepping Intervalls", "1")
             assert float(parameter(ramp, "Start Time").get("value")) == 0.
@@ -443,12 +468,15 @@ def main():
         common(simulation, final_time, extra_segments, extra_exports)
         if artery == "phini":
             phini_adaptive_ramp(simulation)
+            phini_minimum_dt(simulation)
         set_material(material_tree, "growthDirectionBool", GROWTH_DIRECTION_BOOL)
 
         folder = os.path.join(CASES_DIR, study, case)
         os.makedirs(folder)
         write(simulation, os.path.join(folder, "simulationParameters.xml"), os.path.join(BASE, sim_file))
         write(material_tree, os.path.join(folder, mat_file), os.path.join(BASE, mat_file))
+        if artery == "phini":
+            phini_solver(os.path.join(folder, "solverParameters.xml"))
 
         name = job_name(study, case)
         assert name not in names, name

@@ -130,14 +130,14 @@
                 <Parameter name="Start Time" type="double" value="0.0"/>
                 <Parameter name="dt" type="double" value="0.01"/>
                 <Parameter name="Adaptive" type="bool" value="true"/>
-                <Parameter name="Minimum dt" type="double" value="0.0003"/>
+                <Parameter name="Minimum dt" type="double" value="0.0001"/>
                 <Parameter name="Maximum dt" type="double" value="0.05"/>
             </ParameterList>
             <ParameterList name="2">
                 <Parameter name="Start Time" type="double" value="1.0"/>
                 <Parameter name="dt" type="double" value="0.5"/>
                 <Parameter name="Adaptive" type="bool" value="true"/>
-                <Parameter name="Minimum dt" type="double" value="0.5"/>
+                <Parameter name="Minimum dt" type="double" value="0.03125"/>
                 <Parameter name="Maximum dt" type="double" value="9.5"/>
                 <Parameter name="Accept Element Failures At Minimum dt" type="bool" value="false"/>
             </ParameterList>
@@ -145,7 +145,7 @@
                 <Parameter name="Start Time" type="double" value="20.0"/>
                 <Parameter name="dt" type="double" value="0.1"/>
                 <Parameter name="Adaptive" type="bool" value="true"/>
-                <Parameter name="Minimum dt" type="double" value="0.1"/>
+                <Parameter name="Minimum dt" type="double" value="0.00625"/>
                 <Parameter name="Maximum dt" type="double" value="15.0"/>
                 <Parameter name="Accept Element Failures At Minimum dt" type="bool" value="false"/>
             </ParameterList>
@@ -153,7 +153,7 @@
                 <Parameter name="Start Time" type="double" value="50.0"/>
                 <Parameter name="dt" type="double" value="0.15"/>
                 <Parameter name="Adaptive" type="bool" value="true"/>
-                <Parameter name="Minimum dt" type="double" value="0.15"/>
+                <Parameter name="Minimum dt" type="double" value="0.009375"/>
                 <Parameter name="Maximum dt" type="double" value="15.0"/>
                 <Parameter name="Accept Element Failures At Minimum dt" type="bool" value="false"/>
             </ParameterList>
@@ -161,7 +161,7 @@
                 <Parameter name="Start Time" type="double" value="80.0"/>
                 <Parameter name="dt" type="double" value="0.2"/>
                 <Parameter name="Adaptive" type="bool" value="true"/>
-                <Parameter name="Minimum dt" type="double" value="0.2"/>
+                <Parameter name="Minimum dt" type="double" value="0.0125"/>
                 <Parameter name="Maximum dt" type="double" value="15.0"/>
                 <Parameter name="Accept Element Failures At Minimum dt" type="bool" value="false"/>
             </ParameterList>
@@ -169,7 +169,7 @@
                 <Parameter name="Start Time" type="double" value="110.0"/>
                 <Parameter name="dt" type="double" value="0.25"/>
                 <Parameter name="Adaptive" type="bool" value="true"/>
-                <Parameter name="Minimum dt" type="double" value="0.25"/>
+                <Parameter name="Minimum dt" type="double" value="0.015625"/>
                 <Parameter name="Maximum dt" type="double" value="55.0"/>
                 <Parameter name="Accept Element Failures At Minimum dt" type="bool" value="false"/>
             </ParameterList>
@@ -177,7 +177,7 @@
                 <Parameter name="Start Time" type="double" value="220.0"/>
                 <Parameter name="dt" type="double" value="0.5"/>
                 <Parameter name="Adaptive" type="bool" value="true"/>
-                <Parameter name="Minimum dt" type="double" value="0.5"/>
+                <Parameter name="Minimum dt" type="double" value="0.03125"/>
                 <Parameter name="Maximum dt" type="double" value="10.0"/>
                 <Parameter name="Accept Element Failures At Minimum dt" type="bool" value="false"/>
             </ParameterList>
@@ -185,7 +185,7 @@
                 <Parameter name="Start Time" type="double" value="240.0"/>
                 <Parameter name="dt" type="double" value="0.2"/>
                 <Parameter name="Adaptive" type="bool" value="true"/>
-                <Parameter name="Minimum dt" type="double" value="0.2"/>
+                <Parameter name="Minimum dt" type="double" value="0.0125"/>
                 <Parameter name="Maximum dt" type="double" value="150.0"/>
                 <Parameter name="Accept Element Failures At Minimum dt" type="bool" value="false"/>
             </ParameterList>
@@ -193,7 +193,7 @@
                 <Parameter name="Start Time" type="double" value="540.0"/>
                 <Parameter name="dt" type="double" value="0.025"/>
                 <Parameter name="Adaptive" type="bool" value="true"/>
-                <Parameter name="Minimum dt" type="double" value="0.025"/>
+                <Parameter name="Minimum dt" type="double" value="0.0015625"/>
                 <Parameter name="Maximum dt" type="double" value="150.0"/>
                 <Parameter name="Accept Element Failures At Minimum dt" type="bool" value="true"/>
             </ParameterList>
@@ -201,7 +201,7 @@
                 <Parameter name="Start Time" type="double" value="840.0"/>
                 <Parameter name="dt" type="double" value="0.5"/>
                 <Parameter name="Adaptive" type="bool" value="true"/>
-                <Parameter name="Minimum dt" type="double" value="0.5"/>
+                <Parameter name="Minimum dt" type="double" value="0.03125"/>
                 <Parameter name="Maximum dt" type="double" value="10.0"/>
                 <Parameter name="Accept Element Failures At Minimum dt" type="bool" value="false"/>
             </ParameterList>
@@ -209,7 +209,7 @@
                 <Parameter name="Start Time" type="double" value="860.0"/>
                 <Parameter name="dt" type="double" value="0.2"/>
                 <Parameter name="Adaptive" type="bool" value="true"/>
-                <Parameter name="Minimum dt" type="double" value="0.2"/>
+                <Parameter name="Minimum dt" type="double" value="0.0125"/>
                 <Parameter name="Maximum dt" type="double" value="320.0"/>
                 <Parameter name="Accept Element Failures At Minimum dt" type="bool" value="false"/>
             </ParameterList>

@@ -9,7 +9,7 @@
 #               or a whole study, e.g. pressure_drop_variation
 #
 # The run directory gets the case's two input files, the shared solver and preconditioner
-# files, the mesh, and job.sh. --dry-run prepares the directories without submitting.
+# files (the case's own solverParameters.xml if it has one), the mesh, and job.sh. --dry-run prepares the directories without submitting.
 # A case runs on NODES nodes (case.env) with 48 ranks each. Cases with HOLD in case.env
 # are skipped unless INCLUDE_HELD=1 is set.
 # MAIL_USER=<address> in the environment adds Slurm mails at the end of each job.
@@ -43,6 +43,8 @@ for case in "${CASES[@]}"; do
     mkdir -p "$run"
     cp "$HERE/cases/$case/simulationParameters.xml" "$HERE/cases/$case/$MATERIAL" "$run/"
     cp "$HERE/solverParameters.xml" "$HERE/preconditionerParameters_Structure.xml" "$HERE/preconditionerParameters_Chemistry.xml" "$run/"
+    # a case with its own solver parameters (phini)
+    [ -e "$HERE/cases/$case/solverParameters.xml" ] && cp "$HERE/cases/$case/solverParameters.xml" "$run/"
     cp "$MESHES/$MESH" "$run/"
     mail=""
     [ -n "${MAIL_USER:-}" ] && mail="#SBATCH --mail-type=END,FAIL

@@ -126,15 +126,21 @@ so all runs share the one executable.
   `phini_original_L2.mesh`: the paper's geometry, cap shoulders at 0.03 mm; the
   paper: the `..._medium_SCI` meshes; 93,487 / 57,760 tetrahedra on 4 / 2
   nodes), on hold until the repeated study decides the mesh.
-- **phini**: `Alpha2` as in dan, kim and plasschaert (it was 10.0 in every region),
-  and an adaptive load ramp: "Ramp Follows Time Step" (the load is Lambda t, see
-  `main.cpp`) and a first time segment that adapts its step between 0.0003 and
-  0.05 s. With fixed load steps phini's Newton iteration diverges: in the first
-  step at 0.02 s on the paper's mesh and at 0.01 s on the remeshes, and at 0.005 s
-  at 84-92 % of the pressure on the finer remeshes; the adaptive ramp passed
-  original L2 by shrinking to 0.00125 s at 84 %. The mesh convergence runs of
-  phini original L0 and r0.1 L0/L1 ran with fixed load steps of 0.005 s (the paper's
-  ramp Lambda (t + Load Step Size)); the other phini runs use the adaptive ramp.
+- **phini**: the paper's `Alpha2` of 10.0 in every region, an adaptive load ramp,
+  smaller minimum time steps and more linear iterations. The load ramp: "Ramp
+  Follows Time Step" (the load is Lambda t, see `main.cpp`) and a first time
+  segment that adapts its step between 0.0001 and 0.05 s. With fixed load steps
+  phini's Newton iteration diverged (with the `Alpha2` of dan, kim and plass): in
+  the first step at 0.02 s on the paper's mesh and at 0.01 s on the remeshes, and
+  at 0.005 s at 84-92 % of the pressure on the finer remeshes. The later segments
+  may shrink to their `dt` / 16 (`PHINI_MIN_DT_DIVISOR`), and GMRES may take 3000
+  iterations without restart (the case's own `solverParameters.xml`; 1000
+  elsewhere). With the `Alpha2` of dan, kim and plass and the paper's `dt` as the
+  minimum, phini original stopped on the remeshes (L1 at 0.91 s, L2 at 52.4 s,
+  Newton stalling at any time step) while r0.1 L0-L2 and original L0 ran to
+  1500 s (2026-10-17); those mesh convergence runs used the old settings, and
+  original L0 and r0.1 L0/L1 fixed load steps of 0.005 s (the paper's ramp
+  Lambda (t + Load Step Size)).
   narula keeps the paper's `Alpha2` of 500 in its calcifications (19, 20), the
   lipid value, where the other arteries use 151.73775: as a volumetric penalty
   the higher value changes little.
