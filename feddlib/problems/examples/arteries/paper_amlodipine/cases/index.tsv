@@ -79,16 +79,16 @@ mesh_convergence/artery_narula_original_L1	mesh_narula_original_L1	narula	narula
 mesh_convergence/artery_narula_original_L1_withDrug	mesh_narula_original_L1_d	narula	narula_original_L1.mesh	2	1500		drug, mesh narula_original_L1.mesh
 mesh_convergence/artery_narula_original_L2	mesh_narula_original_L2	narula	narula_original_L2.mesh	4	1500		control, mesh narula_original_L2.mesh
 mesh_convergence/artery_narula_original_L2_withDrug	mesh_narula_original_L2_d	narula	narula_original_L2.mesh	4	1500		drug, mesh narula_original_L2.mesh
-mesh_convergence/artery_narula_original_L3	mesh_narula_original_L3	narula	narula_original_L3.mesh	13	1500		control, mesh narula_original_L3.mesh
-mesh_convergence/artery_narula_original_L3_withDrug	mesh_narula_original_L3_d	narula	narula_original_L3.mesh	13	1500		drug, mesh narula_original_L3.mesh
+mesh_convergence/artery_narula_original_L3	mesh_narula_original_L3	narula	narula_original_L3.mesh	4	1500		control, mesh narula_original_L3.mesh
+mesh_convergence/artery_narula_original_L3_withDrug	mesh_narula_original_L3_d	narula	narula_original_L3.mesh	4	1500		drug, mesh narula_original_L3.mesh
 mesh_convergence/artery_narula_r0.1_L0	mesh_narula_r0.1_L0	narula	narula_r0.1_L0.mesh	2	1500		control, mesh narula_r0.1_L0.mesh
 mesh_convergence/artery_narula_r0.1_L0_withDrug	mesh_narula_r0.1_L0_d	narula	narula_r0.1_L0.mesh	2	1500		drug, mesh narula_r0.1_L0.mesh
 mesh_convergence/artery_narula_r0.1_L1	mesh_narula_r0.1_L1	narula	narula_r0.1_L1.mesh	2	1500		control, mesh narula_r0.1_L1.mesh
 mesh_convergence/artery_narula_r0.1_L1_withDrug	mesh_narula_r0.1_L1_d	narula	narula_r0.1_L1.mesh	2	1500		drug, mesh narula_r0.1_L1.mesh
 mesh_convergence/artery_narula_r0.1_L2	mesh_narula_r0.1_L2	narula	narula_r0.1_L2.mesh	4	1500		control, mesh narula_r0.1_L2.mesh
 mesh_convergence/artery_narula_r0.1_L2_withDrug	mesh_narula_r0.1_L2_d	narula	narula_r0.1_L2.mesh	4	1500		drug, mesh narula_r0.1_L2.mesh
-mesh_convergence/artery_narula_r0.1_L3	mesh_narula_r0.1_L3	narula	narula_r0.1_L3.mesh	13	1500		control, mesh narula_r0.1_L3.mesh
-mesh_convergence/artery_narula_r0.1_L3_withDrug	mesh_narula_r0.1_L3_d	narula	narula_r0.1_L3.mesh	13	1500		drug, mesh narula_r0.1_L3.mesh
+mesh_convergence/artery_narula_r0.1_L3	mesh_narula_r0.1_L3	narula	narula_r0.1_L3.mesh	4	1500		control, mesh narula_r0.1_L3.mesh
+mesh_convergence/artery_narula_r0.1_L3_withDrug	mesh_narula_r0.1_L3_d	narula	narula_r0.1_L3.mesh	4	1500		drug, mesh narula_r0.1_L3.mesh
 axial_stretch/artery_dan_stretch5	ax_dan_stretch5	dan	Artery_dan_SCI.mesh	1	1500		control, 5 % axial stretch
 axial_stretch/artery_dan_withDrug_stretch5	ax_dan_d_stretch5	dan	Artery_dan_SCI.mesh	1	1500		drug, 5 % axial stretch
 basal_tone_tuning/artery_dan_eta_x0.75	eta_dan_eta_x0.75	dan	Artery_dan_SCI.mesh	1	540		control to 540 s, Eta x0.75 (all regions)

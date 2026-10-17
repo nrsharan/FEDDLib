@@ -84,6 +84,12 @@ STRESS_FIELDS = ["Sxx", "Sxy", "Sxz", "Syx", "Syy", "Syz", "Szx", "Szy", "Szz", 
 
 # Remeshed meshes: tetrahedra per node (48 ranks)
 TETS_PER_NODE = {"narula": 25000, "phini": 30000, "kim": 30000}
+# Meshes whose node count is set by a benchmark instead. narula L3 (1.85M unknowns) on 13 nodes needed
+# ~20 s per Newton step, twice L2's at the same load per rank: FROSch's coarse problem grows with the
+# number of ranks and is solved on one. 3 load steps of narula original L3 (2026-10-17,
+# runs_frozen/bench_narula_L3): 13 nodes ~20 s per Newton step (0.072 node-h), 7 nodes 22.4 s (0.044),
+# 4 nodes 31 s (0.034)
+MESH_NODES = {"narula_original_L3.mesh": 4, "narula_r0.1_L3.mesh": 4}
 # The L3 meshes (5-12 MB) are not in the repository (smoothing_package/<artery>/meshes on the
 # user's machine); their sizes, for the node counts when the file is not there
 MESH_TETRAHEDRA = {"narula_original_L3.mesh": 316461, "narula_r0.1_L3.mesh": 316935,
@@ -485,7 +491,9 @@ def main():
         names.add(name)
         mesh_name = parameter(sublist(simulation.getroot(), "Mesh Partitioner"), "Mesh 1 Name").get("value")
         nodes = 1
-        if artery in TETS_PER_NODE:
+        if mesh_name in MESH_NODES:
+            nodes = MESH_NODES[mesh_name]
+        elif artery in TETS_PER_NODE:
             nodes = -(-tetrahedra(mesh_name) // TETS_PER_NODE[artery])
         hold = HELD if artery in ("kim", "narula", "phini") and study != "mesh_convergence" else ""
         with open(os.path.join(folder, "case.env"), "w") as f:
