@@ -126,7 +126,8 @@ so all runs share the one executable.
   `phini_original_L2.mesh`: the paper's geometry, cap shoulders at 0.03 mm; the
   paper: the `..._medium_SCI` meshes; 93,487 / 57,760 tetrahedra on 4 / 2
   nodes), on hold until the repeated study decides the mesh.
-- **phini**: the paper's `Alpha2` of 10.0 in every region, an adaptive load ramp,
+- **phini**: `Alpha2` of 50.0 in every region (the paper: 10.0, with which its cap
+  lost ~10 % of its volume elastically, DetFe ~0.9), an adaptive load ramp,
   smaller minimum time steps and more linear iterations. The load ramp: "Ramp
   Follows Time Step" (the load is Lambda t, see `main.cpp`) and a first time
   segment that adapts its step between 0.0001 and 0.05 s. With fixed load steps

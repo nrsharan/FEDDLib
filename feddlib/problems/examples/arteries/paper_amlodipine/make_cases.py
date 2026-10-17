@@ -6,7 +6,7 @@ paper's results were computed with) and changes only what is listed here:
 
 * every run: adaptive time stepping (see adaptive_segments), output by time and
   checkpoints;
-* phini: the paper's Alpha2 of 10.0 (PHINI_ALPHA2), an adaptive load ramp that follows the time
+* phini: Alpha2 of 50.0 (PHINI_ALPHA2), an adaptive load ramp that follows the time
   step (with fixed load steps its Newton iteration diverges, see PHINI_RAMP_DT), smaller minimum
   time steps (PHINI_MIN_DT_DIVISOR) and more linear iterations (PHINI_GMRES_ITERATIONS, the case's
   own solverParameters.xml);
@@ -56,11 +56,12 @@ GEOMETRIES = {
     "plass": ("simulationParameters_plass.xml", "materialParameters_plasschaert_heeneman_daemem.xml", "Artery_plasschaert_heeneman_daemem_SCI.mesh"),
 }
 
-# phini's Alpha2 in every region: the paper's 10.0 (FEDDLib-Sharan 18a1448b). With the values of dan,
-# kim and plass (198.654, 151.73775, 151.73775, 500.0, 151.73775, 151.73775, 151.73775, 165.528 in
-# regions 15-22) phini original stopped on the corrected remeshes: L1 at 0.91 s and L2 at 52.4 s, its
-# Newton iteration stalling at any time step (mesh convergence study, 2026-10-17)
-PHINI_ALPHA2 = "10.0"
+# phini's Alpha2 in every region: 50.0. With the values of dan, kim and plass (198.654, 151.73775,
+# 151.73775, 500.0, 151.73775, 151.73775, 151.73775, 165.528 in regions 15-22) phini original stopped on
+# the corrected remeshes: L1 at 0.91 s and L2 at 52.4 s, its Newton iteration stalling at any time step
+# (mesh convergence study, 2026-10-17). With the paper's 10.0 (FEDDLib-Sharan 18a1448b) the paper's cap
+# lost ~10 % of its volume elastically (DetFe p50 0.88-0.90, nodal min 0.72; dan's cap: 0.99)
+PHINI_ALPHA2 = "50.0"
 # phini's segments after the load ramp may shrink to their dt / PHINI_MIN_DT_DIVISOR (the other
 # arteries: to their dt)
 PHINI_MIN_DT_DIVISOR = 16
