@@ -97,3 +97,7 @@ basal_tone_tuning/artery_dan_eta_x0.35	eta_dan_eta_x0.35	dan	Artery_dan_SCI.mesh
 basal_tone_tuning/artery_dan_eta_x0.25	eta_dan_eta_x0.25	dan	Artery_dan_SCI.mesh	1	540		control to 540 s, Eta x0.25 (all regions)
 basal_tone_tuning/artery_dan_eta_x0.15	eta_dan_eta_x0.15	dan	Artery_dan_SCI.mesh	1	540		control to 540 s, Eta x0.15 (all regions)
 basal_tone_tuning/artery_dan_eta_x0.1	eta_dan_eta_x0.1	dan	Artery_dan_SCI.mesh	1	540		control to 540 s, Eta x0.1 (all regions)
+basal_tone/artery_dan_eta_x0.25	tone_dan_eta_x0.25	dan	Artery_dan_SCI.mesh	1	1500		control, Eta x0.25 (all regions)
+basal_tone/artery_dan_withDrug_eta_x0.25	tone_dan_d_eta_x0.25	dan	Artery_dan_SCI.mesh	1	1500		drug, Eta x0.25 (all regions)
+basal_tone/artery_dan_eta_x0.1	tone_dan_eta_x0.1	dan	Artery_dan_SCI.mesh	1	1500		control, Eta x0.1 (all regions)
+basal_tone/artery_dan_withDrug_eta_x0.1	tone_dan_d_eta_x0.1	dan	Artery_dan_SCI.mesh	1	1500		drug, Eta x0.1 (all regions)

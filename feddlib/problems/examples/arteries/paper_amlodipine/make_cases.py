@@ -423,11 +423,18 @@ for factor in [0.75, 0.5, 0.35, 0.25, 0.15, 0.1]:
     add("basal_tone_tuning", "artery_dan_eta_x%g" % factor, "dan", chain(scaled("Eta", factor), drug(False)),
         "control to 540 s, Eta x%g (all regions)" % factor)
 
+# Revision 3.3: lower basal tone. The tuning runs gave a pre-drug n_C (media, 540 s) of 0.482 with
+# Eta x0.25 and 0.285 with x0.1 (baseline 0.746; 2026-10-18)
+for factor in [0.25, 0.1]:
+    add("basal_tone", "artery_dan_eta_x%g" % factor, "dan", chain(scaled("Eta", factor), drug(False)),
+        "control, Eta x%g (all regions)" % factor)
+    add("basal_tone", "artery_dan_withDrug_eta_x%g" % factor, "dan", scaled("Eta", factor), "drug, Eta x%g (all regions)" % factor)
+
 STUDY_ABBREVIATIONS = {"kappa_variation": "kap", "arteries": "art", "pressure_drop_variation/10_pressure_drop": "pd10",
                        "pressure_drop_variation/20_pressure_drop": "pd20", "pressure_drop_variation/30_pressure_drop": "pd30",
                        "diffusion_variation": "dif", "reaction_variation": "rea", "degen_kappa_variation": "dkap",
                        "dose_variation": "dose", "drug_response_variation": "resp", "mesh_convergence": "mesh",
-                       "axial_stretch": "ax", "basal_tone_tuning": "eta"}
+                       "axial_stretch": "ax", "basal_tone_tuning": "eta", "basal_tone": "tone"}
 
 
 def job_name(study, case):

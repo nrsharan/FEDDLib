@@ -162,6 +162,7 @@ The studies:
 | `mesh_convergence` | narula and phini remeshed, control and drug | the mesh: the paper's geometry (`original`) and its cap shoulders smoothed with a 0.1 mm fillet (`r0.1`), each refined at the shoulders to 0.12, 0.06, 0.03, 0.015 mm (L0-L3) |
 | `axial_stretch` | dan, control and drug | `Axial Stretch` 0.05, ramped with the pressure |
 | `basal_tone_tuning` | dan, control to 540 s | `Eta` × 0.75, 0.5, 0.35, 0.25, 0.15, 0.1 (all regions), to find the basal-tone levels |
+| `basal_tone` | dan, control and drug | `Eta` × 0.25 and × 0.1 (all regions): pre-drug n_C in the media 0.48 and 0.29 (baseline 0.75) |
 
 The kim, narula and phini runs outside `mesh_convergence` are on hold (`HOLD` in
 `case.env`) until the repeated mesh convergence study has decided their mesh;
