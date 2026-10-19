@@ -282,12 +282,29 @@ def chain(*changes):
     return change
 
 
+# Unloading: after the pressure, the active stiffness MuA goes to 0 (FEDDLib "MuA Ramp"), so the final
+# state holds the residual stresses without the frozen tone (the active phase ends at 1500 s, and its
+# state nC/nD stays as it was then)
+UNLOADING_EXPORT_TIMES = (1550., 1600., 1650., 1700.)
+UNLOADING_CHECKPOINT_TIMES = (1500., 1600.)
+MUA_RAMP = (1600., 1700.)
+
+
 def unloading(sim, mat):
-    """Pressure from 85 mmHg to 0 over 1500-1600 s, then held to 1700 s (residual stresses)."""
+    """Pressure from 85 mmHg to 0 over 1500-1600 s, then MuA to 0 over 1600-1700 s (residual stresses)."""
     p = sublist(sim.getroot(), "Parameter")
     parameter(p, "Pressure Reduction Start Time").set("value", "1500.0")
     parameter(p, "Pressure Reduction End Time").set("value", "1600.0")
     parameter(p, "Pressure Reduction Amount mmHg").set("value", "85.0")
+    for _, region in regions(mat):
+        mu_a = parameter(region, "MuA")
+        if float(mu_a.get("value")) != 0.:
+            # after MuA, with its indentation (the material files are not indented like set_parameter's)
+            position = list(region).index(mu_a)
+            for k, (name, value) in enumerate([("MuA Ramp Start Time", MUA_RAMP[0]), ("MuA Ramp End Time", MUA_RAMP[1])]):
+                ramp = ET.Element("Parameter", {"name": name, "type": "double", "value": fmt(value)})
+                ramp.tail = mu_a.tail if "\n" in (mu_a.tail or "") else "\n" + " " * 6
+                region.insert(position + 1 + k, ramp)
 
 
 def pressure_drop(mmhg):
@@ -476,11 +493,15 @@ def main():
             unloading(simulation, material_tree)
             last_dt = sorted((float(parameter(i, "Start Time").get("value")), parameter(i, "dt").get("value"))
                              for i in sublist(simulation.getroot(), "Timestepping Parameter", "Timestepping Intervalls").findall("ParameterList"))[-1][1]
-            final_time, extra_segments, extra_exports = 1700., [(1500., last_dt)], (1600., 1700.)
-            description += ", unloading 1500-1600 s to 1700 s"
+            final_time, extra_segments, extra_exports = 1700., [(1500., last_dt)], UNLOADING_EXPORT_TIMES
+            description += ", unloading 1500-1600 s, MuA to 0 1600-1700 s"
         if study == "basal_tone_tuning":
             final_time = 540.
         common(simulation, final_time, extra_segments, extra_exports)
+        if (study, case) in UNLOADING:
+            stepping = sublist(simulation.getroot(), "Timestepping Parameter")
+            times = [t for t in CHECKPOINT_TIMES if t < final_time] + list(UNLOADING_CHECKPOINT_TIMES)
+            set_parameter(simulation, stepping, "Checkpoint Times", "Array(double)", "{%s}" % ", ".join(fmt(t) for t in times))
         if artery == "phini":
             phini_adaptive_ramp(simulation)
             phini_minimum_dt(simulation)

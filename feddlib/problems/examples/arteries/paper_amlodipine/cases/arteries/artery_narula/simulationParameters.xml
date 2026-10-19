@@ -78,7 +78,7 @@
         <Parameter name="Name coarse functions block1" type="string" value="phiC"/>
         <Parameter name="Name coarse functions block2" type="string" value="phiD"/>
         <Parameter name="Exclude coarse functions block4" type="bool" value="true"/>
-        <Parameter name="Export Times" type="Array(double)" value="{1.0, 20.0, 220.0, 240.0, 540.0, 840.0, 860.0, 1000.0, 1200.0, 1500.0, 1600.0, 1700.0}"/>
+        <Parameter name="Export Times" type="Array(double)" value="{1.0, 20.0, 220.0, 240.0, 540.0, 840.0, 860.0, 1000.0, 1200.0, 1500.0, 1550.0, 1600.0, 1650.0, 1700.0}"/>
         <Parameter name="Export Interval" type="double" value="50.0"/>
         
     </ParameterList>
@@ -121,7 +121,7 @@
         <Parameter name="Converged Time Steps Before Increase" type="int" value="7"/>
         <Parameter name="Checkpointing" type="bool" value="true"/>
         <Parameter name="Checkpoint directory" type="string" value="checkpoints"/>
-        <Parameter name="Checkpoint Times" type="Array(double)" value="{220.0, 540.0, 565.0, 590.0, 615.0, 640.0, 665.0, 690.0, 715.0, 740.0, 765.0, 790.0, 815.0, 840.0, 860.0, 1200.0}"/>
+        <Parameter name="Checkpoint Times" type="Array(double)" value="{220.0, 540.0, 565.0, 590.0, 615.0, 640.0, 665.0, 690.0, 715.0, 740.0, 765.0, 790.0, 815.0, 840.0, 860.0, 1200.0, 1500.0, 1600.0}"/>
         <Parameter name="Export history" type="bool" value="true"/>
         <ParameterList name="Timestepping Intervalls">
             <Parameter name="Number of Segments" type="int" value="12"/>

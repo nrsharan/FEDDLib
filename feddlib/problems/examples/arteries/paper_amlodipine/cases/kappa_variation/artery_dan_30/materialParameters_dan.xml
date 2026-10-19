@@ -132,6 +132,8 @@
       <Parameter name="Kappa" type="double" value="103.783" />
       <Parameter name="Beta1" type="double" value="0.00100" />
       <Parameter name="MuA" type="double" value="11.857" />
+      <Parameter name="MuA Ramp Start Time" type="double" value="1600.0" />
+      <Parameter name="MuA Ramp End Time" type="double" value="1700.0" />
       <Parameter name="Beta2" type="double" value="26.68" />
       <Parameter name="Alpha2" type="double" value="151.73775" />
       <Parameter name="Alpha3" type="double" value="2.75662" />
@@ -244,6 +246,8 @@
       <Parameter name="Kappa" type="double" value="69.5349" />
       <Parameter name="Beta1" type="double" value="0.001006" />
       <Parameter name="MuA" type="double" value="7.25139" />
+      <Parameter name="MuA Ramp Start Time" type="double" value="1600.0" />
+      <Parameter name="MuA Ramp End Time" type="double" value="1700.0" />
       <Parameter name="Beta2" type="double" value="26.68" />
       <Parameter name="Alpha2" type="double" value="151.73775" />
       <Parameter name="Alpha3" type="double" value="2.75662" />

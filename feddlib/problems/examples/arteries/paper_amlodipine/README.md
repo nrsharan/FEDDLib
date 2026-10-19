@@ -82,7 +82,7 @@ so all runs share the one executable.
   time otherwise.
 - **Output by time.** The solution and the postprocessing fields are written at
   the ends of the phases (1, 20, 220, 240, 540, 840, 860, 1000, 1200, 1500 s, and
-  1600, 1700 s with unloading) and every 50 s (`Export Times`, `Export Interval`
+  1550, 1600, 1650, 1700 s with unloading) and every 50 s (`Export Times`, `Export Interval`
   in `Exporter`). A time step ends exactly at the phase ends, and at the 50 s marks
   if it is not longer than 50 s; a longer one is written at its end.
 - **Checkpoints** at 220, 540, 860 and 1200 s and every 25 s of growth (565 ... 840 s),
@@ -171,7 +171,11 @@ tetrahedra per node (`NODES` in `case.env`).
 
 The controls of the baseline arteries (`kappa_variation/artery_dan_30` and the
 four in `arteries`) continue past 1500 s: the pressure goes to 0 over
-1500-1600 s and is held to 1700 s.
+1500-1600 s, then the active stiffness `MuA` goes to 0 over 1600-1700 s
+(`MuA Ramp Start Time` / `MuA Ramp End Time` in the regions with a nonzero
+`MuA`), so the state at 1700 s holds the residual stresses without the tone. The
+active phase ends at 1500 s and its state (nC, nD) stays as it was then; without
+the ramp its stress would remain. They also checkpoint at 1500 and 1600 s.
 
 Two parameters of `main.cpp` are new and default to the paper's behaviour:
 `Inflow Concentration` (2.0) and `Axial Stretch` (0.0; the end faces and rings

@@ -76,6 +76,15 @@ AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::AssembleFE_SCI_S
         this->postDataNames_[i] = std::string(postDataNames[i]);
     }
 
+    // Ramp of the active stiffness MuA to 0 (e.g. to remove the frozen tone after unloading)
+    muARampStartTime_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("MuA Ramp Start Time", -1.);
+    muARampEndTime_ = this->params_->sublist("Parameter Solid").sublist(std::to_string(materialID)).get("MuA Ramp End Time", -1.);
+    if (muARampStartTime_ >= 0. || muARampEndTime_ >= 0.) {
+        TEUCHOS_TEST_FOR_EXCEPTION(muARampStartTime_ < 0. || muARampEndTime_ <= muARampStartTime_, std::logic_error, "MuA Ramp: set both \"MuA Ramp Start Time\" and \"MuA Ramp End Time\" with start < end (material " << materialID << ").");
+        muAIndex_ = findPosition("MuA", this->domainDataNames_);
+        TEUCHOS_TEST_FOR_EXCEPTION(muAIndex_ == -1, std::logic_error, "MuA Ramp: MuA is not a domain data parameter of this element.");
+    }
+
     // Create map from field name to position in postDataNames_
     for (int i = 0; i < postDataNames_.size(); i++) {
         fieldNameToPosition_[postDataNames_[i]] = i;
@@ -307,6 +316,31 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::assembleRHS
 		}
 
 template <class SC, class LO, class GO, class NO>
+std::vector<double> AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::modifiedDomainData(double time) const {
+    std::vector<double> domainDataModified(this->domainData_);
+
+    if (time < this->activeAcceleratedEndTime_) {
+        for (int idx : acceleratedParamIndices_) {
+            domainDataModified[idx] = this->domainData_[idx] * this->activeAcceleratedMultiplier_;
+        }
+        for (int idx : deceleratedParamIndices_) {
+            domainDataModified[idx] = this->domainData_[idx] / this->activeAcceleratedMultiplier_;
+        }
+    }
+
+    // MuA at the end of the step: input value until the ramp starts, 0 from its end on
+    if (muAIndex_ >= 0) {
+        double factor = 1.;
+        if (time >= muARampEndTime_)
+            factor = 0.;
+        else if (time > muARampStartTime_)
+            factor = (muARampEndTime_ - time) / (muARampEndTime_ - muARampStartTime_);
+        domainDataModified[muAIndex_] = this->domainData_[muAIndex_] * factor;
+    }
+    return domainDataModified;
+}
+
+template <class SC, class LO, class GO, class NO>
 void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::assemble_SCI_SMC_Active_Growth_Reorientation(bool computeTangent) {
 #ifdef FEDD_HAVE_ACEGENINTERFACE
 
@@ -333,18 +367,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::assemble_SC
     for (int i = 0; i < 10; i++)
         this->rates_[i] = (this->solutionC_n1_[i] - this->solutionC_n_[i]) / deltaT;
 
-    std::vector<double> domainDataModified(this->domainDataLength_);
-
-    std::copy(this->domainData_.begin(), this->domainData_.end(), domainDataModified.begin());
-
-    if (time < this->activeAcceleratedEndTime_) {
-        for (int idx : acceleratedParamIndices_) {
-            domainDataModified[idx] = this->domainData_[idx] * this->activeAcceleratedMultiplier_;
-        }
-        for (int idx : deceleratedParamIndices_) {
-            domainDataModified[idx] = this->domainData_[idx] / this->activeAcceleratedMultiplier_;
-        }
-    }
+    std::vector<double> domainDataModified = modifiedDomainData(time);
 
     AceGenElement_Type& elem = aceGenElement(this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), deltaT, time);
 
@@ -423,18 +446,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::postProcess
 
     double time = this->getTimeStep();
 
-    std::vector<double> domainDataModified(this->domainDataLength_);
-
-    std::copy(this->domainData_.begin(), this->domainData_.end(), domainDataModified.begin());
-
-    if (time < this->activeAcceleratedEndTime_) {
-        for (int idx : acceleratedParamIndices_) {
-            domainDataModified[idx] = this->domainData_[idx] * this->activeAcceleratedMultiplier_;
-        }
-        for (int idx : deceleratedParamIndices_) {
-            domainDataModified[idx] = this->domainData_[idx] / this->activeAcceleratedMultiplier_;
-        }
-	}
+    std::vector<double> domainDataModified = modifiedDomainData(time);
 
     AceGenElement_Type& elem = aceGenElement(&displacements[0], &concentrations[0], &accelerations[0], &rates[0], domainDataModified.data(), deltaT, time);
     
@@ -480,18 +492,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::initializeG
 
     double time = this->getTimeStep();
 
-    std::vector<double> domainDataModified(this->domainDataLength_);
-
-    std::copy(this->domainData_.begin(), this->domainData_.end(), domainDataModified.begin());
-
-    if (time < this->activeAcceleratedEndTime_) {
-        for (int idx : acceleratedParamIndices_) {
-            domainDataModified[idx] = this->domainData_[idx] * this->activeAcceleratedMultiplier_;
-	}
-        for (int idx : deceleratedParamIndices_) {
-            domainDataModified[idx] = this->domainData_[idx] / this->activeAcceleratedMultiplier_;
-        }
-	}
+    std::vector<double> domainDataModified = modifiedDomainData(time);
 
     AceGenElement_Type& elem = aceGenElement(&displacements[0], &concentrations[0], &accelerations[0], &rates[0], domainDataModified.data(), deltaT, time);
 			
@@ -510,18 +511,7 @@ void AssembleFE_SCI_SMC_Active_Growth_Reorientation<SC, LO, GO, NO>::initializeA
     double deltaT = this->getTimeIncrement();
     double time = this->getTimeStep();
 #ifdef FEDD_HAVE_ACEGENINTERFACE
-    std::vector<double> domainDataModified(this->domainDataLength_);
-
-    std::copy(this->domainData_.begin(), this->domainData_.end(), domainDataModified.begin());
-
-    if (time < this->activeAcceleratedEndTime_) {
-        for (int idx : acceleratedParamIndices_) {
-            domainDataModified[idx] = this->domainData_[idx] * this->activeAcceleratedMultiplier_;
-        }
-        for (int idx : deceleratedParamIndices_) {
-            domainDataModified[idx] = this->domainData_[idx] / this->activeAcceleratedMultiplier_;
-        }
-	}
+    std::vector<double> domainDataModified = modifiedDomainData(time);
 
     AceGenElement_Type& elem = aceGenElement(this->displacements_.data(), this->concentrations_.data(), this->accelerations_.data(), this->rates_.data(), domainDataModified.data(), deltaT, time);
 			

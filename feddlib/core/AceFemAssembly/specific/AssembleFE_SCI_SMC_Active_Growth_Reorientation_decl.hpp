@@ -87,6 +87,12 @@ class AssembleFE_SCI_SMC_Active_Growth_Reorientation : public AssembleFE<SC, LO,
 
     void assemble_SCI_SMC_Active_Growth_Reorientation(bool computeTangent);
 
+    /*!
+    \brief Domain data with the active-acceleration factors applied (if time < "Accelerated Active Until")
+    and MuA scaled by the "MuA Ramp" factor.
+    */
+    std::vector<double> modifiedDomainData(double time) const;
+
     friend class AssembleFEFactory<SC, LO, GO, NO>;  // Must have for specfic classes
 
     int findPosition(const std::string& subString, const std::vector<std::string>& stringArray);
@@ -142,6 +148,12 @@ class AssembleFE_SCI_SMC_Active_Growth_Reorientation : public AssembleFE<SC, LO,
     int reorientationBool_ = 0;
     double activeAcceleratedEndTime_ = 0.;
     double activeAcceleratedMultiplier_ = 1.;
+
+    // "MuA Ramp Start Time" / "MuA Ramp End Time": MuA (active stiffness) goes linearly from its input
+    // value to 0 between the two times and stays 0 afterwards; off (index -1) unless both are set
+    int muAIndex_ = -1;
+    double muARampStartTime_ = -1.;
+    double muARampEndTime_ = -1.;
 
     bool activeInitialized_ = false;
     bool growthInitialized_ = false;
