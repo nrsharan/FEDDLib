@@ -113,9 +113,9 @@ so all runs share the one executable.
   0.0125 s) and Newton needs 3-5 iterations. Runs restarted on 2026-10-14 with
   it froze the directions at their restart time, not at 540 s.
 - **kim on a finer mesh** (`kim_original_L2.mesh`; the paper:
-  `Artery_kim_guzman_SCI.mesh`), on hold with narula and phini until the
-  repeated mesh convergence study (the first one ran unloaded, see above) decides
-  whether the paper's meshes are fine enough. The paper's narula and phini meshes
+  `Artery_kim_guzman_SCI.mesh`), chosen with narula and phini after the
+  repeated mesh convergence study (the first one ran unloaded, see above): L2
+  region statistics within ~2 % of L3. The paper's narula and phini meshes
   are at the coarsest level of the study in the fibrous cap (elements ~0.13 mm);
   dan's and plass's caps are as fine as L2 (~0.047 and ~0.041 mm), kim's is not
   (~0.088 mm). kim was remeshed with the study's pipeline: its cross-section recovered from the
@@ -125,7 +125,7 @@ so all runs share the one executable.
 - **narula and phini on the study's L2 meshes** (`narula_original_L2.mesh`,
   `phini_original_L2.mesh`: the paper's geometry, cap shoulders at 0.03 mm; the
   paper: the `..._medium_SCI` meshes; 93,487 / 57,760 tetrahedra on 4 / 2
-  nodes), on hold until the repeated study decides the mesh.
+  nodes), chosen from the repeated study (L0-L3).
 - **phini**: `Alpha2` of 100.0 in every region (the paper: 10.0, with which its cap
   lost ~10 % of its volume elastically, DetFe ~0.9; phini original L2 ran to
   1500 s with 50.0, cap DetFe ~0.96, and with 100.0), an adaptive load ramp,
@@ -164,18 +164,14 @@ The studies:
 | `basal_tone_tuning` | dan, control to 540 s | `Eta` × 0.75, 0.5, 0.35, 0.25, 0.15, 0.1 (all regions), to find the basal-tone levels |
 | `basal_tone` | dan, control and drug | `Eta` × 0.25 and × 0.1 (all regions): pre-drug n_C in the media 0.48 and 0.29 (baseline 0.75) |
 
-The kim, narula and phini runs outside `mesh_convergence` are on hold (`HOLD` in
-`case.env`) until the repeated mesh convergence study has decided their mesh;
-`submit_cases.sh` skips them unless `INCLUDE_HELD=1` is set. The remeshed meshes run on 2-13 nodes, about 25,000 (narula) or 30,000 (phini, kim)
+The remeshed meshes run on 2-13 nodes, about 25,000 (narula) or 30,000 (phini, kim)
 tetrahedra per node (`NODES` in `case.env`).
 
 The controls of the baseline arteries (`kappa_variation/artery_dan_30` and the
 four in `arteries`) continue past 1500 s: the pressure goes to 0 over
-1500-1600 s, then the active stiffness `MuA` goes to 0 over 1600-1700 s
-(`MuA Ramp Start Time` / `MuA Ramp End Time` in the regions with a nonzero
-`MuA`), so the state at 1700 s holds the residual stresses without the tone. The
-active phase ends at 1500 s and its state (nC, nD) stays as it was then; without
-the ramp its stress would remain. They also checkpoint at 1500 and 1600 s.
+1500-1600 s and is held to 1700 s. They also checkpoint at 1500 and 1600 s.
+(The element can also take the active stiffness `MuA` to 0, with `MuA Ramp Start
+Time` / `MuA Ramp End Time` in a region; the cases do not use it.)
 
 Two parameters of `main.cpp` are new and default to the paper's behaviour:
 `Inflow Concentration` (2.0) and `Axial Stretch` (0.0; the end faces and rings

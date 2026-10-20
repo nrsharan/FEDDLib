@@ -17,12 +17,10 @@ paper's results were computed with) and changes only what is listed here:
 * every run: growthDirectionBool GROWTH_DIRECTION_BOOL in every region (growth directions
   kept at their values at the start of growth);
 * kim, narula, phini: the paper's geometry remeshed finer at the cap (KIM_MESH, NARULA_MESH,
-  PHINI_MESH); on hold until the mesh convergence study has run on the corrected meshes;
+  PHINI_MESH), level L2 of the repeated mesh convergence study (decided 2026-10-20);
 * each run: the parameters of its study (the table in CASES below).
 
-cases/index.tsv lists every run with its job name, mesh, nodes and changes. The runs of
-kim, narula and phini are on hold (HOLD in case.env; submit_cases.sh skips them): their mesh is
-decided by the mesh convergence study, which has to be repeated on the corrected meshes.
+cases/index.tsv lists every run with its job name, mesh, nodes and changes.
 Run it from this directory; it rewrites cases/ completely.
 """
 
@@ -43,8 +41,7 @@ KIM_MESH = "kim_original_L2.mesh"
 # The remeshed meshes written before 2026-10-16 had half of their boundary triangles pointing into
 # the volume; FEDDLib takes a surface load's normal from the vertex order, so the lumen pressure
 # cancelled and every run on them (the first mesh convergence study, kim L2) was unloaded. The
-# meshes are now written with outward triangles; KIM_MESH, NARULA_MESH and PHINI_MESH are to be
-# decided again from the repeated study (HELD)
+# meshes are now written with outward triangles; the repeated study (L0-L3) chose L2 (2026-10-20)
 NARULA_MESH = "narula_original_L2.mesh"
 PHINI_MESH = "phini_original_L2.mesh"
 
@@ -94,7 +91,7 @@ MESH_NODES = {"narula_original_L3.mesh": 4, "narula_r0.1_L3.mesh": 4}
 # user's machine); their sizes, for the node counts when the file is not there
 MESH_TETRAHEDRA = {"narula_original_L3.mesh": 316461, "narula_r0.1_L3.mesh": 316935,
                    "phini_original_L3.mesh": 147287, "phini_r0.1_L3.mesh": 147911}
-HELD = "the repeated mesh convergence study decides the mesh of kim, narula and phini"
+HELD = ""  # HOLD for the kim / narula / phini runs outside mesh_convergence; none since the mesh decision
 
 # Phase ends: load ramp, reorientation, accelerated active, reorientation, active,
 # growth, reorientation, drug inflow, pressure drop, end of the run
@@ -282,29 +279,17 @@ def chain(*changes):
     return change
 
 
-# Unloading: after the pressure, the active stiffness MuA goes to 0 (FEDDLib "MuA Ramp"), so the final
-# state holds the residual stresses without the frozen tone (the active phase ends at 1500 s, and its
-# state nC/nD stays as it was then)
+# Unloading: output every 50 s and checkpoints at 1500 and 1600 s
 UNLOADING_EXPORT_TIMES = (1550., 1600., 1650., 1700.)
 UNLOADING_CHECKPOINT_TIMES = (1500., 1600.)
-MUA_RAMP = (1600., 1700.)
 
 
 def unloading(sim, mat):
-    """Pressure from 85 mmHg to 0 over 1500-1600 s, then MuA to 0 over 1600-1700 s (residual stresses)."""
+    """Pressure from 85 mmHg to 0 over 1500-1600 s, then held to 1700 s (residual stresses)."""
     p = sublist(sim.getroot(), "Parameter")
     parameter(p, "Pressure Reduction Start Time").set("value", "1500.0")
     parameter(p, "Pressure Reduction End Time").set("value", "1600.0")
     parameter(p, "Pressure Reduction Amount mmHg").set("value", "85.0")
-    for _, region in regions(mat):
-        mu_a = parameter(region, "MuA")
-        if float(mu_a.get("value")) != 0.:
-            # after MuA, with its indentation (the material files are not indented like set_parameter's)
-            position = list(region).index(mu_a)
-            for k, (name, value) in enumerate([("MuA Ramp Start Time", MUA_RAMP[0]), ("MuA Ramp End Time", MUA_RAMP[1])]):
-                ramp = ET.Element("Parameter", {"name": name, "type": "double", "value": fmt(value)})
-                ramp.tail = mu_a.tail if "\n" in (mu_a.tail or "") else "\n" + " " * 6
-                region.insert(position + 1 + k, ramp)
 
 
 def pressure_drop(mmhg):
@@ -494,7 +479,7 @@ def main():
             last_dt = sorted((float(parameter(i, "Start Time").get("value")), parameter(i, "dt").get("value"))
                              for i in sublist(simulation.getroot(), "Timestepping Parameter", "Timestepping Intervalls").findall("ParameterList"))[-1][1]
             final_time, extra_segments, extra_exports = 1700., [(1500., last_dt)], UNLOADING_EXPORT_TIMES
-            description += ", unloading 1500-1600 s, MuA to 0 1600-1700 s"
+            description += ", unloading 1500-1600 s to 1700 s"
         if study == "basal_tone_tuning":
             final_time = 540.
         common(simulation, final_time, extra_segments, extra_exports)
