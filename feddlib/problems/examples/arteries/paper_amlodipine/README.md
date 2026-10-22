@@ -170,8 +170,6 @@ tetrahedra per node (`NODES` in `case.env`).
 The controls of the baseline arteries (`kappa_variation/artery_dan_30` and the
 four in `arteries`) continue past 1500 s: the pressure goes to 0 over
 1500-1600 s and is held to 1700 s. They also checkpoint at 1500 and 1600 s.
-(The element can also take the active stiffness `MuA` to 0, with `MuA Ramp Start
-Time` / `MuA Ramp End Time` in a region; the cases do not use it.)
 
 Two parameters of `main.cpp` are new and default to the paper's behaviour:
 `Inflow Concentration` (2.0) and `Axial Stretch` (0.0; the end faces and rings
