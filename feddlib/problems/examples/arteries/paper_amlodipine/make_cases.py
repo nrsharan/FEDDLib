@@ -415,9 +415,12 @@ for artery in ["phini", "narula"]:
             add("mesh_convergence", "artery_%s_%s_%s" % (artery, family, level), artery, chain(mesh(name), drug(False)), "control, mesh " + name)
             add("mesh_convergence", "artery_%s_%s_%s_withDrug" % (artery, family, level), artery, mesh(name), "drug, mesh " + name)
 
-# Revision 3.6: 5 % axial pre-stretch, ramped with the pressure
-add("axial_stretch", "artery_dan_stretch5", "dan", chain(axial_stretch(0.05), drug(False)), "control, 5 % axial stretch")
-add("axial_stretch", "artery_dan_withDrug_stretch5", "dan", axial_stretch(0.05), "drug, 5 % axial stretch")
+# Revision 3.6: 5 % and 10 % axial pre-stretch, ramped with the pressure
+for percent in [5, 10]:
+    add("axial_stretch", "artery_dan_stretch%d" % percent, "dan", chain(axial_stretch(percent / 100.), drug(False)),
+        "control, %d %% axial stretch" % percent)
+    add("axial_stretch", "artery_dan_withDrug_stretch%d" % percent, "dan", axial_stretch(percent / 100.),
+        "drug, %d %% axial stretch" % percent)
 
 # Revision 3.3 (tuning): the active phase 240-540 s with lower Eta, to find the values that give a
 # pre-drug n_C of about 0.5 and 0.3; the basal-tone runs follow once they are known
