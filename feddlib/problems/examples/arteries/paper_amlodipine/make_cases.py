@@ -415,12 +415,19 @@ for artery in ["phini", "narula"]:
             add("mesh_convergence", "artery_%s_%s_%s" % (artery, family, level), artery, chain(mesh(name), drug(False)), "control, mesh " + name)
             add("mesh_convergence", "artery_%s_%s_%s_withDrug" % (artery, family, level), artery, mesh(name), "drug, mesh " + name)
 
-# Revision 3.6: 5 % and 10 % axial pre-stretch, ramped with the pressure
+# Revision 3.6: 5 % and 10 % axial pre-stretch, ramped with the pressure: the five arteries, control and
+# drug (the controls without the unloading, to 1500 s), and the pressure-drop runs (drug)
 for percent in [5, 10]:
-    add("axial_stretch", "artery_dan_stretch%d" % percent, "dan", chain(axial_stretch(percent / 100.), drug(False)),
-        "control, %d %% axial stretch" % percent)
-    add("axial_stretch", "artery_dan_withDrug_stretch%d" % percent, "dan", axial_stretch(percent / 100.),
-        "drug, %d %% axial stretch" % percent)
+    stretch = axial_stretch(percent / 100.)
+    for artery in ["dan", "kim", "narula", "phini", "plass"]:
+        add("axial_stretch", "artery_%s_stretch%d" % (artery, percent), artery, chain(stretch, drug(False)),
+            "control, %d %% axial stretch" % percent)
+        add("axial_stretch", "artery_%s_withDrug_stretch%d" % (artery, percent), artery, stretch,
+            "drug, %d %% axial stretch" % percent)
+    for mmhg in [10, 20, 30]:
+        for artery in ["dan", "kim", "narula", "phini", "plass"]:
+            add("axial_stretch_pressure_drop/%d_pressure_drop" % mmhg, "artery_%s_withDrug_stretch%d" % (artery, percent),
+                artery, chain(stretch, pressure_drop(mmhg)), "drug, %d %% axial stretch, pressure drop %d mmHg" % (percent, mmhg))
 
 # Revision 3.3 (tuning): the active phase 240-540 s with lower Eta, to find the values that give a
 # pre-drug n_C of about 0.5 and 0.3; the basal-tone runs follow once they are known
@@ -439,7 +446,9 @@ STUDY_ABBREVIATIONS = {"kappa_variation": "kap", "arteries": "art", "pressure_dr
                        "pressure_drop_variation/20_pressure_drop": "pd20", "pressure_drop_variation/30_pressure_drop": "pd30",
                        "diffusion_variation": "dif", "reaction_variation": "rea", "degen_kappa_variation": "dkap",
                        "dose_variation": "dose", "drug_response_variation": "resp", "mesh_convergence": "mesh",
-                       "axial_stretch": "ax", "basal_tone_tuning": "eta", "basal_tone": "tone"}
+                       "axial_stretch": "ax", "axial_stretch_pressure_drop/10_pressure_drop": "axpd10",
+                       "axial_stretch_pressure_drop/20_pressure_drop": "axpd20",
+                       "axial_stretch_pressure_drop/30_pressure_drop": "axpd30", "basal_tone_tuning": "eta", "basal_tone": "tone"}
 
 
 def job_name(study, case):
